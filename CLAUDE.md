@@ -139,12 +139,12 @@ Keep this updated at the end of each plan file: one line per completed plan item
 - [x] 02 scaffold — Node 24 locally (engines >=22). Mongoose pinned to 8 (npm latest is 9). Vite 8 + React 19. JWT_SECRET must be >= 32 chars.
 - [~] 03 LLM layer — code done; offline checks pass. PENDING: live checks (smoke, llm-check x3, --budget) need NEBIUS_API_KEY + MONGODB_URI; then record model IDs + where reasoning appears (separate field vs <think>) here. Retries use the openai SDK built-in (maxRetries 2, backoff+jitter). LLM env vars stay optional at boot; client.js throws on first use. Admin header: x-admin-token.
 - [x] 04 backend core — `npm run api-check [baseUrl]` runs a 19-step e2e check (REST + sockets + DELETE /me), all passing against a local in-memory Mongo; two real browser windows not tested (no UI yet). Postman v2.1 collection in server/api-collection/ (Bruno can import it). Additions: Match.pairKey (unique, prevents duplicate matches on simultaneous likes), Match.lastMessageAt, perUser.lastReadAt (unread counts). message:new goes to `user:<id>` rooms because authoredBy is redacted per viewer; match rooms carry typing. Discover filters by mutual gender/interestedIn; dealbreakers are hidden from other users. Socket events ack `{ ok, error? }`. Inbox answer just stores it (plan 08 adds facts); date-ideas returns 501.
-- [ ] 05 onboarding + knowledge graph
+- [ ] 05 onboarding + knowledge graph — question set (`services/kg/questions.js`) + `GET /api/onboarding/questions` were built early with plan 10 (static content the UI needed); answer shape is documented at the top of that file. Extraction pipeline, style profile and embeddings still to do.
 - [ ] 06 trust check
 - [ ] 07 match brief
 - [ ] 08 agent conversation
 - [ ] 09 compatibility + handoff
-- [ ] 10 frontend
+- [x] 10 frontend — all screens + live match room. Verified in headless Chrome (puppeteer, not committed) against the real API + in-memory Mongo with `VITE_USE_MOCKS=true`: signup→onboarding→review→discover→match→room→take over (input unlocks in <50 ms)→report receipts→continue→reveal; 0 console errors; no horizontal scroll at 375px; light + dark. Mocks (`client/src/lib/mock.js`) add a scripted demo match `/matches/demo` and stand in for plans 05–09 (onboarding status, sample graph, inbox item); delete once those land. Contract assumptions for later plans: `kg:update` may carry `{ agenda }` to update agenda statuses live; agenda items may carry `confidence`; report `dimensions[key] = { score, confidence }`, `report.chemistry`, `report.icebreakers`; date-ideas returns `{ ideas: [{ title, why, link }], icebreakers? }`; "Talk anyway" on an incompatible report calls `POST /decision { continue }`, so plan 09 must reopen the match on that. Bundle 620 KB (force-graph); code-split if load time matters.
 - [ ] 11 seed data + eval
 - [ ] 12 deploy + keep-alive
 - [ ] 13 submission

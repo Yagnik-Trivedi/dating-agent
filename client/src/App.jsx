@@ -1,30 +1,60 @@
-import { useEffect, useState } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { api } from './lib/api'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import Layout from './components/Layout'
+import { Loading } from './components/ui'
+import { AuthProvider, useAuth } from './hooks/useAuth'
+import { ToastProvider } from './hooks/useToast'
+import Discover from './pages/Discover'
+import Inbox from './pages/Inbox'
+import Landing from './pages/Landing'
+import { Login, Signup } from './pages/Auth'
+import MatchRoom from './pages/MatchRoom'
+import Matches from './pages/Matches'
+import Onboarding from './pages/Onboarding'
+import OnboardingReview from './pages/OnboardingReview'
+import Profile from './pages/Profile'
+import Report from './pages/Report'
+import Settings from './pages/Settings'
 
-function Home() {
-  const [health, setHealth] = useState('loading…')
+/** Not logged in → /login. Onboarding not done → /onboarding (unless this page is part of onboarding). */
+function Protected({ children, onboarding = false }) {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+  if (loading) return <Loading />
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (!onboarding && user.onboarding?.status !== 'done') return <Navigate to="/onboarding" replace />
+  return children
+}
 
-  useEffect(() => {
-    api.get('/health')
-      .then((res) => setHealth(JSON.stringify(res.data, null, 2)))
-      .catch((err) => setHealth(`error: ${err.message}`))
-  }, [])
-
-  return (
-    <main className="min-h-screen p-8 font-sans">
-      <h1 className="text-3xl font-bold">dating-agent</h1>
-      <pre className="mt-4 rounded bg-gray-100 p-4 text-sm">{health}</pre>
-    </main>
-  )
+function PublicOnly({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <Loading />
+  return user ? <Navigate to="/discover" replace /> : children
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
+      <AuthProvider>
+        <ToastProvider>
+          <Routes>
+            <Route path="/" element={<PublicOnly><Landing /></PublicOnly>} />
+            <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
+            <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
+            <Route path="/onboarding" element={<Protected onboarding><Onboarding /></Protected>} />
+            <Route element={<Protected><Layout /></Protected>}>
+              <Route path="/onboarding/review" element={<OnboardingReview />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/matches/:id" element={<MatchRoom />} />
+              <Route path="/matches/:id/report" element={<Report />} />
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ToastProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

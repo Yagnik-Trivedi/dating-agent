@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { QUESTIONS } from '../services/kg/questions.js';
 import { parse } from '../utils/http.js';
 
 export const onboardingRouter = Router();
+
+onboardingRouter.get('/onboarding/questions', (req, res) => res.json(QUESTIONS));
 
 // Plan 05 adds fact extraction after submit.
 onboardingRouter.post('/onboarding/submit', async (req, res) => {
