@@ -16,6 +16,10 @@ const schema = z.object({
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
   TAVILY_API_KEY: optional,
+  LLM_DAILY_CALLS_PER_USER: z.coerce.number().int().positive().default(300),
+  LLM_DAILY_TOKENS_GLOBAL: z.coerce.number().int().positive().default(3_000_000),
+  LLM_SMART_DAILY_CALLS: z.coerce.number().int().positive().default(60),
+  ADMIN_TOKEN: optional,
 });
 
 const parsed = schema.safeParse(process.env);
@@ -28,6 +32,6 @@ if (!parsed.success) {
 export const env = parsed.data;
 export const clientOrigins = env.CLIENT_URL.split(',').map((s) => s.trim()).filter(Boolean);
 
-// ponytail: optional until plan 03; make these required there.
+// Optional so the app (and frontend dev) boots without keys; llm/client.js throws a clear error on first use.
 const missing = ['NEBIUS_API_KEY', 'MODEL_FAST', 'MODEL_MID', 'MODEL_SMART', 'MODEL_EMBED', 'TAVILY_API_KEY'].filter((k) => !env[k]);
 if (missing.length) console.warn(`⚠ Missing LLM/API env vars (AI features will fail): ${missing.join(', ')}`);

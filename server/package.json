@@ -10,6 +10,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "smoke": "node scripts/smoke.js",
+    "llm-check": "node scripts/llm-check.js",
     "seed": "node scripts/seed.js",
     "simulate": "node scripts/simulate.js",
     "eval": "node scripts/eval.js"

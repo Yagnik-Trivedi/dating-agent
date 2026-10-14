@@ -137,7 +137,7 @@ cd client && npm run dev        # http://localhost:5173
 Keep this updated at the end of each plan file: one line per completed plan item, plus any decisions that deviate from the plan.
 
 - [x] 02 scaffold — Node 24 locally (engines >=22). Mongoose pinned to 8 (npm latest is 9). Vite 8 + React 19. JWT_SECRET must be >= 32 chars.
-- [ ] 03 LLM layer
+- [~] 03 LLM layer — code done; offline checks pass. PENDING: live checks (smoke, llm-check x3, --budget) need NEBIUS_API_KEY + MONGODB_URI; then record model IDs + where reasoning appears (separate field vs <think>) here. Retries use the openai SDK built-in (maxRetries 2, backoff+jitter). LLM env vars stay optional at boot; client.js throws on first use. Admin header: x-admin-token.
 - [ ] 04 backend core
 - [ ] 05 onboarding + knowledge graph
 - [ ] 06 trust check

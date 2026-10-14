@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import { env, clientOrigins } from './config/env.js';
+import { adminRouter } from './routes/admin.js';
 
 const app = express();
 app.use(helmet());
@@ -21,6 +22,8 @@ app.get('/health/deep', (req, res) => {
   const state = mongoose.connection.readyState;
   res.status(state === 1 ? 200 : 503).json({ ok: state === 1, mongo: states[state] ?? 'unknown' });
 });
+
+app.use('/api/admin', adminRouter);
 
 app.use((req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found' } }));
 app.use((err, req, res, next) => {
