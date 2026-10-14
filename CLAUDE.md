@@ -138,7 +138,7 @@ Keep this updated at the end of each plan file: one line per completed plan item
 
 - [x] 02 scaffold — Node 24 locally (engines >=22). Mongoose pinned to 8 (npm latest is 9). Vite 8 + React 19. JWT_SECRET must be >= 32 chars.
 - [~] 03 LLM layer — code done; offline checks pass. PENDING: live checks (smoke, llm-check x3, --budget) need NEBIUS_API_KEY + MONGODB_URI; then record model IDs + where reasoning appears (separate field vs <think>) here. Retries use the openai SDK built-in (maxRetries 2, backoff+jitter). LLM env vars stay optional at boot; client.js throws on first use. Admin header: x-admin-token.
-- [ ] 04 backend core
+- [x] 04 backend core — `npm run api-check [baseUrl]` runs a 19-step e2e check (REST + sockets + DELETE /me), all passing against a local in-memory Mongo; two real browser windows not tested (no UI yet). Postman v2.1 collection in server/api-collection/ (Bruno can import it). Additions: Match.pairKey (unique, prevents duplicate matches on simultaneous likes), Match.lastMessageAt, perUser.lastReadAt (unread counts). message:new goes to `user:<id>` rooms because authoredBy is redacted per viewer; match rooms carry typing. Discover filters by mutual gender/interestedIn; dealbreakers are hidden from other users. Socket events ack `{ ok, error? }`. Inbox answer just stores it (plan 08 adds facts); date-ideas returns 501.
 - [ ] 05 onboarding + knowledge graph
 - [ ] 06 trust check
 - [ ] 07 match brief

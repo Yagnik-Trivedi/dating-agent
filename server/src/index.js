@@ -3,11 +3,23 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
-import { Server } from 'socket.io';
 import { env, clientOrigins } from './config/env.js';
+import { requireAuth } from './middleware/auth.js';
+import { errorHandler, notFound } from './middleware/error.js';
 import { adminRouter } from './routes/admin.js';
+import { authRouter } from './routes/auth.js';
+import { discoverRouter } from './routes/discover.js';
+import { inboxRouter } from './routes/inbox.js';
+import { kgRouter } from './routes/kg.js';
+import { matchesRouter } from './routes/matches.js';
+import { meRouter } from './routes/me.js';
+import { onboardingRouter } from './routes/onboarding.js';
+import { profileRouter } from './routes/profile.js';
+import { registerSockets } from './sockets/index.js';
+import { io } from './sockets/io.js';
 
 const app = express();
+app.set('trust proxy', 1); // Render's proxy; needed for per-IP rate limits
 app.use(helmet());
 app.use(cors({ origin: clientOrigins }));
 app.use(express.json({ limit: '1mb' }));
@@ -23,16 +35,16 @@ app.get('/health/deep', (req, res) => {
   res.status(state === 1 ? 200 : 503).json({ ok: state === 1, mongo: states[state] ?? 'unknown' });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter);
 
-app.use((req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found' } }));
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ error: { code: err.code || 'INTERNAL', message: err.expose ? err.message : 'Internal server error' } });
-});
+app.use(notFound);
+app.use(errorHandler);
 
 const server = createServer(app);
-export const io = new Server(server, { cors: { origin: clientOrigins } });
+io.attach(server);
+registerSockets(io);
 
 async function connectMongo(attempt = 1) {
   try {
