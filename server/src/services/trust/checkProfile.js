@@ -24,7 +24,7 @@ const schema = z.object({
 
 // What the LLM sees: public profile content only. Dealbreakers are private to their owner, and the result is
 // shown to the viewer, so they're left out.
-const forModel = (p) => ({
+export const publicProfile = (p) => ({
   name: p.name, age: p.age, city: p.city, gender: p.gender, bio: p.bio ?? '',
   prompts: (p.prompts ?? []).map(({ q, a }) => ({ q, a })),
   tags: p.tags ?? {},
@@ -45,7 +45,7 @@ export async function checkProfileData({ profile, accountAgeMinutes, userId, mat
   let llm = { contradictions: [], scamSignals: [], genericBio: false, summary: '' };
 
   try {
-    llm = await chatJSON({ tier: 'mid', messages: profileConsistency.build({ profile: forModel(profile) }), schema, purpose: 'trust-check', userId, matchId });
+    llm = await chatJSON({ tier: 'mid', messages: profileConsistency.build({ profile: publicProfile(profile) }), schema, purpose: 'trust-check', userId, matchId });
   } catch (err) {
     console.error(`trust-check: consistency check unavailable (${err.code ?? err.name}): ${err.message}`);
     llm.summary = 'Automatic consistency check unavailable; rule checks only.';

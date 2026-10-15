@@ -5,8 +5,8 @@ const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
 const IMPORTANCE_WEIGHT = Object.fromEntries(section('B').importance.map((i) => [i.value, i.weight]));
 const INTENSITY_WEIGHT = Object.fromEntries(section('D').intensities.map((i) => [i.value, i.weight]));
 
-// How each section-B item reads as a fact ("smoking: never").
-const TOPICS = {
+// How each section-B item reads as a fact ("smoking: never"). The brief phrases profile tags the same way.
+export const TOPICS = {
   kids: 'wants children',
   religion: 'religion in own life',
   location: 'living in 3-5 years',

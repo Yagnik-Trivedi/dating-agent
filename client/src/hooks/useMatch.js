@@ -57,7 +57,7 @@ export function useMatch(matchId) {
     if (!same(id)) return
     setMatch((m) => (m ? { ...m, status, agentActive } : m))
     if (status === 'handed_off') loadMessages().catch(() => {}) // authoredBy is revealed now
-    if (REPORT_STATUSES.includes(status) || status === 'agent_chatting') loadDetail().catch(() => {})
+    if (REPORT_STATUSES.includes(status) || ['agent_chatting', 'evaluating'].includes(status)) loadDetail().catch(() => {})
   })
 
   useSocketEvent('kg:update', ({ matchId: id, facts: incoming = [], agenda }) => {
