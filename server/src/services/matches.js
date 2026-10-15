@@ -6,7 +6,7 @@ import { User } from '../models/User.js';
 import { emitToUser } from '../sockets/io.js';
 import { httpError } from '../utils/http.js';
 import { serializeMessage } from './chat.js';
-import { onMatchCreated } from './pipeline/index.js';
+import { onMatchCreated, statusFor } from './pipeline/index.js';
 
 // Dealbreakers stay private to their owner (the agent uses them; the other person doesn't see the list).
 export const PUBLIC_PROFILE = '-dealbreakers';
@@ -36,7 +36,7 @@ export async function matchListItem(match, viewerId) {
   ]);
   return {
     _id: match._id,
-    status: match.status,
+    status: statusFor(match, viewerId),
     createdAt: match.createdAt,
     lastMessageAt: match.lastMessageAt ?? null,
     agentActive: mine?.agentActive ?? false,
@@ -54,7 +54,7 @@ export async function matchDetail(match, viewerId) {
   const key = String(viewerId);
   return {
     _id: match._id,
-    status: match.status,
+    status: statusFor(match, viewerId),
     createdAt: match.createdAt,
     agentActive: mine?.agentActive ?? false,
     tookOverAt: mine?.tookOverAt ?? null,

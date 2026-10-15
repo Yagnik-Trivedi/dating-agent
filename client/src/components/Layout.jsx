@@ -35,7 +35,8 @@ export default function Layout() {
   useSocketEvent('inbox:new', () => {
     if (!pathname.startsWith('/inbox')) toast('Your agent has a question for you', { to: '/inbox', agent: true })
   })
-  useSocketEvent('report:ready', ({ matchId }) => toast('Your agent finished a verdict', { to: `/matches/${matchId}/report`, agent: true }))
+  useSocketEvent('trust:flagged', ({ matchId }) => toast('Your agent flagged a profile as likely fake and stopped. Tap to see why.', { to: `/matches/${matchId}`, agent: true, tone: 'bad' }))
+  useSocketEvent('report:ready',({ matchId }) => toast('Your agent finished a verdict', { to: `/matches/${matchId}/report`, agent: true }))
 
   const linkCls = ({ isActive }) => `flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition ${isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:text-ink'}`
 

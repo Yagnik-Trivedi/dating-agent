@@ -24,7 +24,7 @@ export async function sendMessage({ match, senderId, authoredBy, text, meta }) {
   const clean = String(text ?? '').trim();
   if (!clean) throw httpError(400, 'VALIDATION', 'Message is empty');
   if (clean.length > MAX_MESSAGE_LENGTH) throw httpError(400, 'VALIDATION', `Message exceeds ${MAX_MESSAGE_LENGTH} characters`);
-  if (match.status === 'closed') throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
+  if (['closed', 'flagged_fake'].includes(match.status)) throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
 
   const message = await Message.create({ matchId: match._id, senderId, authoredBy, text: clean, meta });
   await Match.updateOne({ _id: match._id }, { $set: { lastMessageAt: message.createdAt } });

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "clean-ananya",
+    "expect": ["ok"],
+    "note": "Complete, consistent profile",
+    "profile": {
+      "name": "Ananya", "age": 28, "city": "Pune", "gender": "woman",
+      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Ananya", "https://api.dicebear.com/9.x/notionists/svg?seed=Ananya2"],
+      "bio": "Architect who sketches cafés on weekends. Early riser, terrible at sleeping in, great at finding the best vada pav in any neighbourhood.",
+      "prompts": [
+        { "q": "A perfect Sunday", "a": "Sketching at a quiet café, then a long walk through the old city." },
+        { "q": "I geek out on", "a": "Old buildings, especially Pune's wadas and their courtyards." },
+        { "q": "My simple pleasures", "a": "Cutting chai in the rain and a good fountain pen." }
+      ],
+      "tags": { "interests": ["sketching", "architecture", "walking", "chai"], "lifestyle": { "smoking": "never", "drinking": "socially", "workout": "sometimes", "diet": "veg" }, "wantsKids": "open", "relationshipGoal": "long-term" }
+    }
+  },
+  {
+    "id": "clean-rahul",
+    "expect": ["ok"],
+    "note": "Complete, consistent profile",
+    "profile": {
+      "name": "Rahul", "age": 31, "city": "Bengaluru", "gender": "man",
+      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Rahul"],
+      "bio": "Backend engineer by day, amateur baker by night. My sourdough starter is called Kevin and he is thriving.",
+      "prompts": [
+        { "q": "Two truths and a lie", "a": "I have run two half marathons, I bake bread every weekend, I have never seen the sea." },
+        { "q": "The way to win me over", "a": "Recommend me a book I would never pick up myself." }
+      ],
+      "tags": { "interests": ["baking", "running", "reading", "coding"], "lifestyle": { "smoking": "never", "drinking": "socially", "workout": "often", "diet": "non-veg" }, "wantsKids": "yes", "relationshipGoal": "long-term" }
+    }
+  },
+  {
+    "id": "mild-meghna",
+    "expect": ["ok", "caution"],
+    "note": "Mild tag-vs-text contradictions (drinking, workout)",
+    "profile": {
+      "name": "Meghna", "age": 26, "city": "Mumbai", "gender": "woman",
+      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Meghna"],
+      "bio": "Marketing person who loves stand-up comedy and long train journeys. Will talk your ear off about street food.",
+      "prompts": [
+        { "q": "My simple pleasures", "a": "A glass of wine at a friend's wedding, which is honestly the only time I drink." },
+        { "q": "A perfect Sunday", "a": "Lazy morning, then a long run along Marine Drive before brunch." }
+      ],
+      "tags": { "interests": ["comedy", "street food", "trains", "podcasts"], "lifestyle": { "smoking": "never", "drinking": "never", "workout": "rarely", "diet": "non-veg" }, "wantsKids": "open", "relationshipGoal": "open to long-term" }
+    }
+  },
+  {
+    "id": "mild-dev",
+    "expect": ["caution"],
+    "note": "Minor contradictions on a thin profile with no photos",
+    "profile": {
+      "name": "Dev", "age": 29, "city": "Delhi", "gender": "man",
+      "photos": [],
+      "bio": "Hi, I'm Dev.",
+      "prompts": [
+        { "q": "Best travel story", "a": "Missed a train in Jaipur and ended up at a stranger's family dinner. Best night of the trip, I even had the occasional cigarette with the uncles." },
+        { "q": "My simple pleasures", "a": "Running 10k every Sunday morning before anyone else is awake." }
+      ],
+      "tags": { "interests": ["travel", "running"], "lifestyle": { "smoking": "never", "drinking": "socially", "workout": "rarely" }, "relationshipGoal": "long-term" }
+    }
+  },
+  {
+    "id": "blatant-karan",
+    "expect": ["caution", "likely_fake"],
+    "note": "Bio blatantly contradicts declared goals",
+    "profile": {
+      "name": "Karan", "age": 33, "city": "Hyderabad", "gender": "man",
+      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Karan"],
+      "bio": "Not looking for anything serious, and kids are definitely not for me. Just here to have fun.",
+      "prompts": [
+        { "q": "The way to win me over", "a": "Do not expect commitment, I get bored of people quickly." }
+      ],
+      "tags": { "interests": ["cricket", "gaming"], "lifestyle": { "smoking": "never", "drinking": "socially" }, "wantsKids": "yes", "relationshipGoal": "long-term" }
+    }
+  },
+  {
+    "id": "scammer-daniel",
+    "expect": ["likely_fake"],
+    "note": "Oil-rig engineer, crypto pitch, pushes to Telegram",
+    "accountAgeMinutes": 3,
+    "profile": {
+      "name": "Daniel", "age": 41, "city": "Mumbai", "gender": "man",
+      "photos": [],
+      "bio": "Widowed civil engineer working on an offshore oil rig. I made my fortune with crypto trading and I can teach you, guaranteed returns.",
+      "prompts": [
+        { "q": "The way to win me over", "a": "I rarely check this app, text me on telegram @dan_rig_88 so we can talk properly." }
+      ],
+      "tags": { "interests": ["investing", "travel"], "relationshipGoal": "long-term" }
+    }
+  }
+]

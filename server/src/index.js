@@ -16,6 +16,7 @@ import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
 import { profileRouter } from './routes/profile.js';
 import { failStuckOnboarding } from './services/kg/buildUserGraph.js';
+import { resumePipelines } from './services/pipeline/index.js';
 import { refresh as loadBudget } from './services/llm/budget.js';
 import { registerSockets } from './sockets/index.js';
 import { io } from './sockets/io.js';
@@ -54,6 +55,7 @@ async function connectMongo(attempt = 1) {
     console.log('✓ MongoDB connected');
     await loadBudget({ force: true }).catch((err) => console.error(`budget load failed: ${err.message}`));
     await failStuckOnboarding().catch((err) => console.error(`onboarding cleanup failed: ${err.message}`));
+    await resumePipelines().catch((err) => console.error(`pipeline resume failed: ${err.message}`));
   } catch (err) {
     const delay = Math.min(30_000, 2_000 * attempt);
     console.error(`✖ MongoDB connect failed (attempt ${attempt}): ${err.message}. Retrying in ${delay / 1000}s`);
