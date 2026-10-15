@@ -150,6 +150,7 @@ assert.equal(r.body.match.status, 'handed_off');
 await waitFor(sA, 'match:status', (p) => p.status === 'handed_off');
 r = await call('GET', `/matches/${matchId}/messages`, { token: A.token });
 assert.equal(r.body.messages[1].authoredBy, 'human');
+assert.ok('reveal' in r.body, 'messages response carries the reveal (null when no agent spoke)');
 ok('both continue → handed_off; authoredBy revealed');
 
 // --- settings, onboarding, kg, inbox
@@ -162,8 +163,8 @@ assert.equal(r.body.nodes[0].id, 'me');
 r = await call('GET', '/inbox', { token: A.token });
 assert.deepEqual(r.body.items, []);
 r = await call('GET', `/matches/${matchId}/date-ideas`, { token: A.token });
-assert.equal(r.status, 501);
-ok('settings, onboarding stub, kg/me, inbox, date-ideas stub');
+assert.ok(r.status === 200 ? r.body.ideas.length > 0 : r.body.error.code === 'DATE_IDEAS_UNAVAILABLE', `date-ideas: ${r.status}`);
+ok(`settings, onboarding stub, kg/me, inbox, date-ideas (${r.status === 200 ? 'ideas' : '503 without TAVILY_API_KEY'})`);
 
 // --- DELETE /me
 r = await call('DELETE', '/me', { token: B.token });

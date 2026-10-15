@@ -6,7 +6,9 @@ import { Message } from '../models/Message.js';
 import { cancelReplies } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
-import { emitStatus, setStatus } from '../services/pipeline/index.js';
+import { decide, revealFor } from '../services/compat/index.js';
+import { emitStatus } from '../services/pipeline/index.js';
+import { dateIdeasFor } from '../services/tavily/dateIdeas.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const matchesRouter = Router();
@@ -33,7 +35,7 @@ matchesRouter.get('/matches/:id/messages', async (req, res) => {
   const filter = { matchId: match._id, ...(before && { createdAt: { $lt: before } }) };
   const page = await Message.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
   if (!before) await Match.updateOne({ _id: match._id, 'perUser.userId': me }, { $set: { 'perUser.$.lastReadAt': new Date() } });
-  res.json({ messages: page.reverse().map((m) => serializeMessage(m, me, match.status)) });
+  res.json({ messages: page.reverse().map((m) => serializeMessage(m, me, match.status)), reveal: await revealFor(match) });
 });
 
 matchesRouter.post('/matches/:id/messages', async (req, res) => {
@@ -59,17 +61,9 @@ matchesRouter.post('/matches/:id/takeover', async (req, res) => {
 
 matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { decision } = parse(z.object({ decision: z.enum(['continue', 'pass']) }), req.body);
-  const me = req.user._id;
-  const { _id } = await getMatchFor(req.params.id, me);
-  const match = await Match.findOneAndUpdate(
-    { _id, 'perUser.userId': me },
-    { $set: { 'perUser.$.decision': decision } },
-    { new: true },
-  );
-  if (match.status !== 'handed_off' && match.perUser.every((p) => p.decision === 'continue')) {
-    await setStatus(match, 'handed_off');
-  }
-  res.json({ match: await matchDetail(match, me) });
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await decide(_id, req.user._id, decision);
+  res.json({ match: await matchDetail(match, req.user._id) });
 });
 
 // What the requester's agent has learned about the other person.
@@ -80,7 +74,9 @@ matchesRouter.get('/matches/:id/kg', async (req, res) => {
   res.json({ facts });
 });
 
+// Only once the agents think it's worth meeting (or both people took over).
 matchesRouter.get('/matches/:id/date-ideas', async (req, res) => {
-  await getMatchFor(req.params.id, req.user._id);
-  throw httpError(501, 'NOT_IMPLEMENTED', 'Date ideas arrive in plan 09');
+  const match = await getMatchFor(req.params.id, req.user._id);
+  if (!['compatible', 'maybe', 'handed_off'].includes(match.status)) throw httpError(409, 'NOT_READY', 'Date ideas come after a compatible or maybe verdict');
+  res.json(await dateIdeasFor(match, req.user._id));
 });

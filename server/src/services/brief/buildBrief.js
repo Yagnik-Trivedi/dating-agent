@@ -66,7 +66,8 @@ async function observeProfile({ profile, viewerId, subjectId, matchId }) {
   if (text.trim()) {
     try {
       const out = await chatJSON({
-        tier: 'mid', schema: factsSchema, purpose: 'brief-profile-facts', userId: viewerId, matchId,
+        // Reasoning off: literal extraction (quotes are verified in code); with reasoning it timed out at 120 s on NVIDIA.
+        tier: 'mid', reasoning: false, schema: factsSchema, purpose: 'brief-profile-facts', userId: viewerId, matchId,
         messages: profileToFacts.build({ profile: { bio: profile.bio ?? '', prompts: (profile.prompts ?? []).map(({ q, a }) => ({ q, a })) } }),
       });
       fromText = out.facts.filter((f) => isVerbatim(f.quote, text)).slice(0, 10).map((f) => ({ ...f, confidence: TEXT_CONFIDENCE }));

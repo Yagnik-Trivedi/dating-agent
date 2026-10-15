@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, errMsg } from '../lib/api'
-import { isDemo, startDemo } from '../lib/mock'
 import { useSocket, useSocketEvent } from './useSocket'
 
 const REPORT_STATUSES = ['compatible', 'maybe', 'incompatible', 'flagged_fake', 'handed_off', 'closed']
@@ -32,7 +31,6 @@ export function useMatch(matchId) {
     try {
       const [, , kg] = await Promise.all([loadDetail(), loadMessages(), api.get(`/api/matches/${matchId}/kg`)])
       setFacts(kg.data.facts)
-      if (isDemo(matchId)) startDemo()
     } catch (err) {
       setError(errMsg(err))
     }

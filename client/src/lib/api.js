@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { installMocks } from './mock'
 
 export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
@@ -17,8 +16,6 @@ api.interceptors.response.use(undefined, (err) => {
   }
   return Promise.reject(err)
 })
-
-if (import.meta.env.VITE_USE_MOCKS === 'true') installMocks(api)
 
 /** Human-readable message from an API error. */
 export function errMsg(err) {

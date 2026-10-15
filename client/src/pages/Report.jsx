@@ -56,7 +56,7 @@ function DateIdeas({ matchId, fallbackIcebreakers }) {
   useEffect(() => {
     api.get(`/api/matches/${matchId}/date-ideas`)
       .then((r) => setState(r.data))
-      .catch((err) => setState({ error: err.response?.status === 501 ? 'Date ideas are on their way.' : errMsg(err) }))
+      .catch((err) => setState({ error: err.response?.status === 503 ? 'Date ideas are switched off on this server right now.' : errMsg(err) }))
   }, [matchId])
   const icebreakers = state.icebreakers ?? fallbackIcebreakers ?? []
   return (
@@ -167,7 +167,7 @@ export default function Report() {
       <div className="grid gap-5 md:grid-cols-2">
         <Card>
           <h2 className="mb-2 font-display text-xl font-semibold">Why</h2>
-          <ul className="-mx-3">{report.reasons?.map((r) => <Item key={r.text} item={r} icon="✓" tone="text-good" />)}</ul>
+          {report.reasons?.length ? <ul className="-mx-3">{report.reasons.map((r) => <Item key={r.text} item={r} icon="✓" tone="text-good" />)}</ul> : <p className="text-sm text-muted">Nothing to point to yet: the conversation ended before it really started.</p>}
         </Card>
         <Card>
           <h2 className="mb-2 font-display text-xl font-semibold">Worth noting</h2>

@@ -4,6 +4,14 @@ Dating apps match on preferences, not character, so people often find out two or
 
 Built for the Nebius x NVIDIA Global AI Hackathon.
 
+## What the verdict is (and isn't)
+
+Research on pre-meeting compatibility prediction is sobering: what people say they want, and how well two people
+"match" on paper, predicts very little about whether they actually click (e.g. Joel, Eastwick & Finkel, 2017). So the
+agent doesn't try to predict love. Its job is narrower: **filter clear mismatches and fakes, and save you the first few
+conversations**. Every reason in a report cites the real messages it's based on, dealbreakers are a hard gate, a low-
+confidence read is always a "Maybe", and you can override any verdict ("Talk anyway").
+
 ## Setup
 
 TODO

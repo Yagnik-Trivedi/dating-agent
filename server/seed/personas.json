@@ -9,36 +9,112 @@
       "age": 27,
       "city": "Pune",
       "gender": "woman",
-      "interestedIn": ["man"],
-      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Meera"],
+      "interestedIn": [
+        "man"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Meera"
+      ],
       "bio": "Product designer. Weekends belong to the Sahyadris, weeknights to books and filter coffee.",
       "prompts": [
-        { "q": "A perfect Sunday", "a": "Sunrise trek to Sinhagad, misal after, long nap, balcony reading." },
-        { "q": "I'll fall for you if", "a": "you plan the snacks for a trek without being asked." }
+        {
+          "q": "A perfect Sunday",
+          "a": "Sunrise trek to Sinhagad, misal after, long nap, balcony reading."
+        },
+        {
+          "q": "I'll fall for you if",
+          "a": "you plan the snacks for a trek without being asked."
+        }
       ],
       "tags": {
-        "interests": ["trekking", "reading", "cooking", "board games"],
-        "lifestyle": { "smoking": "never", "drinking": "socially", "workout": "often", "diet": "veg" },
+        "interests": [
+          "trekking",
+          "reading",
+          "cooking",
+          "board games"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "veg"
+        },
         "wantsKids": "open",
         "relationshipGoal": "long-term",
         "religionImportance": "not really"
       },
-      "dealbreakers": ["smoking"]
+      "dealbreakers": [
+        "smoking"
+      ]
     },
     "answers": {
-      "A": { "a1": 3, "a6": 3, "a11": 3, "a16": 3, "a2": 4, "a7": 1, "a12": 5, "a17": 2, "a3": 4, "a8": 2, "a13": 4, "a18": 2, "a4": 2, "a9": 4, "a14": 2, "a19": 4, "a5": 5, "a10": 1, "a15": 2, "a20": 1 },
+      "A": {
+        "a1": 3,
+        "a6": 3,
+        "a11": 3,
+        "a16": 3,
+        "a2": 4,
+        "a7": 1,
+        "a12": 5,
+        "a17": 2,
+        "a3": 4,
+        "a8": 2,
+        "a13": 4,
+        "a18": 2,
+        "a4": 2,
+        "a9": 4,
+        "a14": 2,
+        "a19": 4,
+        "a5": 5,
+        "a10": 1,
+        "a15": 2,
+        "a20": 1
+      },
       "B": {
-        "kids": { "answer": "open", "importance": "important" },
-        "religion": { "answer": "not_really", "importance": "nice_to_have" },
-        "location": { "answer": "this_city", "importance": "important" },
-        "smoking": { "answer": "never", "importance": "dealbreaker" },
-        "drinking": { "answer": "socially", "importance": "nice_to_have" },
-        "family": { "answer": "somewhat", "importance": "important" },
-        "career": { "answer": "balanced", "importance": "important" },
-        "looking_for": { "answer": "long_term", "importance": "dealbreaker" },
-        "diet": { "answer": "veg", "importance": "nice_to_have" },
-        "conflict": { "answer": "talk_it_out_immediately", "importance": "important" },
-        "alone_time": { "answer": "some", "importance": "nice_to_have" }
+        "kids": {
+          "answer": "open",
+          "importance": "important"
+        },
+        "religion": {
+          "answer": "not_really",
+          "importance": "nice_to_have"
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "important"
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "dealbreaker"
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "nice_to_have"
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "important"
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "important"
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "dealbreaker"
+        },
+        "diet": {
+          "answer": "veg",
+          "importance": "nice_to_have"
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "important"
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "nice_to_have"
+        }
       },
       "C": {
         "sunday": "A sunrise trek to Sinhagad with two friends, then a long misal breakfast. Afternoon nap, and I end the day reading on the balcony with filter coffee.",
@@ -48,10 +124,26 @@
         "place": "Spiti Valley, because I want to see a sky with that many stars and spend a week somewhere without network.",
         "friends_rely": "Planning trips nobody else wants to plan, and being the calm one when things go wrong."
       },
-      "D": { "interests": [
-        { "name": "trekking", "intensity": "obsessed" }, { "name": "reading", "intensity": "into_it" },
-        { "name": "cooking", "intensity": "into_it" }, { "name": "board games", "intensity": "casual" }
-      ] },
+      "D": {
+        "interests": [
+          {
+            "name": "trekking",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "reading",
+            "intensity": "into_it"
+          },
+          {
+            "name": "cooking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "board games",
+            "intensity": "casual"
+          }
+        ]
+      },
       "E": {
         "e1": "haha thank you, yours made me smile too 😄",
         "e2": "mostly trekking or reading, sometimes cooking something ambitious that may or may not work haha",
@@ -74,35 +166,109 @@
       "age": 29,
       "city": "Pune",
       "gender": "man",
-      "interestedIn": ["woman"],
-      "photos": ["https://api.dicebear.com/9.x/notionists/svg?seed=Arjun"],
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Arjun"
+      ],
       "bio": "Backend engineer by day, biryani experimenter by night. Trying to get better at treks without complaining on the way up.",
       "prompts": [
-        { "q": "My most controversial opinion", "a": "Board game nights beat clubbing, every single time." },
-        { "q": "A perfect Sunday", "a": "Cook a big lunch for friends, then a long walk and a nap." }
+        {
+          "q": "My most controversial opinion",
+          "a": "Board game nights beat clubbing, every single time."
+        },
+        {
+          "q": "A perfect Sunday",
+          "a": "Cook a big lunch for friends, then a long walk and a nap."
+        }
       ],
       "tags": {
-        "interests": ["cooking", "trekking", "board games", "cricket"],
-        "lifestyle": { "smoking": "never", "drinking": "socially", "workout": "sometimes", "diet": "non-veg" },
+        "interests": [
+          "cooking",
+          "trekking",
+          "board games",
+          "cricket"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "sometimes",
+          "diet": "non-veg"
+        },
         "wantsKids": "yes",
         "relationshipGoal": "long-term"
       },
       "dealbreakers": []
     },
     "answers": {
-      "A": { "a1": 4, "a6": 2, "a11": 4, "a16": 2, "a2": 4, "a7": 2, "a12": 4, "a17": 1, "a3": 3, "a8": 3, "a13": 3, "a18": 2, "a4": 2, "a9": 4, "a14": 2, "a19": 4, "a5": 4, "a10": 2, "a15": 2, "a20": 2 },
+      "A": {
+        "a1": 4,
+        "a6": 2,
+        "a11": 4,
+        "a16": 2,
+        "a2": 4,
+        "a7": 2,
+        "a12": 4,
+        "a17": 1,
+        "a3": 3,
+        "a8": 3,
+        "a13": 3,
+        "a18": 2,
+        "a4": 2,
+        "a9": 4,
+        "a14": 2,
+        "a19": 4,
+        "a5": 4,
+        "a10": 2,
+        "a15": 2,
+        "a20": 2
+      },
       "B": {
-        "kids": { "answer": "yes", "importance": "important" },
-        "religion": { "answer": "somewhat", "importance": "nice_to_have" },
-        "location": { "answer": "another_indian_city", "importance": "nice_to_have" },
-        "smoking": { "answer": "never", "importance": "important" },
-        "drinking": { "answer": "socially", "importance": "nice_to_have" },
-        "family": { "answer": "closely", "importance": "important" },
-        "career": { "answer": "career_first", "importance": "nice_to_have" },
-        "looking_for": { "answer": "long_term", "importance": "important" },
-        "diet": { "answer": "non_veg", "importance": "nice_to_have" },
-        "conflict": { "answer": "need_space_first", "importance": "nice_to_have" },
-        "alone_time": { "answer": "little", "importance": "nice_to_have" }
+        "kids": {
+          "answer": "yes",
+          "importance": "important"
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "nice_to_have"
+        },
+        "location": {
+          "answer": "another_indian_city",
+          "importance": "nice_to_have"
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "important"
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "nice_to_have"
+        },
+        "family": {
+          "answer": "closely",
+          "importance": "important"
+        },
+        "career": {
+          "answer": "career_first",
+          "importance": "nice_to_have"
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "important"
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "nice_to_have"
+        },
+        "conflict": {
+          "answer": "need_space_first",
+          "importance": "nice_to_have"
+        },
+        "alone_time": {
+          "answer": "little",
+          "importance": "nice_to_have"
+        }
       },
       "C": {
         "sunday": "I cook a huge lunch for friends, usually some biryani experiment, then we go for a long walk by the river and I nap like I earned it.",
@@ -112,10 +278,26 @@
         "place": "Hampi, because I want to cycle around the ruins at sunrise and eat at every small stall on the way.",
         "friends_rely": "Hosting. If something needs to be celebrated, I am the one cooking for twelve people."
       },
-      "D": { "interests": [
-        { "name": "cooking", "intensity": "obsessed" }, { "name": "board games", "intensity": "into_it" },
-        { "name": "trekking", "intensity": "casual" }, { "name": "cricket", "intensity": "into_it" }
-      ] },
+      "D": {
+        "interests": [
+          {
+            "name": "cooking",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "board games",
+            "intensity": "into_it"
+          },
+          {
+            "name": "trekking",
+            "intensity": "casual"
+          },
+          {
+            "name": "cricket",
+            "intensity": "into_it"
+          }
+        ]
+      },
       "E": {
         "e1": "Haha thanks, yours was way better though 😄",
         "e2": "Mostly cooking or losing at Catan with friends. Weekends are for food basically",
@@ -125,6 +307,312 @@
         "e6": "Good food and a long walk. Easy to talk that way",
         "e7": "Haha I try my best",
         "e8": "Texting mostly, calls are for when the story is too long"
+      }
+    }
+  },
+  {
+    "email": "seed03@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "Easygoing sales lead who smokes regularly (stated in tags). Pair with seed01: designed early dealbreaker (her smoking dealbreaker vs his tag).",
+    "profile": {
+      "name": "Kabir",
+      "age": 30,
+      "city": "Pune",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Kabir"
+      ],
+      "bio": "Sales lead, weekend cricketer, chai and a smoke after the match. Always up for a road trip.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "Gully cricket in the morning, biryani for lunch, a long drive in the evening."
+        },
+        {
+          "q": "My friends call me",
+          "a": "the guy who knows a dhaba on every highway."
+        }
+      ],
+      "tags": {
+        "interests": [
+          "cricket",
+          "road trips",
+          "food"
+        ],
+        "lifestyle": {
+          "smoking": "regularly",
+          "drinking": "socially",
+          "workout": "sometimes",
+          "diet": "non-veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 3,
+        "a6": 3,
+        "a11": 3,
+        "a16": 3,
+        "a2": 4,
+        "a7": 2,
+        "a12": 4,
+        "a17": 2,
+        "a3": 4,
+        "a8": 2,
+        "a13": 4,
+        "a18": 2,
+        "a4": 2,
+        "a9": 4,
+        "a14": 2,
+        "a19": 4,
+        "a5": 4,
+        "a10": 2,
+        "a15": 2,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "nice_to_have"
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "nice_to_have"
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "nice_to_have"
+        },
+        "smoking": {
+          "answer": "regularly",
+          "importance": "nice_to_have"
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "nice_to_have"
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "important"
+        },
+        "career": {
+          "answer": "career_first",
+          "importance": "important"
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "important"
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "nice_to_have"
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "nice_to_have"
+        },
+        "alone_time": {
+          "answer": "little",
+          "importance": "nice_to_have"
+        }
+      },
+      "C": {
+        "sunday": "Gully cricket with the society boys in the morning, a huge biryani lunch, and a long evening drive towards Lavasa with music on.",
+        "hill": "Test cricket is the only real cricket. T20 is fun but it is not the same thing.",
+        "weirdly_good": "Finding a good dhaba on any highway in India, even at two in the morning.",
+        "laugh": "My nephew asked Alexa to call me and it ordered twelve kilos of onions instead.",
+        "place": "Ladakh on a bike, because I have been planning that trip with my college friends for six years.",
+        "friends_rely": "Driving everyone home after a late night and remembering everyone's birthday."
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "cricket",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "road trips",
+            "intensity": "into_it"
+          },
+          {
+            "name": "food",
+            "intensity": "into_it"
+          }
+        ]
+      },
+      "E": {
+        "e1": "Haha thanks, nice profile too",
+        "e2": "Mostly cricket and drives, sometimes just chilling with friends",
+        "e3": "Pineapple on pizza is a crime bro",
+        "e4": "Not a big trekker honestly, I prefer drives",
+        "e5": "No worries, happens",
+        "e6": "Chai and a long drive, easy conversation",
+        "e7": "Haha I try",
+        "e8": "Calls, texting is too slow"
+      }
+    }
+  },
+  {
+    "email": "seed04@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "Calm architect who treks every monsoon, reads, cooks, long-term, staying in Pune. Pair with seed01: designed compatible (same values, lifestyle, interests, similar lowercase texting).",
+    "profile": {
+      "name": "Ishaan",
+      "age": 29,
+      "city": "Pune",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Ishaan"
+      ],
+      "bio": "Architect. Sketchbook in one hand, trekking pole in the other. Quiet weekends, good books, better chai.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "Early trek to Rajmachi, poha on the way back, then a long read with chai."
+        },
+        {
+          "q": "I'll fall for you if",
+          "a": "you like long walks and don't mind me stopping to sketch old buildings."
+        }
+      ],
+      "tags": {
+        "interests": [
+          "trekking",
+          "reading",
+          "cooking",
+          "sketching"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "not really"
+      },
+      "dealbreakers": [
+        "smoking"
+      ]
+    },
+    "answers": {
+      "A": {
+        "a1": 3,
+        "a6": 3,
+        "a11": 3,
+        "a16": 3,
+        "a2": 5,
+        "a7": 1,
+        "a12": 4,
+        "a17": 1,
+        "a3": 4,
+        "a8": 2,
+        "a13": 4,
+        "a18": 2,
+        "a4": 2,
+        "a9": 4,
+        "a14": 1,
+        "a19": 4,
+        "a5": 5,
+        "a10": 1,
+        "a15": 1,
+        "a20": 1
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "important"
+        },
+        "religion": {
+          "answer": "not_really",
+          "importance": "nice_to_have"
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "important"
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "dealbreaker"
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "nice_to_have"
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "important"
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "important"
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "dealbreaker"
+        },
+        "diet": {
+          "answer": "veg",
+          "importance": "nice_to_have"
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "important"
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "nice_to_have"
+        }
+      },
+      "C": {
+        "sunday": "An early trek to Rajmachi with two friends, poha at the base village, and then a long afternoon reading with chai on my terrace.",
+        "hill": "Filter coffee and cutting chai are equally great and people should stop fighting about it.",
+        "weirdly_good": "Sketching a building from memory after looking at it for one minute.",
+        "laugh": "My dog stole a whole paratha off my plate and then looked offended when I laughed.",
+        "place": "Hampi, because I want to sketch the temples at sunrise and spend a week without my laptop.",
+        "friends_rely": "Being the calm one in a crisis and cooking a proper dinner when someone has had a bad week."
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "trekking",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "reading",
+            "intensity": "into_it"
+          },
+          {
+            "name": "cooking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "sketching",
+            "intensity": "obsessed"
+          }
+        ]
+      },
+      "E": {
+        "e1": "haha thank you, yours made me smile too",
+        "e2": "mostly trekking or sketching old buildings, sometimes cooking for friends",
+        "e3": "no, but I respect your wrong opinion 😄",
+        "e4": "yes! rajmachi in the rain is my favourite, which one?",
+        "e5": "no worries, hope the day got better",
+        "e6": "a long walk and chai somewhere quiet",
+        "e7": "haha I try 😄",
+        "e8": "texting mostly, calls for the long stories"
       }
     }
   }

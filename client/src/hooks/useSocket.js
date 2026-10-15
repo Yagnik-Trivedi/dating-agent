@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { isDemo, mockBus } from '../lib/mock'
 import { getSocket } from '../lib/socket'
 
-/** Subscribe to a server event (and its mock twin) for the component's lifetime. */
+/** Subscribe to a server event for the component's lifetime. */
 export function useSocketEvent(event, handler) {
   const ref = useRef(handler)
   useEffect(() => { ref.current = handler })
@@ -10,18 +9,14 @@ export function useSocketEvent(event, handler) {
     const fn = (payload) => ref.current(payload)
     const socket = getSocket()
     socket.on(event, fn)
-    const offMock = mockBus.on(event, fn)
-    return () => {
-      socket.off(event, fn)
-      offMock()
-    }
+    return () => socket.off(event, fn)
   }, [event])
 }
 
 /** Join the match room (re-joins after reconnects) and expose a throttled typing ping. */
 export function useSocket(matchId) {
   useEffect(() => {
-    if (!matchId || isDemo(matchId)) return
+    if (!matchId) return
     const socket = getSocket()
     const join = () => socket.emit('match:join', { matchId })
     if (socket.connected) join()
@@ -31,7 +26,7 @@ export function useSocket(matchId) {
 
   const last = useRef(0)
   const sendTyping = useCallback(() => {
-    if (!matchId || isDemo(matchId) || Date.now() - last.current < 2000) return
+    if (!matchId || Date.now() - last.current < 2000) return
     last.current = Date.now()
     getSocket().emit('typing', { matchId })
   }, [matchId])
