@@ -7,6 +7,7 @@ import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
 import { Profile } from '../models/Profile.js';
 import { User } from '../models/User.js';
+import { pauseReason } from '../services/llm/budget.js';
 import { emitStatus, setStatus } from '../services/pipeline/index.js';
 import { io } from '../sockets/io.js';
 import { parse } from '../utils/http.js';
@@ -14,7 +15,11 @@ import { parse } from '../utils/http.js';
 export const meRouter = Router();
 
 meRouter.get('/me', async (req, res) => {
-  res.json({ user: req.user, profile: await Profile.findOne({ userId: req.user._id }).lean() });
+  res.json({
+    user: req.user,
+    profile: await Profile.findOne({ userId: req.user._id }).lean(),
+    system: { agentPaused: pauseReason()?.message ?? null }, // UI shows an "Agent paused" banner
+  });
 });
 
 meRouter.put('/me/settings', async (req, res) => {

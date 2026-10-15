@@ -1,4 +1,5 @@
-// The only module that talks to Nebius Token Factory. Everything else calls chat / chatJSON / embed.
+// The only module that talks to the LLM provider (Nebius Token Factory, or NVIDIA build.nvidia.com while
+// we're on the temporary key). Everything else calls chat / chatJSON / embed. Provider switch = .env only.
 import OpenAI from 'openai';
 import { env } from '../../config/env.js';
 import { checkBudget, recordUsage } from './budget.js';
@@ -15,15 +16,21 @@ export class LLMJsonError extends Error {
 
 const MODEL_ENV = { fast: 'MODEL_FAST', mid: 'MODEL_MID', smart: 'MODEL_SMART', embed: 'MODEL_EMBED' };
 const DEFAULT_MAX_TOKENS = { fast: 2048, mid: 4096, smart: 8192 };
-const TIMEOUT_MS = { fast: 60_000, mid: 60_000, smart: 120_000, embed: 60_000 };
+// Generous: NVIDIA's free endpoints can take 30–40 s for a reasoning reply.
+const TIMEOUT_MS = { fast: 90_000, mid: 120_000, smart: 180_000, embed: 60_000 };
+const MAX_RETRIES = 3;
 const EMBED_BATCH = 64;
 const JSON_RULE = 'Return ONLY valid JSON matching the requested shape. No prose.';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let openai;
 function client() {
   if (!env.NEBIUS_API_KEY) throw new Error('NEBIUS_API_KEY is not set (server/.env)');
-  // SDK retries 429/5xx twice with exponential backoff + jitter.
-  openai ??= new OpenAI({ apiKey: env.NEBIUS_API_KEY, baseURL: env.NEBIUS_BASE_URL, maxRetries: 2 });
+  if (!openai) {
+    // Retries are ours (below) so every attempt goes through the rate limiter.
+    openai = new OpenAI({ apiKey: env.NEBIUS_API_KEY, baseURL: env.NEBIUS_BASE_URL, maxRetries: 0 });
+    console.log(`LLM provider: ${env.LLM_PROVIDER} (${new URL(env.NEBIUS_BASE_URL).host})`);
+  }
   return openai;
 }
 
@@ -32,6 +39,41 @@ function modelFor(tier) {
   if (!key) throw new Error(`Unknown LLM tier: ${tier}`);
   if (!env[key]) throw new Error(`${key} is not set (server/.env); run scripts/smoke.js to list model IDs`);
   return env[key];
+}
+
+/** The model new embeddings are made with; store it next to every vector. */
+export const embeddingModel = () => modelFor('embed');
+
+// --- global rate limit: at most LLM_MAX_RPM requests in any 60 s window (NVIDIA free tier ≈ 40/min total).
+const stamps = [];
+async function acquireSlot() {
+  for (;;) {
+    const now = Date.now();
+    while (stamps.length && now - stamps[0] >= 60_000) stamps.shift();
+    if (stamps.length < env.LLM_MAX_RPM) {
+      stamps.push(now);
+      return;
+    }
+    await sleep(60_000 - (now - stamps[0]) + 25);
+  }
+}
+
+const retryable = (err) => err.status === 429 || err.status >= 500 || (err.status === undefined && /Connection|Timeout/.test(err.name ?? ''));
+
+/** Run one API request through the limiter, retrying 429/5xx/network errors with backoff + jitter. */
+async function request(label, fn) {
+  for (let attempt = 0; ; attempt++) {
+    await acquireSlot();
+    try {
+      return await fn();
+    } catch (err) {
+      if (!retryable(err) || attempt >= MAX_RETRIES) throw err;
+      const retryAfter = Number(err.headers?.get?.('retry-after'));
+      const delay = retryAfter > 0 ? retryAfter * 1000 : Math.min(30_000, 2000 * 2 ** attempt) + Math.random() * 1000;
+      console.warn(`llm ${label}: ${err.status ?? err.name}, retry ${attempt + 1}/${MAX_RETRIES} in ${Math.round(delay / 1000)}s`);
+      await sleep(delay);
+    }
+  }
 }
 
 /** Remove reasoning so it never reaches a user-visible message. */
@@ -49,7 +91,7 @@ export function extractJSON(text) {
   return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
 }
 
-/** → { text, usage, model, latencyMs } */
+/** → { text, usage, model, latencyMs, costUsd } */
 export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId }) {
   const model = modelFor(tier);
   await checkBudget({ tier, userId });
@@ -59,10 +101,10 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
     const started = Date.now();
     let res;
     try {
-      res = await client().chat.completions.create(
+      res = await request(`${purpose}/${tier}`, () => client().chat.completions.create(
         { model, messages, max_tokens: max, temperature },
         { timeout: TIMEOUT_MS[tier] },
-      );
+      ));
     } catch (err) {
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
       console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${err.message}`);
@@ -70,8 +112,9 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
     }
     const latencyMs = Date.now() - started;
     const choice = res.choices?.[0];
-    const text = stripReasoning(choice?.message?.content); // reasoning / reasoning_content fields are ignored
-    recordUsage({
+    // `reasoning_content` / `reasoning` fields are ignored; inline <think> blocks are stripped.
+    const text = stripReasoning(choice?.message?.content);
+    const costUsd = recordUsage({
       purpose, tier, model, userId, matchId, latencyMs, ok: Boolean(text),
       promptTokens: res.usage?.prompt_tokens ?? 0,
       completionTokens: res.usage?.completion_tokens ?? 0,
@@ -79,9 +122,10 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
     // Reasoning ate the whole budget: retry once with double headroom.
     if (!text && choice?.finish_reason === 'length' && attempt === 0) {
       max *= 2;
+      await checkBudget({ tier, userId });
       continue;
     }
-    return { text, usage: res.usage, model, latencyMs };
+    return { text, usage: res.usage, model, latencyMs, costUsd };
   }
 }
 
@@ -111,10 +155,17 @@ export async function chatJSON({ tier = 'fast', messages, schema, purpose, userI
   throw new LLMJsonError(`${purpose}: model returned invalid JSON`);
 }
 
-/** → number[][] in input order. Cached per (model, text). */
-export async function embed(texts, { purpose = 'embed', userId } = {}) {
+// NVIDIA retrieval embedders take `input_type` (query | passage); other providers may reject it.
+// Send it, and drop it for good if the provider complains.
+let sendInputType = true;
+
+/**
+ * → number[][] in input order. Cached per (model, inputType, text).
+ * inputType: 'passage' for stored facts (fact↔fact comparisons), 'query' for search queries.
+ */
+export async function embed(texts, { purpose = 'embed', userId, inputType = 'passage' } = {}) {
   const model = modelFor('embed');
-  const hashes = texts.map((t) => hashText(model, t));
+  const hashes = texts.map((t) => hashText(model, inputType, t));
   const cached = await getCached(hashes);
 
   const misses = [...new Map(texts.map((t, i) => [hashes[i], t])).entries()].filter(([h]) => !cached.has(h));
@@ -122,9 +173,18 @@ export async function embed(texts, { purpose = 'embed', userId } = {}) {
     const batch = misses.slice(i, i + EMBED_BATCH);
     await checkBudget({ tier: 'embed', userId });
     const started = Date.now();
+    const call = () => client().embeddings.create(
+      { model, input: batch.map(([, t]) => t), ...(sendInputType && { input_type: inputType }) },
+      { timeout: TIMEOUT_MS.embed },
+    );
     let res;
     try {
-      res = await client().embeddings.create({ model, input: batch.map(([, t]) => t) }, { timeout: TIMEOUT_MS.embed });
+      res = await request(`${purpose}/embed`, call).catch(async (err) => {
+        if (!(sendInputType && err.status === 400 && /input_type|extra/i.test(err.message))) throw err;
+        sendInputType = false;
+        console.warn(`llm embed: ${model} rejects input_type; sending without it from now on`);
+        return request(`${purpose}/embed`, call);
+      });
     } catch (err) {
       recordUsage({ purpose, tier: 'embed', model, userId, latencyMs: Date.now() - started, ok: false });
       throw err;

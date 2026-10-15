@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { EmbCache } from '../../models/EmbCache.js';
 
-export const hashText = (model, text) => createHash('sha256').update(`${model}\n${text}`).digest('hex');
+export const hashText = (model, inputType, text) => createHash('sha256').update(`${model}\n${inputType}\n${text}`).digest('hex');
 
 /** → Map<hash, vector>. Cache failures degrade to "all misses". */
 export async function getCached(hashes) {

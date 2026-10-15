@@ -19,6 +19,7 @@ const kgFactSchema = new mongoose.Schema({
   evidence: [{ messageId: { type: ObjectId, ref: 'Message' }, quote: String, _id: false }],
   disclosure: { type: String, enum: ['public', 'if_asked', 'private'], default: 'public' },
   embedding: { type: [Number], select: false },
+  embeddingModel: String, // model that produced `embedding`; scripts/reembed.js refreshes mismatches
 }, { timestamps: { createdAt: false, updatedAt: true }, versionKey: false });
 
 kgFactSchema.index({ subjectId: 1, observerId: 1 });

@@ -1,25 +1,46 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-const optional = z.string().trim().min(1).optional();
+// `KEY=` in .env arrives as "", which should mean "not set".
+const blank = (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
+const field = (schema) => z.preprocess(blank, schema);
+const optional = field(z.string().trim().optional());
+const bool = (fallback) => z.preprocess((v) => (blank(v) === undefined ? fallback : !['false', '0', 'no', 'off'].includes(String(v).trim().toLowerCase())), z.boolean());
+// "inputUsdPer1M,outputUsdPer1M", e.g. "0.06,0.24". Default 0 (NVIDIA free tier).
+const price = field(z.string().regex(/^\s*\d+(\.\d+)?\s*,\s*\d+(\.\d+)?\s*$/, 'expected "inputUsdPer1M,outputUsdPer1M", e.g. "0.06,0.24"').default('0,0'))
+  .transform((s) => { const [input, output] = s.split(',').map(Number); return { input, output }; });
 
 const schema = z.object({
-  PORT: z.coerce.number().int().positive().default(5000),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CLIENT_URL: z.string().default('http://localhost:5173'),
-  MONGODB_URI: z.string({ error: 'MONGODB_URI is required' }).trim().min(1, 'MONGODB_URI is required'),
-  JWT_SECRET: z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters'),
+  PORT: field(z.coerce.number().int().positive().default(5000)),
+  NODE_ENV: field(z.enum(['development', 'production', 'test']).default('development')),
+  CLIENT_URL: field(z.string().default('http://localhost:5173')),
+  MONGODB_URI: field(z.string({ error: 'MONGODB_URI is required' }).trim()),
+  JWT_SECRET: field(z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters')),
+  ADMIN_TOKEN: optional,
+
+  // LLM provider: Nebius Token Factory (final) or NVIDIA build.nvidia.com (temporary). Same variables, env-only switch.
+  LLM_PROVIDER: field(z.enum(['nvidia', 'nebius']).default('nebius')), // logging + README notes only
   NEBIUS_API_KEY: optional,
-  NEBIUS_BASE_URL: z.string().url().default('https://api.tokenfactory.nebius.com/v1/'),
+  NEBIUS_BASE_URL: field(z.string().url().default('https://api.tokenfactory.nebius.com/v1/')),
   MODEL_FAST: optional,
   MODEL_MID: optional,
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
   TAVILY_API_KEY: optional,
-  LLM_DAILY_CALLS_PER_USER: z.coerce.number().int().positive().default(300),
-  LLM_DAILY_TOKENS_GLOBAL: z.coerce.number().int().positive().default(3_000_000),
-  LLM_SMART_DAILY_CALLS: z.coerce.number().int().positive().default(60),
-  ADMIN_TOKEN: optional,
+
+  // Rate limiting + budgets
+  LLM_MAX_RPM: field(z.coerce.number().int().positive().default(35)),
+  LLM_DAILY_CALLS_PER_USER: field(z.coerce.number().int().positive().default(300)),
+  LLM_DAILY_TOKENS_GLOBAL: field(z.coerce.number().int().positive().default(3_000_000)),
+  LLM_SMART_DAILY_CALLS: field(z.coerce.number().int().positive().default(60)),
+
+  // Hard spending protection
+  LLM_ENABLED: bool(true), // false = kill switch, every LLM call fails immediately
+  LLM_HARD_CAP_USD: field(z.coerce.number().nonnegative().default(35)), // all-time; reached = all LLM calls blocked
+  LLM_PRICE_FAST: price,
+  LLM_PRICE_MID: price,
+  LLM_PRICE_SMART: price,
+  LLM_PRICE_EMBED: price,
 });
 
 const parsed = schema.safeParse(process.env);
@@ -35,3 +56,4 @@ export const clientOrigins = env.CLIENT_URL.split(',').map((s) => s.trim()).filt
 // Optional so the app (and frontend dev) boots without keys; llm/client.js throws a clear error on first use.
 const missing = ['NEBIUS_API_KEY', 'MODEL_FAST', 'MODEL_MID', 'MODEL_SMART', 'MODEL_EMBED', 'TAVILY_API_KEY'].filter((k) => !env[k]);
 if (missing.length) console.warn(`⚠ Missing LLM/API env vars (AI features will fail): ${missing.join(', ')}`);
+if (!env.LLM_ENABLED) console.warn('⚠ LLM_ENABLED=false: all AI calls are switched off');

@@ -5,18 +5,18 @@ import { disconnectSocket } from '../lib/socket'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState(() => ({ loading: Boolean(localStorage.getItem('token')), user: null, profile: null }))
+  const [state, setState] = useState(() => ({ loading: Boolean(localStorage.getItem('token')), user: null, profile: null, system: {} }))
 
   const refresh = useCallback(async () => {
     const { data } = await api.get('/api/me')
-    setState({ loading: false, user: data.user, profile: data.profile })
+    setState({ loading: false, user: data.user, profile: data.profile, system: data.system ?? {} })
     return data
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     disconnectSocket()
-    setState({ loading: false, user: null, profile: null })
+    setState({ loading: false, user: null, profile: null, system: {} })
   }, [])
 
   useEffect(() => {

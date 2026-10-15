@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import { useSocketEvent } from '../hooks/useSocket'
 import { useToast } from '../hooks/useToast'
 import { AgentIcon } from './ui'
@@ -28,6 +29,7 @@ export function Logo() {
 export default function Layout() {
   const toast = useToast()
   const { pathname } = useLocation()
+  const { system } = useAuth()
 
   useSocketEvent('match:new', ({ match }) => toast(`New match with ${match.other.name}! Your agent is checking their profile…`, { to: `/matches/${match._id}`, agent: true }))
   useSocketEvent('inbox:new', () => {
@@ -48,6 +50,12 @@ export default function Layout() {
           <span className="md:hidden"><AgentIcon className="size-7" /></span>
         </div>
       </header>
+
+      {system.agentPaused && (
+        <div role="status" className="border-b border-warn/30 bg-warn/10 px-4 py-2 text-center text-sm font-medium text-warn">
+          {system.agentPaused}. Your conversations are safe; you can still chat yourself.
+        </div>
+      )}
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-5 md:pb-10">
         <Outlet />

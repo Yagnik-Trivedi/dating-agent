@@ -92,6 +92,15 @@ dating-agent/
       pages/ components/ lib/ (api.js, socket.js) hooks/ styles/
 ```
 
+## Temporary LLM provider (NVIDIA build.nvidia.com, until we switch back to Nebius)
+
+- Token Factory needs a payment card, so **development and testing currently run on NVIDIA's free API** (`https://integrate.api.nvidia.com/v1`, `nvapi-...` key) while a teammate sets up the Nebius account with the promo credits.
+- The env var names stay the same: `NEBIUS_BASE_URL` / `NEBIUS_API_KEY` currently hold the NVIDIA URL and key. `LLM_PROVIDER=nvidia|nebius` is for logging and README notes only.
+- **Before final deployment for judging we switch back to Nebius Token Factory.** The hackathon requires runtime Token Factory calls, so the final demo, README and video must use Nebius. The switch must need **only `.env` changes, no code changes**. Checklist: `plan/14-switch-to-nebius.md` (target: by Oct 26).
+- The NVIDIA free tier allows ~40 requests/min in total: the LLM client has a global limiter (`LLM_MAX_RPM`, default 35); keep simulate/eval at low concurrency.
+- Spending protection for when a real card is attached: per-model prices in env, cost stored per call, all-time `LLM_HARD_CAP_USD` (default 35) blocks every call, `LLM_ENABLED=false` kill switch.
+- **Never print, echo, log or commit any secret value from `.env`.**
+
 ## LLM model routing
 
 The exact model IDs come from `.env`. Copy them from `GET /v1/models` (run `server/scripts/smoke.js`) and never hard-code them.
@@ -137,7 +146,7 @@ cd client && npm run dev        # http://localhost:5173
 Keep this updated at the end of each plan file: one line per completed plan item, plus any decisions that deviate from the plan.
 
 - [x] 02 scaffold — Node 24 locally (engines >=22). Mongoose pinned to 8 (npm latest is 9). Vite 8 + React 19. JWT_SECRET must be >= 32 chars.
-- [~] 03 LLM layer — code done; offline checks pass. PENDING: live checks (smoke, llm-check x3, --budget) need NEBIUS_API_KEY + MONGODB_URI; then record model IDs + where reasoning appears (separate field vs <think>) here. Retries use the openai SDK built-in (maxRetries 2, backoff+jitter). LLM env vars stay optional at boot; client.js throws on first use. Admin header: x-admin-token.
+- [x] 03 LLM layer — acceptance checks pass **on NVIDIA** (temporary provider): smoke lists models + clean reply + 2048-dim embedding; `llm-check` 3/3 chatJSON + cached embed; `--budget` (LLM_DAILY_CALLS_PER_USER=1) throws BudgetExceededError; `spend-cap-check` proves the $0.01 cap and LLM_ENABLED=false block calls instantly. Usage docs verified in the in-memory test DB (Atlas pending, see below). **Model IDs (NVIDIA):** fast `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` (the listed `nvidia/nemotron-nano-3-30b-a3b` 404s for our account; Omni is slow, 18–42 s/call, and returns 503 when busy — `nvidia/nemotron-3.5-lightning-30b-a3b` answers in ~10 s if latency hurts), mid `nvidia/nemotron-3-super-120b-a12b`, smart `nvidia/nemotron-3-ultra-550b-a55b`, embed `nvidia/nemotron-3-embed-1b`. **Reasoning finding:** all three Nemotron chat models return reasoning in a separate `message.reasoning_content` field; `content` is clean (no <think> tags). Retries are now our own (3 attempts, backoff+jitter, honours Retry-After) so every attempt passes the global RPM limiter; SDK retries off. Timeouts raised to 90/120/180 s for NVIDIA latency. Embeddings send `input_type` (auto-dropped if a provider rejects it); KgFact stores `embeddingModel`; `scripts/reembed.js` refreshes mismatches. Spend: per-tier prices (`LLM_PRICE_*`), `costUsd` per Usage doc, all-time total, `LLM_HARD_CAP_USD` fails closed (blocks if prices are set but spend can't be read), `LLM_ENABLED` kill switch; GET /api/me returns `system.agentPaused` and the UI shows a banner. **Atlas: NOT connecting yet** — TLS rejected (SSL alert 80) = this machine's IP not on the Atlas Network Access list.
 - [x] 04 backend core — `npm run api-check [baseUrl]` runs a 19-step e2e check (REST + sockets + DELETE /me), all passing against a local in-memory Mongo; two real browser windows not tested (no UI yet). Postman v2.1 collection in server/api-collection/ (Bruno can import it). Additions: Match.pairKey (unique, prevents duplicate matches on simultaneous likes), Match.lastMessageAt, perUser.lastReadAt (unread counts). message:new goes to `user:<id>` rooms because authoredBy is redacted per viewer; match rooms carry typing. Discover filters by mutual gender/interestedIn; dealbreakers are hidden from other users. Socket events ack `{ ok, error? }`. Inbox answer just stores it (plan 08 adds facts); date-ideas returns 501.
 - [ ] 05 onboarding + knowledge graph — question set (`services/kg/questions.js`) + `GET /api/onboarding/questions` were built early with plan 10 (static content the UI needed); answer shape is documented at the top of that file. Extraction pipeline, style profile and embeddings still to do.
 - [ ] 06 trust check
@@ -148,3 +157,4 @@ Keep this updated at the end of each plan file: one line per completed plan item
 - [ ] 11 seed data + eval
 - [ ] 12 deploy + keep-alive
 - [ ] 13 submission
+- [ ] 14 switch back to Nebius Token Factory (by Oct 26) — checklist in plan/14-switch-to-nebius.md
