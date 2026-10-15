@@ -70,6 +70,11 @@ export default function KgGraph({ data, height = 320, label = 'Knowledge graph' 
               ctx.strokeStyle = colors.surface
               ctx.stroke()
             }
+            // Big graphs: label only the center, important facts, or everything once zoomed in (hover shows the rest).
+            if (!n.center && graph.nodes.length > 16 && (n.weight ?? 0) < 0.8 && scale < 2.2) {
+              ctx.globalAlpha = 1
+              return
+            }
             const fontSize = Math.max(n.center ? 12 : 10, 0) / scale
             ctx.font = `${n.center ? 700 : 500} ${fontSize}px "Plus Jakarta Sans", sans-serif`
             ctx.textAlign = 'center'

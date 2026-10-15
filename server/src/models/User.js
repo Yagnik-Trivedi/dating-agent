@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     answers: Mixed,
     completedAt: Date,
   },
-  styleProfile: { metrics: Mixed, description: String },
+  styleProfile: { metrics: Mixed, description: String, doList: [String], dontList: [String] },
   isSeed: { type: Boolean, default: false },
 }, {
   timestamps: { createdAt: true, updatedAt: false },

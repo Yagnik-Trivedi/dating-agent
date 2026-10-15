@@ -7,7 +7,6 @@ import { env, clientOrigins } from './config/env.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { adminRouter } from './routes/admin.js';
-import { refresh as loadBudget } from './services/llm/budget.js';
 import { authRouter } from './routes/auth.js';
 import { discoverRouter } from './routes/discover.js';
 import { inboxRouter } from './routes/inbox.js';
@@ -16,6 +15,8 @@ import { matchesRouter } from './routes/matches.js';
 import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
 import { profileRouter } from './routes/profile.js';
+import { failStuckOnboarding } from './services/kg/buildUserGraph.js';
+import { refresh as loadBudget } from './services/llm/budget.js';
 import { registerSockets } from './sockets/index.js';
 import { io } from './sockets/io.js';
 
@@ -52,6 +53,7 @@ async function connectMongo(attempt = 1) {
     await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
     console.log('✓ MongoDB connected');
     await loadBudget({ force: true }).catch((err) => console.error(`budget load failed: ${err.message}`));
+    await failStuckOnboarding().catch((err) => console.error(`onboarding cleanup failed: ${err.message}`));
   } catch (err) {
     const delay = Math.min(30_000, 2_000 * attempt);
     console.error(`✖ MongoDB connect failed (attempt ${attempt}): ${err.message}. Retrying in ${delay / 1000}s`);

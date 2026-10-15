@@ -1,7 +1,7 @@
-// Mock layer (VITE_USE_MOCKS=true) for backend plans 05–09 that aren't built yet.
-// - Adds a scripted demo match at /matches/demo: trust → brief → live agent↔agent chat → kg:update → verdict.
-// - Lets onboarding finish (plan 05 not built) and shows a sample graph when the real one is empty.
-// Everything else goes to the real backend. Delete once plans 05–09 land.
+// Mock layer (VITE_USE_MOCKS=true) for backend plans 06–09 that aren't built yet.
+// Adds a scripted demo match at /matches/demo: trust → brief → live agent↔agent chat → kg:update → verdict.
+// Everything else (incl. onboarding + knowledge graph, real since plan 05) goes to the real backend.
+// Delete once plans 06–09 land.
 import axios from 'axios'
 
 // --- tiny event bus; useSocketEvent listens to it next to the real socket
@@ -246,15 +246,6 @@ const detail = () => ({
   report: demo.report,
 })
 
-const sampleGraphFacts = [
-  ['likes', 'trekking', 0.9], ['likes', 'board games', 0.6], ['likes', 'filter coffee', 0.4], ['values', 'calm weekends', 0.8],
-  ['values', 'honesty', 0.9], ['goal', 'stay in Pune', 0.7], ['lifestyle', 'rarely drinks', 0.7], ['dealbreaker', 'partner must not smoke', 1],
-  ['story', 'got lost on Kalsubai and found the best chai stall', 0.5], ['trait', 'openness', 0.6],
-].map(([type, label, weight], i) => ({
-  id: `demo-kg${i}`, label, type, weight, confidence: 0.8, source: 'questionnaire',
-  disclosure: type === 'trait' ? 'private' : type === 'dealbreaker' ? 'if_asked' : 'public',
-}))
-
 // --- axios adapter: [method, path regex, handler({ body, m, real })]
 const json = (r) => (typeof r.data === 'string' && r.data ? JSON.parse(r.data) : r.data)
 const fail = (status, code, message) => ({ status, data: { error: { code, message } } })
@@ -263,26 +254,7 @@ const routes = [
   ['GET', /^\/api\/me$/, async ({ real }) => {
     const data = json(await real())
     me = data.user._id
-    if (data.user.onboarding?.status === 'processing') data.user.onboarding.status = 'done' // plan 05 not built
     return data
-  }],
-  ['GET', /^\/api\/onboarding\/status$/, async ({ real }) => {
-    const data = json(await real())
-    return { status: data.status === 'processing' ? 'done' : data.status }
-  }],
-  ['GET', /^\/api\/kg\/me$/, async ({ real }) => {
-    const data = json(await real())
-    if (data.nodes.length > 1) return data
-    return { nodes: [data.nodes[0], ...sampleGraphFacts], links: sampleGraphFacts.map((n) => ({ source: 'me', target: n.id, label: n.type })) }
-  }],
-  ['PATCH', /^\/api\/kg\/facts\/(demo-kg\d+)$/, ({ body, m }) => {
-    const n = sampleGraphFacts.find((f) => f.id === m[1])
-    n.disclosure = body.disclosure
-    return { fact: { _id: n.id, disclosure: n.disclosure } }
-  }],
-  ['DELETE', /^\/api\/kg\/facts\/(demo-kg\d+)$/, ({ m }) => {
-    sampleGraphFacts.splice(sampleGraphFacts.findIndex((f) => f.id === m[1]), 1)
-    return { status: 204, data: '' }
   }],
   ['GET', /^\/api\/matches$/, async ({ real }) => {
     const data = json(await real())
