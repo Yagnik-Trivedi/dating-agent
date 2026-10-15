@@ -13,6 +13,8 @@ export function build({ userName, profile, overlaps, agendaTopics, style }) {
         '   (a prompt answer, an interest or a shared thing), be written in the style below, and be at most 2 sentences.',
         '   Prefer the shared things when there are any. "hook" names what it uses, e.g. "Prompt: A perfect Sunday" or "Shared: trekking".',
         '   No pickup lines, no compliments on looks, no questions about religion, caste, money or past relationships.',
+        `   Openers are about THEM: never state anything about ${userName}'s own life (no anecdotes, habits or "I" stories);`,
+        `   you don't know ${userName}'s facts here, and anything invented would be a lie told in their name.`,
         '3. "watchouts": 0 to 3 short notes for the assistant (tone to match, sensitive areas, things to clarify gently).',
         '',
         `How ${userName} texts:`,

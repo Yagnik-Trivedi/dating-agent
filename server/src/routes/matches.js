@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
+import { cancelReplies } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { emitStatus, setStatus } from '../services/pipeline/index.js';
@@ -51,6 +52,7 @@ matchesRouter.post('/matches/:id/takeover', async (req, res) => {
     { $set: { 'perUser.$.agentActive': false, 'perUser.$.tookOverAt': new Date() } },
     { new: true },
   );
+  cancelReplies(_id, me); // a reply already being written is discarded by the agent's pre-send re-check
   emitStatus(match);
   res.json({ match: await matchDetail(match, me) });
 });

@@ -91,8 +91,15 @@ export function extractJSON(text) {
   return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
 }
 
-/** → { text, usage, model, latencyMs, costUsd } */
-export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId }) {
+// Nemotron's reasoning can be switched off per request (vLLM-style chat_template_kwargs). Off = ~0.5–2 s replies
+// instead of 10–40 s, and no runaway reasoning eating max_tokens. Per tier via LLM_REASONING_*; if a provider
+// rejects the parameter we drop it for good, like input_type below.
+const REASONING_ENV = { fast: 'LLM_REASONING_FAST', mid: 'LLM_REASONING_MID', smart: 'LLM_REASONING_SMART' };
+let sendThinkingSwitch = true;
+const thinkingOff = (tier, reasoning) => sendThinkingSwitch && (reasoning ?? env[REASONING_ENV[tier]]) === false;
+
+/** → { text, usage, model, latencyMs, costUsd }. `reasoning` overrides the tier's LLM_REASONING_* default. */
+export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId, reasoning }) {
   const model = modelFor(tier);
   await checkBudget({ tier, userId });
   let max = maxTokens ?? DEFAULT_MAX_TOKENS[tier];
@@ -100,11 +107,17 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
   for (let attempt = 0; ; attempt++) {
     const started = Date.now();
     let res;
+    const call = () => client().chat.completions.create(
+      { model, messages, max_tokens: max, temperature, ...(thinkingOff(tier, reasoning) && { chat_template_kwargs: { enable_thinking: false } }) },
+      { timeout: TIMEOUT_MS[tier] },
+    );
     try {
-      res = await request(`${purpose}/${tier}`, () => client().chat.completions.create(
-        { model, messages, max_tokens: max, temperature },
-        { timeout: TIMEOUT_MS[tier] },
-      ));
+      res = await request(`${purpose}/${tier}`, call).catch(async (err) => {
+        if (!(thinkingOff(tier, reasoning) && err.status === 400 && /chat_template_kwargs|extra/i.test(err.message))) throw err;
+        sendThinkingSwitch = false;
+        console.warn(`llm: provider rejects chat_template_kwargs; reasoning stays on from now on`);
+        return request(`${purpose}/${tier}`, call);
+      });
     } catch (err) {
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
       console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${err.message}`);
@@ -130,7 +143,7 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
 }
 
 /** → schema-validated object; one corrective retry, then LLMJsonError. */
-export async function chatJSON({ tier = 'fast', messages, schema, purpose, userId, matchId, maxTokens, temperature = 0.3 }) {
+export async function chatJSON({ tier = 'fast', messages, schema, purpose, userId, matchId, maxTokens, temperature = 0.3, reasoning }) {
   // Some chat templates reject a second system message, so merge into the first.
   const base = messages[0]?.role === 'system'
     ? [{ ...messages[0], content: `${messages[0].content}\n\n${JSON_RULE}` }, ...messages.slice(1)]
@@ -139,7 +152,7 @@ export async function chatJSON({ tier = 'fast', messages, schema, purpose, userI
   let msgs = base;
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { text } = await chat({ tier, messages: msgs, maxTokens, temperature, purpose, userId, matchId });
+    const { text } = await chat({ tier, messages: msgs, maxTokens, temperature, purpose, userId, matchId, reasoning });
     try {
       return schema.parse(extractJSON(text));
     } catch (err) {

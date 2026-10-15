@@ -45,6 +45,7 @@ function printBrief(b) {
     { predicate: 'dealbreaker', object: 'partner must be compatible on smoking (mine: never)', weight: 1, disclosure: 'if_asked', embedding: v(0, 1, 0.2) },
     { predicate: 'values', object: 'religion in own life: central', weight: 0.7, disclosure: 'if_asked', embedding: v(0, 0, 1) },
     { predicate: 'goal', object: 'secretly moving abroad', weight: 1, disclosure: 'private', embedding: v(0.5, 0.5, 0.5) },
+    { predicate: 'goal', object: 'visit Hampi', weight: 0.9, disclosure: 'public', evidence: [{ quote: 'Hampi, because…' }], embedding: v(0.3, 0.3, 0.3) },
   ];
   const observed = [
     { predicate: 'likes', object: 'trekking', confidence: 0.6, evidence: [{ quote: 'tags.interests: trekking' }], embedding: v(1, 0, 0) },
@@ -60,6 +61,7 @@ function printBrief(b) {
   assert.equal(agenda.find((a) => a.topic === 'drinking').priority, 0.6);
   assert.ok(!JSON.stringify(agenda).includes('abroad'), 'private facts never become agenda topics');
   assert.ok(!agenda.some((a) => a.topic.includes('religion')), 'if_asked values (religion) are never raised by the agent');
+  assert.ok(!agenda.some((a) => a.topic.includes('Hampi')), 'story facts are conversation material, not agenda dimensions');
   console.log('✓ offline checks passed (topics, tag facts, overlaps, agenda merge/sort/privacy)');
 }
 if (flag('--offline')) process.exit(0);

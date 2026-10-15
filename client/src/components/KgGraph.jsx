@@ -52,7 +52,7 @@ export default function KgGraph({ data, height = 320, label = 'Knowledge graph' 
           backgroundColor="rgba(0,0,0,0)"
           cooldownTicks={120}
           autoPauseRedraw={false}
-          onEngineStop={() => fg.current?.zoomToFit(500, 48)}
+          onEngineStop={() => graph.nodes.length > 1 && fg.current?.zoomToFit(500, 48)} // a lone center node would fill the canvas
           linkColor={() => colors.line}
           linkWidth={1}
           nodeLabel={(n) => (n.center ? n.label : `${n.type}: ${n.label}${n.confidence != null ? ` · ${Math.round(n.confidence * 100)}% sure` : ''}`)}

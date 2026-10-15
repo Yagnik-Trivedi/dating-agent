@@ -27,6 +27,10 @@ const schema = z.object({
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
   TAVILY_API_KEY: optional,
+  // Nemotron reasoning per tier. Off for fast (chat turns, quick checks): ~1 s instead of 10–40 s.
+  LLM_REASONING_FAST: bool(false),
+  LLM_REASONING_MID: bool(true),
+  LLM_REASONING_SMART: bool(true),
 
   // Rate limiting + budgets
   LLM_MAX_RPM: field(z.coerce.number().int().positive().default(35)),
@@ -41,6 +45,14 @@ const schema = z.object({
   LLM_PRICE_MID: price,
   LLM_PRICE_SMART: price,
   LLM_PRICE_EMBED: price,
+
+  // Agent conversation (plan 08)
+  AGENT_DEBOUNCE_MS: field(z.coerce.number().int().nonnegative().default(4000)),
+  AGENT_MIN_DELAY_MS: field(z.coerce.number().int().nonnegative().default(1500)),
+  AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
+  AGENT_MAX_TURNS: field(z.coerce.number().int().positive().default(24)),
+  AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
+  DEMO_FAST: bool(false),
 });
 
 const parsed = schema.safeParse(process.env);

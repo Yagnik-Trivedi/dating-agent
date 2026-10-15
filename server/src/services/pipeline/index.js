@@ -1,3 +1,4 @@
+import { KgFact } from '../../models/KgFact.js';
 import { Match } from '../../models/Match.js';
 import { emitToUser } from '../../sockets/io.js';
 import { startConversation } from '../agent/index.js';
@@ -44,12 +45,25 @@ export async function runTrustCheck(match) {
 
   const flaggers = [a, b].filter((u) => match.trust[u].level === 'likely_fake');
   if (!flaggers.length) return true;
-  // Likely fake: no agent ever starts on this match; tell the viewer(s) who flagged it, with reasons.
-  await Match.updateOne({ _id: match._id }, { $set: { 'perUser.$[].agentActive': false } });
+  await flagMatch(match, flaggers);
+  return false;
+}
+
+/**
+ * Likely fake (trust check, or a scam script in chat): every agent stops for good, the match becomes flagged_fake,
+ * and only the flagging viewer(s) are told why. The flagged side just sees the match as closed.
+ */
+export async function flagMatch(match, flaggerIds, newFlags = []) {
+  const trust = { ...(match.trust ?? {}) };
+  for (const u of flaggerIds.map(String)) {
+    const prev = trust[u] ?? {};
+    trust[u] = { ...prev, level: 'likely_fake', flags: [...new Set([...(prev.flags ?? []), ...newFlags])] };
+  }
+  match.trust = trust;
+  await Match.updateOne({ _id: match._id }, { $set: { trust, 'perUser.$[].agentActive': false } });
   match.perUser.forEach((p) => { p.agentActive = false; });
   await setStatus(match, 'flagged_fake');
-  for (const u of flaggers) emitToUser(u, 'trust:flagged', { matchId: String(match._id), flags: match.trust[u].flags });
-  return false;
+  for (const u of flaggerIds) emitToUser(u, 'trust:flagged', { matchId: String(match._id), flags: trust[String(u)].flags });
 }
 
 /** Step 2 (plan 07): briefs, then an early-dealbreaker verdict (09) or the agent conversation (08). */
@@ -61,6 +75,11 @@ export async function runBrief(match) {
 
   match.brief = briefs;
   await Match.updateOne({ _id: match._id }, { $set: { brief: briefs } });
+  // The brief's observed facts are the first nodes of each viewer's live graph.
+  for (const u of Object.keys(briefs)) {
+    const facts = await KgFact.find({ matchId: match._id, observerId: u }).lean();
+    emitToUser(u, 'kg:update', { matchId: String(match._id), facts, agenda: briefs[u].agenda });
+  }
   if (Object.values(briefs).some((b) => b.earlyDealbreaker)) {
     await setStatus(match, 'evaluating');
     return startEvaluation(match, { reason: 'early_dealbreaker' });

@@ -25,6 +25,7 @@
 - [ ] **Re-embed.** Vectors from different embedding models can't be compared:
   `node scripts/reembed.js --prune-cache` (re-embeds every fact whose `embeddingModel` differs, then drops old cached vectors).
 - [ ] **Re-check similarity thresholds** if the embedding model changed: `THRESHOLDS` in `server/src/services/brief/buildBrief.js` were calibrated for `nvidia/nemotron-3-embed-1b`. Run `node scripts/brief.js --check` (trekking overlap + smoking dealbreaker must still pass) and adjust if not.
+- [ ] **Reasoning switch.** The client sends `chat_template_kwargs: { enable_thinking: false }` for reasoning-off calls (fast tier by default; agent replies, claim checks and belief updates always). If Nebius rejects it, the client logs "provider rejects chat_template_kwargs" once and continues with reasoning on: then raise timeouts/`max_tokens` or pick models that answer quickly, and re-run `node scripts/agent-check.js`.
 - [ ] **Smoke the agent.** Run `scripts/simulate.js` on 2 seed pairs (one compatible, one dealbreaker) and an eval subset (`scripts/eval.js`, a few pairs). Compare verdicts and token usage with the NVIDIA runs; note cost per simulated conversation from `GET /api/admin/usage`.
 - [ ] **Provider flag.** `LLM_PROVIDER=nebius`.
 - [ ] **README.** Update the "How we use NVIDIA Nemotron + Nebius Token Factory" section: final model IDs per tier and why, and remove any mention of the temporary NVIDIA key.

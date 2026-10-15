@@ -85,7 +85,7 @@ async function observeProfile({ profile, viewerId, subjectId, matchId }) {
 }
 
 /** The viewer's own facts with current-model embeddings (missing or stale ones are embedded now, not saved). */
-async function selfFacts(viewerId, viewerProfile) {
+export async function selfFacts(viewerId, viewerProfile) {
   const facts = await KgFact.find({ subjectId: viewerId, observerId: null }).select('+embedding').lean();
   // Free-text dealbreakers from the profile page count too.
   for (const d of viewerProfile?.dealbreakers ?? []) facts.push({ predicate: 'dealbreaker', object: d, weight: 1, confidence: 1, disclosure: 'if_asked' });
@@ -97,7 +97,7 @@ async function selfFacts(viewerId, viewerProfile) {
 }
 
 // "smoking: never" vs "smoking: regularly" embed close together but are opposite answers, not an overlap.
-const differentAnswer = (a, b) => {
+export const differentAnswer = (a, b) => {
   const [ta, va] = a.split(': ');
   const [tb, vb] = b.split(': ');
   return va !== undefined && vb !== undefined && ta === tb && va !== vb;
@@ -123,27 +123,32 @@ export function findOverlaps(self, observed) {
   return out;
 }
 
-/** 2b. Early dealbreaker: the top 3 dealbreaker↔observed candidates go to the clash prompt; a clash on a structured tag stops early. */
-async function findEarlyDealbreaker({ self, observed, viewerId, matchId }) {
+/**
+ * Dealbreaker clash: viewer dealbreakers vs observed facts with confidence ≥ minConfidence. The top `top` candidates by
+ * cosine go to the clash prompt (fast). → { topic, why, theirs, quote } for the first confirmed clash, or null.
+ * Used before the conversation (plan 07, structured tags) and during it (plan 08 stop rule).
+ */
+export async function findClash({ self, observed, viewerId, matchId, minConfidence, top = 3 }) {
   const candidates = [];
   for (const d of self.filter((f) => f.predicate === 'dealbreaker')) {
-    for (const o of observed) {
+    for (const o of observed.filter((f) => f.confidence >= minConfidence)) {
       const score = cosine(d.embedding, o.embedding);
       if (score >= THRESHOLDS.dealbreakerCandidate) candidates.push({ d, o, score });
     }
   }
-  const top = candidates.sort((a, b) => b.score - a.score).slice(0, 3);
-  const verdicts = await Promise.all(top.map(({ d, o }) => chatJSON({
-    tier: 'fast', schema: clashSchema, purpose: 'brief-dealbreaker-clash', userId: viewerId, matchId,
+  const best = candidates.sort((a, b) => b.score - a.score).slice(0, top);
+  const verdicts = await Promise.all(best.map(({ d, o }) => chatJSON({
+    tier: 'fast', schema: clashSchema, purpose: 'dealbreaker-clash', userId: viewerId, matchId,
     messages: dealbreakerClash.build({ dealbreaker: d.object, observed: `${o.predicate} ${o.object}` }),
   }).catch((err) => {
-    console.error(`brief: dealbreaker check unavailable (${err.code ?? err.name}): ${err.message}`);
+    if (err.name === 'BudgetExceededError') throw err;
+    console.error(`dealbreaker check unavailable (${err.code ?? err.name}): ${err.message}`);
     return { clash: false, why: '' };
   })));
-  const hit = top.findIndex((c, i) => verdicts[i].clash && c.o.confidence >= TAG_CONFIDENCE);
+  const hit = verdicts.findIndex((v) => v.clash);
   if (hit < 0) return null;
-  const { d, o } = top[hit];
-  return { topic: topicOf(d), why: verdicts[hit].why || `Conflicts with your dealbreaker on ${topicOf(d)}.`, theirs: o.object, quote: o.evidence[0]?.quote ?? '' };
+  const { d, o } = best[hit];
+  return { topic: topicOf(d), why: verdicts[hit].why || `Conflicts with your dealbreaker on ${topicOf(d)}.`, theirs: o.object, quote: o.evidence?.at(-1)?.quote ?? '' };
 }
 
 /** A neutral topic for a fact: "smoking: never" → "smoking"; "partner must be compatible on smoking (mine: never)" → "smoking". */
@@ -162,9 +167,12 @@ const WHY = { dealbreaker: 'A dealbreaker for you', values: 'Matters to you', go
  */
 export function buildAgenda({ self, observed, clarify = [] }) {
   const usable = (f) => f.predicate === 'dealbreaker' || f.disclosure === 'public';
+  // Dimensions come from structured answers (onboarding B + D, profile dealbreakers), which carry no quote.
+  // Facts extracted from stories ("visit Hampi") are things to talk about, not things to find out.
+  const structured = (f) => !f.evidence?.length;
   const dims = [
-    ...self.filter((f) => ['dealbreaker', 'values', 'goal', 'lifestyle'].includes(f.predicate) && usable(f)),
-    ...self.filter((f) => f.predicate === 'likes' && usable(f)).sort((a, b) => b.weight - a.weight).slice(0, 5),
+    ...self.filter((f) => ['dealbreaker', 'values', 'goal', 'lifestyle'].includes(f.predicate) && usable(f) && structured(f)),
+    ...self.filter((f) => f.predicate === 'likes' && usable(f) && structured(f)).sort((a, b) => b.weight - a.weight).slice(0, 5),
   ];
   const byTopic = new Map();
   for (const f of dims) {
@@ -229,7 +237,7 @@ export async function buildBrief({ viewerId, subjectId, matchId, trust }) {
   const clarify = (trust?.contradictions ?? []).filter((c) => c.severity <= 2).map((c) => c.topic);
   const agenda = buildAgenda({ self, observed, clarify });
   // A dealbreaker clash ends things before any conversation, so don't spend tokens on openers.
-  const earlyDealbreaker = await findEarlyDealbreaker({ self, observed, viewerId, matchId });
+  const earlyDealbreaker = await findClash({ self, observed, viewerId, matchId, minConfidence: TAG_CONFIDENCE });
   const written = earlyDealbreaker
     ? { summary: '', openers: [], watchouts: [] }
     : await writeBrief({ viewerId, matchId, viewerName: viewerProfile?.name ?? viewer?.name ?? 'the user', profile, overlaps, agenda, styleProfile: viewer?.styleProfile });
