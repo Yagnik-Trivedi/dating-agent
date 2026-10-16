@@ -157,7 +157,7 @@ ok('both continue → handed_off; authoredBy revealed');
 r = await call('PUT', '/me/settings', { token: A.token, body: { agentMode: 'auto' } });
 assert.equal(r.body.user.agentMode, 'auto');
 r = await call('POST', '/onboarding/submit', { token: A.token, body: { answers: { q1: 'hi' } } });
-assert.equal(r.body.status, 'processing');
+assert.equal(r.status, 400, 'incomplete answers are rejected (v2 zod schema)');
 r = await call('GET', '/kg/me', { token: A.token });
 assert.equal(r.body.nodes[0].id, 'me');
 r = await call('GET', '/inbox', { token: A.token });
