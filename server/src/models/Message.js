@@ -9,6 +9,8 @@ const messageSchema = new mongoose.Schema({
   authoredBy: { type: String, enum: ['human', 'agent'], required: true },
   text: { type: String, required: true, maxlength: 1000 },
   archiveAt: Date, // agent messages of closed matches: removed by the TTL index (plan 17 archiveNotes)
+  actPlan: mongoose.Schema.Types.Mixed, // plan 08: the sampled act plan behind an agent message (replay/eval)
+  checks: mongoose.Schema.Types.Mixed, // plan 08: style/grounding/stance/leak results
   meta: {
     usedFactIds: [{ type: ObjectId, ref: 'KgFact' }],
     targets: String,

@@ -11,6 +11,7 @@ import { asActor } from '../actor.js';
 import { TOPICS } from '../kg/questionnaireFacts.js';
 import { chatJSON } from '../llm/client.js';
 import * as matchBrief from '../prompts/matchBrief.js';
+import { selfClaimSentences } from '../persona/checks.js';
 import { publicProfile } from '../trust/checkProfile.js';
 
 const AGENDA_SIZE = 8;
@@ -45,14 +46,15 @@ export function buildAgenda({ self, clarify = [] }) {
     .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: 0, status: 'open', ...(a.dealbreaker && { dealbreaker: true }) }));
 }
 
-const FIRST_PERSON = /\b(i|i'm|im|i've|i'd|my|me|mine|myself)\b/i;
-const sentences = (s) => s.split(/[.!?]+(?:\s|$)/).filter((x) => x.trim()).length;
+// Real sentences only: "yes please." and a trailing "😄" are chat fragments, not sentences (they dropped good openers).
+const sentences = (s) => s.split(/[.!?]+(?:\s|$)/).filter((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 3).length;
 
 /** Openers: ≤ 2 sentences; anything about me must cite listed fact ids (validated here, as in plan 08's grounding). */
 export function validOpeners(openers, factIds, log = () => {}) {
-  const why = (o) => (sentences(o.text) > 2 ? 'more than 2 sentences'
+  // ≤ 3 short sentences within 40 words: two chatty lines + a question was the norm, and a strict 2 dropped most.
+  const why = (o) => (sentences(o.text) > 3 || o.text.split(/\s+/).length > 40 ? 'too long for an opener'
     : !o.factIds.every((id) => factIds.has(id)) ? 'cites an unknown fact'
-      : FIRST_PERSON.test(o.text) && !o.factIds.length ? 'talks about the user without citing a fact' : null);
+      : selfClaimSentences(o.text).length && !o.factIds.length ? 'talks about the user without citing a fact' : null);
   return openers.filter((o) => {
     const reason = why(o);
     if (reason) log(`brief: opener dropped (${reason}): "${o.text}"`);
@@ -92,7 +94,9 @@ export const buildBrief = ({ viewerId, subjectId, matchId, trust, viewerName }) 
         agendaTopics: agenda.slice(0, 5).map((a) => a.topic), style, exemplars: samples.map((s) => s.text),
       }),
     });
-    const openers = validOpeners(out.openers, new Set(factIds.keys()), console.warn).map((o) => ({ text: o.text, hook: o.hook, usedFactIds: o.factIds.map((id) => factIds.get(id)) }));
+    // Models sometimes paste a fact id into the text ("… lately? F4"): strip it before validating.
+    const cleaned = out.openers.map((o) => ({ ...o, text: o.text.replace(/\s*\[?\bF\d+\b\]?/g, '').trim() }));
+    const openers = validOpeners(cleaned, new Set(factIds.keys()), console.warn).map((o) => ({ text: o.text, hook: o.hook, usedFactIds: o.factIds.map((id) => factIds.get(id)) }));
     written = { summary: out.summary, openers, watchouts: out.watchouts.slice(0, 3) };
   } catch (err) {
     if (err.name === 'BudgetExceededError') throw err;

@@ -6,8 +6,8 @@ import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
 import { emitToUser } from '../../sockets/io.js';
 import { httpError } from '../../utils/http.js';
-import { styleCard } from '../agent/context.js';
-import { cleanText } from '../agent/guard.js';
+import { VoiceProfile } from '../../models/VoiceProfile.js';
+import { cleanText } from '../persona/text.js';
 import { cancelReplies } from '../agent/scheduler.js';
 import { sendMessage } from '../chat.js';
 import { chatJSON } from '../llm/client.js';
@@ -22,17 +22,19 @@ const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'them';
 
 /** One kind closing message from userId's side, in their style. A fixed line if the model fails or says anything risky. */
 export async function windDown(match, userId) {
-  const [user, mine, count] = await Promise.all([
-    User.findById(userId, { styleProfile: 1, name: 1 }).lean(),
+  const [user, mine, count, voice] = await Promise.all([
+    User.findById(userId, { name: 1 }).lean(),
     Profile.findOne({ userId }, { name: 1 }).lean(),
     Message.countDocuments({ matchId: match._id }),
+    VoiceProfile.findOne({ userId }, { description: 1, doList: 1, dontList: 1, closingStyle: 1 }).lean(),
   ]);
   const name = firstName(mine?.name ?? user?.name);
+  const card = [voice?.description, voice?.doList?.length && `Do: ${voice.doList.join('; ')}`, voice?.dontList?.length && `Don't: ${voice.dontList.join('; ')}`, voice?.closingStyle && `Ends chats like: "${voice.closingStyle}"`].filter(Boolean).join('\n') || 'Casual, warm, short messages.';
   let text = "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
   try {
     const out = await chatJSON({
       tier: 'fast', purpose: 'wind-down', userId, matchId: match._id, schema: z.object({ reply: z.string().trim().min(1).max(300) }),
-      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: styleCard(user?.styleProfile), hadConversation: count > 0 }),
+      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: card, hadConversation: count > 0 }),
     });
     const draft = cleanText(out.reply, name);
     if (draft && !draft.includes('?') && scanMessage(draft).severity === 0) text = draft;

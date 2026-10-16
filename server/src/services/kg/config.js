@@ -2,7 +2,10 @@
 export const KG = Object.freeze({
   // T_HIGH/T_LOW calibrated for nvidia/nemotron-3-embed-1b (scripts/calibrate-concepts.js, 50 alias pairs): true pairs
   // median 0.57, hardest wrong concept up to 0.64. Above 0.70 auto-match; 0.40–0.70 LLM tie-break; below, a new concept.
-  T_HIGH: 0.70, T_LOW: 0.40, T_ASKED: 0.6, T_LEAK: 0.8,
+  T_HIGH: 0.70, T_LOW: 0.40,
+  // Same embedding model: a question about a topic scores ~0.45–0.6 against the fact; a sentence restating a private
+  // fact ~0.6+ (plan 08 probes in scripts/agent-check.js). The spec's 0.6 / 0.8 would never fire.
+  T_ASKED: 0.45, T_LEAK: 0.62,
   DECAY_HALF_LIFE_DAYS: 365, CURRENT_FACT_TTL_DAYS: 180,
   SELECT_K: 10, EXEMPLARS_K: 4, MIN_STORIES: 4, TOPIC_TEMP: 0.7,
   MAX_REGENERATIONS: 1, // Checkpoint A: one regeneration per message, max
@@ -20,6 +23,8 @@ export const KG = Object.freeze({
   K_LOW_EFFORT: 0.1, K_REPEAT: 0.05, K_DECAY: 0.1,
   LOW_INTEREST: 0.3, END_AFTER_LOW_TURNS: 3, MAX_TURNS: 24,
   TOPIC_SHIFT: 0.25, STORY_RATE: 0.2, TEMP_RANGE: [0.7, 1.0],
+  STEER_AFTER_TURNS: 2, // my turns of warm-up before every-other-turn agenda steering
+  ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
   JUDGE_YES_MIN: 0.6,

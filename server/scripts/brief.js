@@ -53,7 +53,7 @@ const printBrief = (b) => {
     { text: 'I do Sinhagad most weekends, which trail is your favourite?', hook: 'Shared', factIds: ['F1'] },
     { text: 'I make the best misal in Pune, fight me.', hook: 'Food', factIds: [] }, // claims about me without a fact
     { text: 'Love that.', hook: 'x', factIds: ['F9'] }, // unknown id
-    { text: 'One. Two. Three sentences is too many.', hook: 'x', factIds: [] },
+    { text: 'That trail looks amazing. The monsoon views must be unreal. I have always wanted to go there. Which month do you usually go?', hook: 'x', factIds: [] }, // 4 real sentences
   ], ids);
   assert.deepEqual(ok.map((o) => o.hook), ['Prompt', 'Shared']);
   console.log('✓ offline checks passed (agenda from own graph: dealbreakers first, no private/if_asked/story topics; opener grounding)');

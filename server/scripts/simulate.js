@@ -5,7 +5,10 @@
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
 import { InboxItem } from '../src/models/InboxItem.js';
+import { ChatEvent } from '../src/models/ChatEvent.js';
+import { Conversation } from '../src/models/Conversation.js';
 import { KgFact } from '../src/models/KgFact.js';
+import { Message } from '../src/models/Message.js';
 import { User } from '../src/models/User.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 import { ensurePersona } from './lib/personas.js';
@@ -25,11 +28,25 @@ async function runOnce(a, b) {
   const names = { [a._id]: a.name, [b._id]: b.name };
   console.log(`\nStop reason: ${m.agentState?.stopReason ?? '(none: still ' + m.status + ')'}${m.agentState?.stopDetail ? ` — ${m.agentState.stopDetail.why}` : ''}`);
   console.log(`Messages: ${messages.length} in ${seconds} s`);
+  const conv = await Conversation.findOne({ matchId: m._id }).sort({ round: -1 }).lean();
+  console.log(`Conversation ended by: ${conv?.endedBy ?? '—'} (seed ${conv?.seed})`);
+  const full = await Message.find({ matchId: m._id }).sort({ createdAt: 1 }).lean();
+  console.log('\nTranscript [act plan · checks]:');
+  for (const [i, x] of full.entries()) {
+    const p = x.actPlan;
+    const plan = !p ? '' : p.honestAI ? 'honest-AI' : p.fromBrief ? 'brief opener'
+      : `~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
+    const c = x.checks;
+    const chk = !c ? '' : [c.regenerated && 'regen', c.dropped?.length && `dropped ${c.dropped.length}`, c.leak?.length && 'LEAK', c.stance?.length && 'conceded'].filter(Boolean).join(', ');
+    console.log(`${String(i + 1).padStart(2)}. ${names[x.senderId]}: ${x.text}${plan ? `\n      [${plan}${chk ? ` · ${chk}` : ''}]` : ''}`);
+  }
   for (const u of [a, b]) {
     console.log(`\n${u.name}'s agenda:`);
-    for (const x of m.brief?.[String(u._id)]?.agenda ?? []) console.log(`  ${x.status.padEnd(9)} p=${x.priority.toFixed(2)} conf=${(x.confidence ?? 0).toFixed(2)}  ${x.topic}`);
-    const learned = await KgFact.find({ matchId: m._id, observerId: u._id, source: { $in: ['conversation', 'profile'] } }).lean();
-    console.log(`  facts about the other: ${learned.length} (${learned.filter((f) => f.source === 'conversation').length} from chat, ${learned.filter((f) => f.evidence.length > 1).length} confirmed more than once)`);
+    for (const x of m.brief?.[String(u._id)]?.agenda ?? []) console.log(`  ${x.status.padEnd(9)} p=${x.priority.toFixed(2)}  ${x.topic}${x.dealbreaker ? ' (dealbreaker)' : ''}`);
+    const notes = await KgFact.find({ matchId: m._id, observerId: u._id, source: 'agent_observed' }).lean();
+    console.log(`  notes about the other (verbatim-quoted): ${notes.length}${notes.length ? ` e.g. ${notes.slice(0, 4).map((f) => `${f.predicate}: ${f.object}`).join(' | ')}` : ''}`);
+    const events = await ChatEvent.find({ matchId: m._id, observerId: u._id }).lean();
+    console.log(`  chat moments: ${JSON.stringify(events.reduce((acc, e) => ({ ...acc, [e.type]: (acc[e.type] ?? 0) + 1 }), {}))}`);
   }
   const ids = new Set(messages.map((x) => String(x._id)));
   for (const u of [a, b]) {

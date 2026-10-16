@@ -1,15 +1,16 @@
 // Step 3: the agent conversation. Triggers: startConversation (after the brief) and onIncomingMessage (every message).
 // The other side may be a human or their agent; nothing here depends on which.
 import { env } from '../../config/env.js';
+import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
+import { rng } from '../../utils/rng.js';
+import { KG } from '../kg/config.js';
 import { Message } from '../../models/Message.js';
 import { User } from '../../models/User.js';
 import { side } from '../matches.js';
 import { flagMatch } from '../pipeline/index.js';
 import { scanMessage } from '../trust/rules.js';
-import { learnFromMessage } from './beliefUpdate.js';
 import { cancelReplies, scheduleReply, stopConversation } from './scheduler.js';
-import { shouldStop } from './shouldStop.js';
 
 export { cancelReplies, stopConversation } from './scheduler.js';
 
@@ -21,32 +22,13 @@ async function activeAgents(match) {
   return match.perUser.filter((p) => p.agentActive && STARTABLE_MODES.includes(mode(p.userId))).map((p) => String(p.userId));
 }
 
-/** After the brief: one active agent (random if both) opens with its brief's opener. No agents → the humans chat. */
+/** After the brief: one active agent opens (picked with the conversation's seeded rng). No agents → the humans chat. */
 export async function startConversation(match) {
-  const active = await activeAgents(match);
-  if (active.length) scheduleReply(match._id, active[Math.floor(Math.random() * active.length)], 0);
-}
-
-// Belief updates for one (match, viewer) run one at a time so agenda writes never race.
-const chains = new Map();
-function serial(key, fn) {
-  const next = (chains.get(key) ?? Promise.resolve()).then(fn);
-  chains.set(key, next);
-  next.finally(() => { if (chains.get(key) === next) chains.delete(key); });
-}
-
-/** Resolves when every queued belief update has finished (scripts wait on this before reading results). */
-export const beliefUpdatesSettled = () => Promise.allSettled([...chains.values()]);
-
-async function learnAndCheck(match, viewerId, message) {
-  try {
-    const { touched } = await learnFromMessage(match, viewerId, message);
-    const stop = await shouldStop(match._id, { viewerId, touched });
-    if (stop) await stopConversation(match._id, stop.reason, stop.detail);
-  } catch (err) {
-    if (err.name === 'BudgetExceededError') console.warn(`belief update paused: ${err.message}`);
-    else console.error(`belief update ${match._id} for ${viewerId} failed: ${err.message}`);
-  }
+  const active = (await activeAgents(match)).sort();
+  if (!active.length) return;
+  const conv = await Conversation.findOne({ matchId: match._id, status: 'active' }, { seed: 1 }).lean();
+  const r = rng(conv?.seed ?? 0);
+  scheduleReply(match._id, active[Math.floor(r() * active.length)], 0);
 }
 
 /** Called after EVERY saved message (human or agent). */
@@ -63,14 +45,13 @@ export async function onIncomingMessage(message) {
     await flagMatch(match, others, scan.flags.map((f) => `In chat: ${f}`));
     return;
   }
-  if (await Message.countDocuments({ matchId: match._id }) >= env.AGENT_MAX_TURNS) {
+  if (await Message.countDocuments({ matchId: match._id }) >= KG.MAX_TURNS) {
     await stopConversation(match._id, 'max_turns');
     return;
   }
+  // Perceiving their message happens inside my next turn (one LLM call: perceive + observe, plan 08 §2.1).
   for (const viewer of others) {
-    if (!side(match, viewer)?.agentActive) continue; // a side that took over neither replies nor learns
-    scheduleReply(match._id, viewer);
-    serial(`${match._id}:${viewer}`, () => learnAndCheck(match, viewer, message));
+    if (side(match, viewer)?.agentActive) scheduleReply(match._id, viewer); // a side that took over neither replies nor learns
   }
 }
 

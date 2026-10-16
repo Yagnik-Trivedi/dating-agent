@@ -2,6 +2,7 @@
 // human-like typing delay, and a re-check before sending so a take-over or a newer message discards the draft.
 import { env } from '../../config/env.js';
 import { InboxItem } from '../../models/InboxItem.js';
+import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
 import { User } from '../../models/User.js';
@@ -10,8 +11,7 @@ import { sendMessage } from '../chat.js';
 import { cancel, enqueue } from '../jobs/queue.js';
 import { side } from '../matches.js';
 import { emitStatus, queueEvaluation } from '../pipeline/index.js';
-import { buildContext } from './context.js';
-import { generateReply } from './generateReply.js';
+import { composeTurn } from '../conversation/engine.js';
 
 const LOCK_STALE_MS = 2 * 60_000;
 const MAX_AGENT_REPLIES_PER_MINUTE = 2; // per match, both agents together: the agent↔agent loop guard
@@ -86,6 +86,7 @@ export async function stopConversation(matchId, reason, detail = null) {
   );
   if (!match) return false;
   cancelReplies(matchId);
+  await Conversation.updateOne({ matchId, status: 'active' }, { $set: { status: 'ended', endedBy: detail?.endedBy ?? reason, endedAt: new Date() } });
   emitStatus(match);
   await queueEvaluation(match, { reason });
   return true;
@@ -104,28 +105,34 @@ export async function runReply(matchId, userId) {
   try {
     const match = await mayReply(matchId, userId);
     if (!match) return;
-    const ctx = await buildContext(match, userId);
-    if (ctx.lastMessage && String(ctx.lastMessage.senderId) === String(userId)) return; // nothing new to answer
+    let last = (await Message.findOne({ matchId }).sort({ createdAt: -1 }).lean())?._id ?? null;
+    const turn = await composeTurn(match, userId); // plan 08 engine: perceive → interest → act plan → generate → checks
+    if (!turn) return;
 
-    const draft = await generateReply({ ctx, userId, matchId });
-    await typeFor(matchId, userId, paceMs(draft.reply));
-
-    // Re-check: took over, status changed, agent switched off, or a newer message arrived → discard this draft.
-    const current = await mayReply(matchId, userId);
-    if (!current) return;
-    const newest = await Message.findOne({ matchId }).sort({ createdAt: -1 }).lean();
-    if (String(newest?._id ?? '') !== String(ctx.lastMessage?._id ?? '')) {
-      scheduleReply(matchId, userId);
-      return;
+    for (const [i, text] of turn.messages.entries()) {
+      await typeFor(matchId, userId, paceMs(text));
+      // Re-check: took over, status changed, agent switched off, or a newer message arrived → discard the rest.
+      const current = await mayReply(matchId, userId);
+      if (!current) return;
+      const newest = await Message.findOne({ matchId }).sort({ createdAt: -1 }).lean();
+      if (String(newest?._id ?? '') !== String(last ?? '')) {
+        scheduleReply(matchId, userId);
+        return;
+      }
+      const sent = await sendMessage({
+        match: current, senderId: userId, authoredBy: 'agent', text, meta: { usedFactIds: turn.usedFactIds },
+        ...(i === 0 && { extra: { actPlan: turn.actPlan, checks: turn.checks } }),
+      });
+      last = sent._id;
     }
-    await sendMessage({ match: current, senderId: userId, authoredBy: 'agent', text: draft.reply, meta: { usedFactIds: draft.usedFactIds, targets: draft.targets } });
     failures.delete(key);
-
-    if (draft.unknownAboutMe) await askMyHuman(userId, matchId, draft.unknownAboutMe);
-    const path = `agentState.wantsToEnd.${userId}`;
-    const after = await Match.findOneAndUpdate({ _id: matchId }, draft.wantsToEnd ? { $inc: { [path]: 1 } } : { $set: { [path]: 0 } }, { new: true }).lean();
-    if (after?.agentState?.wantsToEnd?.[String(userId)] >= 2) await stopConversation(matchId, 'wants_to_end');
-    return draft;
+    if (turn.unknownAboutMe) await askMyHuman(userId, matchId, turn.unknownAboutMe);
+    if (turn.end) {
+      // dealbreaker_hint keeps the v1 judge's 'dealbreaker' stop semantics until plan 09's judge replaces it.
+      if (turn.end === 'dealbreaker_hint') await stopConversation(matchId, 'dealbreaker', { viewerId: String(userId), why: 'Something they said clashes with one of your dealbreakers.', endedBy: 'dealbreaker_hint' });
+      else await stopConversation(matchId, turn.end);
+    }
+    return turn;
   } catch (err) {
     // Budget/kill switch: the agent goes quiet, status stays agent_chatting, the UI shows the paused banner.
     if (err.name === 'BudgetExceededError') return console.warn(`agent ${key} paused: ${err.message}`);

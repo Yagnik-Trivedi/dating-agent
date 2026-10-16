@@ -5,7 +5,6 @@ import { KgFact } from '../../src/models/KgFact.js';
 import { Match } from '../../src/models/Match.js';
 import { Message } from '../../src/models/Message.js';
 import { Usage } from '../../src/models/Usage.js';
-import { beliefUpdatesSettled } from '../../src/services/agent/index.js';
 import { flushUsage } from '../../src/services/llm/budget.js';
 import { createMatch } from '../../src/services/matches.js';
 import './worker.js'; // job worker for the match pipeline (plan 17)
@@ -33,7 +32,7 @@ export async function runPair(a, b, { log = console.log, timeoutMin = 45 } = {})
     const msgs = await Message.find({ matchId: created._id }).sort({ createdAt: 1 }).skip(printed).lean();
     for (const msg of msgs) log(`  ${String(++printed).padStart(2)}. ${names[msg.senderId]} (${msg.authoredBy}): ${msg.text}`);
   }
-  for (let i = 0; i < 3; i++) { await sleep(2000); await beliefUpdatesSettled(); } // in-flight belief updates
+  await sleep(2000); // the last turn's writes (notes, events) settle
   await flushUsage();
   const [match, messages, usage] = await Promise.all([
     Match.findById(created._id).lean(),

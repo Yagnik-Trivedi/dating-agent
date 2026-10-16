@@ -51,7 +51,6 @@ const schema = z.object({
   AGENT_DEBOUNCE_MS: field(z.coerce.number().int().nonnegative().default(4000)),
   AGENT_MIN_DELAY_MS: field(z.coerce.number().int().nonnegative().default(1500)),
   AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
-  AGENT_MAX_TURNS: field(z.coerce.number().int().positive().default(24)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
   DEMO_FAST: bool(false),
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
