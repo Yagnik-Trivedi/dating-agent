@@ -17,6 +17,8 @@ import { checkProfileData } from '../src/services/trust/checkProfile.js';
 import { FLAG, ruleChecks, scanMessage } from '../src/services/trust/rules.js';
 import { mapLimit } from '../src/utils/mapLimit.js';
 import './lib/worker.js'; // job worker for the match pipeline (plan 17)
+import { readsOfOther, startSpy, stopSpy } from './lib/dbSpy.js';
+import { runTrustCheck } from '../src/services/pipeline/index.js';
 
 const cases = JSON.parse(readFileSync(new URL('../seed/trust-cases.json', import.meta.url)));
 const byId = Object.fromEntries(cases.map((c) => [c.id, c]));
@@ -83,6 +85,7 @@ try {
     throw new Error(`match stuck in ${(await Match.findById(match._id)).status}`);
   };
 
+  startSpy();
   const [flagged, clean] = await Promise.all([
     waitStatus(await createMatch(viewer._id, scammer._id), ['flagged_fake', 'briefing']),
     waitStatus(await createMatch(viewer._id, genuine._id), ['flagged_fake', 'briefing']),
@@ -97,6 +100,23 @@ try {
   assert.equal(clean.status, 'briefing');
   assert.ok(['ok', 'caution'].includes(clean.trust[String(viewer._id)].level));
   console.log(`✓ pipeline: Ananya × Rahul → briefing (trust ${clean.trust[String(viewer._id)].level} / ${clean.trust[String(genuine._id)].level})`);
+
+  // Information boundary: the trust check read only the other user's public profile + account age.
+  const recs = stopSpy();
+  const theirs = readsOfOther(recs, 'trust');
+  const allowed = (r) => (r.model === 'Profile' && ['gate', 'dealbreakers', 'geo'].every((f) => r.projection[f] === 0))
+    || (r.model === 'User' && Object.keys(r.projection).every((k) => ['createdAt', '_id'].includes(k)));
+  assert.ok(theirs.length >= 4, `trust reads of the other side were recorded (${theirs.length})`);
+  assert.deepEqual(theirs.filter((r) => !allowed(r)).map((r) => `${r.model}.${r.op} ${JSON.stringify(r.projection)}`), [], 'only the public profile + createdAt');
+  console.log(`✓ boundary: ${theirs.length} trust reads of the other user, all public-profile projection or account age (${[...new Set(theirs.map((r) => r.model))].join(', ')})`);
+
+  // Idempotent: re-running the step on a match with saved trust reuses it (no new check, same checkedAt).
+  const before = JSON.stringify(clean.trust);
+  await Match.updateOne({ _id: clean._id }, { $set: { status: 'matched' } });
+  const t0 = Date.now();
+  assert.equal(await runTrustCheck(await Match.findById(clean._id)), true);
+  assert.equal(JSON.stringify((await Match.findById(clean._id).lean()).trust), before);
+  console.log(`✓ re-run reuses the saved trust result (${Date.now() - t0} ms, no LLM call)`);
   console.log('\nTrust checks passed.');
 } finally {
   await flushUsage();

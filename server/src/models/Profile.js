@@ -43,3 +43,7 @@ for (const k of GATE_ATTRIBUTE_IDS) profileSchema.index({ [`gate.values.${k}`]: 
 profileSchema.index({ geo: '2dsphere' }, { sparse: true });
 
 export const Profile = mongoose.model('Profile', profileSchema);
+
+// What anyone else (a human or their agent) may see of a profile: never the gate, dealbreakers, age range or geo.
+export const PUBLIC_PROFILE = '-dealbreakers -gate -geo -ageMin -ageMax -radiusKm';
+export const PUBLIC_PROJECTION = Object.fromEntries(PUBLIC_PROFILE.split(' ').map((f) => [f.slice(1), 0]));

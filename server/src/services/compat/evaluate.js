@@ -1,5 +1,6 @@
 // Step 4, one viewer: dimension scores in code, ONE smart-tier judge call, verdict in code.
 import { z } from 'zod';
+import { items } from '../../utils/zodItems.js';
 import { KgFact } from '../../models/KgFact.js';
 import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
@@ -21,7 +22,6 @@ const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'them';
 const structured = (f) => f.source === 'questionnaire_choice' || !f.evidence?.length; // onboarding B/D answers (stories carry a quote)
 
 // One bad item drops that item, not the whole response.
-const items = (item) => z.array(z.unknown()).default([]).transform((xs) => xs.map((x) => item.safeParse(x)).filter((r) => r.success).map((r) => r.data));
 const alignmentSchema = z.object({ pairs: items(z.object({ id: z.string(), alignment: z.enum(['aligned', 'neutral', 'conflicting']) })) });
 const cited = z.object({ text: z.string().trim().min(1).max(240), messageIds: z.array(z.string()).default([]) });
 const judgeSchema = z.object({

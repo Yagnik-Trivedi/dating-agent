@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
-import { Profile } from '../models/Profile.js';
+import { Profile, PUBLIC_PROFILE } from '../models/Profile.js';
 import { User } from '../models/User.js';
 import { emitToUser } from '../sockets/io.js';
 import { httpError } from '../utils/http.js';
@@ -10,8 +10,7 @@ import { enqueue } from './jobs/queue.js';
 import { statusFor } from './pipeline/index.js';
 
 // Dealbreakers stay private to their owner (the agent uses them; the other person doesn't see the list).
-export const PUBLIC_PROFILE = '-dealbreakers -gate -geo -ageMin -ageMax -radiusKm';
-export const PUBLIC_PROJECTION = Object.fromEntries(PUBLIC_PROFILE.split(' ').map((f) => [f.slice(1), 0]));
+export { PUBLIC_PROFILE, PUBLIC_PROJECTION } from '../models/Profile.js';
 
 export const side = (match, userId) => match.perUser.find((p) => String(p.userId) === String(userId));
 export const otherUserId = (match, userId) => match.users.find((u) => String(u) !== String(userId));

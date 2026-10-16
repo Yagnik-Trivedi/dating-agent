@@ -1,6 +1,7 @@
 // After every message from the other side: learn facts about them (verbatim quotes only), update the agenda,
 // note red flags, and push kg:update to the viewer.
 import { z } from 'zod';
+import { items } from '../../utils/zodItems.js';
 import { KgFact } from '../../models/KgFact.js';
 import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
@@ -18,7 +19,6 @@ const MAX_CONFIDENCE = 0.95;
 const RANK = { open: 0, partially: 1, answered: 2 };
 
 // One malformed item (e.g. an empty quote) drops that item, not the whole update.
-const items = (item) => z.array(z.unknown()).default([]).transform((xs) => xs.map((x) => item.safeParse(x)).filter((r) => r.success).map((r) => r.data));
 const schema = z.object({
   facts: items(z.object({
     predicate: z.enum(beliefUpdate.PREDICATES),

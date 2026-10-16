@@ -1,8 +1,10 @@
 // Step 1: each user's agent checks the OTHER profile for fakes and inconsistencies before any conversation.
 // "Inconsistent" is not "fake": mild contradictions become gentle "clarify" topics for the brief (plan 07).
 import { z } from 'zod';
-import { Profile } from '../../models/Profile.js';
+import { items } from '../../utils/zodItems.js';
+import { Profile, PUBLIC_PROFILE } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
+import { asActor } from '../actor.js';
 import { isVerbatim } from '../kg/extractFacts.js';
 import { chatJSON } from '../llm/client.js';
 import * as profileConsistency from '../prompts/profileConsistency.js';
@@ -11,13 +13,14 @@ import { profileText, ruleChecks } from './rules.js';
 const SEVERITY_POINTS = { 1: 2, 2: 8, 3: 20 };
 
 const schema = z.object({
-  contradictions: z.array(z.object({
+  // items(): a malformed entry (e.g. a scam signal without "signal") is dropped instead of failing the whole check.
+  contradictions: items(z.object({
     a: z.string().trim().min(1).max(300),
     b: z.string().trim().min(1).max(300),
     topic: z.string().trim().min(1).max(60),
     severity: z.coerce.number().int().min(1).max(3).catch(1),
-  })).max(10).default([]),
-  scamSignals: z.array(z.object({ signal: z.string().trim().min(1).max(160), quote: z.string().trim().min(1).max(300) })).max(10).default([]),
+  })).transform((xs) => xs.slice(0, 10)),
+  scamSignals: items(z.object({ signal: z.string().trim().min(1).max(160), quote: z.string().trim().min(1).max(300) })).transform((xs) => xs.slice(0, 10)),
   genericBio: z.preprocess((v) => v === true || v === 'true', z.boolean()), // coerce.boolean would turn "false" into true
   summary: z.string().max(400).default(''),
 });
@@ -73,10 +76,16 @@ export async function checkProfileData({ profile, accountAgeMinutes, userId, mat
   };
 }
 
-/** viewer's agent checks subject's profile. */
-export async function checkProfile(viewerId, subjectId, matchId) {
-  const [profile, subject] = await Promise.all([Profile.findOne({ userId: subjectId }).lean(), User.findById(subjectId, { createdAt: 1 }).lean()]);
+/**
+ * viewer's agent checks subject's PUBLIC profile (plan 06 boundary): the public projection + account age, nothing
+ * else of theirs (no gate, dealbreakers, graph or voice). Runs as the 'trust' actor so the DB spy can verify it.
+ */
+export const checkProfile = (viewerId, subjectId, matchId) => asActor({ role: 'trust', userId: viewerId, otherId: subjectId }, async () => {
+  const [profile, subject] = await Promise.all([
+    Profile.findOne({ userId: subjectId }).select(PUBLIC_PROFILE).lean(),
+    User.findById(subjectId, { createdAt: 1 }).lean(),
+  ]);
   if (!profile) return { score: 0, level: 'caution', flags: ['Profile missing'], contradictions: [], scamSignals: [], clarify: [], summary: '', checkedAt: new Date() };
   const accountAgeMinutes = subject?.createdAt ? (Date.now() - new Date(subject.createdAt)) / 60_000 : Infinity;
   return checkProfileData({ profile, accountAgeMinutes, userId: viewerId, matchId });
-}
+});

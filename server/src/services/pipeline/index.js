@@ -32,9 +32,11 @@ export async function setStatus(match, status) {
 
 /** Step 1 (plan 06): both agents check the other profile in parallel. → true if the pipeline may continue. */
 export async function runTrustCheck(match) {
-  await setStatus(match, 'trust_check');
   const [a, b] = match.users.map(String);
-  const [ta, tb] = await Promise.all([checkProfile(a, b, match._id), checkProfile(b, a, match._id)]);
+  // Idempotent (the matchCreated job may re-run after a crash): a saved result is reused, no LLM call.
+  const saved = (await Match.findById(match._id, { trust: 1 }).lean())?.trust ?? {};
+  await setStatus(match, 'trust_check');
+  const [ta, tb] = await Promise.all([saved[a] ?? checkProfile(a, b, match._id), saved[b] ?? checkProfile(b, a, match._id)]);
 
   // The match may have been closed (account deleted) while we were checking.
   const current = await Match.findById(match._id, { status: 1 }).lean();
