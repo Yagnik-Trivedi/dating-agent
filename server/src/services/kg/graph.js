@@ -2,9 +2,9 @@ import { KgFact } from '../../models/KgFact.js';
 
 /** The user's own graph for react-force-graph: a center node + one node per self-reported fact. */
 export async function userGraph(user) {
-  const facts = await KgFact.find({ subjectId: user._id, observerId: null }).lean();
+  const facts = await KgFact.find({ subjectId: user._id, observerId: null }).select('-embedding').lean();
   const nodes = [
-    { id: 'me', label: user.name, type: 'self', group: 'self', size: 1 },
+    { id: 'me', label: user.name, type: 'self', group: 'self', size: 1, center: true },
     ...facts.map((f) => ({
       id: String(f._id),
       label: f.object,

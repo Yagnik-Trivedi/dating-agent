@@ -1,7 +1,8 @@
 // Every knowledge-graph, engine, judge and job threshold (plan 15 §9, plan 17 §2). Plan 11's eval sweeps these.
 export const KG = Object.freeze({
-  // concepts & retrieval (T_HIGH/T_LOW are re-calibrated for the embedding model in plan 05)
-  T_HIGH: 0.85, T_LOW: 0.75, T_ASKED: 0.6, T_LEAK: 0.8,
+  // T_HIGH/T_LOW calibrated for nvidia/nemotron-3-embed-1b (scripts/calibrate-concepts.js, 50 alias pairs): true pairs
+  // median 0.57, hardest wrong concept up to 0.64. Above 0.70 auto-match; 0.40–0.70 LLM tie-break; below, a new concept.
+  T_HIGH: 0.70, T_LOW: 0.40, T_ASKED: 0.6, T_LEAK: 0.8,
   DECAY_HALF_LIFE_DAYS: 365, CURRENT_FACT_TTL_DAYS: 180,
   SELECT_K: 10, EXEMPLARS_K: 4, MIN_STORIES: 4, TOPIC_TEMP: 0.7,
   MAX_REGENERATIONS: 1, // Checkpoint A: one regeneration per message, max

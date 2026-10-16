@@ -2,13 +2,9 @@
 import { z } from 'zod';
 import { chatJSON } from '../llm/client.js';
 import * as describeStyle from '../prompts/describeStyle.js';
+import { hinglishCount, tokensOf } from './language.js';
 import { QUESTIONS } from './questions.js';
 
-const HINGLISH = new Set([
-  'yaar', 'kya', 'hai', 'hain', 'nahi', 'nahin', 'acha', 'accha', 'achha', 'bhai', 'matlab', 'bas', 'arre', 'arey', 'haan', 'na',
-  'kaise', 'kuch', 'bohot', 'bahut', 'thoda', 'chal', 'chalo', 'theek', 'thik', 'mast', 'sahi', 'abhi', 'kal', 'aaj', 'tum', 'mera', 'meri',
-  'tera', 'teri', 'hum', 'koi', 'woh', 'yeh', 'ye', 'kab', 'kyun', 'kyu', 'bilkul', 'pakka', 'jaldi', 'bindaas', 'scene', 'ji',
-]);
 const EMOJI = /\p{Extended_Pictographic}/gu;
 const LAUGH = /\b(ha(ha)+|he(he)+|lol+|lmao+|rofl)\b/i;
 
@@ -43,7 +39,8 @@ export function styleMetrics(replies) {
     exclamationRate: share((m) => m.includes('!')),
     questionRate: share((m) => m.includes('?')),
     laughRate: share((m) => LAUGH.test(m)),
-    hinglishRatio: tokens.length ? round(tokens.filter((t) => HINGLISH.has(t)).length / tokens.length) : 0,
+    // Per message, so ambiguous words (na/ye/hum/tum) count only next to a clear Hindi word (F34).
+    hinglishRatio: tokens.length ? round(msgs.reduce((n, m) => n + hinglishCount(tokensOf(m)), 0) / tokens.length) : 0,
     typicalEnding: Object.entries(endings).sort((a, b) => b[1] - a[1])[0][0],
   };
 }

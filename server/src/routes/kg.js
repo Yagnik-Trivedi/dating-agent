@@ -12,6 +12,7 @@ async function ownFact(req) {
   const { id } = parse(z.object({ id: objectId }), req.params);
   const fact = await KgFact.findOne({ _id: id, subjectId: req.user._id, observerId: null });
   if (!fact) throw httpError(404, 'NOT_FOUND', 'Fact not found');
+  if (fact.predicate === 'trait') throw httpError(422, 'TRAIT_READ_ONLY', 'Personality traits are computed from your answers and can’t be edited');
   return fact;
 }
 

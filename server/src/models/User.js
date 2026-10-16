@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
     answers: Mixed,
     completedAt: Date,
   },
-  styleProfile: { metrics: Mixed, description: String, doList: [String], dontList: [String] },
+  styleProfile: { metrics: Mixed, description: String, doList: [String], dontList: [String] }, // v1; VoiceProfile replaces it (plan 05)
+  graphVersion: { type: Number, default: 0 }, // $inc on every self-graph or voice write: plan 08's cache key
+  settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
   isSeed: { type: Boolean, default: false },
 }, {
   timestamps: { createdAt: true, updatedAt: false },
