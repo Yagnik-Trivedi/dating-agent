@@ -26,6 +26,7 @@ assert.equal(verdictFor({ dimensions: dims(0.3), chemistry: 0.3 }).verdict, 'inc
 assert.equal(verdictFor({ dimensions: dims(0.6), chemistry: 0.6 }).verdict, 'maybe');
 assert.equal(verdictFor({ dimensions: dims(1, 1, 0), chemistry: 1 }).verdict, 'incompatible', 'dealbreaker is a hard gate');
 assert.equal(verdictFor({ dimensions: dims(0.8), chemistry: 0.5 }).score, 0.77);
+assert.equal(verdictFor({ dimensions: { ...dims(0.9), dealbreakers: { score: 1, confidence: 0 } }, chemistry: 0.8 }).verdict, 'maybe', 'an unchecked dealbreaker is never compatible');
 assert.equal(lowerVerdict('compatible', 'maybe'), 'maybe');
 assert.equal(lowerVerdict('incompatible', 'compatible'), 'incompatible');
 const msg = (text, authoredBy = 'agent') => ({ text, authoredBy });

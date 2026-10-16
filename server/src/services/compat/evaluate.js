@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { KgFact } from '../../models/KgFact.js';
 import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
+import { settled } from '../agent/shouldStop.js';
 import { selfFacts } from '../brief/buildBrief.js';
 import { cosine } from '../kg/similarity.js';
 import { styleMetrics } from '../kg/styleProfile.js';
@@ -139,34 +140,40 @@ export async function evaluateFor(match, viewerId) {
   // Hard gate: a dealbreaker clash found before (plan 07) or during (plan 08) the conversation.
   const stop = match.agentState?.stopReason === 'dealbreaker' && match.agentState.stopDetail?.viewerId === viewer ? match.agentState.stopDetail : null;
   const clash = brief?.earlyDealbreaker ?? stop;
+  // A dealbreaker topic the conversation never settled: no clash found, but nothing confirms it either.
+  const unchecked = clash ? [] : (brief?.agenda ?? []).filter((a) => a.dealbreaker && !settled(a));
 
   messages.forEach((m, i) => { m.prevAt = messages[i - 1]?.createdAt; });
   const mine = messages.filter((m) => String(m.senderId) === viewer);
   const theirs = messages.filter((m) => String(m.senderId) !== viewer);
   const { dims: aligned } = await alignmentDims({ self, observed, viewerId: viewer, matchId });
   const dimensions = {
-    dealbreakers: { score: clash ? 0 : 1, confidence: clash ? 0.9 : 0.6 },
+    dealbreakers: { score: clash ? 0 : 1, confidence: clash ? 0.9 : unchecked.length ? 0 : 0.6 },
     ...aligned,
     interests: interestsDim(self, observed),
     communication: communicationDim(mine, theirs),
     personality: personalityDim(traits, theirs),
   };
 
-  // Judge: one smart call. No conversation (early dealbreaker) = nothing to judge.
+  // Judge: one smart call (mid if smart is down). No conversation (early dealbreaker) = nothing to judge.
   let judged = { chemistry: 0.5, reasons: [], concerns: [], askYourself: [], summary: '' };
   const ids = new Map(messages.map((m, i) => [`m${i + 1}`, String(m._id)]));
   if (messages.length) {
+    const prompt = verdictPrompt.build({
+      userName, matchName,
+      facts: self.filter((f) => f.disclosure !== 'private' && !['trait', 'style'].includes(f.predicate)).sort((a, b) => b.weight - a.weight).slice(0, 25).map((f) => `${f.predicate}: ${f.object}`),
+      tone: toneOf(traits),
+      dimensions: Object.fromEntries(Object.entries(dimensions).map(([k, d]) => [k, d.score])),
+      agenda: (brief?.agenda ?? []).map((a) => `${a.topic}: ${a.status}`),
+      transcript: messages.map((m, i) => `[m${i + 1}] ${String(m.senderId) === viewer ? userName : matchName}: ${m.text}`),
+    });
+    const judge = (tier, reasoning) => chatJSON({ tier, reasoning, schema: judgeSchema, purpose: tier === 'smart' ? 'verdict' : 'verdict-fallback', userId: viewer, matchId, messages: prompt });
     try {
-      const out = await chatJSON({
-        tier: 'smart', schema: judgeSchema, purpose: 'verdict', userId: viewer, matchId,
-        messages: verdictPrompt.build({
-          userName, matchName,
-          facts: self.filter((f) => f.disclosure !== 'private' && !['trait', 'style'].includes(f.predicate)).sort((a, b) => b.weight - a.weight).slice(0, 25).map((f) => `${f.predicate}: ${f.object}`),
-          tone: toneOf(traits),
-          dimensions: Object.fromEntries(Object.entries(dimensions).map(([k, d]) => [k, d.score])),
-          agenda: (brief?.agenda ?? []).map((a) => `${a.topic}: ${a.status}`),
-          transcript: messages.map((m, i) => `[m${i + 1}] ${String(m.senderId) === viewer ? userName : matchName}: ${m.text}`),
-        }),
+      // Ultra first; if it's unavailable (NVIDIA's free Ultra timed out on every call for hours), Super writes the report.
+      const out = await judge('smart').catch((err) => {
+        if (err.name === 'BudgetExceededError') throw err;
+        console.error(`verdict judge (smart) unavailable, falling back to mid: ${err.message}`);
+        return judge('mid', false);
       });
       // Every reason/concern must cite a message that exists; the rest are dropped.
       const withReceipts = (list) => list
@@ -185,6 +192,7 @@ export async function evaluateFor(match, viewerId) {
   } else if (!messages.length) {
     judged.summary ||= "This one ended before a real conversation started: something important didn't line up on their side.";
   }
+  for (const a of unchecked) judged.concerns.push({ text: `You never found out where they stand on ${a.topic}, one of your dealbreakers.`, messageIds: [] });
 
   const computed = verdictFor({ dimensions, chemistry: judged.chemistry });
   const { score, avgConf } = computed;

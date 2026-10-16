@@ -177,18 +177,24 @@ export function buildAgenda({ self, observed, clarify = [] }) {
   ];
   const byTopic = new Map();
   for (const f of dims) {
-    const known = Math.max(0, ...observed.filter((o) => cosine(f.embedding, o.embedding) >= THRESHOLDS.related).map((o) => o.confidence));
     const topic = topicOf(f);
     const key = topic.toLowerCase();
+    const known = Math.max(0, ...observed.filter((o) => cosine(f.embedding, o.embedding) >= THRESHOLDS.related).map((o) => o.confidence));
+    // A dealbreaker is only known from an answer on the same topic ("wants children: no"): a merely related fact
+    // ("looking for: long-term" scores 0.65+ against kids) once made the agent skip the kids question entirely.
+    const exact = Math.max(0, ...observed.filter((o) => topicOf(o).toLowerCase() === key).map((o) => o.confidence));
     const cur = byTopic.get(key);
     // Merged topics ("smoking" as a dealbreaker and as a lifestyle fact): highest importance, best knowledge.
-    if (!cur) byTopic.set(key, { topic, why: WHY[f.predicate], importance: f.weight, known });
+    if (!cur) byTopic.set(key, { topic, why: WHY[f.predicate], importance: f.weight, known, exact, dealbreaker: f.predicate === 'dealbreaker' });
     else {
       if (f.weight > cur.importance || f.predicate === 'dealbreaker') Object.assign(cur, { importance: Math.max(cur.importance, f.weight), why: WHY[f.predicate] });
-      cur.known = Math.max(cur.known, known);
+      Object.assign(cur, { known: Math.max(cur.known, known), exact: Math.max(cur.exact, exact), dealbreaker: cur.dealbreaker || f.predicate === 'dealbreaker' });
     }
   }
-  const items = [...byTopic.values()].map((d) => ({ topic: d.topic, why: d.why, priority: d.importance * (1 - d.known), confidence: d.known }));
+  const items = [...byTopic.values()].map((d) => {
+    const known = d.dealbreaker ? d.exact : d.known;
+    return { topic: d.topic, why: d.why, priority: d.importance * (1 - known), confidence: known, ...(d.dealbreaker && { dealbreaker: true }) };
+  });
   for (const topic of clarify) {
     const cur = items.find((i) => i.topic.toLowerCase() === topic.toLowerCase());
     if (cur) cur.priority = Math.max(cur.priority, CLARIFY_PRIORITY);
@@ -198,7 +204,7 @@ export function buildAgenda({ self, observed, clarify = [] }) {
   return items
     .sort((a, b) => b.priority - a.priority)
     .slice(0, AGENDA_SIZE)
-    .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: r2(a.confidence), status: 'open' }));
+    .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: r2(a.confidence), status: 'open', ...(a.dealbreaker && { dealbreaker: true }) }));
 }
 
 const sentences = (s) => s.split(/[.!?]+(?:\s|$)/).filter((x) => x.trim()).length;

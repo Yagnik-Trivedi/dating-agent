@@ -60,6 +60,11 @@ function printBrief(b) {
   assert.equal(smoking.why, 'A dealbreaker for you');
   assert.equal(agenda.find((a) => a.topic === 'drinking').priority, 0.6);
   assert.ok(!JSON.stringify(agenda).includes('abroad'), 'private facts never become agenda topics');
+  const kids = buildAgenda({
+    self: [{ predicate: 'dealbreaker', object: 'partner must be compatible on wants children (mine: yes)', weight: 1, disclosure: 'if_asked', embedding: v(1, 0, 0) }],
+    observed: [{ predicate: 'goal', object: 'looking for: long-term', confidence: 0.6, evidence: [{ quote: 'x' }], embedding: v(1, 0, 0) }],
+  })[0];
+  assert.deepEqual([kids.priority, kids.dealbreaker], [1, true], 'a related fact on another topic never answers a dealbreaker');
   assert.ok(!agenda.some((a) => a.topic.includes('religion')), 'if_asked values (religion) are never raised by the agent');
   assert.ok(!agenda.some((a) => a.topic.includes('Hampi')), 'story facts are conversation material, not agenda dimensions');
   console.log('✓ offline checks passed (topics, tag facts, overlaps, agenda merge/sort/privacy)');

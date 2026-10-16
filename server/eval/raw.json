@@ -1,0 +1,461 @@
+{
+  "f1#1": {
+    "id": "f1",
+    "run": 1,
+    "expected": "flagged_fake",
+    "predicted": "flagged_fake",
+    "reason": "Elena: abroad, crypto story, pushes to Telegram, no photos",
+    "names": [
+      "Leela",
+      "Elena"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "flagged_fake",
+    "turns": 0,
+    "tokens": 4827,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 56,
+    "file": "transcripts/f1-run1.md"
+  },
+  "f2#1": {
+    "id": "f2",
+    "run": 1,
+    "expected": "flagged_fake",
+    "predicted": "flagged_fake",
+    "reason": "Daniel: army doctor abroad, forex investment, pushes off-app, no photos",
+    "names": [
+      "Pooja",
+      "Daniel"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "flagged_fake",
+    "turns": 0,
+    "tokens": 5631,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 64,
+    "file": "transcripts/f2-run1.md"
+  },
+  "c2#1": {
+    "id": "c2",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term",
+    "names": [
+      "Riya",
+      "Aditya"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.89,
+      0.9
+    ],
+    "stopReason": "agenda_complete",
+    "status": "compatible",
+    "turns": 13,
+    "tokens": 127818,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1108,
+    "file": "transcripts/c2-run1.md"
+  },
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.91,
+      0.88
+    ],
+    "stopReason": "max_turns",
+    "status": "compatible",
+    "turns": 24,
+    "tokens": 202172,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1813,
+    "file": "transcripts/c1-run1.md"
+  },
+  "c3#1": {
+    "id": "c3",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Books, pottery, old-city food walks; both life-first, never drink, need lots of alone time",
+    "names": [
+      "Sana",
+      "Leela"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.93,
+      0.92
+    ],
+    "stopReason": "max_turns",
+    "status": "compatible",
+    "turns": 24,
+    "tokens": 248898,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1865,
+    "file": "transcripts/c3-run1.md"
+  },
+  "c4#1": {
+    "id": "c4",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Films and running in Mumbai; both career-first, need space in conflicts, long-term",
+    "names": [
+      "Dev",
+      "Nikhil"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.69,
+      0.89
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 236305,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 2127,
+    "file": "transcripts/c4-run1.md"
+  },
+  "c5#1": {
+    "id": "c5",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Carnatic music, filter coffee, family-first, veg, want kids (Ananya has a mild drinking inconsistency)",
+    "names": [
+      "Ananya",
+      "Karthik"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.89,
+      0.84
+    ],
+    "stopReason": "agenda_complete",
+    "status": "compatible",
+    "turns": 12,
+    "tokens": 127696,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1486,
+    "file": "transcripts/c5-run1.md"
+  },
+  "c6#1": {
+    "id": "c6",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Stand-up comedy and fitness in Delhi; both career-first, high energy, want kids (Rohit has a mild workout inconsistency)",
+    "names": [
+      "Pooja",
+      "Rohit"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.92,
+      0.92
+    ],
+    "stopReason": "max_turns",
+    "status": "compatible",
+    "turns": 24,
+    "tokens": 207454,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 2043,
+    "file": "transcripts/c6-run1.md"
+  },
+  "i2#1": {
+    "id": "i2",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "compatible",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
+    "names": [
+      "Tara",
+      "Sameer"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.91,
+      0.87
+    ],
+    "stopReason": "agenda_complete",
+    "status": "compatible",
+    "turns": 12,
+    "tokens": 124654,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1094,
+    "file": "transcripts/i2-run1.md"
+  },
+  "c7#1": {
+    "id": "c7",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
+    "names": [
+      "Hetal",
+      "Parth"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.89,
+      0.87
+    ],
+    "stopReason": "max_turns",
+    "status": "compatible",
+    "turns": 24,
+    "tokens": 242561,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1956,
+    "file": "transcripts/c7-run1.md"
+  },
+  "i1#1": {
+    "id": "i1",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Nisha's dealbreaker is kids; Varun doesn't want any (hidden from his tags, surfaces in chat)",
+    "names": [
+      "Nisha",
+      "Varun"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.78,
+      0.74
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 313919,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 2187,
+    "file": "transcripts/i1-run1.md"
+  },
+  "i4#1": {
+    "id": "i4",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "incompatible",
+    "reason": "Aisha will never leave Hyderabad (dealbreaker); Vikram is moving abroad (not a profile tag)",
+    "names": [
+      "Aisha",
+      "Vikram"
+    ],
+    "verdicts": [
+      "incompatible",
+      "compatible"
+    ],
+    "scores": [
+      0.72,
+      0.79
+    ],
+    "stopReason": "dealbreaker",
+    "status": "closed",
+    "turns": 8,
+    "tokens": 99612,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 702,
+    "file": "transcripts/i4-run1.md"
+  },
+  "i3#1": {
+    "id": "i3",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Meghna needs long-term (dealbreaker); Kunal wants short-term (hidden from his tags)",
+    "names": [
+      "Meghna",
+      "Kunal"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.84,
+      0.7
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 284950,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1622,
+    "file": "transcripts/i3-run1.md"
+  },
+  "i5#1": {
+    "id": "i5",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Gauri needs a non-drinker (dealbreaker); Arnav brews beer and drinks regularly (hidden from his tags)",
+    "names": [
+      "Gauri",
+      "Arnav"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.63,
+      0.78
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 212729,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1888,
+    "file": "transcripts/i5-run1.md"
+  },
+  "i6#1": {
+    "id": "i6",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Lifestyle and values: nightlife, drinks, no kids, not serious, family not involved vs family-first, never drinks, wants kids, long-term",
+    "names": [
+      "Zoya",
+      "Karthik"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.54,
+      0.5
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 246779,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1627,
+    "file": "transcripts/i6-run1.md"
+  },
+  "i7#1": {
+    "id": "i7",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Lifestyle and values: smoker, non-veg, drinks vs veg (important), never drinks, family-first; no shared interests",
+    "names": [
+      "Kabir",
+      "Hetal"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.66,
+      0.52
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 233718,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 2340,
+    "file": "transcripts/i7-run1.md"
+  },
+  "m1#1": {
+    "id": "m1",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "compatible",
+    "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style",
+    "names": [
+      "Meera",
+      "Arjun"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.73
+    ],
+    "stopReason": "max_turns",
+    "status": "compatible",
+    "turns": 24,
+    "tokens": 222183,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 2147,
+    "file": "transcripts/m1-run1.md"
+  }
+}

@@ -12,10 +12,16 @@ const AGENDA_PRIORITY = 0.5;
 const KNOWN = 0.75;
 const CLASH_CONFIDENCE = 0.7;
 
-/** An agenda is done when every item with priority ≥ 0.5 is answered or known with confidence ≥ 0.75. */
+// A dealbreaker answered by their profile tags (confidence 0.6, same topic) is settled: plan 07 already checked it.
+const DEALBREAKER_KNOWN = 0.6;
+
+/** Answered in the chat, or known well enough already. */
+export const settled = (a) => a.status === 'answered' || (a.confidence ?? 0) >= (a.dealbreaker ? DEALBREAKER_KNOWN : KNOWN);
+
+/** An agenda is done when every dealbreaker topic and every item with priority ≥ 0.5 is settled. */
 export const agendaDone = (agenda = []) => agenda
-  .filter((a) => a.priority >= AGENDA_PRIORITY)
-  .every((a) => a.status === 'answered' || (a.confidence ?? 0) >= KNOWN);
+  .filter((a) => a.priority >= AGENDA_PRIORITY || a.dealbreaker)
+  .every(settled);
 
 /**
  * → { reason, detail? } or null.

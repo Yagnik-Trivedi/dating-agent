@@ -44,6 +44,8 @@ assert.deepEqual(updated.map((a) => a.status), ['answered', 'answered', 'open'],
 assert.equal(updated[2].confidence, 0.8);
 assert.ok(agendaDone(updated) && !agendaDone(agenda), 'priority ≥ 0.5 items must be answered or known');
 assert.ok(agendaDone([{ priority: 0.7, status: 'open', confidence: 0.8 }]), 'known with confidence ≥ 0.75 counts');
+assert.ok(!agendaDone([{ priority: 0.3, status: 'open', confidence: 0, dealbreaker: true }]), 'an open dealbreaker blocks agenda_complete at any priority');
+assert.ok(agendaDone([{ priority: 0.4, status: 'open', confidence: 0.6, dealbreaker: true }]), 'a dealbreaker answered by their tags is settled');
 const card = styleCard({ description: 'Short.', metrics: { medianWords: 8, lowercaseStartRatio: 0.9, laughRate: 0.5, emojiPerMessage: 0.1, exclamationRate: 0.05 } }, { extraversion: 0.2 });
 assert.ok(card.includes('lowercase') && card.includes('haha') && card.includes('reserved') && !card.includes('0.2'), 'traits shape tone, values never shown');
 Object.assign(env, { DEMO_FAST: false, AGENT_MIN_DELAY_MS: 1500, AGENT_MAX_DELAY_MS: 20000 });

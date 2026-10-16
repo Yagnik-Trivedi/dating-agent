@@ -26,6 +26,8 @@ export function verdictFor({ dimensions, chemistry }) {
   if (dimensions.dealbreakers.score === 0) verdict = 'incompatible';
   else if (score >= THRESHOLDS.compatible && avgConf >= THRESHOLDS.minConfidence) verdict = 'compatible';
   else if (score < THRESHOLDS.incompatible && avgConf >= THRESHOLDS.minConfidence) verdict = 'incompatible';
+  // An unchecked dealbreaker (confidence 0) can't be called compatible: we only know nothing contradicted it yet.
+  if (verdict === 'compatible' && dimensions.dealbreakers.confidence === 0) verdict = 'maybe';
   return { verdict, score: Math.round(score * 100) / 100, avgConf: Math.round(avgConf * 100) / 100 };
 }
 
