@@ -1,0 +1,39 @@
+# Runs the server's node:test suite on every push and PR. The tests start their own
+# MongoMemoryReplSet and make no LLM calls, so no secrets are needed: the env below is dummy.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: server
+    env:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://127.0.0.1:1/unused # tests use their own in-memory replica set
+      JWT_SECRET: ci-only-dummy-secret-not-used-anywhere-0123456789
+      LLM_ENABLED: 'false' # kill switch: any accidental LLM call fails fast
+      MODEL_FAST: ci-fast
+      MODEL_MID: ci-mid
+      MODEL_SMART: ci-smart
+      MODEL_EMBED: ci-embed
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Cache MongoDB binary (mongodb-memory-server)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+      - run: npm ci
+      - run: npm test
