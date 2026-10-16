@@ -37,6 +37,16 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 20 | UI design brief | 🚫 Not for Claude Code (design team) | main | (this commit) | Prompt for Claude Design. Claude Code does not touch it. |
 | ref | kg-upgrade-reference | ✅ Done (reference) | main | `f91d072` | Implementation detail where plan 15 is silent. |
 
+## Owner's order (decided 2026-10-17)
+
+Finish **all development first**, then go live, then submit. No side work in between.
+
+1. **Phase 1, development (now → ~Oct 24):** plan 09 (judges) → plan 10 (screens for report + replay) → plan 11 (seed personas + evaluation + tuning) → fix what the tests find. Plans 18/19: ask the owner at the end of plan 11.
+2. **Phase 2, go live (~Oct 25 → 28):** plan 14 (switch to the Nebius key) → plan 12 (deploy + keep-alive).
+3. **Phase 3, submit (Oct 29):** plan 13 (README, video, Devpost).
+
+Humans, before Phase 2: Nebius account + credits, Atlas login, Tavily key (optional).
+
 ## Currently working on
 
 **Plan 09 on `feat/plan-09-judges`** (owner said "go" 2026-10-16 ~21:45 IST).
@@ -52,7 +62,7 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 4. CLAUDE.md Status line for plan 09, final commit `feat(plan-09): …`, merge to `main`, stop for "go".
 5. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
 
-**Side work (parallel, only while the main line waits at a checkpoint):** queue, in order:
+**Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
 1. ✅ **CI test workflow** on `side/ci-tests` (`bbd6dcd`, **merged to `main`** in `4aa13c8` on the owner's OK). Only `.github/workflows/ci.yml`: Node 22, `npm ci` + `npm test` in `server/`, dummy env (no secrets; `LLM_ENABLED=false`; dummy `MODEL_*` IDs because `createConcept` reads the embed model name), caches the MongoDB binary, runner pinned to `ubuntu-24.04` (`ubuntu-latest` moves to Ubuntu 26 on Oct 19 and mongodb-memory-server may not know it), actions checkout@v7 / setup-node@v7 / cache@v6 (v4 ran on deprecated Node 20). GitHub Actions run 38928682293: green, 52/52, no warnings.
 2. **Deploy prep (plan 12)** on `side/deploy-prep`. Touches `render.yaml`, `.github/workflows/keep-alive.yml`, `server/src/keepalive.js` (+ one line in `index.js`), and `DEPLOY.md`. Nothing schema-related.
