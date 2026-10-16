@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 15:00 IST, by Claude Code (plan 08: stance check fails open; Hinglish sim running)
+- **Last updated:** 2026-10-16 15:35 IST, by Claude Code (plan 08: language + same-start fixes; re-running the Hinglish sim)
 - **Main-line branch:** `feat/plan-08-engine` (plan 08 WIP) · **main:** `916f89d` (plans 02–07 + 17 done)
-- **Last commit (main line):** `7ec810c` on `feat/plan-08-engine`
+- **Last commit (main line):** `a38dc7d` on `feat/plan-08-engine`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -22,7 +22,7 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 05 | Onboarding + knowledge graph (v2) | ✅ Done | main | `1417ee0` | v1 was `219d0ef`. `feat/plan-05-kg-v2` is merged and can be deleted. |
 | 06 | Trust check (v2) | ✅ Done | main | `d8d1a80` | The DB spy proves it reads only the public profile. |
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
-| 08 | Agent conversation: persona engine + per-turn pipeline (v2) | 🔄 In progress | `feat/plan-08-engine` | `7ec810c` | Engine works end to end; acceptance checks not done yet. See "Currently working on". |
+| 08 | Agent conversation: persona engine + per-turn pipeline (v2) | 🔄 In progress | `feat/plan-08-engine` | `a38dc7d` | Engine works end to end; acceptance checks not done yet. See "Currently working on". |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ⬜ Not started | — | — | Next after 08. v1 (`9889032`) still runs until v2 replaces it. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | Functional changes only. Visual restyling waits for plan 20's design. |
 | 11 | Seed personas + evaluation (v2) | ⏸ Paused | `wip/plan-11b` | `a8fc99c` | **Stopped at:** the v1 eval harness (partial), superseded by v2. **Resume:** after 10, write v2 on a new branch reusing `scripts/lib/runPair.js` + the `eval.js` report from `wip/plan-11b`; add ≥ 3 eligible seeds per demo city. |
@@ -44,7 +44,11 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 - Simulation g (Meera × Ishaan) ran 12 natural messages: grounded opener, steering to looking-for / smoking / kids / location, honest answers. Then the fast-tier stance check timed out 3× and the reply failed, so the run was stopped.
 - **Done:** the stance check now fails open (`7ec810c`): on an LLM error it logs and keeps the draft. `npm test` 51/51.
 - **Next** (continue from the first unchecked item):
-  1. [ ] Hinglish pair `node scripts/simulate.js seed13@demo.local seed14@demo.local` (Pooja × Rohit, Delhi, `hi_latn` mix): confirm replies use their language mix (act plan `language` on each message) and the run ends with an end reason.
+  1. [~] Hinglish pair `node scripts/simulate.js seed13@demo.local seed14@demo.local` (Pooja × Rohit, both ~70% English).
+     - Run h: natural end at 13 messages, 70.8k tokens / 46 calls (~12 min), 1 stance timeout handled.
+     - Run h bugs, fixed in `a38dc7d`: mirroring looped into 9/13 Hinglish replies (now it weights the mix), and every message started "Arre yaar" (now a hard check).
+     - **Re-run i is pending:** check each message's `actPlan.language` in Mongo against the mix (about 30–40% `hi_latn` primary) and that openings vary.
+     - Also seen: both verdicts came back "maybe" because the smart tier (Ultra) timed out. That's the v1 judge, which plan 09 replaces.
   2. [ ] A fresh `simulate.js seed01@demo.local seed04@demo.local`: record end reason, tokens and time.
   3. [ ] `node scripts/agent-check.js` live (written, never run): inbox question, honest bot answer, anti-smoking stance, take over, scam flag, ≤ 2 calls + stance + 1 regen per message, DB-spy boundary. Fix failures.
   4. [ ] `npm test`, `node scripts/check-indexes.js` (add the `chatevents` indexes to EXPECTED), then with `npm run dev` running: `npm run api-check`, `node scripts/seed-check.js`.
@@ -100,4 +104,4 @@ This section is kept current, so another session can take over at any moment (fo
 - Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
 - Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
 
-**Last handoff state:** 2026-10-16 15:00 IST (owner's usage nearly exhausted). Plan 08 WIP is pushed on `feat/plan-08-engine`. No background jobs need to survive; the local dev DB can be recreated with `npm run dev-db` + `npm run seed`.
+**Last handoff state:** 2026-10-16 15:35 IST (owner's usage nearly exhausted). Plan 08 WIP is pushed on `feat/plan-08-engine`. No background jobs need to survive; the local dev DB can be recreated with `npm run dev-db` + `npm run seed`.
