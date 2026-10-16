@@ -1,75 +1,77 @@
-# 10 — Frontend (React + Vite + Tailwind)
+# 10 — Frontend (React + Vite + Tailwind), v2 patch
 
-> **Prompt for Claude Code:** Read `CLAUDE.md` and the API contract in `plan/04-backend-core.md`. Load the `frontend-design` skill if available. Build the screens below against that contract. Where backend pieces aren't ready yet, use a small mock layer in `src/lib/mock.js` behind `VITE_USE_MOCKS=true`. Run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §5, and the API added by plans 05–09 (v2). The v1 screens exist and run on the real API (mocks were removed in plan 09). Update them as below, run the acceptance checks.
 
-## Design direction
+## Design direction (unchanged)
 
-- **Mobile-first** (judges may open it on a phone), and it must look good at 1280px too.
-- Warm and trustworthy, not Tinder-clone neon. One accent color, generous spacing, rounded cards, readable type (a Google Font pair, e.g. a characterful display font plus a clean sans).
-- The agent should feel like a calm **assistant at your side**: a small consistent agent avatar or icon and a soft secondary color for anything agent-related.
+- Mobile-first, and good at 1280px too.
+- Warm and trustworthy: one accent color, generous spacing, rounded cards, a characterful display font + a clean sans.
+- The agent is a calm assistant at your side: a consistent agent icon and a soft secondary color for anything agent-related.
 - Light and dark mode via CSS variables.
 - Every async action has loading and error states. No blank screens.
+- Accessibility: labelled inputs, focus states, contrast, `aria-live` on new messages.
 
-## Routes and screens
+**Keep the app runnable:** each backend plan (05–09) already made the minimum client change so the flow keeps working. This plan finishes those screens. Nothing here may break signup → onboarding → discover → match → agent chat.
 
-| Route | Screen | Key elements |
-|---|---|---|
-| `/` | Landing | One-line pitch, how it works in 4 steps (Trust check → Understand → Pre-chat → Verdict), sign up / log in |
-| `/signup` | Sign up | Name, email, password, and a **required consent checkbox**: "Early conversations with your matches may be handled by AI agents, including yours." Link to a short "How the agent works" modal. |
-| `/login` | Log in | |
-| `/onboarding` | Multi-step questionnaire | Step per section A–E from plan 05 (fetched from `GET /api/onboarding/questions`). Progress bar; Likert as tappable 1–5 chips; importance selector per value item; chat-bubble UI for style samples ("reply like you would"). Save drafts to localStorage. Submit, then a processing screen. |
-| `/onboarding/review` | Your graph + privacy | Force-graph of `GET /api/kg/me`, plus a list grouped by predicate. Each fact has a disclosure toggle (public / if asked / private) and delete. Explain tiers in one line. |
-| `/profile` | Edit profile | Photos (DiceBear URL picker for the demo), bio, 3 prompts, tags, dealbreakers |
-| `/discover` | Swipe deck | Card with photo, name, age, city, bio, prompts, interests. Like / Pass buttons (no gestures needed). On match: a celebratory modal, "Your agent is checking this profile…". |
-| `/matches` | Match list | Each row shows a status badge (Checking · Agent chatting · Compatible · Maybe · Not compatible · Flagged · You're chatting), last message preview and unread dot |
-| `/matches/:id` | Match room | See the details below |
-| `/matches/:id/report` | Verdict report | See the details below |
-| `/inbox` | Ask my human | Questions from your agent with an answer box. On answer, a toast: "Your agent learned something new". |
-| `/settings` | Settings | Default agent mode (off / shadow / auto) with a plain explanation of each; delete account (confirm dialog) |
+## Changes
 
-### Match room (`/matches/:id`) — the hero screen for the demo
+### Signup / profile
+- Signup collects age, gender, interested in and city (plan 15 stage 1). Consent checkbox unchanged (required).
+- `/profile` adds the wanted age range (two number inputs, or a dual slider) and an optional radius. **Dealbreakers move out of the profile:** they live in section B now (shown read-only, with a link to edit them in the questionnaire).
 
-Desktop has three panels (stacked tabs on mobile).
+### Onboarding (`/onboarding`, sections fetched from `GET /api/onboarding/questions`)
+- **Identity** step first: job/studies, languages spoken (chips + "other"), optional family setup.
+- **B:**
+  - The importance selector has **no default**; Next is disabled until every item has one.
+  - After the importance, an "In a partner I'd accept" chip multi-select (all selected by default) and a **Dealbreaker** toggle.
+  - Turning on the dealbreaker toggle with every option still accepted shows an inline error and blocks Next.
+- **C:** 7 prompts, at least 4 answered (counter "3 of 4 minimum"), each with a grey example placeholder; the opinion prompt asks "how strongly?" with a 3-step strength chip.
+- **D:** chips + free text, each with an intensity chip (casual / into it / obsessed).
+- **E:** 15 chat-bubble "how would you reply?" items, grouped by mood; any language and script is welcome (say so in one line).
+- Drafts save to localStorage. The processing screen polls the build job ("building your profile…").
 
-1. **Chat (center):**
-   - Live messages via socket. Typing indicator.
-   - **Own-side agent messages** get a subtle "sent by your agent" marker that only the owner sees.
-   - Banner at the top while the agent is active: "Your agent is chatting (shadow mode)", with a big **Take over** button.
-   - Message input is disabled while your agent is active, with a "Take over to type" hint.
-   - After handoff, show the **reveal** divider message.
-2. **Trust + brief (left):**
-   - Trust level chip with flags and quotes.
-   - Brief summary.
-   - Agenda checklist with live status (open / partially / answered ✓).
-3. **What we're learning (right):**
-   - Live force-graph of observed facts about the match (`GET /api/matches/:id/kg` plus `kg:update` events). Nodes fade in; size = weight; opacity = confidence.
-   - Below it, confidence bars per agenda topic.
-   - **This panel is the "wow" moment of the video: make it smooth.**
+### Review screen (`/onboarding/review` and `/profile/graph`)
+- **Hub graph** (`GET /api/kg/me`): the user in the centre and 8 hubs (Who I am · Likes · Dislikes · Values & lifestyle · Goals · Stories · Opinions & humour · How I text). Node size = `max(importance, strength)`, opacity = confidence. Traits are never shown.
+- **Fact list** grouped by hub. Per fact:
+  - edit wording, strength (slider) and privacy (public / if asked / private)
+  - delete (explain: "it won't come back when you re-submit")
+  - `PATCH` / `DELETE /api/kg/facts/:id`
+- **Contradictions panel** (`GET /api/kg/contradictions`): "Which is right?" with both quotes; choosing one calls resolve, and the item leaves the panel.
+- **"How I text" corrections:** each style node has "That's not me" with a short fix field (`POST /api/kg/voice/corrections`), for example "I never use emojis".
 
-### Report (`/matches/:id/report`)
-- Big verdict badge and a short summary.
-- Dimension bars (values, lifestyle, interests, communication, personality, chemistry) with a confidence hint.
-- Reasons ✓ and concerns ⚠. Each is clickable and **scrolls/highlights the cited messages** in a transcript drawer (the "receipts").
-- "Ask yourself" questions.
+### Match room (`/matches/:id`)
+- **Right panel → "My notes":** what **my** agent learned about them (notes with quotes) and chat moments (shared interest, laugh, disagreement, …) growing live via `notes:update`. It replaces the observed-facts force graph. Everything shown comes from the transcript.
+- **Left panel:** trust chip with flags and quotes; brief summary; agenda checklist with live statuses.
+- **Own agent messages:**
+  - The "sent by your agent" marker (owner only).
+  - A small **"I wouldn't say that"** action that opens an optional "how would you say it?" field (`POST /api/messages/:id/wouldnt-say`); toast "Your agent will remember".
+  - Never shown on the other side's messages.
+- Take over: unchanged (instant, input unlocks).
+
+### Report (`/matches/:id/report`, from my `MatchDecision`)
+- Big label (Compatible / Maybe / Not compatible) + `summaryForUser`.
+- **Positives ✓, frictions ⚠ and dealbreaker risks**, each with its quote. Clicking one opens the transcript drawer and **highlights the cited message** (the receipts).
+- The dimension bars from v1 are removed (there are no code dimension scores any more).
 - **Actions:**
-  - Compatible/Maybe: **Continue as myself** / **Pass**. Date ideas (Tavily) and icebreakers after continue.
-  - Incompatible: "Talk anyway" override.
+  - Compatible / Maybe: **Continue as myself** / **Pass**. After Continue: date ideas (Tavily, or the 503 message) and icebreakers.
+  - Not compatible: "Talk anyway".
+- Never show anything from the other side's decision.
 
-## Client plumbing
+### Chat replay (`/matches/:id/replay`, from `GET /api/conversations/:id/replay`)
+- The whole agent conversation with **my** side's ChatEvents as inline badges and my decision's evidence highlighted.
+- "I wouldn't say that" is available on my own agent's messages here too.
 
-- `src/lib/api.js`, `src/lib/socket.js` (from plan 02).
-- `useAuth`, `useSocket(matchId)` and `useMatch(matchId)` hooks. The socket reconnects with the token.
-- Global toasts for `inbox:new`, `report:ready`, `match:new`.
-- Route guard: not logged in → `/login`; onboarding not done → `/onboarding`.
-- Basic accessibility: labelled inputs, focus states, color contrast, `aria-live` on new messages.
+### Settings
+- Default agent mode (off / shadow / auto) with a plain explanation.
+- **"Learn from my chats"** toggle (default on): "After you take over, your own messages help your agent sound like you."
+- Delete account (confirm dialog).
 
 ## Acceptance checks
 
-- [ ] The full flow works in the browser against the real backend: signup with consent → onboarding → review graph → discover → match → match room shows the agent chatting live → report → continue → reveal.
-- [ ] Take over works instantly and the input unlocks.
-- [ ] Clicking a reason in the report highlights its cited messages.
-- [ ] Usable at 375px width with no horizontal scroll.
-- [ ] No console errors in normal use.
+- [ ] Real backend, headless Chrome (puppeteer-core with system Chrome, scratchpad only, not committed): signup (with basics + consent) → onboarding v2 (B importance required, dealbreaker validation) → hub review (edit, delete, contradiction resolve, "I never use emojis") → discover → match → match room (agent chatting, My notes growing live) → "I wouldn't say that" → report with receipts → continue → reveal.
+- [ ] Take over unlocks the input in under 100 ms and no agent message follows.
+- [ ] Clicking a positive or friction highlights its cited message.
+- [ ] 375px width: no horizontal scroll. Light and dark both readable. No console errors.
 - [ ] Update the Status section of `CLAUDE.md`.
 
-**Commit:** `feat(plan-10): frontend screens and live match room`
+**Commit:** `feat(plan-10): v2 onboarding, hub review, my-notes panel, replay, corrections`

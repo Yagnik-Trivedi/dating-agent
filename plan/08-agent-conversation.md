@@ -1,141 +1,188 @@
-# 08 — Step 3: The agent conversation (the core)
+# 08 — Step 3: The agent conversation (persona engine + per-turn pipeline)
 
-> **Prompt for Claude Code:** Read `CLAUDE.md`, `plan/04-backend-core.md` and `plan/07-match-brief.md`, then implement the conversation engine below. This is the most important part of the product. Take care with concurrency, grounding and stopping. Run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §4 stage 5 and §7, and `plan/kg-upgrade-reference.md` Phases 6–7.1 for detail (plan 15 and this file win on conflicts). The engine replaces the v1 engine (`agent/beliefUpdate.js`, `prompts/claimCheck.js`, `agent/shouldStop.js`, the Hinglish guard). Implement it, run the acceptance checks.
 
 ## Goal
 
-After the brief, the user's agent opens (or replies to) the conversation **in the user's own voice**, grounded only in the user's knowledge graph. It steers naturally toward the agenda, learns about the match after every incoming message, and stops when it knows enough.
+My agent texts **as me**:
+- grounded in my graph
+- in my real voice and language mix
+- opinionated where I am (no sycophancy)
+- variable from chat to chat (seeded randomness)
 
-The other side may be a **human** or **their own agent**. The engine must not care which.
+It learns about the other person **only from the transcript**, as quote-backed notes and chat moments.
 
-## Triggers
+The other side may be **their agent or the human themselves** (shadow mode, Take over). The pipeline is identical either way: a human's messages are just transcript lines.
 
-- `startConversation(match)`, from plan 07: decide who opens. If both agents are active, pick one at random. The opener comes from `brief.openers[0]`, re-styled if needed.
-- `onIncomingMessage(message)`, from plan 04, after every saved message:
-  - For **each user in the match other than the sender** whose `perUser.agentActive` is true, and whose `user.agentMode` is `shadow` or `auto`, schedule a reply.
-  - **Shadow and auto behave the same server-side.** The difference is only UI: shadow shows the live transcript prominently with a big Take over button.
+## Hard rules
 
-## Concurrency and pacing (`services/agent/scheduler.js`)
+- **Information boundary.** My agent's inputs are (a) my own graph, voice and agenda and (b) the transcript. Never the other user's `KgFact`, `KgEdge`, `VoiceProfile`, `VoiceSample`, `Profile.gate` or answers. Their name comes from `match.perUser[].name`.
+- **Cost per incoming message:** normally 2 LLM chat calls (perceive+observe; generate). Add a stance check only when `mustDisagree`, and at most **1** regeneration (`MAX_REGENERATIONS`). Style, grounding and leak checks run in code. Embedding calls are batched; the RPM limiter and spending cap apply.
+- **Private facts** never reach the generate prompt as text. Only `privateGuidance` (behaviour rules) does.
+- **Kept from v1 (all measured and needed):**
+  - **Take over:** one tap stops the agent and discards the reply being written.
+  - **Atomic Mongo lock** per (match, agent user).
+  - **Deterministic honest answer** to a sincere "are you a bot?".
+  - **No meeting or contact sharing; SFW only.**
+  - **`scanMessage`** (plan 06) on every incoming message and every outgoing draft; severe → flag the match.
+  - **Pacing:** typing indicator, then a delay ∝ words; `DEMO_FAST` / `NO_PACING` for scripts.
 
-- **Debounce per (matchId, agentUserId):** wait `AGENT_DEBOUNCE_MS` (default 4000) after the last incoming message, so bursts of 2–3 messages get one reply.
-- **Lock per (matchId, agentUserId):** an in-memory `Map`, plus `match.agentState.runningLock` with a timestamp. A stale lock older than 2 minutes is ignored. Never two replies in flight.
-- **Re-check before sending:** after generating, re-read the match. If the user took over, the status changed, or newer human messages arrived, discard the draft.
-- **Pacing:** wait `delay = clamp(AGENT_MIN_DELAY_MS + words * 350 + random(0, 2000), max AGENT_MAX_DELAY_MS)` (defaults 1500 / 20000). Emit `typing` as the agent's user during the wait. `DEMO_FAST=true` uses 300 ms to 2 s.
-- **Restart safety:** state lives in Mongo (`agentState`, `agenda` statuses), so a Render restart loses at most one in-flight reply. On boot, resume matches in `agent_chatting` whose last message is from the other side and older than 30 s.
+## 1. Persona engine: `services/persona/`
 
-## Reply generation (`services/agent/generateReply.js`, tier `fast`)
+### 1.1 Per-conversation cache (`cache.js`)
+- A tiny in-process LRU (a `Map`; no dependency) of `{ facts (no vectors), conceptVectors, privateFacts (+ vectors for leak checks), voiceProfile, samples (+ incoming vectors) }`.
+- Keyed by `userId:graphVersion`, so any self-graph or voice write invalidates it.
+- Max ~200 entries.
 
-### Context assembly (`services/agent/context.js`)
-1. **Style card:** `styleProfile.description`, do/don't lists, and key metrics turned into rules ("usually 6–12 words", "lowercase starts", "uses 'haha' often", "mixes some Hinglish words").
-2. **Sayable facts:** the user's self facts where `disclosure !== 'private'`, each as `[F12] likes: trekking (story: "…")`. Include `if_asked` facts with a marker: "only if they ask directly". Order by weight, cap at 40.
-3. **Agenda:** the top 3 open items, as neutral topics.
-4. **What we know about them:** observed facts about the match with confidence ≥ 0.5, cap 15.
-5. **Transcript:** the last 20 messages labelled "You" (this user's side) or by the match's first name.
-6. **Traits** (private) only shape tone instructions, e.g. low extraversion → "a bit reserved, fewer exclamation marks". They are never sayable.
+### 1.2 `contextBuilder.js`
+- **`selectFacts({ userId, incoming, rng, k = SELECT_K })`**
+  - Candidates: `public` always. `if_asked` only when the incoming message is a question about that topic: cosine ≥ `T_ASKED` **and** question detection (`?`, or an interrogative word list in English + common romanised Hindi/Gujarati: kya, kaise, kab, kyun, shu, kem, kyare). `private` never.
+  - Score: `0.5·relevance + 0.3·max(importance, strength) + 0.2·recency`, sampled with softmax(score / `TOPIC_TEMP`) using `rng`. Dedupe by concept.
+  - Returns facts + up to 2 untold story candidates.
+- **`privateGuidance({ userId })`**: private facts + traits → non-verbatim behaviour rules ("avoid topic X; deflect lightly if asked"). Never raw text.
+- **`traitRules.js`** (deterministic). Values 0.4–0.7 give no rule.
 
-### Prompt skeleton (`services/prompts/agentReply.js`)
+  | Trait | < 0.4 | > 0.7 |
+  |---|---|---|
+  | Extraversion | short replies, few `!`, rarely asks back | energetic, more `!`, asks back often |
+  | Agreeableness | direct, comfortable disagreeing | warm, softens disagreement, but still disagrees on strong opinions |
+  | Neuroticism | (n/a) | more reactive to low-effort replies; avoid sarcasm |
+  | Openness | concrete topics | curious, playful hypotheticals |
+  | Conscientiousness | casual about plans | proposes concrete plans/times |
+
+- **`selectExemplars({ userId, incoming, rng, k = EXEMPLARS_K })`**: my `VoiceSample`s ranked by cosine(incoming, sample.incoming) with MMR diversity (mood, language). Returned as few-shot `{ incoming → reply }` pairs. Each side always gets **its own** exemplars.
+
+### 1.3 Checks: `checks.js`
+- **`styleCheck(draft, actPlan, voice)`** (code): word count within ±40% of `targetWords`; emoji, ask-back and laugh obey the plan; lowercase start and ending punctuation match my majority; the reply language matches `actPlan.language` (code heuristics + script detection); nothing from `neverSay`.
+- **`groundingCheck(draft, claims, facts)`** (code, **no LLM**):
+  - `generate` must list every first-person claim with the fact ids it relies on, and a stance (`positive`/`negative`/`neutral`).
+  - A claim citing a missing id, or whose stance contradicts the cited fact's polarity, fails.
+  - A first-person sentence ("i …", "my …", "i'm …", plus romanised equivalents like "mera", "mujhe") not covered by any listed claim fails as unsupported.
+  - Unsupported claims about likes are rewritten as honest uncertainty ("never really tried it") plus an "ask my human" inbox question, rather than regenerating.
+- **`stanceCheck(draft, mustDisagree)`** (LLM, tier fast, reasoning off, **only when `mustDisagree`**): verifies the draft doesn't agree or concede.
+- **`leakCheck(draft, privateFacts)`** (code, on **every** outgoing agent message): alias and keyword hits against private facts' labels/aliases, plus sentence-embedding cosine ≥ `T_LEAK` against private facts' (or their concepts') vectors. Sentences are embedded in one batched call.
+- **Retry policy:** any failure → **one** regeneration with the reasons. Still failing → send the best draft minus every failing sentence. If nothing is left, send a neutral reaction to their message with no self-claims. All scores are stored on `message.checks`.
+
+## 2. Per-turn pipeline (my side S, user U, incoming message m)
+
+Runs as the `agentTurn` job (plan 17), dedupeKey `turn:<matchId>:<userId>`, `runAt = now + AGENT_DEBOUNCE_MS`. Re-enqueueing moves `runAt`, so bursts get one reply. Take over calls `cancel()`.
+
+### 2.1 `perceiveObserve(m)`: ONE LLM call (tier mid, reasoning off). Zod:
+```js
+{ concepts: [{ text, type, polarity }], claims: [{ text, conceptText?, attribute?, value?, polarity }],
+  isQuestion, aboutMe, lowEffort, humor, warmth, acknowledgesDifference,
+  dealbreakerHint: attribute | null,
+  language: { languages: [String], script, codeSwitch },
+  notes: [{ predicate, object, attribute?, value?, polarity, strength?, quote }],
+  agendaHits: [{ id, quote }] }
 ```
-You are texting AS {firstName} on a dating app. Write the next message exactly as {firstName} would.
+- Resolve concepts and claims through `resolveConcept` (dictionary only). Look each up in **my own** graph to get `ownReaction = { strength, polarity, value } | null`.
+- **Notes:** `KgFact` with `observerId: U`, `subjectId: other`, `matchId`, `conversationId`, `source: 'agent_observed'`, confidence 0.6. The quote must be verbatim in `m` (`isVerbatim`), otherwise dropped. Merge by `factKey` within (observer, subject); repeats raise confidence and append evidence.
+- **`ChatEvent`** (`models/ChatEvent.js`: `{ conversationId, observerId, turn, messageId, quote, type, conceptId, weight, createdAt, archiveAt }`, index `{conversationId, observerId}`):
 
-HOW {firstName} TEXTS:
-{style card}
+  | Event | When |
+  |---|---|
+  | `shared_interest` | `ownReaction.polarity` and the claim's polarity are both +1, and my strength ≥ 0.5 |
+  | `interest_clash` | the polarities are opposite |
+  | `laugh` | humor was perceived and my `laughForms` are non-empty |
+  | `disagreement` | a claim conflicts with my fact of strength ≥ `STANCE_BEND` |
+  | `disagreement_resolved` | `acknowledgesDifference` within `RESOLVE_WINDOW` turns, with no concession by either side |
+  | `low_effort` / `boredom` | from `lowEffort` and the interest meter |
+  | `question_dodged` | I asked a question and the reply ignored it |
+  | `dealbreaker_hint` | `dealbreakerHint` is one of my dealbreaker attributes and the stated value ∉ my `accepts` |
 
-THINGS {firstName} CAN SAY ABOUT THEMSELVES (cite ids you use; never add facts not listed):
-{sayable facts}
+- **Live shared-interest discovery happens only here:** the transcript against **my** graph, comparing polarity and values explicitly, never cosine alone.
+- **Agenda:** `agendaHits` with verbatim quotes mark my agenda items `answered`.
+- Emit `notes:update` (notes + events + agenda) to me only. It replaces `kg:update`.
 
-WHAT YOU KNOW ABOUT {matchName} SO FAR:
-{observed facts}
-
-WHAT {firstName} WANTS TO FIND OUT (steer gently over several messages; never interrogate):
-{agenda top 3}
-
-RULES:
-- Reply to what they actually said first.
-- Max one question. Often share something of your own before asking (reciprocity).
-- Match their energy and length. No paragraphs unless they write paragraphs.
-- Never claim to be an AI or a human; just text naturally. If they sincerely ask whether they're
-  talking to an AI, answer honestly that {firstName} uses the app's AI assistant for early chats.
-- If they ask something not covered by the listed facts, deflect lightly ("haha good question,
-  tell you later") and put the question in unknownAboutMe.
-- Never mention dealbreakers, scores, agendas, or that you are evaluating them.
-- Never agree to meet, share contact details, or make plans; say you'd like to keep chatting here first.
-- Keep it SFW. Decline sexual topics politely and change the subject.
-
-CONVERSATION SO FAR:
-{transcript}
-
-Return JSON only.
+### 2.2 `updateInterest(state, perception)` (deterministic)
 ```
-
-The honest-answer rule is required. Consent covers AI handling, so the agent must never deny it when sincerely asked.
-
-### Output schema (zod)
-```json
-{
-  "reply": "string, 1–300 chars",
-  "usedFactIds": ["F12"],
-  "targets": "agenda item id or null",
-  "unknownAboutMe": "question the user should answer, or null",
-  "wantsToEnd": false
-}
+interest += K_LIKE·s (each concept I like) − K_DISLIKE·s (each I dislike) + K_QUESTION (aboutMe question)
+          + K_HUMOR (humor ∧ I laugh easily) − K_LOW_EFFORT (lowEffort) − K_REPEAT (topic already touched)
+interest  = clamp(interest + K_DECAY·(baseline − interest), 0, 1);  baseline = 0.4 + 0.2·extraversion
 ```
+`lowInterestTurns` counts consecutive turns below `LOW_INTEREST`.
 
-### Post-checks before sending (`services/agent/guard.js`)
-1. **Grounding:** every `usedFactIds` entry must exist in the sayable list. Then run a cheap check (tier `fast`, prompt `prompts/claimCheck.js`): "List any first-person factual claims in this reply that are NOT supported by these facts." If any are unsupported, regenerate once with a warning. If it fails again, send a safe generic reply that reacts to their message without self-claims.
-2. **Safety:** `scanMessage()` from plan 06 on the draft. Block contact sharing and money talk.
-3. **Length/style sanity:** trim if over 2× the user's median length (unless the other side wrote long). Strip any remaining `<think>` text, markdown and quote marks.
-4. **Unknown:** if `unknownAboutMe` is set, create an `InboxItem` for the user and emit `inbox:new`. Their answer becomes facts via plan 05 §4, usable in later turns.
+### 2.3 `planAct(state, voice, perception, rng)` (deterministic sampling; stored as `message.actPlan`)
 
-Save the message with `authoredBy: 'agent'`, `senderId` = the agent's user, and `meta.usedFactIds` and `meta.targets`. Emit `message:new`.
+| Field | How |
+|---|---|
+| `targetWords` | sample from `voice.wordCounts` × `(0.5 + interest)` |
+| `burst` | Bernoulli(`burstiness`) → 2–3 messages |
+| `askBack` | Bernoulli(`questionBackRate × (0.5 + interest)`); never more than one question |
+| `emoji` | Bernoulli(`min(1, emojiPerMessage)`), choice from `topEmojis` |
+| `laugh` | humor ∧ Bernoulli(laugh rate), form from `laughForms` |
+| `reactions` | per recognised concept: `excited` (strength ≥ 0.75), `positive` (≥ 0.5), `lukewarm` (> 0), `dislike` (polarity −1), `unknown` (honest "never tried / not my thing", or curious, per traits) |
+| `mustDisagree` | conflicting claim vs my fact of strength ≥ `STANCE_HOLD`; `STANCE_BEND..STANCE_HOLD` → Bernoulli(0.5); below → may concede |
+| `topic` | with probability `TOPIC_SHIFT` (higher when interest is low): the highest-priority open agenda item, else a sampled fact from `selectFacts` not in `topicsTouched`; with `STORY_RATE`: an untold story |
+| `language` | the reply language (below) |
+| `end` | `lowInterestTurns ≥ END_AFTER_LOW_TURNS`, `turn ≥ MAX_TURNS`, a natural close, or a confirmed `dealbreaker_hint`; written in my `closingStyle` |
 
-## Learning about the match after every incoming message (`services/agent/beliefUpdate.js`, tier `mid`)
+**Reply language** (replaces the v1 Hinglish guard):
+- If m's language differs from my dominant one: mirror it with probability `mirrorsLanguage`, **but only into languages in my `language.mix`**.
+- Otherwise sample from `mix`.
+- Code-switch with probability `codeSwitchRate`, boosted when the mood matches a `switchTrigger` (e.g. joking).
+- Never reply in a language I don't use.
 
-Runs on every message from the other side, in parallel with reply scheduling.
-- **Input:** the last 6 messages, the current observed facts about them, and the open agenda topics.
-- **Output:**
-```json
-{
-  "facts": [ { "predicate": "...", "object": "...", "weight": 0.0-1.0, "confidence": 0.0-1.0, "quote": "their exact words", "agendaId": "a3 or null" } ],
-  "agendaUpdates": [ { "id": "a3", "status": "answered|partially|open", "note": "short" } ],
-  "redFlags": [ { "flag": "...", "quote": "..." } ]
-}
+### 2.4 `generate(plan)` (tier mid by default, or `AGENT_MODEL_BY_SIDE[side]`; temperature = `agentState[U].temperature`)
+
+**System prompt** (`prompts/agentReply.js`):
+- ≤ 10 selected facts with ids
+- 3–5 own exemplars
+- trait rules + private guidance
+- the act plan as hard constraints
+- the last 20 transcript lines
+
+**Anti-sycophancy rules:**
+- You are <name>, not an assistant.
+- Don't agree, compliment or show enthusiasm unless <name> genuinely would, given the facts.
+- Being brief, bored or in disagreement is fine.
+- Never claim anything not in your facts; say you're unsure instead.
+- No meta-talk.
+
+Output (zod):
+```js
+{ messages: [String] /*1..3*/, claims: [{ text, factIds: [String], stance }], unknownAboutMe: String|null, end: Boolean }
 ```
-- **Merge:** if an observed fact with cosine ≥ 0.85 exists, raise its confidence (`new = 1 − (1 − old) × (1 − c)`) and append the evidence. Otherwise create a new fact with `source: 'conversation'`.
-- The quote must appear verbatim in the message text; drop facts that fail.
-- Update agenda statuses. Emit `kg:update` to the viewer's room for the live graph.
-- Red flags go through `scanMessage` logic. If severe, pause and flag (plan 06).
+`unknownAboutMe` → `InboxItem` for my human + `inbox:new`.
 
-## Stopping rule (`services/agent/shouldStop.js`), checked after every belief update
+**Opening:** the first speaker is picked with the conversation `rng`. The opener comes from `brief.openers` (plan 07), chosen by `rng` and re-styled to my greeting exemplars.
 
-Stop when **any** of these is true:
-- every agenda item with priority ≥ 0.5 is `answered` (or known with confidence ≥ 0.75)
-- an observed fact clearly contradicts a viewer `dealbreaker` with confidence ≥ 0.7. Confirm with the `dealbreakerClash` prompt from plan 07.
-- `turnCount ≥ AGENT_MAX_TURNS` (default 24 total messages)
-- the other side hasn't replied in `AGENT_STALE_HOURS` (default 24)
-- `wantsToEnd` was true twice in a row
-- a `BudgetExceededError` was thrown (status stays `agent_chatting`; show the paused banner)
+### 2.5 Checks → send → persist
+- Run §1.3. The re-check before sending (Take over, status change, a newer human message) discards the draft.
+- Pacing; then save `Message` (`authoredBy: 'agent'`, `conversationId`, `actPlan`, `checks`, `meta.usedFactIds`), update `agentState`, emit `message:new`.
+- **On `end`:** send the closing line, set `Conversation.endedBy`/`endedAt`, status `evaluating`, and enqueue one `judge` job per side (plan 09).
 
-On stop, set `agentState.stopReason`, `setStatus('evaluating')`, and call plan 09's `evaluate(match)`. The agent sends **no more messages** until the verdict.
+## 3. Learning from my own side (plan 15 stage 7)
+- **"I wouldn't say that"** (`POST /api/messages/:id/wouldnt-say { fix? }`, only on **my own** agent's messages):
+  - With a `fix`: save `VoiceSample(edited_draft)` and run `prompts/voiceCorrection.js` (zod `{ rule, kind: 'style'|'never_say'|'fact' }`).
+  - `style` / `never_say` → `VoiceProfile.corrections` / `neverSay`.
+  - `fact` → a `userEdited` fact.
+  - `$inc graphVersion`.
+- **After handoff,** if `settings.learnFromChats` (default on): my own human messages in that chat → `VoiceSample(own_chat)`, language-tagged in batches. This triggers `rebuildVoice` every `STYLE_REBUILD_EVERY`.
+- Prune voice samples to `MAX_VOICE_SAMPLES` (plan 17 `pruneToCap`).
 
-## Agent ↔ agent safety
+## 4. Information-boundary spy test: `scripts/lib/dbSpy.js`
+- Use `AsyncLocalStorage` to tag the current actor (`{ role: 'agent'|'judge'|'trust'|'brief'|'ui', userId, otherId }`).
+- A Mongoose global plugin records every query's model + filter.
+- The test runs a full simulated conversation + judges, then asserts:
+  - no `KgFact`/`KgEdge` read with `subjectId: other` and `observerId: null`
+  - no `VoiceProfile`/`VoiceSample` read for `other`
+  - no `Profile` read for `other` except in `trust`, `brief` and the `ui` routes in `matches.js`
 
-When both sides are agents, every message triggers the other agent. `AGENT_MAX_TURNS`, the stop rule and the budget guard prevent infinite loops. Also add a global cap: no more than 2 agent replies per match per minute.
-
-## Simulation for testing and eval: `scripts/simulate.js <emailA> <emailB> [--runs 1]`
-
-- Create (or reuse) a match between two seed users, with both in `auto`.
-- Run trust → brief → conversation with `DEMO_FAST`, **no socket or pacing delays**, until it stops.
-- Print the transcript, agenda progress, stop reason and token usage.
+## 5. Simulation: `scripts/simulate.js <emailA> <emailB> [--runs N] [--seed S]`
+Both sides on auto, `NO_PACING`. Prints the transcript with act plans, events, notes, check results, end reason and token usage. The same `--seed` with a stubbed LLM replays identically.
 
 ## Acceptance checks
 
-- [ ] `simulate.js` on two seed personas produces a natural 12–24-message conversation that stops on its own with a sensible `stopReason`.
-- [ ] Manual check: a human chats (in the browser) with a seed persona's agent. Replies arrive with a typing indicator and pacing, use only listed facts, and ask at most one question.
-- [ ] Ask the agent something not in its user's graph → it deflects, and an inbox item appears for its user.
-- [ ] Sincerely ask "are you a bot?" → it answers honestly per the rule.
-- [ ] Press Take over mid-conversation → no further agent messages, even if a reply was already scheduled.
-- [ ] Send "add me on telegram, I can help you invest" → the agent pauses and the match is flagged.
-- [ ] `kg:update` events fire and observed facts gain confidence over the conversation.
-- [ ] Update the Status section of `CLAUDE.md` with the average tokens per simulated conversation.
+- [ ] Unit tests: `traitRules`; `styleCheck`; `leakCheck` (keyword path + embedding path with stubbed vectors); `groundingCheck` (missing id, contradicting stance, uncovered first-person sentence); `selectFacts` never returns `private` and returns `if_asked` only for a matching question; the same seed gives the same selection; `updateInterest`; `planAct` (strong opinion → `mustDisagree`; low interest → shorter `targetWords`, then `end`); reply-language choice (never a language outside my mix; mirrors at the configured rate).
+- [ ] **Seeded replay:** the same seed + stubbed LLM responses → an identical act-plan sequence.
+- [ ] **Integration, two seeded users** (A strongly anti-smoking, high importance but not a dealbreaker; B mentions smoking): a `disagreement` or `interest_clash` event is recorded, and A's reply doesn't concede (stance check ran).
+- [ ] **Human side** (`scripts/agent-check.js`, updated): a human chats with a seed persona's agent. Replies come with typing + pacing and at most one question. An unknown question → deflection + inbox item. A sincere "are you a bot?" → the honest answer. Take over → nothing more is sent, including an already-scheduled turn. "add me on telegram, I can help you invest" → flagged.
+- [ ] **Per-message cost:** from `usage`, every agent message used ≤ 2 chat calls, +1 only when `mustDisagree`, +regeneration ≤ 1.
+- [ ] The DB-spy boundary test passes.
+- [ ] `simulate.js` on two seed personas: a natural chat that ends by itself (`interest`, `natural` or `max_turns`), in each persona's language mix. Record tokens and seconds per conversation in Status.
+- [ ] App end to end after wipe + re-seed. The v1 judge still runs on the result until plan 09 lands.
+- [ ] Update the Status section of `CLAUDE.md`.
 
-**Commit:** `feat(plan-08): grounded agent conversation engine`
+**Commit:** `feat(plan-08): persona engine + per-turn pipeline (perceive/observe, interest, act plan, checks)`

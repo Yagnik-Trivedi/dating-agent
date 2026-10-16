@@ -1,79 +1,96 @@
 # 06 — Step 1: Fake profile + inconsistency check
 
-> **Prompt for Claude Code:** Read `CLAUDE.md`, then implement the trust check that runs on every new match before any conversation. Run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design") and `plan/15-knowledge-graph-final.md` §1 and §4 stage 4. The trust logic is unchanged from v1; this plan moves it into the match-created job and locks down what it may read. Implement it and run the acceptance checks.
 
 ## Goal
 
-When a match is created, each user's agent checks the **other** profile. The result:
-- a trust level of `ok | caution | likely_fake`, with reasons
-- a list of soft inconsistencies, which feed the conversation agenda as "clarify gently" items
+When a match is created, each user's agent checks the **other** user's **public profile**. The result:
+- a trust level `ok | caution | likely_fake`, with reasons
+- soft inconsistencies, which become "clarify gently" agenda items in plan 07
 
 **Key principle:** "inconsistent" is not "fake". Real people are messy. Mild contradictions become things to clarify, not a rejection. Reserve `likely_fake` for strong signals.
 
+## Information boundary (tested in code)
+
+- The trust check is one of only two places (with the brief) where an agent reads another user's `Profile`.
+- It reads **only** the `PUBLIC_PROFILE` projection (name, age, city, photos, bio, prompts, public tags) plus the account's `createdAt`.
+- It never reads their `Profile.gate`, `dealbreakers`, `KgFact`, `KgEdge`, `VoiceProfile` or `VoiceSample`.
+- The plan 08 DB-spy test asserts this.
+- The subject's private dealbreakers are never sent to the consistency check (v1 decision, kept).
+
 ## Where it runs
 
-`onMatchCreated(match)` → `setStatus('trust_check')` → run `checkProfile(viewerId, subjectId)` for **both** directions in parallel → save into `match.trust[viewerId]`. Then:
-- If either side is `likely_fake`: status `flagged_fake`, and notify that viewer with the reasons. The agent never starts for that viewer.
-- Otherwise, continue to plan 07 (`briefing`).
+It's step 2 of the `matchCreated` job (plan 17 queue, plan 07 pipeline):
+1. gate re-check (plan 07)
+2. **trust check**: `checkProfile(viewerId, subjectId)` for both directions in parallel → `match.trust[viewerId]`
+3. brief (plan 07)
+
+Then:
+- Either side `likely_fake` → status `flagged_fake`. Only the flagging viewer gets `trust:flagged` + reasons. For the flagged side the match reads as `closed` (`statusFor`). The agents never start, and messages are refused.
+- Otherwise continue to the brief.
+
+The job is idempotent: a re-run with `match.trust` already set skips straight to the next step.
 
 ## `services/trust/checkProfile.js`
 
-### A. Rule checks (code, no LLM; each adds points and a flag)
+### A. Rule checks (code, no LLM; each adds points and a flag; patterns in `services/trust/rules.js`)
 
 | Signal | Points | Flag text |
 |---|---|---|
 | No photos | +25 | "No photos" |
 | Bio under 15 characters, or missing prompts | +10 | "Very little profile content" |
 | Phone number, email, URL, @handle, UPI, "telegram", "whatsapp me" in bio or prompts | +30 | "Pushes contact off-app" |
-| Money, crypto, investment, forex, "trading profits", gift cards, "send", loan words | +40 | "Money/investment talk" |
+| Money phrases: "investment opportunity", crypto, forex, "guaranteed returns", gift cards, loans | +40 | "Money/investment talk" |
 | Age outside 18–80, or the age in the bio contradicts the age field | +30 | "Age mismatch" |
-| Account younger than 10 minutes with a maxed-out profile (seed metadata only) | +10 | "Brand-new account" |
+| Account younger than 10 minutes with a maxed-out profile | +10 | "Brand-new account" |
 
-### B. LLM consistency check (tier `mid`, prompt `prompts/profileConsistency.js`)
+Money rules match **phrases**, not bare words, so "investment banker" isn't flagged.
 
-The input is the full profile as structured JSON: tags, dealbreakers, prompts and bio. Instruction: compare the **declared tags/preferences** with what the **free text** says, and find contradictions *and* scam-script patterns. For example:
-- tags say "never drinks" but a prompt says "best nights end with a few beers"
-- tags say "wants kids" but the bio says "kids are not for me"
-- a bio that reads like a template or is LLM-generated and generic
-- sob stories, urgency, or claims of being abroad, military or on an oil rig
+### B. LLM consistency check (tier mid, `prompts/profileConsistency.js`)
 
-Output schema (zod):
+The input is the public profile as JSON (public tags, prompts, bio; **not** dealbreakers). The model compares the declared tags with what the free text says, and finds contradictions and scam-script patterns:
+- tags "never drinks" vs a prompt "best nights end with a few beers"
+- template-like or generic bios
+- sob stories, urgency, "abroad / military / oil rig" claims
+
+Output (zod):
 ```json
-{
-  "contradictions": [ { "a": "quote or tag", "b": "quote", "topic": "drinking", "severity": 1 } ],
+{ "contradictions": [ { "a": "quote or tag", "b": "quote", "topic": "drinking", "severity": 1 } ],
   "scamSignals": [ { "signal": "short", "quote": "..." } ],
-  "genericBio": false,
-  "summary": "one sentence"
-}
+  "genericBio": false, "summary": "one sentence" }
 ```
-Severity runs 1 to 3: 1 = minor, 2 = notable, 3 = blatant.
+- Severity uses the concrete guide in the prompt: 1 = minor, 2 = notable, 3 = blatant reversal.
+- **Every contradiction must carry a verbatim profile quote**; drop the rest in code.
 
-Points: each severity-3 contradiction +20, severity-2 +8, severity-1 +2; each scam signal +25; `genericBio` +8.
+Points: severity 3 → +20, severity 2 → +8, severity 1 → +2; each scam signal +25; `genericBio` +8.
 
-### C. Optional stretch: photo check
-Only if time allows. If a vision model is available on Token Factory (prefer an NVIDIA one; else Qwen-VL), check whether photo content contradicts the stated age or lifestyle. **Never** infer ethnicity, religion or caste. Skip this for DiceBear avatars.
+If the LLM call fails, the rule results still stand.
 
-### D. Scoring
-`points` = sum, capped at 100. `score = 100 - points`.
+### C. Scoring
+
+`points` = sum, capped at 100; `score = 100 − points`.
 - `ok`: score ≥ 70
 - `caution`: 40–69
 - `likely_fake`: < 40, **or** any scam signal combined with off-app contact pushing
 
 Save:
 ```json
-{ "score": 82, "level": "ok", "flags": [...], "contradictions": [...], "clarify": ["drinking: tags vs prompt"] }
+{ "score": 82, "level": "ok", "flags": [...], "contradictions": [...], "clarify": ["drinking"] }
 ```
-`clarify` items are severity 1–2 contradictions, phrased as neutral topics for plan 07's agenda.
+`clarify` holds severity 1–2 contradiction topics as neutral words. Plan 07 adds them to the agenda.
+
+Photo checks are out of scope (DiceBear avatars). Never infer ethnicity, religion or caste.
 
 ## Continuous scam watch (used by plan 08)
 
-Export `scanMessage(text) → { flags[], severity }` using the same rule patterns (off-app contact, money, urgency). Plan 08 calls it on every incoming message. Two hits, or one severe hit: pause the agent, set status `flagged_fake`, and notify the user.
+`scanMessage(text) → { flags[], severity 0–3 }`, with the same patterns. "add me on telegram, I can help you invest" = 3. Plan 08 runs it on every incoming message and every outgoing draft.
 
 ## Acceptance checks
 
-- [ ] Add a script `scripts/trust-check.js` that runs against 6 crafted profiles in `seed/trust-cases.json`: 2 clean, 2 with mild contradictions, 1 with a blatant contradiction, 1 scammer. It prints levels, and the expected levels match: ok, ok, ok/caution, caution, caution/likely_fake, likely_fake.
-- [ ] A mild contradiction appears in `clarify`, not as a rejection.
-- [ ] Every contradiction includes a quote.
+- [ ] `node scripts/trust-check.js`: the 6 crafted cases in `seed/trust-cases.json` land on ok, ok, ok, caution, caution, likely_fake, two runs in a row.
+- [ ] A mild contradiction appears in `clarify`, not as a rejection. Every contradiction includes a verbatim quote.
+- [ ] Running inside the `matchCreated` job: scammer → `flagged_fake` (closed for the flagged side, reasons only to the viewer); clean → continues to the brief. Re-running the job doesn't call the LLM again.
+- [ ] DB spy (helper from plan 08, or a minimal one here): during the trust check the only reads about the subject are `Profile` with the public projection and `User.createdAt`.
 - [ ] Update the Status section of `CLAUDE.md`.
 
-**Commit:** `feat(plan-06): profile trust and consistency check`
+**Commit:** `feat(plan-06): trust check in the match-created job, public-profile only`

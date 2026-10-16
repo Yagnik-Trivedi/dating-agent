@@ -13,48 +13,56 @@ This folder holds the build plan as a series of prompts for Claude Code. Each fi
 
 ## Order and dependencies
 
+**The knowledge-graph design changed (plan 15, executed by plan 16).** Plans 02–04 stay as built. Plans 05–11 were rewritten to match `15-knowledge-graph-final.md`, and the new plan 17 lays the foundation. `kg-upgrade-reference.md` is the detailed reference spec; plan 15 wins where they disagree.
+
+**Build order:**
+
+**02 → 03 → 04 → 17 (jobs & indexes) → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 14 (switch to Nebius) → 12 → 13**
+
 ```
-01 accounts (humans) ─► 02 scaffold ─► 03 LLM layer ─► 04 backend core (defines the API contract)
-                                                          │
-                     ┌────────────────────┬───────────────┼────────────────────┐
-                     ▼                    ▼               ▼                    ▼
-           05 onboarding + KG     06 trust check    10 frontend         11a seed personas
-                     │                    │          (against the API      (generation only)
-                     └─────────┬──────────┘           contract in 04)
-                               ▼
-                         07 match brief
-                               ▼
-                       08 agent conversation
-                               ▼
-                    09 compatibility + handoff ─► 11b eval harness
-                               ▼
-                 12 deploy + keep-alive ─► 13 submission
+02 scaffold ─► 03 LLM layer ─► 04 backend core ─► 17 jobs, vectors, gate, indexes
+                                                      ▼
+                                05 KG v2: concepts, edges, voice, build job, review API
+                                                      ▼
+                                06 trust check (public profile only, in the match-created job)
+                                                      ▼
+                                07 gate re-check, profile-only brief, own-graph agenda, conversation doc
+                                                      ▼
+                                08 persona engine + per-turn pipeline (perceive/observe, act plan, checks)
+                                                      ▼
+                                09 independent judges, handoff, compaction, date ideas
+                                                      ▼
+                                10 frontend v2 ─► 11 seed personas + evaluation + scale test
+                                                      ▼
+                                14 switch to Nebius ─► 12 deploy + keep-alive ─► 13 submission
 ```
 
-After 04 is merged, 05, 06, 10 and the persona-generation half of 11 can run **in parallel** on separate branches.
+**Rules for every plan from 17 onward:**
+- The app stays runnable after each plan: signup → onboarding → discover → match → agent chat works end to end (degraded is fine, broken isn't), with seed data re-loaded by the updated seed script.
+- Wipe and re-seed test data instead of writing migrations.
+- Each plan: implement → acceptance checks → commit + push → one Status line in `CLAUDE.md` → stop for "go".
 
 ## Team split (4 people)
 
 | Person | Owns | Plan files |
 |---|---|---|
-| A — Agent lead | LLM layer, conversation engine, verdict | 03, 08, 09 |
-| B — Backend lead | Scaffold, models, auth, matching, sockets, deploy | 02, 04, 12 |
+| A — Agent lead | LLM layer, conversation engine, judges | 03, 08, 09 |
+| B — Backend lead | Scaffold, models, auth, matching, jobs, sockets, deploy | 02, 04, 17, 12 |
 | C — Frontend lead | All UI | 10 |
-| D — Trust + data lead | KG, trust check, brief, seed data, eval, video, README | 05, 06, 07, 11, 13 |
+| D — Trust + data lead | KG, trust check, brief, seed data, eval, video, README | 05, 06, 07, 11, 13, 14 |
 
 **Branches:** `feat/plan-05-onboarding-kg`, and so on. Open a PR into `main`; one other person skims it before merge. Never push `.env`.
 
-## Timeline (today: Oct 14)
+## Fixed dates
 
-| Dates | Milestone (definition of done) | Plan files |
-|---|---|---|
-| Oct 14–15 | Accounts done, keys work, `smoke.js` prints Nemotron IDs, repo on GitHub with MIT | 01, 02, 03 |
-| Oct 16–18 | Two humans can sign up, match and chat live; onboarding writes facts to Mongo | 04, 05, 06, 10 (screens), 11a |
-| Oct 19–22 | **Full pipeline runs end to end for one pair:** match → trust → brief → agent chat → stop | 07, 08 |
-| Oct 23–25 | Verdict report + handoff + date ideas; eval numbers exist | 09, 10 (report + KG view), 11b |
-| Oct 26–27 | Deployed on free tiers, keep-alive running, demo accounts work | 12 |
-| Oct 28 | **Feature freeze.** Video, README, Devpost write-up | 13 |
-| Oct 29 | **Submit.** Oct 30 is buffer only (deadline 10:30 PM IST). | 13 |
+| Date | What |
+|---|---|
+| by Oct 26 | Switch to Nebius Token Factory (plan 14) before the final deploy |
+| Oct 28 | Feature freeze: video, README, Devpost write-up |
+| Oct 29 | **Submit** (Oct 30 10:30 PM IST deadline is buffer only) |
+| through Dec 15 | Demo URL stays live and testable (judging) |
+
+Plan 16 sets no other time constraint: build the full design, in the order above.
 
 ## Rules for the whole team
 
