@@ -1,16 +1,29 @@
 // Onboarding question set (plan 05 §1), served at GET /api/onboarding/questions.
 //
 // Submitted answers shape (POST /api/onboarding/submit { answers }):
+//   I: { job?: string, languages: [string], family?: string }
 //   A: { [itemId]: 1..5 }
-//   B: { [itemId]: { answer: optionValue, importance: 'nice_to_have'|'important'|'dealbreaker' } }
-//   C: { [promptId]: string }
+//   B: { [itemId]: { answer: optionValue, importance: 'low'|'medium'|'high' (required, no default),
+//                    accepts: [optionValue] (default: all), dealbreaker: boolean (needs >= 1 option not accepted) } }
+//   C: { [promptId]: string }  (at least MIN_STORIES answered)
 //   D: { interests: [{ name: string, intensity: 'casual'|'into_it'|'obsessed' }] }
-//   E: { [sampleId]: string }
+//   E: { [sampleId]: string }  (VOICE_SAMPLES_ONBOARDING prompts across moods)
 
 const opts = (...labels) => labels.map((label) => ({ value: label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''), label }));
 
 export const QUESTIONS = {
   sections: [
+    {
+      id: 'I',
+      title: 'About you',
+      intro: 'A few basics your agent can mention. You can hide any of them later.',
+      type: 'identity',
+      items: [
+        { id: 'job', text: 'What do you do (work or studies)?', kind: 'text', placeholder: 'e.g. UX designer at a fintech startup' },
+        { id: 'languages', text: 'Which languages do you speak?', kind: 'multi', options: opts('English', 'Hindi', 'Gujarati', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Bengali', 'Punjabi', 'Malayalam'), allowOther: true },
+        { id: 'family', text: 'Family setup (optional)', kind: 'text', optional: true, placeholder: 'e.g. live with my parents and younger brother' },
+      ],
+    },
     {
       id: 'A',
       title: 'Personality',
@@ -50,13 +63,16 @@ export const QUESTIONS = {
     {
       id: 'B',
       title: 'Values & life goals',
-      intro: 'Pick an answer, then say how much it matters to you in a partner.',
+      intro: 'Pick your answer, say how much it matters, and what you would accept in a partner. Mark a dealbreaker only if it truly is one.',
       type: 'choice_importance',
+      // No default: every item needs an explicit importance (F7). A dealbreaker sets importance 1.0.
       importance: [
-        { value: 'nice_to_have', label: 'Nice to have', weight: 0.3 },
-        { value: 'important', label: 'Important', weight: 0.7 },
-        { value: 'dealbreaker', label: 'Dealbreaker', weight: 1.0 },
+        { value: 'low', label: 'Nice to have', weight: 0.3 },
+        { value: 'medium', label: 'Important', weight: 0.6 },
+        { value: 'high', label: 'Very important', weight: 0.9 },
       ],
+      accepts: { label: "In a partner I'd accept" }, // multi-select over the item's options, default all
+      dealbreaker: { label: 'Dealbreaker', weight: 1.0 },
       items: [
         { id: 'kids', text: 'Do you want children someday?', predicate: 'goal', options: opts('Yes', 'No', 'Open', 'Have already') },
         { id: 'religion', text: 'How important is religion or spirituality in your own life?', predicate: 'values', options: opts('Central', 'Somewhat', 'Not really') },
@@ -74,15 +90,17 @@ export const QUESTIONS = {
     {
       id: 'C',
       title: 'Your stories',
-      intro: 'One to four sentences each. Your agent uses these as real anecdotes, so keep them true.',
+      intro: 'Answer at least 4, one to four sentences each. Your agent uses these as real anecdotes, so keep them true.',
       type: 'text',
+      minAnswers: 4, // KG.MIN_STORIES
       items: [
-        { id: 'sunday', text: 'Describe a perfect Sunday.' },
-        { id: 'hill', text: "A hill you'd die on (a small or silly opinion)." },
-        { id: 'weirdly_good', text: "Something you're weirdly good at." },
-        { id: 'laugh', text: 'The last thing that made you laugh out loud.' },
-        { id: 'place', text: 'A place you want to go and why.' },
-        { id: 'friends_rely', text: 'What do your close friends rely on you for?' },
+        { id: 'sunday', text: 'Describe a perfect Sunday.', placeholder: 'e.g. Slow breakfast, a long walk by the lake, then cooking something new with my sister.' },
+        { id: 'hill', text: "A hill you'd die on (a small or silly opinion).", placeholder: 'e.g. Filter coffee beats any fancy cafe latte, and I will argue about it.' },
+        { id: 'argue', text: "Something you'll argue about with friends, and how strongly you feel about it.", placeholder: 'e.g. Remakes of old films are almost always worse. Very strongly, ask anyone.', strength: true },
+        { id: 'weirdly_good', text: "Something you're weirdly good at.", placeholder: 'e.g. Guessing the ending of any thriller in the first ten minutes.' },
+        { id: 'laugh', text: 'The last thing that made you laugh out loud.', placeholder: 'e.g. My dad trying to send a voice note and recording his pocket for two minutes.' },
+        { id: 'place', text: 'A place you want to go and why.', placeholder: 'e.g. Spiti, because I want to see a sky with no city lights at all.' },
+        { id: 'friends_rely', text: 'What do your close friends rely on you for?', placeholder: 'e.g. Honest advice, and remembering everyone\u2019s birthdays.' },
       ],
     },
     {
@@ -104,17 +122,24 @@ export const QUESTIONS = {
     {
       id: 'E',
       title: 'How you text',
-      intro: "Reply exactly like you would. Typos, emoji, 'haha' — all welcome. This is how your agent learns your voice.",
+      intro: "Reply exactly like you would, in whatever languages you mix. Typos, emoji, 'haha' — all welcome. This is how your agent learns your voice.",
       type: 'style',
       items: [
-        { id: 'e1', text: 'hey! your profile made me smile 😄' },
-        { id: 'e2', text: "so what do you do when you're not working?" },
-        { id: 'e3', text: 'pineapple on pizza — yes or no?' },
-        { id: 'e4', text: "I'm thinking of trying a trek this weekend, ever done one?" },
-        { id: 'e5', text: 'sorry for the late reply, crazy day' },
-        { id: 'e6', text: "what's your idea of a good first date?" },
-        { id: 'e7', text: 'haha you seem fun' },
-        { id: 'e8', text: 'do you prefer texting or calls?' },
+        { id: 'e1', text: 'hey! your profile made me smile 😄', mood: 'greeting' },
+        { id: 'e2', text: "so what do you do when you're not working?", mood: 'curious' },
+        { id: 'e3', text: 'pineapple on pizza — yes or no?', mood: 'opinion' },
+        { id: 'e4', text: "I'm thinking of trying a trek this weekend, ever done one?", mood: 'casual' },
+        { id: 'e5', text: 'sorry for the late reply, crazy day', mood: 'apologetic' },
+        { id: 'e6', text: "what's your idea of a good first date?", mood: 'plan' },
+        { id: 'e7', text: 'haha you seem fun', mood: 'tease' },
+        { id: 'e8', text: 'do you prefer texting or calls?', mood: 'casual' },
+        { id: 'e9', text: 'I GOT THE JOB!! 🎉', mood: 'excited' },
+        { id: 'e10', text: 'honestly I think dogs are overrated', mood: 'disagree' },
+        { id: 'e11', text: 'we should grab coffee sometime, when are you free?', mood: 'plan' },
+        { id: 'e12', text: '(you have to cancel plans you made with them for tomorrow: write that message)', mood: 'apologetic', prompt: true },
+        { id: 'e13', text: "you're definitely the type who's late everywhere 😏", mood: 'tease' },
+        { id: 'e14', text: 'anyway I should sleep, early day tomorrow', mood: 'closing' },
+        { id: 'e15', text: "ok long story but my week has been insane. work had this huge launch, my flatmate moved out without telling anyone, and I finally started that pottery class I keep talking about. the teacher says I'm a natural which I don't believe at all. how's yours been?", mood: 'long_reply' },
       ],
     },
   ],
