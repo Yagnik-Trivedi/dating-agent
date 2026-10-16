@@ -143,7 +143,13 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     messages = [plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? (lower ? opener : opener[0].toUpperCase() + opener.slice(1)) : NEUTRAL[Math.floor(rng() * NEUTRAL.length)]];
   }
   // Unsupported "I like X" that survived: ask my human instead of inventing it.
-  const unknownAboutMe = best.draft.unknownAboutMe ?? (best.grounding.unsupported[0] ? `Is this true for you: "${best.grounding.unsupported[0]}"?` : null);
+  // They asked about me and perception found a topic with no fact of mine: ask my human even if the draft skipped it
+  // (agent-check: "favourite IPL team?" got "i don't follow IPL much", cited to a trekking fact, and no inbox item).
+  const unknownTopic = plan.answerFirst && (plan.reactions ?? []).some((r) => r.kind === 'unknown');
+  const theirQuestion = history.filter((m) => String(m.senderId) !== me).at(-1)?.text;
+  const unknownAboutMe = best.draft.unknownAboutMe
+    ?? (best.grounding.unsupported[0] ? `Is this true for you: "${best.grounding.unsupported[0]}"?` : null)
+    ?? (unknownTopic && theirQuestion ? theirQuestion : null);
 
   const used = [...new Set(best.draft.claims.flatMap((c) => c.factIds))].map((id) => facts.get(id)?._id).filter(Boolean);
   const told = plan.topic?.kind === 'story' ? [plan.topic.id] : [];
