@@ -5,8 +5,7 @@ import { AgentIcon, Button, Chip, ErrorBox, Loading, ProgressBar, Segmented, Spi
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
 
-const EMPTY = { A: {}, B: {}, C: {}, D: { interests: [] }, E: {} }
-const MIN_STORIES = 3
+const EMPTY = { I: { languages: [] }, A: {}, B: {}, C: {}, D: { interests: [] }, E: {} }
 const MIN_INTERESTS = 3
 
 /** Is this section complete enough to move on? → null if ok, else a hint. */
@@ -17,13 +16,18 @@ function missing(section, answers) {
       const left = section.items.filter((i) => !a[i.id]).length
       return left ? `${left} statement${left > 1 ? 's' : ''} left` : null
     }
+    case 'identity':
+      return a.languages?.length ? null : 'Pick at least one language'
     case 'choice_importance': {
-      const left = section.items.filter((i) => !a[i.id]?.answer).length
-      return left ? `${left} question${left > 1 ? 's' : ''} left` : null
+      const left = section.items.filter((i) => !a[i.id]?.answer || !a[i.id]?.importance).length
+      if (left) return `${left} question${left > 1 ? 's' : ''} left (answer + how much it matters)`
+      const bad = section.items.find((i) => a[i.id].dealbreaker && (a[i.id].accepts ?? i.options.map((o) => o.value)).length >= i.options.length)
+      return bad ? `"${bad.text}": a dealbreaker needs at least one option you wouldn't accept` : null
     }
     case 'text': {
       const done = section.items.filter((i) => a[i.id]?.trim()).length
-      return done < MIN_STORIES ? `Answer at least ${MIN_STORIES} (${done} so far)` : null
+      const min = section.minAnswers ?? 4
+      return done < min ? `Answer at least ${min} (${done} so far)` : null
     }
     case 'interests':
       return a.interests.length < MIN_INTERESTS ? `Pick at least ${MIN_INTERESTS}` : null
@@ -62,24 +66,71 @@ function ChoiceImportance({ section, value, onChange }) {
     <div className="space-y-3">
       {section.items.map((item) => {
         const v = value[item.id]
+        const all = item.options.map((o) => o.value)
+        const accepts = v?.accepts ?? all
+        const set = (patch) => onChange({ ...value, [item.id]: { ...v, ...patch } })
+        const toggleAccept = (o) => set({ accepts: accepts.includes(o) ? accepts.filter((x) => x !== o) : [...accepts, o] })
         return (
           <fieldset key={item.id} className="rounded-2xl border border-line bg-surface p-4">
             <legend className="sr-only">{item.text}</legend>
             <p className="mb-3 font-medium">{item.text}</p>
             <div className="flex flex-wrap gap-2">
               {item.options.map((o) => (
-                <Chip key={o.value} selected={v?.answer === o.value} onClick={() => onChange({ ...value, [item.id]: { importance: 'important', ...v, answer: o.value } })}>{o.label}</Chip>
+                <Chip key={o.value} selected={v?.answer === o.value} onClick={() => set({ answer: o.value })}>{o.label}</Chip>
               ))}
             </div>
             {v?.answer && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-muted">In a partner, this is</span>
-                <Segmented size="sm" label={`Importance: ${item.text}`} value={v.importance} options={section.importance} onChange={(importance) => onChange({ ...value, [item.id]: { ...v, importance } })} />
+              <div className="mt-3 space-y-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted">In a partner, this is</span>
+                  {/* No default (F7): Next stays disabled until each item has an importance. */}
+                  <Segmented size="sm" label={`Importance: ${item.text}`} value={v.importance} options={section.importance} onChange={(importance) => set({ importance })} />
+                </div>
+                <div>
+                  <p className="mb-2 text-muted">{section.accepts?.label ?? "In a partner I'd accept"}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {item.options.map((o) => <Chip key={o.value} selected={accepts.includes(o.value)} onClick={() => toggleAccept(o.value)}>{o.label}</Chip>)}
+                  </div>
+                </div>
+                <label className="flex w-fit items-center gap-2 font-medium">
+                  <input type="checkbox" checked={Boolean(v.dealbreaker)} onChange={(e) => set({ dealbreaker: e.target.checked })} className="size-4 accent-[var(--color-accent)]" />
+                  {section.dealbreaker?.label ?? 'Dealbreaker'}
+                </label>
               </div>
             )}
           </fieldset>
         )
       })}
+    </div>
+  )
+}
+
+function Identity({ section, value, onChange }) {
+  const [custom, setCustom] = useState('')
+  const langs = value.languages ?? []
+  const toggle = (l) => onChange({ ...value, languages: langs.includes(l) ? langs.filter((x) => x !== l) : [...langs, l] })
+  return (
+    <div className="space-y-4">
+      {section.items.map((item) => (
+        <div key={item.id} className="rounded-2xl border border-line bg-surface p-4">
+          <label htmlFor={`i-${item.id}`} className="mb-2 block font-medium">{item.text}</label>
+          {item.kind === 'multi' ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {[...new Set([...item.options.map((o) => o.label.toLowerCase()), ...langs])].map((l) => <Chip key={l} selected={langs.includes(l)} onClick={() => toggle(l)}>{l}</Chip>)}
+              </div>
+              {item.allowOther && (
+                <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); const l = custom.trim().toLowerCase(); if (l && !langs.includes(l)) toggle(l); setCustom('') }}>
+                  <input id={`i-${item.id}`} value={custom} onChange={(e) => setCustom(e.target.value)} maxLength={40} placeholder="Another language…" className="flex-1 rounded-full border border-line bg-bg px-4 py-2 focus:border-accent focus:outline-none" />
+                  <Button type="submit" variant="secondary" disabled={!custom.trim()}>Add</Button>
+                </form>
+              )}
+            </>
+          ) : (
+            <input id={`i-${item.id}`} value={value[item.id] ?? ''} maxLength={item.id === 'family' ? 200 : 120} onChange={(e) => onChange({ ...value, [item.id]: e.target.value })} placeholder={item.placeholder} className="w-full rounded-xl border border-line bg-bg px-3 py-2 focus:border-accent focus:outline-none" />
+          )}
+        </div>
+      ))}
     </div>
   )
 }
@@ -96,7 +147,7 @@ function Stories({ section, value, onChange }) {
             maxLength={400}
             onChange={(e) => onChange({ ...value, [item.id]: e.target.value })}
             className="min-h-20 w-full resize-y rounded-xl border border-line bg-bg px-3 py-2 focus:border-accent focus:outline-none"
-            placeholder="A sentence or four, in your own words…"
+            placeholder={item.placeholder ?? 'A sentence or four, in your own words…'}
           />
           <p className="mt-1 text-right text-xs text-muted">{(value[item.id] ?? '').length}/400</p>
         </div>
@@ -148,14 +199,16 @@ function StyleSamples({ section, value, onChange }) {
     <div className="space-y-5 rounded-3xl border border-line bg-surface p-4 sm:p-6">
       {section.items.map((item) => (
         <div key={item.id} className="space-y-2">
-          <p className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-surface-2 px-4 py-2.5">{item.text}</p>
+          {item.prompt
+            ? <p className="text-sm italic text-muted">{item.text}</p>
+            : <p className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-surface-2 px-4 py-2.5">{item.text}</p>}
           <div className="ml-auto max-w-[85%]">
             <label htmlFor={`e-${item.id}`} className="sr-only">Your reply to: {item.text}</label>
             <textarea
               id={`e-${item.id}`}
               rows={1}
               value={value[item.id] ?? ''}
-              maxLength={300}
+              maxLength={400}
               onChange={(e) => onChange({ ...value, [item.id]: e.target.value })}
               placeholder="reply like you would…"
               className="block w-full resize-none rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-accent-ink placeholder:text-accent-ink/70 focus:outline-none focus:ring-2 focus:ring-accent/40 field-sizing-content"
@@ -167,7 +220,7 @@ function StyleSamples({ section, value, onChange }) {
   )
 }
 
-const SECTION_UI = { likert: Likert, choice_importance: ChoiceImportance, text: Stories, interests: Interests, style: StyleSamples }
+const SECTION_UI = { identity: Identity, likert: Likert, choice_importance: ChoiceImportance, text: Stories, interests: Interests, style: StyleSamples }
 
 function Processing({ onDone, onFailed }) {
   useEffect(() => {

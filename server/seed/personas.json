@@ -74,47 +74,114 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "not_really",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "never"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "long_term"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -153,7 +220,20 @@
         "e5": "no worries at all, hope the day got better",
         "e6": "something low-key, like a walk and chai somewhere quiet where we can actually talk",
         "e7": "haha I try 😄",
-        "e8": "texting for sure, calls only for the important stuff"
+        "e8": "texting for sure, calls only for the important stuff",
+        "e9": "omg congrats!! 🎉 what’s the role?",
+        "e10": "haha bold take but i’ll listen… why?",
+        "e11": "yes please!! how about saturday morning? filter coffee and a slow walk?",
+        "e12": "hey so sorry but something came up and i have to cancel tomorrow 😞 can we reschedule for early next week?",
+        "e13": "haha guilty as charged 😅 but only for the fun things",
+        "e14": "sleep well!! hope tomorrow’s smooth ☀️",
+        "e15": "oh my god that’s a lot!! pottery class wins though — natural or not, you’re doing it and that’s awesome. my week’s been quieter, just trekking and recharging. proud of you for surviving all that 💪"
+      },
+      "I": {
+        "job": "product designer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -228,47 +308,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "another_indian_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "non_veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "need_space_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "little",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -307,7 +459,21 @@
         "e5": "Arre no problem at all, hope it got better",
         "e6": "Good food and a long walk. Easy to talk that way",
         "e7": "Haha I try my best",
-        "e8": "Texting mostly, calls are for when the story is too long"
+        "e8": "Texting mostly, calls are for when the story is too long",
+        "e9": "Wah!! Congrats yaar 🎉 That’s awesome!! What’s the role?",
+        "e10": "Haha bold take but I’ll hear you out. What’s got you anti-dog?",
+        "e11": "Coffee sounds good! I’m free most evenings after work. How about Thursday?",
+        "e12": "Hey, so sorry but something urgent came up at work and I won’t be able to make it tomorrow. Really sorry for the last minute—can we reschedule?",
+        "e13": "Arre yaar… guilty as charged 😅 I’m working on it, promise!",
+        "e14": "Haan ji, sleep ki taraf badh rahe hain. Good night! 😴",
+        "e15": "Waah, that’s a lot! Pottery class and you’re a natural?? No way you’re underselling yourself. My week’s been standard—work, cooking experiments, and trying not to die on stairs during trek practice. Respect for surviving all that."
+      },
+      "I": {
+        "job": "backend engineer",
+        "languages": [
+          "english",
+          "hindi"
+        ]
       }
     }
   },
@@ -381,47 +547,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "regularly",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "non_veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "little",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -456,7 +694,20 @@
         "e5": "No worries, happens",
         "e6": "Chai and a long drive, easy conversation",
         "e7": "Haha I try",
-        "e8": "Calls, texting is too slow"
+        "e8": "Calls, texting is too slow",
+        "e9": "Congrats!! 🎉 That’s awesome, celebrate with chai and a drive?",
+        "e10": "LMAO dogs are underrated bro, loyal af",
+        "e11": "Sure! How about tomorrow evening? I’m free after 6",
+        "e12": "Hey, something came up at work, gotta cancel tomorrow. Raincheck?",
+        "e13": "Guilty as charged 😏 but worth the wait",
+        "e14": "Sleep well, crush it tomorrow!",
+        "e15": "Whoa that’s a lot 😅 Glad you’re trying pottery though! Mine’s been standard — work, cricket, chai breaks. You teaching me pottery someday?"
+      },
+      "I": {
+        "job": "Sales lead",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -535,47 +786,114 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "not_really",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "never"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "long_term"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -614,7 +932,20 @@
         "e5": "no worries, hope the day got better",
         "e6": "a long walk and chai somewhere quiet",
         "e7": "haha I try 😄",
-        "e8": "texting mostly, calls for the long stories"
+        "e8": "texting mostly, calls for the long stories",
+        "e9": "woohoo!! congrats!! 🎉 that’s amazing — what’s the role?",
+        "e10": "haha fair, but have you met a good dog? they’re basically furry therapists 😄",
+        "e11": "i’d love that! how about saturday afternoon at that place near fc road?",
+        "e12": "hey, something urgent came up at work — i’ll have to cancel tomorrow. really sorry, can we reschedule for later this week?",
+        "e13": "guilty as charged 😏 but only for the good things — like chai and sunsets",
+        "e14": "sleep well! early days are the best for quiet chai and sketching",
+        "e15": "woah that’s a lot — proud of you for trying pottery though! mine’s been quiet, just trekking and catching up on books. you’ve gotta tell me how the class goes"
+      },
+      "I": {
+        "job": "architect",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -692,47 +1023,116 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "long_term"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -771,7 +1171,20 @@
         "e5": "no worries! hope your day got less crazy, tell me about it?",
         "e6": "coffee at third wave place, then a slow walk around the lake — low pressure, good vibes",
         "e7": "haha aw shucks, you’re not so bad yourself 😄",
-        "e8": "texting for quick chats, calls for deep convos — best of both worlds!"
+        "e8": "texting for quick chats, calls for deep convos — best of both worlds!",
+        "e9": "omg congrats!! 🎉 that’s huge — tell me all the deets! what’s the role?",
+        "e10": "lmao dogs are *so* overrated… cats 4eva but low-key i’d still pet a golden if i saw one 😅",
+        "e11": "yes please! how’s tomorrow evening around 6? third wave spot near indiranagar?",
+        "e12": "hey so sorry but something urgent came up at work — i’ve gotta cancel tomorrow. raincheck? let me know when you’re free next week!",
+        "e13": "hey!!! guilty as charged 😏 but only for the good things — like gigs that start late and coffee that’s worth the wait",
+        "e14": "same! early day too — sleep well, dream of cold brew and bike rides ☕🚴‍♀️",
+        "e15": "wooooah that’s a lot — pottery class?! you’re totally a natural, i can feel it. my week’s been steady: gig thursday, fixed my bike brakes, and finally brewed pour-over that didn’t taste like sadness. small wins!"
+      },
+      "I": {
+        "job": "UX researcher",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -847,47 +1260,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -926,7 +1411,20 @@
         "e5": "no worries! hope your day calmed down. mine was all debug and chai. haha",
         "e6": "good first date? coffee, then a slow walk somewhere green. low pressure, see if we vibe.",
         "e7": "haha you seem fun",
-        "e8": "texting mostly—lets me think. but calls are good too, once we know each other."
+        "e8": "texting mostly—lets me think. but calls are good too, once we know each other.",
+        "e9": "congrats!! 🎉 that's awesome—what'd you get? hope it's something that makes you smile like your profile did for me 😄",
+        "e10": "hmm dogs overrated? bold take. i’ll admit cats have that quiet cool vibe but dogs? loyalty + chaos = perfect combo. fight me on this too?",
+        "e11": "coffee sounds great! how about saturday morning around 10? lalbagh gate or that cute place near indiranagar? your call ☕",
+        "e12": "hey, so sorry—just got hit with an urgent work thing and gotta cancel tomorrow. feel awful about it. can we reschedule for sunday? same coffee plan?",
+        "e13": "haha guilty as charged 😏 time management is a work in progress… but i’ll try to be on time for coffee if you promise not to judge my chai-stained shirt",
+        "e14": "sleep well! hope tomorrow’s early start treats you kindly. mine’s all about debugging dreams and chai-powered mornings. haha",
+        "e15": "whoa that’s a lot—pottery class?! that’s awesome, natural or not. proud of you for trying. my week’s been… similar chaos? launch prep, band practice, and i tried to cook ravioli and ended up with pasta soup. haha. at least we’re both making weird things, right?"
+      },
+      "I": {
+        "job": "backend engineer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1004,47 +1502,116 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "life_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "long_term"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "lots",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -1083,7 +1650,20 @@
         "e5": "No worries at all — hope your day eased up by the end. Mine was all glazes and giggles from a workshop.",
         "e6": "A good first date? Sharing a plate of biryani at Paradise, then walking silently beside the Hussain Sagar lake.",
         "e7": "I try to find the quiet humour in things — glad it comes through. What made you smile today?",
-        "e8": "I prefer texting — it lets me think my words through. But I’ll always make time for a call if it matters."
+        "e8": "I prefer texting — it lets me think my words through. But I’ll always make time for a call if it matters.",
+        "e9": "Congratulations!! 🎉 That’s amazing — so happy for you. What’s the role?",
+        "e10": "Hmm, I think dogs get a lot of love for good reason — loyal, goofy, always happy to see you. But I’ll admit, I’m more of a quiet cat person myself.",
+        "e11": "I’d love that. How about Saturday morning around 10? There’s this little place near Charminar that does the best filter coffee.",
+        "e12": "Hey, I’m really sorry but something came up and I won’t be able to make it tomorrow. I hate to cancel — can we reschedule for early next week?",
+        "e13": "Guilty as charged 😏 Time just slips away when I’m lost in a sketch or kneading clay. I’m working on it… slowly.",
+        "e14": "Sleep well — hope tomorrow starts off calm and kind. Dream of good biryani.",
+        "e15": "Wow, that’s a lot to carry in one week — major respect for keeping going. So glad to hear the pottery class is going well, even if you don’t believe the teacher yet. Mine’s been steady — quiet studio time, a few new illustrations, and yes, I finally tried that biryani place near Shah Ali Banda. Worth every bite."
+      },
+      "I": {
+        "job": "children's book illustrator",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1159,47 +1739,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "life_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "lots",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -1238,7 +1890,20 @@
         "e5": "No worries at all — hope your day eased up. Mine was slow and sweet, just how I like it.",
         "e6": "Somewhere quiet, maybe a secondhand book fair or a pottery studio — somewhere we can make something small together, even if it’s lopsided.",
         "e7": "Thanks — I try to notice the small things. They’re where the warmth lives, I think.",
-        "e8": "I like both, really. Texts for thoughts, calls when I want to hear your voice — but only if it feels easy, never forced."
+        "e8": "I like both, really. Texts for thoughts, calls when I want to hear your voice — but only if it feels easy, never forced.",
+        "e9": "Congratulations!! 🎉 That’s such good news — I’m genuinely happy for you. What kind of work is it?",
+        "e10": "Hmm, I can see why some might feel that way — but I think it’s more about the quiet kind of love they offer. No demands, just presence. Kind of like my curry leaf plant — doesn’t do much, but I’d miss it if it were gone.",
+        "e11": "I’d love that. How about tomorrow afternoon? I usually close the shop by 5, and we could find a quiet corner with chai and maybe a book to flip through.",
+        "e12": "Hey, I’m so sorry — something came up at the shop and I won’t be able to make it tomorrow. I really was looking forward to it. Can we try for day after instead? No pressure at all.",
+        "e13": "Guilty as charged 😏 But only when I’m lost in a book or waiting for clay to dry. Time just… melts. I’ll try to be better — for you.",
+        "e14": "Sleep well — hope tomorrow starts gentle for you. I’ll be here, probably with a half-mug of chai and a slightly lopsided bowl.",
+        "e15": "Wow, that’s a lot to carry — hugs if you want them. So glad you started the class though, even if you don’t believe the teacher yet. (Spoiler: they’re right.) My week’s been slow and soft — lots of re-organizing the poetry shelf, and I finally centered a bowl. Didn’t collapse. Small wins."
+      },
+      "I": {
+        "job": "bookshop owner",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1314,47 +1979,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "non_veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "need_space_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -1393,7 +2130,20 @@
         "e5": "No worries. Crazy days earn extra biryani.",
         "e6": "Coffee, then a walk. If we survive silence, we try dinner.",
         "e7": "Glad it comes across. Most think I’m just tired.",
-        "e8": "Texting. Calls are for emergencies or birthday wishes."
+        "e8": "Texting. Calls are for emergencies or birthday wishes.",
+        "e9": "Congrats. Hope it comes with decent coffee and fewer meetings.",
+        "e10": "Bold take. I’ll judge you quietly while walking my imaginary dog.",
+        "e11": "Free Thursday or Friday morning. You pick the café—I’ll bring the silence.",
+        "e12": "Hey, gotta cancel tomorrow. Something came up at the edit suite. Raincheck?",
+        "e13": "Guilty. But I’ll be on time for coffee—promise. Unlike my sourdough starter.",
+        "e14": "Sleep well. Dream of uneventful timelines and perfectly cooked rice.",
+        "e15": "Sounds like a sitcom episode. Mine’s been cuts, kilometers, and a dal that finally didn’t stick to the pot. Small wins."
+      },
+      "I": {
+        "job": "Film editor",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1469,47 +2219,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "non_veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "need_space_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -1548,7 +2370,20 @@
         "e5": "no worries! hope it’s better now",
         "e6": "coffee, walk, see if we can talk past the awkward bits",
         "e7": "haha thanks! you seem fun too",
-        "e8": "texting usually. calls for deep convos or bad network"
+        "e8": "texting usually. calls for deep convos or bad network",
+        "e9": "woohoo!! 🎉 congrats!! what’s the role?",
+        "e10": "haha bold take. but have you seen a pupper zoomie? instant serotonin.",
+        "e11": "love it! how about tomorrow morning after my run? seaface view + coffee?",
+        "e12": "hey! something urgent came up at work, got to reschedule tomorrow. how about the day after? same time?",
+        "e13": "guilty as charged 😅 but only if it’s worth the wait… like biryani or a good film.",
+        "e14": "sleep well! dream of pineapple-free pizza 😉",
+        "e15": "woah that’s a lot!! pottery class win though — natural or not, you’re making things. my week’s been steady: runs, films, and finally perfected my biryani stress-cook. all good on the chaos front!"
+      },
+      "I": {
+        "job": "Product Manager at a fintech",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1624,56 +2459,129 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
         "sunday": "I wake up to the smell of filter coffee, practice Carnatic for an hour, then walk Marina Beach with my parents. We eat mango slices and talk about nothing. Peace.",
-        "hill": "",
-        "weirdly_good": "",
+        "hill": "I’ll die on the hill that filter coffee should always be served in a steel tumbler — nothing beats that authentic chennai experience.",
+        "weirdly_good": "I’m weirdly good at remembering obscure Tamil film songs from the 90s — hum a tune and I’ll likely name the movie, year, and singer.",
         "laugh": "",
         "place": "",
-        "friends_rely": ""
+        "friends_rely": "",
+        "argue": "I’ll argue fiercely that Carnatic music isn’t ‘just for old people’ — it’s deep, mathematical, and honestly, way more cool than most realize. I could go on for hours."
       },
       "D": {
         "interests": [
@@ -1703,7 +2611,20 @@
         "e5": "No worries! Hope your day got better.",
         "e6": "Filter coffee at a quiet cafe, then a walk where we can talk easily.",
         "e7": "Why thank you! You seem nice too 🙂",
-        "e8": "Texting is fine for quick chats, but calls feel more personal for real talk."
+        "e8": "Texting is fine for quick chats, but calls feel more personal for real talk.",
+        "e9": "Congrats!! 🎉 That’s amazing news — so happy for you!",
+        "e10": "Haha, I won’t fight you on that… but have you met a golden retriever? Pure joy on four legs 🐶",
+        "e11": "I’d love that! How about tomorrow evening around 5 at that filter coffee place near Elliot’s?",
+        "e12": "Hey, I’m really sorry but something came up with family and I need to cancel our plans for tomorrow. Can we reschedule for later this week?",
+        "e13": "Guilty as charged 😅 But hey, better late than never, right?",
+        "e14": "Sleep well! Hope you wake up refreshed for your early day 😊",
+        "e15": "Whoa, that’s a lot — pottery class win though! Teacher’s right, you’ve got this. My week’s been steady: work, vocals, and too much filter coffee. Hope things calm down for you soon."
+      },
+      "I": {
+        "job": "Junior data analyst",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -1779,47 +2700,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -1858,7 +2851,21 @@
         "e5": "No worries at all! Hope your day eased up a bit.",
         "e6": "A good first date? Filter coffee, a quiet walk somewhere shady, and talking like we’ve known each other forever.",
         "e7": "Thanks! I try to be — life’s too short for anything else.",
-        "e8": "I prefer calls for real talks, but texting’s fine for quick hellos. Whatever feels natural."
+        "e8": "I prefer calls for real talks, but texting’s fine for quick hellos. Whatever feels natural.",
+        "e9": "Omg congrats!! 🎉 That’s awesome — what’s the role? So happy for you!",
+        "e10": "Haha I get that take — but have you met a golden retriever? Instant mood booster. Still, to each their own!",
+        "e11": "I’d love that! How about tomorrow morning after my walk with Dad? Filter coffee and a quiet corner?",
+        "e12": "Hey, I’m really sorry but something came up at work and I have to cancel our plans for tomorrow. I feel awful — can we reschedule for sometime soon?",
+        "e13": "Guilty as charged 😅 Dad says I inherit it from him — ‘Chennai time’, he calls it. Working on it, promise!",
+        "e14": "Sleep well! Hope tomorrow starts off calm and good for you.",
+        "e15": "Whoa, that’s a lot — huge launch, flatmate drama, AND pottery? You’re juggling like a pro. Glad the teacher sees potential — trust them, you’re doing better than you think. My week’s been steady: code, beach, mridangam practice. Quiet wins."
+      },
+      "I": {
+        "job": "Software Engineer",
+        "languages": [
+          "english",
+          "tamil"
+        ]
       }
     }
   },
@@ -1934,47 +2941,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "little",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2013,7 +3092,21 @@
         "e5": "Arre no worries! Crazy days happen — hope yours calmed down 😊",
         "e6": "Good first date? Comedy show + street food crawl. If we laugh and eat badly, we’re golden.",
         "e7": "Haha thanks! Gotta keep the energy high — life’s too short for boring convos.",
-        "e8": "Texting for quick yaars, calls for deep talks — best of both worlds!"
+        "e8": "Texting for quick yaars, calls for deep talks — best of both worlds!",
+        "e9": "Arre yaar, CONGRATS!!! 🎉 That’s huge — celebrate with protein shakes and bad jokes, I demand details!",
+        "e10": "Dogs overrated?!? Yaar, have you even met a wagging tail after a long day? Fight me, but I’ll bring treats.",
+        "e11": "Coffee? YES! I’m free tomorrow evening post-workout — say 6:30? My treat, you pick the spot (just no pineapple pizza vibes).",
+        "e12": "Arre yaar, so sorry — just got hit with an urgent work thing tomorrow AM. Can we shift to Friday? Same comedy spot, I’ll bring the chai.",
+        "e13": "Haha guilty as charged! But hey, better late than never — especially when it’s for you. My CrossFit schedule’s wild, but I’ll try!",
+        "e14": "Sleep ka funda! Early to rise, early to grind — sweet dreams, and don’t let the burpees bite 😴💪",
+        "e15": "Omg that’s a whole Netflix drama in one week!!! Pottery natural? Pfft, we’ll see about that — mine’s been mad too: back-to-back client calls, survived a 5AM CrossFit session, and finally tried that new stand-up open mic. Alive, but barely. Chai?"
+      },
+      "I": {
+        "job": "Consultant",
+        "languages": [
+          "english",
+          "hindi"
+        ]
       }
     }
   },
@@ -2089,56 +3182,129 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "little",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
         "sunday": "5am laced up for my 10k run through Lodhi Gardens, sweat and sunrise. Post-run, masala chai at my usual stall, then scribbling comedy bits for Sunday open-mic. Even if I bomb, the crowd’s energy fuels me. Evening? Biryani with my co-founder crew, debating logistics hacks till midnight. Pure, chaotic joy.",
-        "hill": "",
-        "weirdly_good": "",
+        "hill": "I’ll die on the hill that street-side golgappa beats any fancy appetizer. Fight me, but I’m bringing extra tamarind water.",
+        "weirdly_good": "I’m weirdly good at remembering obscure startup jargon… and forgetting where I put my keys. Priorities, right?",
         "laugh": "",
         "place": "",
-        "friends_rely": ""
+        "friends_rely": "",
+        "argue": "I’ll argue that running 10k every Sunday counts as ‘rarely working out’ — it’s cardio, not culture. I feel *strongly* about this logic."
       },
       "D": {
         "interests": [
@@ -2168,7 +3334,21 @@
         "e5": "No worries, bhai! Hope your crazy day had at least one chai break.",
         "e6": "First date? Morning run together, then street food crawl. If we survive both, we’re good.",
         "e7": "Aw shucks, you made me blush! Keep the good vibes coming 😂",
-        "e8": "Texting for quick yaars, calls for deep bakwaas. Depends on the mood, bhai!"
+        "e8": "Texting for quick yaars, calls for deep bakwaas. Depends on the mood, bhai!",
+        "e9": "Arre yaar, CONGRATS!! 🎉 That calls for chai and bad dance moves! Tell me all! 😄",
+        "e10": "Omg dogs overrated? *gasps in Hindi and English* Next you’ll say biryani is just rice! Fight me, but I’ll bring treats 😂",
+        "e11": "Coffee? Ha! I’m free Sunday post-10k run — sweaty but sincere. Or weekday 7pm if you can handle startup brain dump ☕😂",
+        "e12": "Arre yaar, sorry! Startup fire drill hit — gotta pivot tomorrow. Raincheck? I’ll make it up with extra chai and worse jokes ☕😂",
+        "e13": "Late? Only fashionably! Or because I was rehearsing a joke that bombed. Sue me… but buy me chai first? 😏",
+        "e14": "Sleep ka baap! Sweet dreams — hope your tomorrow’s less insane and more chai-filled. ☕😴",
+        "e15": "Oof, flatmate vanishing act? Pottery natural? Sounds like a Netflix special. Mine’s been hustle + hills + half-baked punchlines. Surviving, basically! 😂"
+      },
+      "I": {
+        "job": "Logistics startup founder",
+        "languages": [
+          "english",
+          "hindi"
+        ]
       }
     }
   },
@@ -2244,47 +3424,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2323,7 +3575,21 @@
         "e5": "no worries! hope your day calmed down. mine was full of fryer tests and dough rolls 😊",
         "e6": "good first date? sharing a thali at a quiet spot, talking about dreams and favourite snacks. simple and real 😊",
         "e7": "haha thanks! i try to keep things light—life’s too long to be serious all the time 😊",
-        "e8": "i prefer texting for quick updates, but calls for long chats—especially with Amma. best of both 😊"
+        "e8": "i prefer texting for quick updates, but calls for long chats—especially with Amma. best of both 😊",
+        "e9": "omg congrats!! 🎉 so proud of you—celebrate with something sweet? maybe jalebi? 😊",
+        "e10": "haha overrated? coming from a cat person? 😼 but hey, to each their own—more cuddles for me then 😊",
+        "e11": "love that! how about tomorrow evening around 5? there’s this cute iranian cafe near law garden—my treat 😊",
+        "e12": "hey, so sorry—something urgent came up at the startup, gotta handle a supplier issue. can we shift to day after? really don’t wanna miss our coffee ☕😊",
+        "e13": "guilty as charged! 😅 amma says i run on ‘indian stretchable time’—working on it, promise 😊",
+        "e14": "sleep well! hope you wake up refreshed—sweet dreams 😊",
+        "e15": "whoa, that’s a lot! pottery class? now i need to see your first mug—hope it’s snack-shaped 😄 mine’s been good—finalised a new masala khakra batch and danced garba in the kitchen. life’s full, alhamdulillah 😊"
+      },
+      "I": {
+        "job": "snack startup founder",
+        "languages": [
+          "english",
+          "gujarati"
+        ]
       }
     }
   },
@@ -2399,47 +3665,119 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2478,7 +3816,22 @@
         "e5": "No worries! Hope your day calmed down. Chai?",
         "e6": "Garba practice followed by street food — pani puri and jalebi. Low pressure, high joy. What about you?",
         "e7": "Thanks! I try to keep things light — life’s too short for dull convos 😊",
-        "e8": "Texting for quick chats, calls for deeper talks. But I’ll always reply to your texts — promise."
+        "e8": "Texting for quick chats, calls for deeper talks. But I’ll always reply to your texts — promise.",
+        "e9": "Congrats!! 🎉 That’s huge — celebrate with garba moves and your favorite snack? I’m so happy for you!",
+        "e10": "Oof, strong take 😅 But hey, to each their own — I’ll keep loving my pupper while you enjoy your cat life 😄",
+        "e11": "Love that! How about tomorrow evening? Say 6 at that cute café near Law Garden? Chai or filter coffee?",
+        "e12": "Hey, so sorry — something urgent came up at work and I won’t be able to make it tomorrow. Raincheck? Let me make it up to you with extra jalebi next time 😅",
+        "e13": "Guilty as charged 😏 But only because I’m busy perfecting garba steps and snack recipes — worth the wait, promise!",
+        "e14": "Sleep well! Hope tomorrow’s smooth — dream of garba and donuts 😄",
+        "e15": "Whoa, that’s a rollercoaster week! 😅 Pottery natural? I don’t believe it either — but I’d love to see your first piece. Mine’s been all startup chaos and late-night recipe tests… but hey, at least the chai’s strong."
+      },
+      "I": {
+        "job": "Founder of a D2C food brand",
+        "languages": [
+          "english",
+          "gujarati",
+          "hindi"
+        ]
       }
     }
   },
@@ -2555,47 +3908,116 @@
       "B": {
         "kids": {
           "answer": "yes",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "yes"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2630,7 +4052,20 @@
         "e5": "no worries at all! hope your day eased up a bit — sending calm vibes your way 😊",
         "e6": "a good first date? chai at a quiet café, then a slow walk somewhere green — talk, laugh, and see if the silence feels comfy too.",
         "e7": "aww you’re sweet! just trying to spread the good vibes — thanks for noticing 😊",
-        "e8": "i like both! texting for quick hellos, calls for deeper chats — depends on the mood. what’s your preference?"
+        "e8": "i like both! texting for quick hellos, calls for deeper chats — depends on the mood. what’s your preference?",
+        "e9": "yay!! 🎉 so happy for you!! what’s the role? spill the details!!",
+        "e10": "hmm… dogs are cute but honestly? i’m more of a bird person 🐦‍⬛ feathers > fur for me 😄",
+        "e11": "love that idea! ☕ how about saturday morning? say 10:30 at that cute place near fc road?",
+        "e12": "hey… so sorry, but something urgent came up at work and i won’t be able to make it tomorrow 😞 can we reschedule? i’ll make it up to you — promise ☕",
+        "e13": "guilty as charged 😏… but hey, better late than never, right? especially when it’s worth the wait 😉",
+        "e14": "sweet dreams! 🌙 hope you wake up refreshed and ready for tomorrow — you’ve got this 💪",
+        "e15": "woah… that’s a lot!! 😅 pottery class though?? that’s awesome — and if the teacher says you’re a natural, trust them!! you’re clearly full of surprises. hope the rest of your week smooths out — sending good vibes!! 🌸"
+      },
+      "I": {
+        "job": "paediatric physiotherapist",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -2704,47 +4139,119 @@
       "B": {
         "kids": {
           "answer": "no",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2779,7 +4286,20 @@
         "e5": "no worries at all — hope your day eased up",
         "e6": "good first date? something simple — coffee, a walk in the botanic garden, no pressure to talk constantly",
         "e7": "haha thanks — i try to keep it light",
-        "e8": "i prefer texting when i’m out in the field — calls scare the birds. otherwise, either works"
+        "e8": "i prefer texting when i’m out in the field — calls scare the birds. otherwise, either works",
+        "e9": "woah congrats!!! 🎉 that’s amazing — what’s the job? so happy for you!",
+        "e10": "haha dogs are cute but yeah, a bit overrated. i’m more of a bird person — quieter companions",
+        "e11": "coffee sounds great! how about tomorrow afternoon? say 4 at that place near fc road?",
+        "e12": "hey, really sorry but something urgent came up — i have to cancel tomorrow. hope we can reschedule soon?",
+        "e13": "haha guilty as charged 😅 time just slips when i’m chasing light or editing. working on it!",
+        "e14": "totally get it — rest well! early days are the best for birding anyway",
+        "e15": "woah that’s a lot — congrats on the pottery class though! natural or not, trying is the win. mine’s been good — finally got a clear shot of a malabar trogon after days of waiting. small joys"
+      },
+      "I": {
+        "job": "wildlife photographer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -2856,47 +4376,117 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "never"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -2931,7 +4521,20 @@
         "e5": "no worries! hope it wasn’t too wild",
         "e6": "coffee and a walk in cubbon park. low pressure, high chance of plant talk",
         "e7": "thanks! i try 🌱",
-        "e8": "texting for quick stuff, calls for real talk. voice notes are peak"
+        "e8": "texting for quick stuff, calls for real talk. voice notes are peak",
+        "e9": "omg congrats!! 🎉 celebrate with a smoothie not smoke lol",
+        "e10": "lol controversial take but i’ll hear you out — cats are clearly superior",
+        "e11": "yes! how about saturday morning? cubbon park, 8am? fresh air and plant gossip",
+        "e12": "hey so sorry but i need to cancel tomorrow — asthma flared up, docs say rest. raincheck?",
+        "e13": "guilty! but only when i’m chasing sunrises or avoiding traffic fumes 😏",
+        "e14": "sleep well! dream of pollen-free runs 😴",
+        "e15": "wtf that’s a lot!!! proud of you for the pottery — natural or not, you showed up. mine? same old: lung burn, leaf talk, surviving"
+      },
+      "I": {
+        "job": "marathon trainee / plant parent",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3005,47 +4608,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "regularly",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3080,7 +4755,20 @@
         "e5": "no worries! hope the crazy day brought at least one good chai break 😅",
         "e6": "good first date? chai at a quiet spot, then walk around lalbagh talking nonsense. if the vibe’s right, maybe a low-key gig after.",
         "e7": "haha thanks! i try — though my jokes are worse than my attempts at quitting smoking 😅",
-        "e8": "texting for quick laughs, calls for deep convos or when i wanna hear your voice after a long day. balance, you know?"
+        "e8": "texting for quick laughs, calls for deep convos or when i wanna hear your voice after a long day. balance, you know?",
+        "e9": "no way!! congrats!!! 🎉 what’s the gig? gotta celebrate — chai and bad jokes on me? 😅",
+        "e10": "lol bold take — but i’ll admit, cats low-key judge us harder. still, a wagging tail after a long day? kinda magic. you just haven’t met the right floof 😅",
+        "e11": "yes please! how about tomorrow evening? say 6 at that chai spot near indiranagar? or whenever works — i’m flexible (unlike my attempts at yoga) 😅",
+        "e12": "hey so… something came up and i’ve gotta cancel tomorrow 😅 really sorry — work call i can’t push. raincheck? i owe you chai and a plant pun as apology 😅",
+        "e13": "guilty as charged 😅 but hey, better late than never… especially if it means i get to see your face. you’ll just have to bring extra chai for the wait 😉",
+        "e14": "sleep well! hope tomorrow’s early start brings good vibes (and decent coffee). dream of plants that don’t die under my care 😅",
+        "e15": "whoa that’s a lot — major respect for starting pottery though! natural or not, you’re trying — that’s the win. mine’s been… loud. gigs, smoke breaks, and trying not to kill my monstera. surviving, basically 😅"
+      },
+      "I": {
+        "job": "sound engineer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3157,47 +4845,116 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "long_term"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3232,7 +4989,20 @@
         "e5": "No worries, hope your day eased up.",
         "e6": "A good first date: chai at Leopold, then a walk to see how the light hits the harbor.",
         "e7": "Thanks! Hope I seem as fun as I feel.",
-        "e8": "I prefer calls for plans, texting for quick hellos—balance works best."
+        "e8": "I prefer calls for plans, texting for quick hellos—balance works best.",
+        "e9": "Yay!! So happy for you! What’s the role? Celebrate with chai?",
+        "e10": "Haha, to each their own—I’m more of a cat person but I’ll still pet a dog if it wags at me!",
+        "e11": "Love that! How about Saturday morning at Kala Ghoda? Say 10:30?",
+        "e12": "Hey, so sorry—something urgent came up at work. Can we reschedule for day after? Really wanna meet you.",
+        "e13": "Guilty! Blame Mumbai time and my architect’s optimism… I’ll buy the next round to make up for it?",
+        "e14": "Sleep well! Hope tomorrow’s early start goes smoothly.",
+        "e15": "Whoa, that’s a lot! Pottery class sounds amazing—natural or not, you’re doing it. Mine’s been steady: sailing, sketching, and finally fixing that leaky studio window."
+      },
+      "I": {
+        "job": "Architect",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3306,47 +5076,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "short_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3381,7 +5223,21 @@
         "e5": "no worries! hope the crazy was good crazy",
         "e6": "good first date? chai at bandstand, walk the fort, see where the convo takes us. no pressure.",
         "e7": "haha thanks! tryin to keep it real",
-        "e8": "texting for quick, calls when the story’s good. voice notes too if i’m on a cliff"
+        "e8": "texting for quick, calls when the story’s good. voice notes too if i’m on a cliff",
+        "e9": "I GOT THE JOB!! 🎉 → hell yes!!! congrats 🎉 what’d you land? celebrating with chai or something stronger?",
+        "e10": "honestly I think dogs are overrated → oof hot take 😂 but I’ll fight you on this—puppy cuddles > your opinion. change my mind?",
+        "e11": "we should grab coffee sometime, when are you free? → coffee? yes. tell me when & where, I’ll bring the good vibes (and maybe a croissant if i’m feeling fancy)",
+        "e12": "hey, sorry but something came up tomorrow—gotta reschedule. raincheck? let me know when you’re free next week, i’ll make it up to you",
+        "e13": "you're definitely the type who's late everywhere 😏 → guilty as charged 😅 but hey, good things come to those who wait… and i’m worth the wait, right?",
+        "e14": "anyway I should sleep, early day tomorrow → sleep tight! hope your early day starts with good coffee and zero alarms. sweet dreams 😌",
+        "e15": "ok long story but my week has been insane... how's yours been? → woah that’s a lot!!! proud of you for trying pottery—natural or not, you showed up. mine? messy but good. more chai, less sleep, same vibe"
+      },
+      "I": {
+        "job": "travel-content creator",
+        "languages": [
+          "english",
+          "hindi"
+        ]
       }
     }
   },
@@ -3458,47 +5314,116 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "this_city"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "closely",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3533,7 +5458,20 @@
         "e5": "No worries at all! Hope your day eased up — chai break soon? 🙂",
         "e6": "Something low-key: filter coffee at a quiet spot, then a walk around Hussain Sagar if the weather’s nice. Talk, no pressure.",
         "e7": "Glad you think so! I try to keep things light — life’s too heavy not to laugh 🙂",
-        "e8": "Texting for quick hellos, calls for real talks. Voice carries warmth — plus, I can multitask badminton practice while chatting!"
+        "e8": "Texting for quick hellos, calls for real talks. Voice carries warmth — plus, I can multitask badminton practice while chatting!",
+        "e9": "Yesss!!! 🎉 That’s amazing news — so proud of you! Gotta celebrate with badminton or biryani? Your call!",
+        "e10": "Oof, strong take — but I’ll let it slide since you’re cute. Dogs > humans, fight me 😄 (jk… unless?)",
+        "e11": "Love that! How about tomorrow evening around 6? Filter coffee at that cute place near Tank Bund?",
+        "e12": "Hey, so sorry — just got an emergency at the clinic. Can we push our coffee to day after? I’ll make it up to you with extra chai!",
+        "e13": "Guilty as charged 😅 But hey, better late than never — and I’m worth the wait, right? 😉",
+        "e14": "Sleep well! Hope tomorrow’s smooth — dream of badminton smashes and sweet dreams 😌",
+        "e15": "Whoa, that’s a lot — pottery class win though! Teacher’s right, you’ve got the hands for it. My week’s been steady — clinic, court, and chai breaks. You surviving?"
+      },
+      "I": {
+        "job": "Doctor running my own clinic",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3608,47 +5546,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "abroad",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3683,7 +5693,20 @@
         "e5": "No worries at all! Hope your day got better 🙂",
         "e6": "A good first date? Let's grab coffee, walk around a market or food street, and see if we can make each other laugh.",
         "e7": "Haha thanks! I try to keep things light and fun — life's too short otherwise.",
-        "e8": "I like texting for quick chats, but calls are better for real conversations. Depends on the mood!"
+        "e8": "I like texting for quick chats, but calls are better for real conversations. Depends on the mood!",
+        "e9": "No way!! 🎉 Huge congrats — you totally earned it! What’s the role?",
+        "e10": "Haha bold take — but I’ll hear you out. What’s your ideal pet then?",
+        "e11": "Yes please! How’s tomorrow evening around 6? Know a great spot near Tank Bund.",
+        "e12": "Hey, so sorry — something urgent came up at work and I won’t be able to make it tomorrow. Really want to reschedule though — how about the day after?",
+        "e13": "Guilty as charged 😏 But hey, better late than never, right?",
+        "e14": "Sleep well! Hope you wake up refreshed 😴",
+        "e15": "Whoa, that’s a lot — flatmate drama AND pottery? Respect for trying something new. I’m proud of you for showing up. My week’s been steady — prepping for the move, hitting the court when I can. You surviving?"
+      },
+      "I": {
+        "job": "aerospace engineer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3760,47 +5783,117 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "never",
-          "importance": "dealbreaker"
+          "importance": "high",
+          "dealbreaker": true,
+          "accepts": [
+            "never"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3835,7 +5928,20 @@
         "e5": "No worries at all 🌸 Hope your day eased up — chai helps, doesn’t it?",
         "e6": "A quiet coffee place where we can talk, maybe catch a short play afterwards if we vibe.",
         "e7": "Thank you 🌸 I try to find joy in small things — like a perfect tatkar or a good joke.",
-        "e8": "I like both 🌸 Texts for quick thoughts, calls when we want to hear each other’s laughter."
+        "e8": "I like both 🌸 Texts for quick thoughts, calls when we want to hear each other’s laughter.",
+        "e9": "Congratulations! 🎉 That’s amazing news — I’m so happy for you. What’s the role?",
+        "e10": "Haha, to each their own 🌸 I grew up around street dogs — they’ve got more loyalty and soul than most people I know.",
+        "e11": "I’d love that ☕ How about Saturday morning? Around 10 at the usual spot near Connaught Place?",
+        "e12": "Hey, I’m really sorry — something urgent came up at school and I won’t be able to make it tomorrow. Can we reschedule for Sunday?",
+        "e13": "Guilty as charged 😏 But only when I’m lost in a rhythm or a good book — time just slips away. I’ll try to be better!",
+        "e14": "Sleep well 🌸 Hope you wake up refreshed — and don’t forget your chai!",
+        "e15": "Wow, that’s a lot to unpack! 🌸 Proud of you for trying pottery — and if the teacher says you’re a natural, trust them. My week’s been full of tatkar practice and grading papers — same old, same old. Glad you’re finding joy in new things."
+      },
+      "I": {
+        "job": "Kathak dancer and school teacher",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -3909,47 +6015,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "regularly",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -3984,7 +6162,20 @@
         "e5": "no worries at all—hope your day slowed down a bit now!",
         "e6": "a good first date? sharing a flight of weird beers at my taproom, then catching a street play in hauz khas",
         "e7": "haha you seem fun",
-        "e8": "i prefer calls for real talk, but texts for quick laughs and beer recs—best of both worlds"
+        "e8": "i prefer calls for real talk, but texts for quick laughs and beer recs—best of both worlds",
+        "e9": "I GOT THE JOB!! 🎉",
+        "e10": "dogs are overrated? bold take—i’ll trade you a stout for that opinion any day",
+        "e11": "coffee sounds perfect—how about saturday morning? i know a spot with beans so good they’ll make you forget chai exists",
+        "e12": "hey, so sorry—last-minute rehearsal ran long and i won’t make it tomorrow. raincheck? i’ll bring the next round",
+        "e13": "you’re definitely the type who’s late everywhere 😏",
+        "e14": "anyway i should sleep, early day tomorrow",
+        "e15": "oh wow—pottery class? i low-key respect that. mine’s been all about perfecting a new sour and memorizing monologues. chaos, but the good kind"
+      },
+      "I": {
+        "job": "craft-beer brewer and theatre actor",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -4056,47 +6247,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -4127,7 +6390,20 @@
         "e5": "No worries at all! Crazy days happen — hope you’re unwinding now. Chai or coffee to recover?",
         "e6": "Good first date? Chai at a quiet café, walk by the water, and real talk. No pressure, just seeing if we click.",
         "e7": "Aww, you’re making me blush 😊 Hope I’m not coming on too strong — just genuinely enjoying this chat!",
-        "e8": "I like both — texting for quick thoughts, calls for deeper convos. What’s your vibe today?"
+        "e8": "I like both — texting for quick thoughts, calls for deeper convos. What’s your vibe today?",
+        "e9": "OMG YES!!! 🎉🎉 That’s amazing news — so proud of you! What’s the role? Celebrate with something sweet? 😄",
+        "e10": "Lol okay hot take — but have you met a golden retriever? Pure joy on four legs 🐶 Still, I respect your opinion… kinda 😄",
+        "e11": "Yes please! ☕ How about Saturday morning at Kala Ghoda? Quiet spot, good chai, and we can actually talk. Does that work?",
+        "e12": "Hey… I’m so sorry, but something urgent came up at work and I have to cancel tomorrow. I really was looking forward to it — can we reschedule for early next week? I’ll make it up to you.",
+        "e13": "Guilty as charged 😏… but hey, better late than never, right? Though I’ll try to be on time for you — promise!",
+        "e14": "Sleep well! 🌙 Hope tomorrow’s early start goes smoothly. Dream of crypto gains and calm seas 😴",
+        "e15": "Whoa — that’s a lot! Pottery class?! You’re definitely a natural — trust the teacher 😄 My week’s been steady: work, waves, and winding down with a book. You’ve earned a break after all that!"
+      },
+      "I": {
+        "job": "offshore engineer",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -4199,47 +6475,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "long_term",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -4270,7 +6618,20 @@
         "e5": "Dear, no apology needed—I understand how demanding days can be. I hope your responsibilities eased by now.",
         "e6": "A good first date begins with sincere conversation over tea or coffee, allowing us to learn each other’s values, aspirations, and what brings us joy—simple, respectful, and open-hearted.",
         "e7": "Dear, I strive to bring warmth and sincerity to every interaction. Your words encourage me to continue being authentic.",
-        "e8": "I value both mediums: texts for thoughtful reflection and calls when tone and immediacy matter. I adapt to what suits the moment and your preference."
+        "e8": "I value both mediums: texts for thoughtful reflection and calls when tone and immediacy matter. I adapt to what suits the moment and your preference.",
+        "e9": "Dear friend, your achievement fills me with genuine joy! Congratulations on securing the position—your dedication has clearly borne fruit. I’m truly happy for you.",
+        "e10": "Dear, while I respect your perspective, I’ve found dogs to offer unwavering loyalty and companionship—qualities I deeply value, especially during long postings away from home.",
+        "e11": "Dear, I would be honored to share coffee with you. My schedule allows flexibility in the coming week—please suggest a time that suits you, and I will make it work.",
+        "e12": "Dear, I regret to inform you that an urgent duty requirement has arisen, necessitating the cancellation of our plans for tomorrow. I sincerely apologize for any inconvenience and hope we can reschedule soon.",
+        "e13": "Dear, while I appreciate your observation, I strive for punctuality as a reflection of respect—both for others’ time and the commitments I hold. I’ll aim to improve where I can.",
+        "e14": "Dear, rest well—tomorrow’s efforts deserve a peaceful night. I’ll be here when you wake, should you wish to continue our conversation.",
+        "e15": "Dear, your week sounds both tumultuous and enriching—pottery, new beginnings, and unexpected turns. I’m glad you’re exploring creativity; trust the teacher’s eye. Mine has been steady: duty, markets, and quiet reflection. We’re both growing, in our ways."
+      },
+      "I": {
+        "job": "Army doctor on UN mission",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -4339,47 +6700,119 @@
       "B": {
         "kids": {
           "answer": "open",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "this_city",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "never",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "balanced",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "figuring_it_out",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "no_preference",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "talk_it_out_immediately",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "some",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -4406,7 +6839,20 @@
         "e5": "np",
         "e6": "coffee walk",
         "e7": "glad",
-        "e8": "texting"
+        "e8": "texting",
+        "e9": "omg congrats!! 🎉 so happy for you",
+        "e10": "lmao okay noted 😅",
+        "e11": "sure! whenever works for you :)",
+        "e12": "hey sorry, something came up, can we reschedule?",
+        "e13": "oof guilty as charged 😅",
+        "e14": "sleep well!!",
+        "e15": "woah that’s a lot!! proud of you for trying pottery though — natural or not, you’re doing it. hope things calm down soon"
+      },
+      "I": {
+        "job": "just vibing",
+        "languages": [
+          "english"
+        ]
       }
     }
   },
@@ -4481,47 +6927,119 @@
       "B": {
         "kids": {
           "answer": "no",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
         },
         "religion": {
           "answer": "somewhat",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
         },
         "location": {
           "answer": "abroad",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
         },
         "smoking": {
           "answer": "socially",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "drinking": {
           "answer": "regularly",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
         },
         "family": {
           "answer": "not_much",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
         },
         "career": {
           "answer": "career_first",
-          "importance": "important"
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
         },
         "looking_for": {
           "answer": "figuring_it_out",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
         },
         "diet": {
           "answer": "non_veg",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
         },
         "conflict": {
           "answer": "avoid_it",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
         },
         "alone_time": {
           "answer": "little",
-          "importance": "nice_to_have"
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
         }
       },
       "C": {
@@ -4556,7 +7074,20 @@
         "e5": "no worries! hope you survived the chaos 🙌",
         "e6": "drinks, dancing, and zero pressure — let’s see if the vibe matches 💫",
         "e7": "aww shucks 😘 you’re not so bad yourself",
-        "e8": "texting all the way — i’m usually mid-set or on the move 📱"
+        "e8": "texting all the way — i’m usually mid-set or on the move 📱",
+        "e9": "OMG YES!!! 🎉 i’m so happy for you!! when do you start? tell me all the deets!",
+        "e10": "lol sorry but NO — dogs are pure joy, fight me 🐶💥",
+        "e11": "coffee sounds cute! how about tomorrow afternoon? say 3? i’ll bring the vibes ☕",
+        "e12": "hey so sorry but something urgent came up at work — gotta cancel tomorrow 😔 can we raincheck? i’ll make it up to you",
+        "e13": "guilty as charged 😏 but hey, fashionably late is a vibe",
+        "e14": "sleep well! dream of bass drops and better wifi 😴🔌",
+        "e15": "woah that’s a lot!!! proud of you for trying pottery though — i low-key wanna try too 😭 how’d the class go? my week’s been non-stop sets and spreadsheets, but hey — surviving"
+      },
+      "I": {
+        "job": "events manager",
+        "languages": [
+          "english"
+        ]
       }
     }
   }
