@@ -12,7 +12,7 @@ export const KG = Object.freeze({
   VOICE_SAMPLES_ONBOARDING: 15,
   // embeddings
   EMBED_DIMS: null, // null = model default
-  EMBED_STORAGE: 'float32', // 'float32' | 'int8'
+  EMBED_STORAGE: 'int8', // 'float32' | 'int8': int8 = 1 byte/dim, cosine within 0.01 (test/vector.test.js); plan 05: a user's facts ~100 → 45 KB
   CONCEPT_CACHE_MAX: 5000, // above this, move concept search to Atlas Vector Search
   // conversation engine (plan 08)
   STANCE_HOLD: 0.7, STANCE_BEND: 0.4, RESOLVE_WINDOW: 4,

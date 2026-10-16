@@ -34,6 +34,11 @@ import { applyCorrections, computeVoiceProfile } from './voiceProfile.js';
 const LLM_CONCURRENCY = 2; // gentle on the provider's rate limit
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
 const LIFESTYLE_CHECKED = ['smoking', 'drinking', 'diet'];
+const EVIDENCE = {
+  drinking: /\b(beers?|wine|whisk(e)?y|vodka|rum|gin|cocktails?|alcohol|drunk|shots?|pubs?|bars?|daaru|tequila|sangria)\b/i,
+  smoking: /\b(smok\w*|cigarettes?|cigs?|vap(e|ing)|hookah|sutta|beedi)\b/i,
+  diet: /\b(chicken|mutton|meat|fish|prawns?|beef|pork|bacon|eggs?|omelettes?|seafood|kebabs?|non-?veg|butter chicken|steak|tandoori chicken|ham|sushi|lamb)\b/i,
+};
 const withWeight = (f) => ({ ...f, weight: f.importance ?? f.strength ?? 0.5 }); // v1 readers (removed in plans 07–09)
 
 const tagSchema = z.object({ tags: z.array(z.object({ i: z.coerce.number(), languages: z.array(z.string()).min(1), script: z.enum(['latin', 'devanagari', 'gujarati', 'other', 'mixed']).catch('latin'), codeSwitch: z.boolean().catch(false) })).catch([]) });
@@ -47,13 +52,13 @@ async function onboardingSamples(answers, userId) {
   if (!texts.length) return [];
   const tags = (await chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema: tagSchema, purpose: 'voice-language-tags', userId,
     messages: tagLanguage.build({ texts }) }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return { tags: [] }; })).tags;
-  const incoming = await embed(items.map((q) => q.text), { purpose: 'voice-incoming', userId, inputType: 'query' });
   return items.map((q, i) => {
     const t = tags.find((x) => x.i === i + 1);
     return {
       userId, incoming: q.prompt ? null : q.text, text: texts[i], source: 'onboarding', mood: q.mood,
       lang: t ? { languages: t.languages, script: t.script, codeSwitch: t.codeSwitch } : tagLanguageHeuristic(texts[i]),
-      embedding: incoming[i], embeddingModel: embeddingModel(),
+      // No per-user vector: the 15 onboarding prompts are the same for everyone, so the agent embeds them once
+      // (EmbCache) instead of storing 15 identical 8 KB vectors per user. Inbox/own-chat samples store theirs.
     };
   });
 }
@@ -72,7 +77,7 @@ function styleProfileV1(v) {
 }
 
 /** → { facts, dropped } for the user; throws on failure (the job marks onboarding failed; the old graph is untouched). */
-export async function buildUserGraph(userId) {
+export async function buildUserGraph(userId, { failBeforeCommit = false } = {}) { // failBeforeCommit: checks only
   const user = await User.findById(userId);
   const answers = user?.onboarding?.answers ?? {};
   const buildId = randomUUID();
@@ -110,7 +115,10 @@ export async function buildUserGraph(userId) {
     for (const c of out.contradictions) {
       const a = bFacts.find((f) => f.attribute === c.attribute);
       const b = storyMerged[c.fact - 1];
-      if (a && b) contradictions.push([a._key, b._key]);
+      // Precision guard: the model flagged "veg" vs "dal chawal" and "drinking" vs filter coffee. Keep a pair only
+      // when the story actually mentions the thing (alcohol / smoking / non-veg food).
+      const text = `${b?.object} ${b?.evidence?.map((e) => e.quote).join(' ')}`;
+      if (a && b && EVIDENCE[a.attribute]?.test(text)) contradictions.push([a._key, b._key]);
     }
   }
 
@@ -179,6 +187,7 @@ export async function buildUserGraph(userId) {
       $set: { styleProfile: styleProfileV1(profile), 'onboarding.status': 'done', 'onboarding.completedAt': new Date() },
       $inc: { graphVersion: 1 },
     }, { session });
+    if (failBeforeCommit) throw new Error('injected failure before commit');
   });
   await buildGate(userId);
   return { facts: inserts.length + plan.updates.length + plan.keepEdited.length, dropped, edges: edges.length, samples: samples.length };

@@ -23,7 +23,8 @@ test('int8 is ~1 byte/dim and keeps cosine within 0.01', () => {
 test('cosine accepts arrays, typed arrays and stored buffers alike', () => {
   const w = v.map((x, i) => x + (i % 7) / 50);
   const expected = cosine(v, w);
-  assert.ok(Math.abs(cosine(toBinary(v), toBinary(w)) - expected) < 1e-6);
-  assert.ok(Math.abs(cosine(toBinary(v), w) - expected) < 1e-6);
+  assert.ok(Math.abs(cosine(toBinary(v, 'float32'), toBinary(w, 'float32')) - expected) < 1e-6);
+  assert.ok(Math.abs(cosine(toBinary(v, 'int8'), toBinary(w, 'int8')) - expected) < 0.01, 'int8 (the default) stays close');
+  assert.ok(Math.abs(cosine(toBinary(v, 'float32'), w) - expected) < 1e-6);
   assert.equal(cosine(null, w), 0);
 });

@@ -28,6 +28,8 @@ const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
 console.log(`users: ${users}\n`);
 console.log('collection'.padEnd(16), 'docs'.padStart(8), 'total'.padStart(12), 'vectors'.padStart(12), 'per user'.padStart(12));
 for (const r of rows) console.log(r.name.padEnd(16), String(r.docs).padStart(8), kb(r.bytes).padStart(12), kb(r.vecBytes).padStart(12), (typeof r.perUser === 'number' ? kb(r.perUser) : r.perUser).padStart(12));
-const perUser = rows.reduce((s, r) => s + (typeof r.perUser === 'number' ? r.perUser : r.bytes / users), 0);
-console.log(`\nbytes per user (all data / users): ${kb(perUser)} → ~${Math.floor(M0_BYTES / perUser).toLocaleString('en')} users fit in M0 (before indexes)`);
+// Shared collections (concept dictionary, embedding cache, jobs) grow sub-linearly, so they're not divided by users.
+const perUser = rows.reduce((s, r) => s + (typeof r.perUser === 'number' ? r.perUser : 0), 0);
+const shared = rows.reduce((s, r) => s + (typeof r.perUser === 'number' ? 0 : r.bytes), 0);
+console.log(`\nper-user data: ${kb(perUser)}/user; shared: ${kb(shared)} → ~${Math.floor((M0_BYTES - shared) / perUser).toLocaleString('en')} users fit in M0 (before indexes)`);
 await mongoose.disconnect();

@@ -1,22 +1,28 @@
-// Plan 05 check: offline unit checks (trait math, style metrics, quote verification, B/D mapping), then a live run
-// that builds a realistic sample user's knowledge graph via the LLM and verifies it.
+// Plan 05 acceptance: offline unit checks, then a live v2 build of a realistic sample user (LLM) with a planted
+// contradiction, an injected failure that must leave the graph intact, and an "ask my human" answer.
 //   node scripts/onboard-sample.js            offline + live (cleans up the test user)
 //   node scripts/onboard-sample.js --offline  unit checks only
 //   node scripts/onboard-sample.js --keep     keep the test user afterwards
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
+import { KgEdge } from '../src/models/KgEdge.js';
 import { KgFact } from '../src/models/KgFact.js';
+import { Profile } from '../src/models/Profile.js';
 import { User } from '../src/models/User.js';
+import { VoiceProfile } from '../src/models/VoiceProfile.js';
+import { VoiceSample } from '../src/models/VoiceSample.js';
 import { learnFromAnswer } from '../src/routes/inbox.js';
+import { answersSchema } from '../src/services/kg/answers.js';
 import { buildUserGraph } from '../src/services/kg/buildUserGraph.js';
 import { isVerbatim } from '../src/services/kg/extractFacts.js';
+import { factKey } from '../src/services/kg/factKey.js';
 import { userGraph } from '../src/services/kg/graph.js';
 import { questionnaireFacts, traitScores } from '../src/services/kg/questionnaireFacts.js';
-import { styleMetrics } from '../src/services/kg/styleProfile.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 
-// --- sample answers (SFW, realistic)
+// --- sample answers (SFW, realistic). Planted contradiction: B drinking "never" vs the Sunday story's beers.
+const I = { job: 'UX designer at a fintech startup', languages: ['english', 'hindi', 'marathi'] };
 const A = {
   // extraversion a1,a6R,a11,a16R | agreeableness a2,a7R,a12,a17R | conscientiousness a3,a8R,a13,a18R
   // neuroticism a4,a9R,a14,a19R | openness a5,a10R,a15R,a20R
@@ -26,26 +32,26 @@ const A = {
   a4: 2, a9: 4, a14: 1, a19: 5,
   a5: 5, a10: 1, a15: 2, a20: 1,
 };
+const all = (...v) => v;
 const B = {
-  kids: { answer: 'open', importance: 'important' },
-  religion: { answer: 'not_really', importance: 'nice_to_have' },
-  location: { answer: 'this_city', importance: 'important' },
-  smoking: { answer: 'never', importance: 'dealbreaker' },
-  drinking: { answer: 'socially', importance: 'nice_to_have' },
-  family: { answer: 'somewhat', importance: 'important' },
-  career: { answer: 'balanced', importance: 'important' },
-  looking_for: { answer: 'long_term', importance: 'dealbreaker' },
-  diet: { answer: 'veg', importance: 'nice_to_have' },
-  conflict: { answer: 'talk_it_out_immediately', importance: 'important' },
-  alone_time: { answer: 'some', importance: 'nice_to_have' },
+  kids: { answer: 'open', importance: 'medium' },
+  religion: { answer: 'not_really', importance: 'low' },
+  location: { answer: 'this_city', importance: 'medium' },
+  smoking: { answer: 'never', importance: 'high', dealbreaker: true, accepts: ['never'] },
+  drinking: { answer: 'never', importance: 'low' },
+  family: { answer: 'somewhat', importance: 'medium' },
+  career: { answer: 'balanced', importance: 'medium' },
+  looking_for: { answer: 'long_term', importance: 'high', dealbreaker: true, accepts: all('long_term', 'open_to_long_term') },
+  diet: { answer: 'veg', importance: 'low' },
+  conflict: { answer: 'talk_it_out_immediately', importance: 'medium' },
+  alone_time: { answer: 'some', importance: 'low' },
 };
 const C = {
-  sunday: 'A sunrise trek to Sinhagad with two friends, then a long misal breakfast. Afternoon nap, and I end the day reading on the balcony with filter coffee.',
+  sunday: 'A sunrise trek to Sinhagad with two friends, then a long misal breakfast. Saturday nights usually end with a few beers at our usual bar.',
   hill: 'Pineapple absolutely belongs on pizza. I will also defend dal chawal as the best comfort food on earth.',
-  weirdly_good: 'I can parallel park a car in one go on the first try, and I can guess the exact time without looking at a clock.',
+  argue: 'Remakes of old films are almost always worse than the originals. I feel very strongly about this and will argue for hours.',
   laugh: 'My grandmother tried to send a voice note and recorded four minutes of her pressure cooker whistling instead.',
   place: 'Spiti Valley, because I want to see a sky with that many stars and spend a week somewhere without network.',
-  friends_rely: 'Planning trips nobody else wants to plan, and being the calm one when things go wrong.',
 };
 const D = { interests: [
   { name: 'trekking', intensity: 'obsessed' }, { name: 'reading', intensity: 'into_it' }, { name: 'cooking', intensity: 'into_it' },
@@ -55,13 +61,20 @@ const E = {
   e1: 'haha thank you, yours made me smile too 😄',
   e2: 'mostly trekking or reading, sometimes cooking something ambitious that may or may not work haha',
   e3: 'yes!! fight me on this 🍍',
-  e4: 'omg yes, Sinhagad like twice a month. which one are you thinking?',
+  e4: 'arre yaar Sinhagad like twice a month. which one are you thinking?',
   e5: 'no worries at all, hope the day got better',
   e6: 'something low-key, like a walk and chai somewhere quiet where we can actually talk',
   e7: 'haha I try 😄',
   e8: 'texting for sure, calls only for the important stuff',
+  e9: 'WHATTT congrats!! 🎉 party kab hai?',
+  e10: 'okay no. dogs are the best thing on this planet, I will not be taking questions',
+  e11: 'saturday morning? there is this cafe near FC road with great filter coffee',
+  e12: 'hey so sorry, something came up at work tomorrow 😕 can we do sunday instead?',
+  e13: 'rude!! I am early to everything, ask anyone haha',
+  e14: 'gn! sleep well 👋',
+  e15: 'that sounds like a LOT, but pottery class!! you have to show me what you made. my week was calmer, mostly work and one sunrise trek',
 };
-const answers = { A, B, C, D, E };
+const answers = { I, A, B, C, D, E };
 
 // --- offline unit checks
 const t = traitScores(A);
@@ -73,97 +86,107 @@ assert.deepEqual(t, {
   openness: 0.938, // (5 + 5 + 4 + 5) / 4 = 4.75 → 0.9375
 });
 assert.deepEqual(traitScores({ a1: 1, a6: 1 }), { extraversion: 0.5 }); // 1 and reverse(1)=5 → mean 3
-assert.deepEqual(traitScores({ a1: 9 }), {}); // out-of-range answers ignored
+assert.ok(answersSchema.safeParse(answers).success, 'sample answers pass the v2 schema');
 
 const qf = questionnaireFacts(answers);
 assert.equal(qf.filter((f) => f.predicate === 'trait').length, 5);
 assert.ok(qf.filter((f) => f.predicate === 'trait').every((f) => f.disclosure === 'private'));
-const db = qf.filter((f) => f.predicate === 'dealbreaker');
-assert.deepEqual(db.map((f) => f.object), ['partner must be compatible on smoking (mine: never)', 'partner must be compatible on looking for (mine: long-term)']);
-assert.ok(db.every((f) => f.disclosure === 'if_asked' && f.weight === 1));
-assert.equal(qf.find((f) => f.object === 'smoking: never').weight, 1);
-assert.equal(qf.find((f) => f.object === 'diet: veg').weight, 0.3);
-assert.equal(qf.find((f) => f.object.startsWith('religion in own life')).disclosure, 'if_asked');
-assert.equal(qf.find((f) => f.object === 'trekking').weight, 0.9);
-
-const m = styleMetrics(['haha yes 😄', 'Sure.', 'what about you?', 'lol ok yaar']);
-assert.equal(m.messages, 4);
-assert.equal(m.medianWords, 2.5);
-assert.equal(m.emojiPerMessage, 0.25);
-assert.equal(m.lowercaseStartRatio, 0.75);
-assert.equal(m.questionRate, 0.25);
-assert.equal(m.laughRate, 0.5);
-assert.equal(m.hinglishRatio, 0.11); // "yaar" = 1 of 9 tokens
-assert.equal(styleMetrics(['', '  ']), null);
+assert.equal(qf.filter((f) => f.predicate === 'dealbreaker').length, 0, 'no separate dealbreaker facts');
+const smoking = qf.find((f) => f.attribute === 'smoking');
+assert.deepEqual([smoking.isDealbreaker, smoking.importance, smoking.accepts, smoking.confidence], [true, 1, ['never'], 1]);
+assert.equal(qf.find((f) => f.attribute === 'diet').importance, 0.3);
+assert.equal(qf.find((f) => f.attribute === 'religion').disclosure, 'if_asked');
+assert.equal(qf.find((f) => f.object === 'trekking').strength, 0.9);
+assert.ok(qf.some((f) => f.predicate === 'background' && f.object === 'speaks marathi'));
 
 assert.ok(isVerbatim('Pineapple  absolutely belongs', C.hill));
 assert.ok(isVerbatim('pineapple absolutely BELONGS', C.hill)); // case/whitespace don't count
 assert.ok(!isVerbatim('pineapple always belongs', C.hill));
 assert.ok(!isVerbatim('pi', C.hill)); // too short to be evidence
-console.log('✓ offline checks passed (trait reverse-scoring, B/D mapping, style metrics, verbatim quotes)');
+console.log('✓ offline checks passed (trait reverse-scoring, v2 schema, B/D/identity mapping, verbatim quotes)');
 if (process.argv.includes('--offline')) process.exit(0);
 
 // --- live
+env.LLM_DAILY_CALLS_PER_USER = Math.max(env.LLM_DAILY_CALLS_PER_USER, 5000);
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
 const user = await User.create({
   email: `onboard-sample-${Date.now().toString(36)}@check.test`, passwordHash: 'x', name: 'Asha',
   consentAgent: true, consentAt: new Date(), onboarding: { status: 'processing', answers },
 });
+await Profile.create({ userId: user._id, name: 'Asha', age: 27, city: 'Pune', gender: 'woman', interestedIn: ['man'] });
 try {
   const started = Date.now();
   const result = await buildUserGraph(user._id);
   const facts = await KgFact.find({ subjectId: user._id, observerId: null }).select('+embedding').lean();
-  const fresh = await User.findById(user._id).lean();
-  console.log(`✓ built in ${Math.round((Date.now() - started) / 1000)} s: ${facts.length} facts, ${result.dropped} LLM facts dropped for non-verbatim quotes`);
+  console.log(`✓ built in ${Math.round((Date.now() - started) / 1000)} s: ${facts.length} facts, ${result.edges} edges, ${result.dropped} extracted facts dropped (unquoted/unsupported)`);
+  console.log('  by predicate:', JSON.stringify(facts.reduce((m, f) => ({ ...m, [f.predicate]: (m[f.predicate] ?? 0) + 1 }), {})));
 
-  const by = (p) => facts.filter((f) => f.predicate === p);
-  console.log('  by predicate:', JSON.stringify(Object.fromEntries([...new Set(facts.map((f) => f.predicate))].map((p) => [p, by(p).length]))));
-  assert.ok(facts.length >= 40 && facts.length <= 70, `expected 40–70 facts, got ${facts.length}`);
+  const keys = facts.map(factKey);
+  assert.equal(keys.length, new Set(keys).size, 'no duplicate factKeys');
+  assert.equal(facts.filter((f) => f.predicate === 'dealbreaker').length, 0, 'no separate dealbreaker facts');
+  assert.deepEqual(Object.fromEntries(facts.filter((f) => f.predicate === 'trait').map((f) => [f.object, f.value])), t);
+  console.log('✓ no duplicate keys, no dealbreaker facts, traits correct');
 
-  const traits = Object.fromEntries(by('trait').map((f) => [f.object, f.value]));
-  assert.deepEqual(traits, t);
-  console.log('✓ 5 trait facts with correct reverse scoring:', JSON.stringify(traits));
+  const stories = facts.filter((f) => f.source === 'questionnaire_story' && f.predicate !== 'story');
+  const allText = Object.values(C).join('\n');
+  for (const f of stories) assert.ok(isVerbatim(f.evidence[0].quote, allText), `quote not verbatim: ${f.evidence[0].quote}`);
+  const edges = await KgEdge.find({ subjectId: user._id }).lean();
+  const supported = (f) => edges.some((e) => e.type === 'SUPPORTS' && String(e.to.id) === String(f._id));
+  assert.ok(stories.length >= 4 && stories.every(supported), 'every story-derived fact has a SUPPORTS edge');
+  console.log(`✓ ${stories.length} story facts, all verbatim and all with SUPPORTS edges`);
+  console.log('  sample:', stories.slice(0, 4).map((f) => `${f.predicate}${f.polarity < 0 ? '(−)' : ''} ${f.object} [${f.strength}]`).join(' | '));
 
-  const isSummary = (f) => f.predicate === 'story' && Object.values(C).includes(f.evidence?.[0]?.quote);
-  const llmFacts = facts.filter((f) => f.evidence?.length && !isSummary(f));
-  const allAnswers = Object.values(C).join('\n');
-  for (const f of llmFacts) assert.ok(isVerbatim(f.evidence[0].quote, allAnswers), `quote not verbatim: ${f.evidence[0].quote}`);
-  assert.equal(facts.filter(isSummary).length, Object.keys(C).length);
-  console.log(`✓ ${llmFacts.length} LLM facts all have verbatim quotes; ${facts.filter(isSummary).length} story summaries keep the full answers`);
-  console.log('  sample:', llmFacts.slice(0, 4).map((f) => `${f.predicate}: ${f.object} ← "${f.evidence[0].quote}"`).join(' | '));
+  const drinking = facts.find((f) => f.attribute === 'drinking');
+  const contra = edges.filter((e) => e.type === 'CONTRADICTS');
+  assert.ok(contra.some((e) => [String(e.from.id), String(e.to.id)].includes(String(drinking._id))), 'planted contradiction (drinking: never vs beers) → CONTRADICTS edge');
+  console.log(`✓ planted contradiction found (${contra.length} CONTRADICTS edge(s))`);
 
-  assert.ok(facts.every((f) => f.embedding?.length > 0 && f.embeddingModel === env.MODEL_EMBED), 'every fact embedded with MODEL_EMBED');
-  console.log(`✓ every fact embedded (${facts[0].embedding.length}-dim, ${facts[0].embeddingModel})`);
+  const opinion = facts.find((f) => f.predicate === 'opinion' && /remake/i.test(f.object));
+  assert.ok(opinion?.strength >= 0.8, `strong opinion keeps its strength (${opinion?.object} ${opinion?.strength})`);
+  assert.ok(facts.filter((f) => f.embedding).every((f) => !f.conceptId), 'only concept-less facts carry their own vector');
+  console.log(`✓ opinion strength ${opinion.strength}; ${facts.filter((f) => f.embedding).length}/${facts.length} facts embedded (concept-less only)`);
 
-  const sp = fresh.styleProfile;
+  const [samples, voice, gate, fresh] = await Promise.all([
+    VoiceSample.find({ userId: user._id }).lean(), VoiceProfile.findOne({ userId: user._id }).lean(),
+    Profile.findOne({ userId: user._id }).lean(), User.findById(user._id).lean(),
+  ]);
+  assert.equal(samples.length, 15);
+  assert.ok(samples.every((s) => s.lang?.languages?.length && s.mood), 'every sample language-tagged with a mood');
+  assert.ok(voice.language.mix.hi_latn > 0 && voice.language.codeSwitchRate > 0, `language mix ${JSON.stringify(voice.language)}`);
+  assert.equal(voice.closingStyle, 'gn! sleep well 👋');
+  assert.ok(voice.description?.length > 10);
+  console.log(`✓ 15 voice samples; mix ${JSON.stringify(voice.language.mix)}, code-switch ${voice.language.codeSwitchRate}, closing "${voice.closingStyle}"`);
+  assert.deepEqual(gate.gate.dealbreakers.sort(), ['looking_for', 'smoking']);
   assert.equal(fresh.onboarding.status, 'done');
-  assert.ok(sp?.metrics?.messages === 8 && sp.description?.length > 20 && sp.doList?.length && sp.dontList?.length, 'styleProfile populated');
-  console.log('✓ styleProfile:', JSON.stringify(sp.metrics));
-  console.log(`  description: ${sp.description.replace(/\n/g, ' / ')}`);
+  console.log('✓ Profile.gate built:', JSON.stringify(gate.gate.accepts));
 
   const graph = await userGraph(fresh);
-  const ids = new Set(graph.nodes.map((n) => n.id));
-  assert.equal(graph.nodes.length, facts.length + 1);
-  assert.ok(graph.links.every((l) => ids.has(l.source) && ids.has(l.target)));
-  assert.ok(graph.nodes.slice(1).every((n) => n.label && n.group && n.confidence != null && n.disclosure && n.source));
-  console.log(`✓ GET /api/kg/me graph valid: ${graph.nodes.length} nodes, ${graph.links.length} links`);
+  const hubs = graph.nodes.filter((n) => n.hubNode);
+  assert.ok(hubs.length <= 8 && hubs.some((h) => h.id === 'hub:voice') && !graph.nodes.some((n) => n.type === 'trait'));
+  assert.ok(!JSON.stringify(graph).includes('embedding'));
+  console.log(`✓ hub graph: ${hubs.map((h) => h.label).join(' · ')}`);
 
-  // "Ask my human" answer → user_answer facts that survive a re-submit.
-  const learned = await learnFromAnswer({ userId: user._id, question: 'Meera asked: do you have any pets?', answer: 'Yes, an indie dog called Momo who steals socks.' });
-  assert.ok(learned.length >= 1 && learned.every((f) => f.source === 'user_answer' && f.confidence === 0.9));
-  console.log(`✓ inbox answer → ${learned.length} user_answer fact(s): ${learned.map((f) => `${f.predicate}: ${f.object}`).join(', ')}`);
-  await User.updateOne({ _id: user._id }, { $set: { 'onboarding.answers': { A, B, D } } }); // re-submit without stories/style: no extra LLM calls
-  await buildUserGraph(user._id);
-  const after = await KgFact.find({ subjectId: user._id, observerId: null }).lean();
-  assert.equal(after.filter((f) => f.source === 'user_answer').length, learned.length);
-  assert.equal(after.filter((f) => f.source === 'questionnaire').length, qf.length);
-  console.log('✓ re-submit replaces questionnaire facts and keeps user_answer facts');
+  // Interrupted build: everything up to the commit happens, then it fails → the previous graph is untouched.
+  const before = (await KgFact.find({ subjectId: user._id, observerId: null }, { _id: 1 }).lean()).map((f) => String(f._id)).sort();
+  const sampleIds = samples.map((s) => String(s._id)).sort();
+  await assert.rejects(buildUserGraph(user._id, { failBeforeCommit: true }), /injected failure/);
+  const afterFail = (await KgFact.find({ subjectId: user._id, observerId: null }, { _id: 1 }).lean()).map((f) => String(f._id)).sort();
+  assert.deepEqual(afterFail, before, 'same facts after the failed build');
+  assert.deepEqual((await VoiceSample.find({ userId: user._id }, { _id: 1 }).lean()).map((s) => String(s._id)).sort(), sampleIds);
+  assert.equal((await User.findById(user._id).lean()).graphVersion, fresh.graphVersion);
+  console.log('✓ a build that fails before commit leaves the previous graph, samples and graphVersion intact');
+
+  // "Ask my human" answer → user_answer facts + a voice sample.
+  const learned = await learnFromAnswer({ _id: new mongoose.Types.ObjectId(), userId: user._id, question: 'Meera asked: do you have any pets?', answer: 'Yes, an indie dog called Momo who steals socks.' });
+  assert.ok(learned.length >= 1 && learned.every((f) => f.source === 'user_answer' && f.confidence >= 0.9));
+  assert.ok(await VoiceSample.exists({ userId: user._id, source: 'inbox' }));
+  console.log(`✓ inbox answer → ${learned.length} user_answer fact(s) (${learned.map((f) => f.object).join(', ')}) + a voice sample`);
   console.log('\nOnboarding checks passed.');
 } finally {
   await flushUsage();
   if (!process.argv.includes('--keep')) {
-    await KgFact.deleteMany({ subjectId: user._id });
-    await User.deleteOne({ _id: user._id });
+    await Promise.all([KgFact.deleteMany({ subjectId: user._id }), KgEdge.deleteMany({ subjectId: user._id }), VoiceSample.deleteMany({ userId: user._id }),
+      VoiceProfile.deleteOne({ userId: user._id }), Profile.deleteOne({ userId: user._id }), User.deleteOne({ _id: user._id })]);
   }
   await mongoose.disconnect();
 }

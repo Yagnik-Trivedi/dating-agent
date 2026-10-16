@@ -88,6 +88,7 @@ kgRouter.post('/kg/contradictions/:id/resolve', async (req, res) => {
     if (loser) {
       await KgTombstone.updateOne({ subjectId: req.user._id, key: factKey(loser) }, { $setOnInsert: { subjectId: req.user._id, key: factKey(loser) } }, { upsert: true, session });
       await loser.deleteOne({ session });
+      await KgEdge.deleteMany({ _id: { $ne: edge._id }, $or: [{ 'from.id': loser._id }, { 'to.id': loser._id }] }, { session });
     }
     await KgFact.updateOne({ _id: keepFactId }, { $set: { userEdited: true, lastConfirmed: new Date() } }, { session });
     await KgEdge.updateOne({ _id: edge._id }, { $set: { resolved: true } }, { session });

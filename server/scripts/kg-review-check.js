@@ -1,6 +1,7 @@
 // Plan 05 §6 acceptance against a running server + the same DB: hub graph, trait lock, edit + delete surviving a
 // re-submit, contradiction resolve, "I never use emojis".   node scripts/kg-review-check.js [baseUrl]
-// Logs in as seed01 with SEED_PASSWORD (from server/.env; never printed). Re-runs seed01's build (LLM, ~1 min).
+// A throwaway user onboards through the API with seed01's answers (2 builds, LLM ~1–2 min) and is deleted at the end.
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
@@ -18,13 +19,19 @@ const call = async (method, path, { token, body } = {}) => {
   const res = await fetch(`${BASE}/api${path}`, { method, headers: { 'content-type': 'application/json', ...(token && { authorization: `Bearer ${token}` }) }, body: body && JSON.stringify(body) });
   return { status: res.status, body: await res.json().catch(() => ({})) };
 };
-assert.ok(env.SEED_PASSWORD, 'SEED_PASSWORD must be set in server/.env');
 env.LLM_DAILY_CALLS_PER_USER = Math.max(env.LLM_DAILY_CALLS_PER_USER, 5000);
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
-const { body: login } = await call('POST', '/auth/login', { body: { email: 'seed01@demo.local', password: env.SEED_PASSWORD } });
-const token = login.token;
-assert.ok(token, 'seed01 login');
-const user = await User.findOne({ email: 'seed01@demo.local' });
+const persona = JSON.parse(readFileSync(new URL('../seed/personas.json', import.meta.url))).find((p) => p.email === 'seed01@demo.local');
+const email = `kg-review-${Date.now().toString(36)}@check.test`;
+const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Mira', email, password: 'password123', consentAgent: true } });
+const token = signup.token;
+assert.ok(token, 'signup');
+await call('PUT', '/profile', { token, body: { name: 'Mira', age: 27, city: 'Pune', gender: 'woman', interestedIn: ['man'] } });
+assert.equal((await call('POST', '/onboarding/submit', { token, body: { answers: persona.answers } })).status, 200, 'onboarding submit');
+for (let i = 0; i < 90 && (await call('GET', '/onboarding/status', { token })).body.status === 'processing'; i++) await new Promise((r) => setTimeout(r, 2000));
+assert.equal((await call('GET', '/onboarding/status', { token })).body.status, 'done', 'build job finished');
+const user = await User.findOne({ email });
+console.log('✓ throwaway user onboarded through the API (build job)');
 
 try {
   // Graph: center + ≤ 8 hubs incl. How I text, no traits, no vectors.
@@ -50,11 +57,12 @@ try {
 
   // Planted contradiction → listed → resolved (loser tombstoned).
   const [a, b] = await KgFact.find({ subjectId: user._id, observerId: null, predicate: 'story' }).limit(2).lean();
-  await KgEdge.create({ subjectId: user._id, from: { kind: 'fact', id: a._id }, to: { kind: 'fact', id: b._id }, type: 'CONTRADICTS' });
-  const list = (await call('GET', '/kg/contradictions', { token })).body.contradictions;
-  assert.equal(list.length, 1);
-  assert.equal((await call('POST', `/kg/contradictions/${list[0].id}/resolve`, { token, body: { keepFactId: String(a._id) } })).status, 200);
-  assert.equal((await call('GET', '/kg/contradictions', { token })).body.contradictions.length, 0, 'resolved contradiction leaves the panel');
+  const plantedEdge = await KgEdge.create({ subjectId: user._id, from: { kind: 'fact', id: a._id }, to: { kind: 'fact', id: b._id }, type: 'CONTRADICTS' });
+  const list = (await call('GET', '/kg/contradictions', { token })).body.contradictions; // the build may have found real ones too
+  assert.ok(list.some((c) => c.id === String(plantedEdge._id)), 'planted contradiction is listed');
+  assert.equal((await call('POST', `/kg/contradictions/${plantedEdge._id}/resolve`, { token, body: { keepFactId: String(a._id) } })).status, 200);
+  const left = (await call('GET', '/kg/contradictions', { token })).body.contradictions;
+  assert.ok(!left.some((c) => c.id === String(plantedEdge._id)) && left.length < list.length, 'resolved contradiction leaves the panel');
   assert.ok(await KgTombstone.exists({ subjectId: user._id, key: factKey(b) }), 'loser tombstoned');
   console.log('✓ edit, delete (tombstone) and contradiction resolve');
 
@@ -74,6 +82,7 @@ try {
   console.log('✓ re-submit keeps the edit, never restores deleted facts, keeps the emoji correction');
   console.log('\nKG review checks passed.');
 } finally {
+  await call('DELETE', '/me', { token });
   await flushUsage();
   await mongoose.disconnect();
 }
