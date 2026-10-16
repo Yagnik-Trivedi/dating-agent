@@ -24,6 +24,7 @@ const kgFactSchema = new mongoose.Schema({
   strength: { type: Number, min: 0, max: 1 }, // how much they like it / how firmly they hold an opinion
   importance: { type: Number, min: 0, max: 1 }, // how much it matters in a partner
   isDealbreaker: { type: Boolean, default: false },
+  weight: { type: Number, min: 0, max: 1 }, // v1 readers sort/read it (= importance ?? strength); removed in plans 07–09
   confidence: { type: Number, min: 0, max: 1, default: 0.6 },
   source: { type: String, enum: [...FACT_SOURCES, ...LEGACY_SOURCES], required: true },
   disclosure: { type: String, enum: ['public', 'if_asked', 'private'], default: 'public' },
@@ -38,10 +39,7 @@ const kgFactSchema = new mongoose.Schema({
   archiveAt: Date, // notes of closed matches: removed by the TTL index (plan 17 archiveNotes)
   embedding: { type: Buffer, select: false, set: (v) => toBinary(v) }, // only facts with no conceptId (plan 15 §6.3)
   embeddingModel: String,
-}, { timestamps: { createdAt: false, updatedAt: true }, versionKey: false, toJSON: { virtuals: true }, toObject: { virtuals: true } });
-
-// v1 callers read `weight` (removed with them in plans 07–09).
-kgFactSchema.virtual('weight').get(function weight() { return this.importance ?? this.strength ?? 0.5; });
+}, { timestamps: { createdAt: false, updatedAt: true }, versionKey: false });
 
 kgFactSchema.index({ subjectId: 1, observerId: 1, predicate: 1, conceptId: 1 });
 kgFactSchema.index({ subjectId: 1, observerId: 1, attribute: 1 });

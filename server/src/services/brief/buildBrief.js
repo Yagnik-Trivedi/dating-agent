@@ -90,6 +90,11 @@ export async function selfFacts(viewerId, viewerProfile) {
   const facts = await KgFact.find({ subjectId: viewerId, observerId: null }).select('+embedding').lean();
   // Free-text dealbreakers from the profile page count too.
   for (const d of viewerProfile?.dealbreakers ?? []) facts.push({ predicate: 'dealbreaker', object: d, weight: 1, confidence: 1, disclosure: 'if_asked' });
+  // v2 adapter (removed in plan 07): KG v2 flags dealbreakers on the B fact; the v1 brief/stop rule/judge want a fact.
+  for (const f of facts.filter((x) => x.isDealbreaker && x.attribute)) {
+    const mine = String(f.object).split(': ').slice(1).join(': ') || f.value;
+    facts.push({ predicate: 'dealbreaker', object: `partner must be compatible on ${TOPICS[f.attribute] ?? f.attribute} (mine: ${mine})`, weight: 1, confidence: 1, disclosure: 'if_asked' });
+  }
   const model = embeddingModel();
   const stale = facts.filter((f) => !f.embedding?.length || f.embeddingModel !== model);
   const vectors = await embedFacts(stale, { userId: viewerId });
@@ -170,7 +175,7 @@ export function buildAgenda({ self, observed, clarify = [] }) {
   const usable = (f) => f.predicate === 'dealbreaker' || f.disclosure === 'public';
   // Dimensions come from structured answers (onboarding B + D, profile dealbreakers), which carry no quote.
   // Facts extracted from stories ("visit Hampi") are things to talk about, not things to find out.
-  const structured = (f) => !f.evidence?.length;
+  const structured = (f) => f.source === 'questionnaire_choice' || !f.evidence?.length; // v2 list answers carry an answer ref
   const dims = [
     ...self.filter((f) => ['dealbreaker', 'values', 'goal', 'lifestyle'].includes(f.predicate) && usable(f) && structured(f)),
     ...self.filter((f) => f.predicate === 'likes' && usable(f) && structured(f)).sort((a, b) => b.weight - a.weight).slice(0, 5),

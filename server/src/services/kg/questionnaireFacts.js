@@ -1,11 +1,14 @@
-// Deterministic facts from onboarding sections A (traits), B (values/goals/dealbreakers) and D (interests). No LLM.
+// Deterministic facts from onboarding (plan 05 §5 step 1): identity, A (traits), B (structured values/goals/lifestyle
+// with accepts + dealbreaker flag) and D (interests). No LLM. `conceptText` / `conceptType` feed concept resolution.
 import { QUESTIONS } from './questions.js';
 
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
-const IMPORTANCE_WEIGHT = Object.fromEntries(section('B').importance.map((i) => [i.value, i.weight]));
-const INTENSITY_WEIGHT = Object.fromEntries(section('D').intensities.map((i) => [i.value, i.weight]));
+const IMPORTANCE = Object.fromEntries(section('B').importance.map((i) => [i.value, i.weight]));
+// v1 answers (seed personas before conversion): nice_to_have / important / dealbreaker.
+const V1_IMPORTANCE = { nice_to_have: 0.3, important: 0.6, dealbreaker: 1 };
+const INTENSITY = Object.fromEntries(section('D').intensities.map((i) => [i.value, i.weight]));
 
-// How each section-B item reads as a fact ("smoking: never"). The brief phrases profile tags the same way.
+// How each section-B item reads as a fact label ("smoking: never").
 export const TOPICS = {
   kids: 'wants children',
   religion: 'religion in own life',
@@ -38,39 +41,54 @@ export function traitScores(answersA = {}) {
   }));
 }
 
-const base = { source: 'questionnaire', confidence: 0.9, disclosure: 'public' };
+const choice = { source: 'questionnaire_choice', confidence: 1, disclosure: 'public', polarity: 1 };
+const answerRef = (id) => [{ quote: null, sourceRef: { kind: 'answer', id }, at: new Date() }];
 
-/** → plain fact objects (no subjectId yet) for sections A, B and D. */
+/** → plain v2 fact objects (no subjectId yet). */
 export function questionnaireFacts(answers = {}) {
   const facts = [];
 
-  // A — traits: shape tone only, never said.
+  // Identity → background (public by default, editable). Job/family are free text: no concept, embedded.
+  const I = answers.I ?? {};
+  if (I.job?.trim()) facts.push({ ...choice, predicate: 'background', object: `works as: ${I.job.trim()}`, attribute: 'job', value: I.job.trim(), evidence: [{ quote: I.job.trim(), sourceRef: { kind: 'answer', id: 'I.job' } }] });
+  for (const lang of [...new Set((I.languages ?? []).map((l) => String(l).trim().toLowerCase()).filter(Boolean))]) {
+    facts.push({ ...choice, predicate: 'background', object: `speaks ${lang}`, conceptText: lang, conceptType: 'other', evidence: answerRef('I.languages') });
+  }
+  if (I.family?.trim()) facts.push({ ...choice, predicate: 'background', object: `family: ${I.family.trim()}`, attribute: 'family_setup', value: I.family.trim(), evidence: [{ quote: I.family.trim(), sourceRef: { kind: 'answer', id: 'I.family' } }] });
+
+  // A — traits: shape tone only, never said; read-only in the review.
   for (const [trait, value] of Object.entries(traitScores(answers.A))) {
-    facts.push({ ...base, predicate: 'trait', object: trait, value, weight: 0.5, confidence: 0.8, disclosure: 'private' });
+    facts.push({ ...choice, predicate: 'trait', object: trait, attribute: trait, value, confidence: 0.8, disclosure: 'private', evidence: answerRef('A') });
   }
 
-  // B — values, goals, lifestyle (+ a dealbreaker fact when marked so).
+  // B — one structured fact per item; a dealbreaker is a flag on it (no separate dealbreaker facts).
   for (const item of section('B').items) {
     const a = answers.B?.[item.id];
     const option = item.options.find((o) => o.value === a?.answer);
     if (!option) continue;
-    const weight = IMPORTANCE_WEIGHT[a.importance] ?? IMPORTANCE_WEIGHT.important;
-    const topic = TOPICS[item.id] ?? item.id;
-    // Religion is sensitive: the agent may answer if asked, but never raises it on its own.
-    const disclosure = item.id === 'religion' ? 'if_asked' : 'public';
-    facts.push({ ...base, predicate: item.predicate, object: `${topic}: ${option.label.toLowerCase()}`, value: option.value, weight, disclosure });
-    if (a.importance === 'dealbreaker') {
-      facts.push({ ...base, predicate: 'dealbreaker', object: `partner must be compatible on ${topic} (mine: ${option.label.toLowerCase()})`, value: option.value, weight: 1, disclosure: 'if_asked' });
-    }
+    const isDealbreaker = Boolean(a.dealbreaker || a.importance === 'dealbreaker');
+    const importance = isDealbreaker ? 1 : IMPORTANCE[a.importance] ?? V1_IMPORTANCE[a.importance] ?? 0.6;
+    const accepts = a.accepts?.length ? a.accepts : isDealbreaker ? [option.value] : item.options.map((o) => o.value);
+    facts.push({
+      ...choice,
+      predicate: item.predicate,
+      object: `${TOPICS[item.id] ?? item.id}: ${option.label.toLowerCase()}`,
+      attribute: item.id, value: option.value, accepts, importance, isDealbreaker,
+      // Religion is sensitive: answerable if asked, never raised by the agent.
+      disclosure: item.id === 'religion' ? 'if_asked' : 'public',
+      ...(item.id === 'religion' && { sensitivity: { topic: 'religion', sensitive: true } }),
+      conceptText: `${item.id.replace(/_/g, ' ')}: ${option.label.toLowerCase()}`, conceptType: item.predicate === 'lifestyle' ? 'lifestyle' : 'value',
+      evidence: answerRef(`B.${item.id}`),
+    });
   }
 
-  // D — interests with intensity.
+  // D — interests with intensity → strength.
   const seen = new Set();
   for (const i of answers.D?.interests ?? []) {
     const name = String(i.name ?? '').trim().toLowerCase();
     if (!name || seen.has(name)) continue;
     seen.add(name);
-    facts.push({ ...base, predicate: 'likes', object: name, weight: INTENSITY_WEIGHT[i.intensity] ?? INTENSITY_WEIGHT.into_it });
+    facts.push({ ...choice, predicate: 'likes', object: name, strength: INTENSITY[i.intensity] ?? INTENSITY.into_it, conceptText: name, conceptType: 'activity', evidence: answerRef('D') });
   }
   return facts;
 }

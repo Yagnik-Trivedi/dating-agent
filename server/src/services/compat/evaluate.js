@@ -18,7 +18,7 @@ const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
 const UNKNOWN = { score: 0.5, confidence: 0 };
 const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'them';
-const structured = (f) => !f.evidence?.length; // onboarding B/D answers (stories carry a quote)
+const structured = (f) => f.source === 'questionnaire_choice' || !f.evidence?.length; // onboarding B/D answers (stories carry a quote)
 
 // One bad item drops that item, not the whole response.
 const items = (item) => z.array(z.unknown()).default([]).transform((xs) => xs.map((x) => item.safeParse(x)).filter((r) => r.success).map((r) => r.data));
