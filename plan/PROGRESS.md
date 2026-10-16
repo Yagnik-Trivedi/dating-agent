@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 22:20 IST, by Claude Code (plan 09 in progress on `feat/plan-09-judges`)
+- **Last updated:** 2026-10-16 23:05 IST, by Claude Code (plan 09: code done, live checks blocked on `server/.env`)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -23,7 +23,7 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 06 | Trust check (v2) | ✅ Done | main | `d8d1a80` | The DB spy proves it reads only the public profile. |
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
-| 09 | Independent judges, handoff, compaction, date ideas (v2) | 🔄 In progress | `feat/plan-09-judges` | `4c08336` | Server code + unit tests done; scripts, client patch and live checks next (live checks need `server/.env`). |
+| 09 | Independent judges, handoff, compaction, date ideas (v2) | 🔄 In progress | `feat/plan-09-judges` | `ce4c0cb` | Code, unit tests, scripts and client patch done; `npm test` 63/63, `api-check` 19/19. **Live checks blocked: no `server/.env` on this machine.** |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | Functional changes only. Visual restyling waits for plan 20's design. |
 | 11 | Seed personas + evaluation (v2) | ⏸ Paused | `wip/plan-11b` | `a8fc99c` | **Stopped at:** the v1 eval harness (partial), superseded by v2. **Resume:** after 10, write v2 on a new branch reusing `scripts/lib/runPair.js` + the `eval.js` report from `wip/plan-11b`; add ≥ 3 eligible seeds per demo city. |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
@@ -43,12 +43,13 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 
 **Done so far** (`4c08336`, pushed): judge job per side (`services/conversation/judge.js`, smart at t=0 → mid reasoning-off fallback, `judgeModel` recorded; last failed attempt writes an honest `unsure` so a match never hangs) → `MatchDecision`; code validators (verbatim quotes mapped to real message ids, generic positives rejected, frictions or a justification, `dealbreakerRisk` when a `dealbreaker_hint` exists, yes below `JUDGE_YES_MIN` → unsure, a hinted dealbreaker is never an automatic yes) with one re-ask (`judge-reask`); `settle` (lower label, atomic, wind-down with exemplars + closing style from a "no" side whose agent is active); `decide` / "Talk anyway" on `MatchDecision` (reopening un-archives); `compactNotes` job on closed/flagged_fake; `GET /matches/:id/report`, `GET /conversations/:id/replay`; date ideas from my `shared_interest` events + my city; account deletion (ChatEvents, MatchDecisions, "Deleted user", messages kept only in handed-off matches). Removed v1 `compat/evaluate.js`, `compat/config.js`, prompts `alignment` + `verdict`, `Match.report`. `npm test` 63/63 (11 new: validators + settle/handoff/wind-down/Talk anyway/compaction).
 
+Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js` (anti-smoking friction, a dealbreaker that surfaces only in chat → no + dealbreakerRisk + one wind-down + compaction + "Talk anyway", one judge call per side, DB spy, handoff on the simulate pair, date ideas cache/503/spy); `simulate.js` prints MatchDecisions; `runPair` also clears decisions, moments and conversations; `check-indexes` covers `matchdecisions`; Report page shows quotes, the dealbreaker notice from `dealbreakerRisk` and the no-friction justification; account deletion also removes chats once both sides are gone. **Verified without an LLM key:** `npm test` 63/63, `api-check` 19/19 (local dev-db, placeholder env, AI off), `check-indexes` all ✓ incl. TTL, client build OK.
+
 **Next:**
-1. Scripts: replace `compat-check.js` with a plan-09 check (usage counts, DB spy, handoff, compaction, date ideas stub/cache/503); `simulate.js` prints MatchDecisions; `check-indexes` adds `matchdecisions`.
-2. Minimal client change: Report page reads the new report (quotes, dealbreaker notice from `dealbreakerRisk`).
-3. Prompts README, CLAUDE.md Status.
-4. **Live checks need `server/.env` on this machine (none here yet)**: anti-smoking judge friction, simulate compatible pair → both yes, dealbreaker pair → no + wind-down, wipe + re-seed end to end.
-5. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
+1. **Copy `server/.env` onto this machine** (blocked: none here).
+2. Live on NVIDIA (dev-db, wipe + re-seed): `node scripts/simulate.js seed01@demo.local seed04@demo.local` (designed compatible → both yes), then `node scripts/judge-check.js`, `seed-check`, `agent-check`; tune `JUDGE_YES_MIN` only if the compatible pair lands on unsure.
+3. CLAUDE.md Status line for plan 09, final commit `feat(plan-09): …`, merge to `main`, stop for "go".
+4. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
 
 **Side work (parallel, only while the main line waits at a checkpoint):** queue, in order:
 
@@ -99,4 +100,4 @@ This section is kept current, so another session can take over at any moment (fo
 - Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
 - Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
 
-**Last handoff state:** 2026-10-16 22:20 IST. Plan 09 in progress on `feat/plan-09-judges` (`4c08336`, pushed). Next: see "Currently working on" → Next.
+**Last handoff state:** 2026-10-16 22:20 IST. Plan 09 on `feat/plan-09-judges` (`ce4c0cb`, pushed): code done, live checks need `server/.env`. Next: see "Currently working on" → Next.
