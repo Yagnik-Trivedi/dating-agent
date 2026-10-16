@@ -22,6 +22,7 @@ import { questionnaireFacts } from '../src/services/kg/questionnaireFacts.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 import { createMatch } from '../src/services/matches.js';
 import { statusFor } from '../src/services/pipeline/index.js';
+import './lib/worker.js'; // job worker for the match pipeline (plan 17)
 
 // --- offline
 assert.equal(cleanText('Meera: "haha **yes** <think>hmm</think>totally"', 'Meera'), 'haha yes totally');

@@ -15,9 +15,9 @@ import { matchesRouter } from './routes/matches.js';
 import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
 import { profileRouter } from './routes/profile.js';
-import { resumeConversations } from './services/agent/index.js';
-import { failStuckOnboarding } from './services/kg/buildUserGraph.js';
-import { resumePipelines } from './services/pipeline/index.js';
+import './services/jobs/handlers.js';
+import { startPeriodic, stopPeriodic } from './services/jobs/periodic.js';
+import { startWorker, stopWorker } from './services/jobs/queue.js';
 import { refresh as loadBudget } from './services/llm/budget.js';
 import { registerSockets } from './sockets/index.js';
 import { io } from './sockets/io.js';
@@ -55,11 +55,11 @@ async function connectMongo(attempt = 1) {
     await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
     console.log('✓ MongoDB connected');
     await loadBudget({ force: true }).catch((err) => console.error(`budget load failed: ${err.message}`));
-    await failStuckOnboarding().catch((err) => console.error(`onboarding cleanup failed: ${err.message}`));
-    await resumePipelines().catch((err) => console.error(`pipeline resume failed: ${err.message}`));
-    const sweep = () => resumeConversations().catch((err) => console.error(`conversation resume failed: ${err.message}`));
-    await sweep();
-    setInterval(sweep, 30 * 60_000).unref(); // stale chats + replies lost to a restart
+    // Onboarding builds, match pipelines, agent turns and evaluations are jobs: a restart resumes them (plan 17).
+    if (env.JOB_WORKER) {
+      startWorker();
+      startPeriodic();
+    }
   } catch (err) {
     const delay = Math.min(30_000, 2_000 * attempt);
     console.error(`✖ MongoDB connect failed (attempt ${attempt}): ${err.message}. Retrying in ${delay / 1000}s`);
@@ -73,7 +73,9 @@ connectMongo();
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down');
   io.close();
+  stopPeriodic();
   server.close(async () => {
+    await stopWorker();
     await mongoose.disconnect();
     process.exit(0);
   });

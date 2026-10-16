@@ -3,7 +3,7 @@ import { Match } from '../../models/Match.js';
 import { emitToUser } from '../../sockets/io.js';
 import { startConversation } from '../agent/index.js';
 import { buildBriefs } from '../brief/index.js';
-import { startEvaluation } from '../compat/index.js';
+import { enqueue } from '../jobs/queue.js';
 import { checkProfile } from '../trust/checkProfile.js';
 
 /**
@@ -82,7 +82,7 @@ export async function runBrief(match) {
   }
   if (Object.values(briefs).some((b) => b.earlyDealbreaker)) {
     await setStatus(match, 'evaluating');
-    return startEvaluation(match, { reason: 'early_dealbreaker' });
+    return queueEvaluation(match, { reason: 'early_dealbreaker' });
   }
   await setStatus(match, 'agent_chatting');
   return startConversation(match);
@@ -94,11 +94,13 @@ export async function onMatchCreated(match) {
   await runBrief(match);
 }
 
-/** After a restart, re-run matches that never finished the pre-conversation steps. */
-export async function resumePipelines() {
-  const stuck = await Match.find({ status: { $in: ['matched', 'trust_check', 'briefing'] } });
-  for (const m of stuck) {
-    (m.status === 'briefing' ? runBrief(m) : onMatchCreated(m)).catch((err) => console.error(`resume pipeline ${m._id} failed: ${err.message}`));
-  }
-  if (stuck.length) console.log(`resumed ${stuck.length} match pipeline(s)`);
+/** `matchCreated` job: picks up wherever the match is (a restart mid-pipeline re-runs the unfinished step). */
+export async function runMatchCreated({ matchId }) {
+  const match = await Match.findById(matchId);
+  if (['matched', 'trust_check'].includes(match?.status)) await onMatchCreated(match);
+  else if (match?.status === 'briefing') await runBrief(match);
 }
+
+/** Queue the verdict (plan 09) for a stopped conversation. */
+export const queueEvaluation = (match, { reason } = {}) =>
+  enqueue('evaluate', { matchId: String(match._id), reason: reason ?? null }, { dedupeKey: `eval:${match._id}` });

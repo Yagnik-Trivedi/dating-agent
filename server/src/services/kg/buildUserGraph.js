@@ -9,6 +9,8 @@ import { embedFacts } from './factEmbedding.js';
 import { QUESTIONS } from './questions.js';
 import { questionnaireFacts } from './questionnaireFacts.js';
 import { buildStyleProfile } from './styleProfile.js';
+import { enqueue } from '../jobs/queue.js';
+import { buildGate } from '../match/gate.js';
 
 const LLM_CONCURRENCY = 2; // gentle on the provider's rate limit
 
@@ -40,19 +42,20 @@ export async function buildUserGraph(userId) {
   return { facts: docs.length, dropped };
 }
 
-/** Fire-and-forget wrapper used by the submit route. */
-export function startUserGraphBuild(userId) {
-  buildUserGraph(userId)
-    .then(({ facts, dropped }) => {
-      console.log(`onboarding ${userId}: ${facts} facts (${dropped} unquoted dropped)`);
-      emitToUser(userId, 'onboarding:done', { status: 'done' });
-    })
-    .catch(async (err) => {
-      console.error(`onboarding ${userId} failed: ${err.message}`);
-      await User.updateOne({ _id: userId }, { $set: { 'onboarding.status': 'failed' } }).catch(() => {});
-      emitToUser(userId, 'onboarding:done', { status: 'failed' });
-    });
-}
+/** Queued by the submit route; a build interrupted by a restart is picked up again by the job worker. */
+export const startUserGraphBuild = (userId) => enqueue('buildUserGraph', { userId: String(userId) }, { dedupeKey: `build:${userId}` });
 
-/** A restart kills in-flight builds: mark them failed so the UI offers "submit again" instead of spinning. */
-export const failStuckOnboarding = () => User.updateMany({ 'onboarding.status': 'processing' }, { $set: { 'onboarding.status': 'failed' } });
+/** Job handler: a failed build marks onboarding failed (the UI offers re-submit) instead of retrying. */
+export async function runUserGraphBuild({ userId }) {
+  try {
+    const { facts, dropped } = await buildUserGraph(userId);
+    await buildGate(userId);
+    console.log(`onboarding ${userId}: ${facts} facts (${dropped} unquoted dropped)`);
+    emitToUser(userId, 'onboarding:done', { status: 'done' });
+  } catch (err) {
+    if (err.name === 'BudgetExceededError') throw err; // re-queued by the worker, onboarding stays "processing"
+    console.error(`onboarding ${userId} failed: ${err.message}`);
+    await User.updateOne({ _id: userId }, { $set: { 'onboarding.status': 'failed' } });
+    emitToUser(userId, 'onboarding:done', { status: 'failed' });
+  }
+}

@@ -15,7 +15,9 @@
     "seed": "node scripts/seed.js",
     "simulate": "node scripts/simulate.js",
     "eval": "node scripts/eval.js",
-    "generate-personas": "node scripts/generate-personas.js"
+    "generate-personas": "node scripts/generate-personas.js",
+    "dev-db": "node scripts/dev-db.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\""
   },
   "dependencies": {
     "@tavily/core": "^0.7.14",
@@ -32,6 +34,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.14",
     "socket.io-client": "^4.8.4"
   }

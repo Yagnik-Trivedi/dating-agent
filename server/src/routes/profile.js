@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
+import { buildGate } from '../services/match/gate.js';
 import { parse } from '../utils/http.js';
 
 const text = (max) => z.string().trim().max(max);
@@ -22,7 +23,10 @@ const profileBody = z.object({
     religionImportance: text(30),
   }).partial(),
   dealbreakers: z.array(text(100)).max(10),
-}).partial().strict();
+  ageMin: z.number().int().min(18).max(100),
+  ageMax: z.number().int().min(18).max(100),
+  radiusKm: z.number().positive().max(500),
+}).partial().strict().refine((p) => !(p.ageMin && p.ageMax) || p.ageMin <= p.ageMax, { message: 'ageMin must be ≤ ageMax' });
 
 export const profileRouter = Router();
 
@@ -37,5 +41,6 @@ profileRouter.put('/profile', async (req, res) => {
     { $set: fields },
     { new: true, upsert: true, runValidators: true },
   ).lean();
+  await buildGate(req.user._id);
   res.json({ profile });
 });

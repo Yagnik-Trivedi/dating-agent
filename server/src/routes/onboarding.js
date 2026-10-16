@@ -28,7 +28,7 @@ onboardingRouter.post('/onboarding/submit', async (req, res) => {
   if (req.user.onboarding?.status === 'processing') throw httpError(409, 'ALREADY_PROCESSING', 'Your answers are already being processed');
   req.user.onboarding = { status: 'processing', answers };
   await req.user.save();
-  startUserGraphBuild(req.user._id);
+  await startUserGraphBuild(req.user._id);
   res.json({ status: 'processing' });
 });
 

@@ -54,6 +54,7 @@ const schema = z.object({
   AGENT_MAX_TURNS: field(z.coerce.number().int().positive().default(24)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
   DEMO_FAST: bool(false),
+  JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
 });
 
 const parsed = schema.safeParse(process.env);

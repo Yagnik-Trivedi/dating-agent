@@ -17,6 +17,7 @@ import { flushUsage } from '../src/services/llm/budget.js';
 import { createMatch } from '../src/services/matches.js';
 import { dateIdeasFor } from '../src/services/tavily/dateIdeas.js';
 import { ensurePersona } from './lib/personas.js';
+import './lib/worker.js'; // job worker for the match pipeline (plan 17)
 
 // --- offline
 const dims = (s, c = 0.7, db = 1) => ({ dealbreakers: { score: db, confidence: 0.9 }, valuesGoals: { score: s, confidence: c }, lifestyle: { score: s, confidence: c }, interests: { score: s, confidence: c }, communication: { score: s, confidence: c }, personality: { score: s, confidence: 0.3 } });

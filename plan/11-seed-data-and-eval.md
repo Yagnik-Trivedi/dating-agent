@@ -29,6 +29,7 @@
 - **Texting styles:** emoji-heavy (≥ 4), terse/no punctuation (≥ 4), formal full sentences (≥ 3), long replies (≥ 3).
 - **Kinds:** 24 normal; 3 with a mild public inconsistency (seed11, seed14, seed15); 2 likely fakes (seed27, seed28: abroad + investment talk + off-app contact, no photos); 1 very thin profile (seed29).
 - **Dealbreakers** as v2 `accepts` + toggle. The "hidden" conflicts that surface only in conversation stay (seed18 kids, seed20 smoking, seed22 looking for, seed26 drinking). Under the gate, a conflict that is a **dealbreaker** never reaches a chat. So the incompatible pairs use **important (not dealbreaker)** conflicts, plus one pair whose dealbreaker is on an attribute the other side's public profile doesn't show but their **gate** does: the gate must catch it, and the eval counts it as `gated`.
+- **Gate coverage:** the gate matches on city. In each demo city (at least Pune and Mumbai), a typical new user (either gender, common answers, no dealbreakers) must have **≥ 3 eligible seeds**. The v1 set leaves only 2 per city (measured in plan 17).
 - **Rules:** SFW only, no real people, DiceBear photos, no inferred caste, religion or ethnicity. `designNotes` is never shown.
 - **Seed logins:** the `SEED_PASSWORD` value in `server/.env`, never committed.
 - **Generation:** `scripts/generate-personas.js` (v1, cast fixed in code, voice by the LLM) gains the language and style fields. Generated text is reviewed by hand before committing; regenerating overwrites hand edits.

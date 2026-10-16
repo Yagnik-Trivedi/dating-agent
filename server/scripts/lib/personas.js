@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { Profile } from '../../src/models/Profile.js';
 import { User } from '../../src/models/User.js';
 import { buildUserGraph } from '../../src/services/kg/buildUserGraph.js';
+import { buildGate } from '../../src/services/match/gate.js';
 
 const personas = JSON.parse(readFileSync(new URL('../../seed/personas.json', import.meta.url)));
 
@@ -20,5 +21,6 @@ export async function ensurePersona(email) {
   });
   await Profile.create({ userId: user._id, ...p.profile });
   await buildUserGraph(user._id);
+  await buildGate(user._id);
   return user;
 }

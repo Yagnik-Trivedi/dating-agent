@@ -8,3 +8,5 @@ build/
 coverage/
 *.log
 server/eval/tmp/
+server/.dev-db/
+server/eval/logs/

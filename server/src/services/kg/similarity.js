@@ -1,7 +1,12 @@
 // In-memory cosine is enough: comparisons are always person-vs-person (~50 × 50 facts).
 // ponytail: O(q·c) scan; move to Atlas Vector Search only if we ever search across all users.
+import { fromBinary } from '../../utils/vector.js';
 
+/** Accepts number arrays, Float32Arrays or stored binary vectors (plan 17). */
 export function cosine(a, b) {
+  a = fromBinary(a);
+  b = fromBinary(b);
+  if (!a || !b) return 0;
   let dot = 0, na = 0, nb = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];

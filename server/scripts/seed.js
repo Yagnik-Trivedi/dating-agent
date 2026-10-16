@@ -13,6 +13,7 @@ import { User } from '../src/models/User.js';
 import { buildUserGraph } from '../src/services/kg/buildUserGraph.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 import { mapLimit } from '../src/utils/mapLimit.js';
+import { buildGate } from '../src/services/match/gate.js';
 
 const personas = JSON.parse(readFileSync(new URL('../seed/personas.json', import.meta.url)));
 const rebuild = process.argv.includes('--rebuild');
@@ -34,6 +35,7 @@ try {
       { upsert: true, new: true, runValidators: true },
     );
     await Profile.updateOne({ userId: user._id }, { $set: { userId: user._id, ...p.profile } }, { upsert: true });
+    await buildGate(user._id);
     const hasGraph = await KgFact.exists({ subjectId: user._id, observerId: null, source: 'questionnaire' });
     if (hasGraph && !rebuild && user.onboarding.status === 'done') return console.log(`= ${p.profile.name} (${p.email}) already seeded`);
     await User.updateOne({ _id: user._id }, { $set: { 'onboarding.status': 'processing' } });

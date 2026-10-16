@@ -40,6 +40,14 @@ if (MODEL_EMBED) {
   console.log(`\n--- embed test: ${MODEL_EMBED}`);
   const res = await client.embeddings.create({ model: MODEL_EMBED, input: ['test'] });
   console.log(`vector length: ${res.data[0].embedding.length}`);
+  // Plan 17: does the provider accept reduced dimensions? If so, KG.EMBED_DIMS can shrink stored vectors.
+  try {
+    const small = await client.embeddings.create({ model: MODEL_EMBED, input: ['test'], dimensions: 256 });
+    const n = small.data[0].embedding.length;
+    console.log(n === 256 ? 'dimensions=256: supported (KG.EMBED_DIMS can be set)' : `dimensions ignored (got ${n}); keep KG.EMBED_DIMS = null`);
+  } catch (err) {
+    console.log(`dimensions not supported (${err.status ?? err.name}); keep KG.EMBED_DIMS = null`);
+  }
 } else {
   console.log('\n(set MODEL_EMBED to run an embedding test)');
 }

@@ -7,38 +7,34 @@ import { Message } from '../../models/Message.js';
 import { User } from '../../models/User.js';
 import { emitToUser, io } from '../../sockets/io.js';
 import { sendMessage } from '../chat.js';
-import { startEvaluation } from '../compat/index.js';
+import { cancel, enqueue } from '../jobs/queue.js';
 import { side } from '../matches.js';
-import { emitStatus } from '../pipeline/index.js';
+import { emitStatus, queueEvaluation } from '../pipeline/index.js';
 import { buildContext } from './context.js';
 import { generateReply } from './generateReply.js';
 
 const LOCK_STALE_MS = 2 * 60_000;
 const MAX_AGENT_REPLIES_PER_MINUTE = 2; // per match, both agents together: the agent↔agent loop guard
 const RETRY_MS = 30_000;
-const timers = new Map(); // `${matchId}:${userId}` → timeout
 const failures = new Map();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const turnKey = (matchId, userId) => `turn:${matchId}:${userId}`;
 
-/** (Re)start the debounce timer: a burst of messages gets one reply. */
+/** (Re)schedule the `agentTurn` job: re-enqueueing moves its runAt, so a burst of messages gets one reply. */
 export function scheduleReply(matchId, userId, delay = env.AGENT_DEBOUNCE_MS) {
-  const key = `${matchId}:${userId}`;
-  clearTimeout(timers.get(key));
-  timers.set(key, setTimeout(() => {
-    timers.delete(key);
-    runReply(matchId, userId).catch((err) => console.error(`agent reply ${key} crashed: ${err.message}`));
-  }, Math.max(0, delay)));
+  return enqueue('agentTurn', { matchId: String(matchId), userId: String(userId) }, {
+    dedupeKey: turnKey(matchId, userId), runAt: new Date(Date.now() + Math.max(0, delay)),
+  }).catch((err) => console.error(`agent turn ${matchId}:${userId} not queued: ${err.message}`));
 }
 
-/** Drop scheduled (not yet running) replies for a match, or one user's agent in it. Running ones are caught by the re-check. */
+/** Drop queued replies for a match, or one user's agent in it. A running one is caught by the re-check. */
 export function cancelReplies(matchId, userId) {
-  for (const [key, t] of timers) {
-    if (key.startsWith(`${matchId}:`) && (!userId || key === `${matchId}:${userId}`)) {
-      clearTimeout(t);
-      timers.delete(key);
-    }
-  }
+  const key = userId ? turnKey(matchId, userId) : new RegExp(`^${turnKey(matchId, '')}`);
+  return cancel(key).catch((err) => console.error(`cancel turns ${matchId} failed: ${err.message}`));
 }
+
+/** `agentTurn` job handler. */
+export const runAgentTurn = ({ matchId, userId }) => runReply(matchId, userId);
 
 const lockPath = (userId) => `agentState.locks.${userId}`;
 async function acquireLock(matchId, userId) {
@@ -91,7 +87,7 @@ export async function stopConversation(matchId, reason, detail = null) {
   if (!match) return false;
   cancelReplies(matchId);
   emitStatus(match);
-  startEvaluation(match, { reason }).catch((err) => console.error(`evaluation ${matchId} failed: ${err.message}`));
+  await queueEvaluation(match, { reason });
   return true;
 }
 

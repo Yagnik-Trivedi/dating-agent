@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { EmbCache } from '../../models/EmbCache.js';
+import { fromBinary } from '../../utils/vector.js';
 
 export const hashText = (model, inputType, text) => createHash('sha256').update(`${model}\n${inputType}\n${text}`).digest('hex');
 
@@ -7,7 +8,7 @@ export const hashText = (model, inputType, text) => createHash('sha256').update(
 export async function getCached(hashes) {
   try {
     const docs = await EmbCache.find({ hash: { $in: hashes } }, { hash: 1, vector: 1 }).lean();
-    return new Map(docs.map((d) => [d.hash, d.vector]));
+    return new Map(docs.map((d) => [d.hash, Array.from(fromBinary(d.vector))]));
   } catch (err) {
     console.error(`embed cache read failed: ${err.message}`);
     return new Map();

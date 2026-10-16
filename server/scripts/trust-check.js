@@ -16,6 +16,7 @@ import { statusFor } from '../src/services/pipeline/index.js';
 import { checkProfileData } from '../src/services/trust/checkProfile.js';
 import { FLAG, ruleChecks, scanMessage } from '../src/services/trust/rules.js';
 import { mapLimit } from '../src/utils/mapLimit.js';
+import './lib/worker.js'; // job worker for the match pipeline (plan 17)
 
 const cases = JSON.parse(readFileSync(new URL('../seed/trust-cases.json', import.meta.url)));
 const byId = Object.fromEntries(cases.map((c) => [c.id, c]));

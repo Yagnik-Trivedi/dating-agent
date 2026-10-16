@@ -14,6 +14,7 @@ import { embedFacts } from '../src/services/kg/factEmbedding.js';
 import { questionnaireFacts } from '../src/services/kg/questionnaireFacts.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 import { createMatch } from '../src/services/matches.js';
+import './lib/worker.js'; // job worker for the match pipeline (plan 17)
 
 const args = process.argv.slice(2);
 const flag = (f) => args.includes(f);

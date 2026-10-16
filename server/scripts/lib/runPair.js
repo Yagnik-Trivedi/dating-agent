@@ -8,6 +8,7 @@ import { Usage } from '../../src/models/Usage.js';
 import { beliefUpdatesSettled } from '../../src/services/agent/index.js';
 import { flushUsage } from '../../src/services/llm/budget.js';
 import { createMatch } from '../../src/services/matches.js';
+import './worker.js'; // job worker for the match pipeline (plan 17)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LIVE = ['matched', 'trust_check', 'briefing', 'agent_chatting', 'evaluating'];
