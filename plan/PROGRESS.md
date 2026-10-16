@@ -80,3 +80,21 @@ cd server && npm install && cd ../client && npm install
 5. Tests: `npm test` (spins up its own in-memory replica set).
 6. Simulate: `node scripts/simulate.js seed01@demo.local seed04@demo.local`.
 7. **Next plan:** finish 08 (see above), then 09.
+
+## Handoff to another Claude Code session
+
+This section is kept current, so another session can take over at any moment (for example when a usage limit ends a session). Everything is committed and pushed after every step; at most the step in flight is lost.
+
+**Prompt for the next session:**
+
+> Read CLAUDE.md, then plan/PROGRESS.md (this file), then plan/16-kg-upgrade-execution.md and the plan marked 🔄. Check out the branch named under "Currently working on" and continue from its **Next** list. Follow the standing rules below. Update PROGRESS.md after every step, then commit and push.
+
+**Standing rules (from the project owner):**
+- Never print, echo, log or commit any secret value from `.env`. Check that no `.env` is tracked before every push.
+- After each plan: run its acceptance checks, commit, push, update PROGRESS.md and CLAUDE.md Status, then STOP and wait for "go".
+- Ask before you add a dependency (`mongodb-memory-server` is already approved), change how agent messages are sent or shown, or delete real user data. Wiping and re-seeding seed data is fine.
+- LLM: NVIDIA free API for now, at low concurrency (~40 requests/min across everyone sharing the key). The switch to Nebius must need only `.env` changes.
+- Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
+- Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
+
+**Last handoff state:** 2026-10-16 14:45 IST. Plan 08 WIP is pushed on `feat/plan-08-engine`. No background jobs need to survive; the local dev DB can be recreated with `npm run dev-db` + `npm run seed`.
