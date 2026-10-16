@@ -116,6 +116,25 @@ The exact model IDs come from `.env`. Copy them from `GET /v1/models` (run `serv
 
 All LLM calls go through `server/src/services/llm/client.js`. Nothing else imports `openai` directly.
 
+## Knowledge graph — final design
+
+- **`plan/15-knowledge-graph-final.md` is the source of truth** for everything the app knows about a user. It overrides plans 05–11 and `plan/kg-upgrade-reference.md` (which supplies implementation detail where plan 15 is silent). Plan 16 is the execution order.
+- **Six layers:** (1) public `Profile`; (2) `Profile.gate` (basics, B answers, `accepts`, dealbreakers; gate code only); (3) self graph (`KgFact` with `observerId: null` + `KgEdge` + shared `Concept`); (4) voice (`VoiceProfile` + `VoiceSample`); (5) notes about others (`KgFact` with `observerId: me` + `ChatEvent`, quote-backed); (6) decisions (`MatchDecision`, mine only).
+- **Information boundary:** another user's agent or judge may read my public `Profile` only in the trust check and the brief. It never reads my `KgFact`, `KgEdge`, `VoiceProfile` or `VoiceSample`. The only other cross-user paths are the transcript and the gate, which is code-only and returns a boolean. A DB-access spy test enforces this. `private` facts never reach a prompt whose output another user sees.
+- **Conversation style is knowledge:** `VoiceProfile` stores distributions, not just means (word counts, emoji, laughs, endings, pet phrases, corrections, never-say) plus real `VoiceSample`s used as few-shot exemplars. The graph shows it as a correctable "How I text" hub.
+- **Any language mix:** every sample is tagged with languages, script and whether it code-switches. `VoiceProfile.language` holds the mix, code-switch rate, switch triggers and `mirrorsLanguage`, and `planAct` picks each reply's language from it.
+- **Matching stays swipe-based:** the gate filters the discover deck as one indexed Mongo query and re-checks (boolean) when a match is created. Discover order is random. Nothing ranks or compares two users' graphs or answers; overlap is discovered live, from the transcript against my own graph.
+- **The engine is side-agnostic:** the other side may be an agent or a human typing (shadow mode); a human's messages are just transcript lines.
+- **Per message:** at most 2 LLM calls (perceive+observe, generate), plus a stance check only when `mustDisagree`, plus at most 1 regeneration. Style and leak checks run in code. Seeded RNG per conversation.
+- **Scaling rules:**
+  - Embed concepts (shared, once for all users), not facts; only concept-less facts get their own vector.
+  - Store vectors as compact BSON float32, loaded only when needed (`select: false`).
+  - Caps: `MAX_SELF_FACTS` 150, `MAX_VOICE_SAMPLES` 200. TTL-archive closed matches' raw notes after `NOTES_RETENTION_DAYS`.
+  - Async work runs through a Mongo `jobs` queue + worker (build, judge, compaction, voice rebuild, reflections, re-confirm, concept cleanup). No job scans all users.
+  - Hot path: a per-conversation LRU cache of my facts + voice, keyed by `userId + graphVersion`.
+  - Indexes from day one (plan 15 §6.6), including the gate query.
+- **Thresholds:** all of them live in `services/kg/config.js`.
+
 ## Coding conventions
 
 - Small modules, one responsibility each. Prompt text lives in `services/prompts/*.js` as exported template functions, never inline in business logic.
