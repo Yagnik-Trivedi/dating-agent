@@ -6,6 +6,7 @@ import { User } from '../models/User.js';
 import { emitToUser } from '../sockets/io.js';
 import { httpError } from '../utils/http.js';
 import { serializeMessage } from './chat.js';
+import { reportFor } from './compat/report.js';
 import { enqueue } from './jobs/queue.js';
 import { statusFor } from './pipeline/index.js';
 
@@ -54,7 +55,10 @@ export async function matchListItem(match, viewerId) {
 export async function matchDetail(match, viewerId) {
   const other = otherUserId(match, viewerId);
   const mine = side(match, viewerId);
-  const profile = await Profile.findOne({ userId: other }).select(PUBLIC_PROFILE).lean();
+  const [profile, report] = await Promise.all([
+    Profile.findOne({ userId: other }).select(PUBLIC_PROFILE).lean(),
+    reportFor(match._id, viewerId),
+  ]);
   const key = String(viewerId);
   return {
     _id: match._id,
@@ -68,7 +72,7 @@ export async function matchDetail(match, viewerId) {
     otherProfile: profile,
     trust: match.trust?.[key] ?? null,
     brief: match.brief?.[key] ?? null,
-    report: match.report?.[key] ?? null,
+    report, // my own judge's MatchDecision (plan 09), never the other side's
   };
 }
 

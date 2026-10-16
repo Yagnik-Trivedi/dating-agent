@@ -26,11 +26,12 @@ export function emitStatus(match) {
   }
 }
 
-/** The one way to change match.status: save, then notify both users. */
+/** The one way to change match.status: save, then notify both users. A closed match gets its notes compacted (plan 09 §3). */
 export async function setStatus(match, status) {
   await Match.updateOne({ _id: match._id }, { $set: { status } });
   match.status = status;
   emitStatus(match);
+  if (status === 'closed' || status === 'flagged_fake') await enqueue('compactNotes', { matchId: String(match._id) }, { dedupeKey: `compact:${match._id}` });
   return match;
 }
 

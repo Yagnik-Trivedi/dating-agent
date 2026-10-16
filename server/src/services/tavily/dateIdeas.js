@@ -1,12 +1,15 @@
-// Date ideas: shared city + top 2 shared interests → Tavily search → 3 ideas (fast tier). Cached by query for 7 days.
+// Date ideas (plan 09 §4): MY top 2 shared_interest moments + MY city → Tavily search → 3 ideas (fast tier). Cached by
+// query for 7 days. Only my own data: the other user's Profile and graph are never read.
 import { tavily } from '@tavily/core';
 import { z } from 'zod';
 import { env } from '../../config/env.js';
 import { Profile } from '../../models/Profile.js';
-import { KgFact } from '../../models/KgFact.js';
+import { ChatEvent } from '../../models/ChatEvent.js';
 import { SearchCache } from '../../models/SearchCache.js';
 import { httpError } from '../../utils/http.js';
 import { chatJSON } from '../llm/client.js';
+import { asActor } from '../actor.js';
+import { myDecision } from '../compat/report.js';
 import { otherUserId } from '../matches.js';
 import * as dateIdeasPrompt from '../prompts/dateIdeas.js';
 
@@ -23,20 +26,22 @@ async function tavilySearch(query) {
 /** The search query for a viewer: "<interest> and <interest> spots for a first date in <city>". */
 export async function dateQuery(match, viewerId) {
   const viewer = String(viewerId);
-  // Only my own data (plan 07/09 boundary): my city + what my agent's notes say they like, from the transcript.
-  const [mine, notes] = await Promise.all([
+  const [mine, events] = await Promise.all([
     Profile.findOne({ userId: viewer }, { city: 1, tags: 1 }).lean(),
-    KgFact.find({ matchId: match._id, observerId: viewer, predicate: 'likes', polarity: { $ne: -1 } }, { object: 1, confidence: 1 }).sort({ confidence: -1 }).limit(2).lean(),
+    ChatEvent.find({ matchId: match._id, observerId: viewer, type: 'shared_interest' }, { label: 1, weight: 1 }).sort({ weight: -1 }).lean(),
   ]);
   const city = mine?.city || 'India';
-  const interests = (notes.length ? notes.map((n) => n.object) : mine?.tags?.interests ?? []).slice(0, 2);
+  const shared = [...new Set(events.map((e) => e.label?.trim().toLowerCase()).filter(Boolean))];
+  const interests = (shared.length ? shared : mine?.tags?.interests ?? []).slice(0, 2);
   return { city, interests, query: `${interests.join(' and ') || 'cafes and walks'} spots for a first date in ${city}`.toLowerCase() };
 }
 
 /** → { ideas: [{ title, why, link }], icebreakers, cached }. `search` is injectable for tests. */
-export async function dateIdeasFor(match, viewerId, { search = tavilySearch } = {}) {
+export const dateIdeasFor = (match, viewerId, opts) => asActor({ role: 'dateIdeas', userId: viewerId, otherId: otherUserId(match, viewerId) }, () => ideas(match, viewerId, opts));
+
+async function ideas(match, viewerId, { search = tavilySearch } = {}) {
   const { city, interests, query } = await dateQuery(match, viewerId);
-  const icebreakers = match.report?.[String(viewerId)]?.icebreakers ?? [];
+  const icebreakers = (await myDecision(match._id, viewerId))?.icebreakers ?? [];
   const hit = await SearchCache.findOne({ query }).lean();
   if (hit) {
     console.log(`date-ideas: cache hit for "${query}"`);

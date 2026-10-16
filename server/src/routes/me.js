@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { ChatEvent } from '../models/ChatEvent.js';
 import { InboxItem } from '../models/InboxItem.js';
 import { KgFact } from '../models/KgFact.js';
 import { KgEdge } from '../models/KgEdge.js';
@@ -8,6 +9,7 @@ import { VoiceProfile } from '../models/VoiceProfile.js';
 import { VoiceSample } from '../models/VoiceSample.js';
 import { Like } from '../models/Like.js';
 import { Match } from '../models/Match.js';
+import { MatchDecision } from '../models/MatchDecision.js';
 import { Message } from '../models/Message.js';
 import { Profile } from '../models/Profile.js';
 import { User } from '../models/User.js';
@@ -33,11 +35,13 @@ meRouter.put('/me/settings', async (req, res) => {
   res.json({ user: req.user });
 });
 
-// Delete everything about the user; their side of each match is stripped and the match closed.
+// Delete everything about the user; their side of each match is anonymised ("Deleted user") and the match closed.
+// Their messages stay only in handed-off matches, where they are the other person's real chat history (plan 09 §5).
 meRouter.delete('/me', async (req, res) => {
   const me = req.user._id;
   const key = String(me);
   const matches = await Match.find({ users: me });
+  const keepHistory = matches.filter((m) => m.status === 'handed_off').map((m) => m._id);
 
   await Promise.all([
     Profile.deleteOne({ userId: me }),
@@ -47,13 +51,15 @@ meRouter.delete('/me', async (req, res) => {
     VoiceSample.deleteMany({ userId: me }),
     VoiceProfile.deleteOne({ userId: me }),
     Like.deleteMany({ $or: [{ fromUserId: me }, { toUserId: me }] }),
-    Message.deleteMany({ senderId: me }),
+    Message.deleteMany({ senderId: me, matchId: { $nin: keepHistory } }),
+    ChatEvent.deleteMany({ observerId: me }),
+    MatchDecision.deleteMany({ userId: me }),
     InboxItem.deleteMany({ userId: me }),
     Match.updateMany(
       { users: me },
       {
-        $set: { 'perUser.$[mine].agentActive': false },
-        $unset: { [`trust.${key}`]: 1, [`brief.${key}`]: 1, [`report.${key}`]: 1 },
+        $set: { 'perUser.$[mine].agentActive': false, 'perUser.$[mine].name': 'Deleted user' },
+        $unset: { [`trust.${key}`]: 1, [`brief.${key}`]: 1 },
       },
       { arrayFilters: [{ 'mine.userId': me }] },
     ),
