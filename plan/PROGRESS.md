@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 23:05 IST, by Claude Code (plan 09: code done, live checks blocked on `server/.env`)
+- **Last updated:** 2026-10-16 23:30 IST, by Claude Code (plan 09: live checks running; local wipe + re-seed in progress)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -46,7 +46,7 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js` (anti-smoking friction, a dealbreaker that surfaces only in chat → no + dealbreakerRisk + one wind-down + compaction + "Talk anyway", one judge call per side, DB spy, handoff on the simulate pair, date ideas cache/503/spy); `simulate.js` prints MatchDecisions; `runPair` also clears decisions, moments and conversations; `check-indexes` covers `matchdecisions`; Report page shows quotes, the dealbreaker notice from `dealbreakerRisk` and the no-friction justification; account deletion also removes chats once both sides are gone. **Verified without an LLM key:** `npm test` 63/63, `api-check` 19/19 (local dev-db, placeholder env, AI off), `check-indexes` all ✓ incl. TTL, client build OK.
 
 **Next:**
-1. **Copy `server/.env` onto this machine** (blocked: none here).
+1. ✅ `server/.env` added by the owner (NVIDIA key; smoke test OK). Its `MONGODB_URI` is Atlas, so every check overrides it inline with the local dev-db URI.
 2. Live on NVIDIA (dev-db, wipe + re-seed): `node scripts/simulate.js seed01@demo.local seed04@demo.local` (designed compatible → both yes), then `node scripts/judge-check.js`, `seed-check`, `agent-check`; tune `JUDGE_YES_MIN` only if the compatible pair lands on unsure.
 3. CLAUDE.md Status line for plan 09, final commit `feat(plan-09): …`, merge to `main`, stop for "go".
 4. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
@@ -66,7 +66,6 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - **Nebius account + promo credits** for plan 14 (switch by Oct 26). Until then dev runs on NVIDIA's free API (~40 requests/min; it sometimes times out).
 - **Decision on plan 18/19:** should plan 18 be folded into 08–11 as each is built, should 05/17 be retro-fitted (epistemic fields, supersede/dispute, pending queue), and should Claude Code write `19-verification.md`? Your note puts 19 after 05; `00-START-HERE` has no 19 yet.
 - **"go" checkpoints:** each plan stops for "go" after its checks pass. Plan 09 got "go".
-- **`server/.env` is missing on the current dev machine** (C:\Users\viranshul): plan 09's live checks can't run until it's copied in.
 
 ## How to continue
 
