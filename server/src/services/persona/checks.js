@@ -138,7 +138,14 @@ export function leakCheck(sentences, privateFacts, sentenceVectors = []) {
 
 /** Only when the plan says I must disagree: does the draft agree or concede? (LLM, tier fast, reasoning off.) */
 export async function stanceCheck({ draft, disagreeOn, userId, matchId }) {
-  const out = await chatJSON({ tier: 'fast', reasoning: false, temperature: 0, purpose: 'agent-stance-check', userId, matchId,
-    schema: z.object({ concedes: z.boolean() }), messages: stancePrompt.build({ draft, disagreeOn }) });
-  return out.concedes ? [`it agrees with or concedes "${disagreeOn}", but you hold the opposite view firmly`] : [];
+  try {
+    const out = await chatJSON({ tier: 'fast', reasoning: false, temperature: 0, purpose: 'agent-stance-check', userId, matchId,
+      schema: z.object({ concedes: z.boolean() }), messages: stancePrompt.build({ draft, disagreeOn }) });
+    return out.concedes ? [`it agrees with or concedes "${disagreeOn}", but you hold the opposite view firmly`] : [];
+  } catch (err) {
+    // Fail open: a soft check must not kill the reply (sim g: 3 timeouts on the free tier stopped the whole chat).
+    if (err.name === 'BudgetExceededError') throw err;
+    console.warn(`stance check skipped (${err.code ?? err.name}): ${err.message}`);
+    return [];
+  }
 }
