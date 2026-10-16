@@ -8,6 +8,7 @@ import { InboxItem } from '../src/models/InboxItem.js';
 import { ChatEvent } from '../src/models/ChatEvent.js';
 import { Conversation } from '../src/models/Conversation.js';
 import { KgFact } from '../src/models/KgFact.js';
+import { MatchDecision } from '../src/models/MatchDecision.js';
 import { Message } from '../src/models/Message.js';
 import { User } from '../src/models/User.js';
 import { flushUsage } from '../src/services/llm/budget.js';
@@ -50,20 +51,21 @@ async function runOnce(a, b) {
   }
   const ids = new Set(messages.map((x) => String(x._id)));
   for (const u of [a, b]) {
-    const r = m.report?.[String(u._id)];
-    if (!r) continue;
-    const dims = Object.entries(r.dimensions).map(([k, d]) => `${k} ${d.score}/${d.confidence}`).join(', ');
-    console.log(`\n${u.name}'s verdict: ${r.verdict.toUpperCase()} (score ${r.score}, confidence ${r.avgConfidence}, chemistry ${r.chemistry})\n  ${dims}\n  ${r.summary}`);
-    for (const x of r.reasons) console.log(`  ✓ ${x.text}  [${x.messageIds.length} receipts${x.messageIds.every((id) => ids.has(id)) ? '' : ', SOME MISSING'}]`);
-    for (const x of r.concerns) console.log(`  ⚠ ${x.text}  [${x.messageIds.length} receipts]`);
-    for (const q of r.askYourself) console.log(`  ? ${q}`);
-    if (r.icebreakers?.length) console.log(`  icebreakers: ${r.icebreakers.join(' | ')}`);
+    const d = await MatchDecision.findOne({ matchId: m._id, userId: u._id }).sort({ createdAt: -1 }).lean();
+    if (!d) continue;
+    const real = (x) => (ids.has(String(x.messageId)) ? '' : ' [MISSING MESSAGE]');
+    console.log(`\n${u.name}'s judge: ${d.decision.toUpperCase()} (confidence ${d.confidence}, ${d.judgeModel ?? 'no LLM'}${d.validation?.reasked ? ', re-asked' : ''}${d.validation?.dropped?.length ? `, dropped ${d.validation.dropped.length}` : ''})\n  ${d.summaryForUser}`);
+    for (const x of d.positives) console.log(`  ✓ "${x.quote}" → ${x.why}${real(x)}`);
+    for (const x of d.frictions) console.log(`  ⚠ "${x.quote}" (sev ${x.severity}) → ${x.why}${real(x)}`);
+    if (d.noFrictionJustification) console.log(`  (no friction: ${d.noFrictionJustification})`);
+    for (const x of d.dealbreakerRisk) console.log(`  ✖ dealbreaker ${x.attribute}: "${x.quote}"`);
+    if (d.icebreakers?.length) console.log(`  icebreakers: ${d.icebreakers.join(' | ')}`);
   }
   console.log(`\nFinal status: ${m.status}`);
   const inbox = await InboxItem.find({ matchId: m._id }).lean();
   if (inbox.length) console.log(`\nAsk-my-human items: ${inbox.map((i) => `${names[i.userId]}: "${i.question}"`).join(' | ')}`);
   if (m.agentState?.redFlags) console.log(`Red flags: ${JSON.stringify(m.agentState.redFlags)}`);
-  console.log(`\nTokens: ${tokens} total across ${usage.reduce((s, u) => s + u.calls, 0)} calls (smart tier: ${smartCalls} calls)`);
+  console.log(`\nTokens: ${tokens} total across ${usage.reduce((s, u) => s + u.calls, 0)} calls (smart tier: ${smartCalls} calls; judge: ${usage.find((u) => u._id === 'judge')?.calls ?? 0})`);
   for (const u of usage) console.log(`  ${u._id.padEnd(22)} ${String(u.calls).padStart(3)} calls  ${String(u.tokens).padStart(7)} tokens`);
   return { status: m.status, stopReason: m.agentState?.stopReason, messages: messages.length, tokens };
 }

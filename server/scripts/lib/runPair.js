@@ -1,8 +1,11 @@
 // One full pipeline run between two users, used by simulate.js and eval.js: fresh match → trust → brief →
 // conversation → verdicts (+ wind-down), until the match settles. Callers set the no-pacing env first.
+import { ChatEvent } from '../../src/models/ChatEvent.js';
+import { Conversation } from '../../src/models/Conversation.js';
 import { InboxItem } from '../../src/models/InboxItem.js';
 import { KgFact } from '../../src/models/KgFact.js';
 import { Match } from '../../src/models/Match.js';
+import { MatchDecision } from '../../src/models/MatchDecision.js';
 import { Message } from '../../src/models/Message.js';
 import { Usage } from '../../src/models/Usage.js';
 import { flushUsage } from '../../src/services/llm/budget.js';
@@ -17,7 +20,7 @@ export const NO_PACING = { AGENT_DEBOUNCE_MS: 0, AGENT_MIN_DELAY_MS: 0, AGENT_MA
 export async function runPair(a, b, { log = console.log, timeoutMin = 45 } = {}) {
   const old = await Match.findOne({ users: { $all: [a._id, b._id] } });
   if (old) {
-    await Promise.all([Message.deleteMany({ matchId: old._id }), KgFact.deleteMany({ matchId: old._id }), InboxItem.deleteMany({ matchId: old._id }), Usage.deleteMany({ matchId: old._id })]);
+    await Promise.all([Message, KgFact, InboxItem, Usage, ChatEvent, Conversation, MatchDecision].map((M) => M.deleteMany({ matchId: old._id })));
     await old.deleteOne();
   }
   const names = { [a._id]: a.name, [b._id]: b.name };

@@ -180,18 +180,23 @@ const left = {
   users: await db.collection('users').countDocuments({ _id: bId }),
   profiles: await db.collection('profiles').countDocuments({ userId: bId }),
   likes: await db.collection('likes').countDocuments({ $or: [{ fromUserId: bId }, { toUserId: bId }] }),
-  messages: await db.collection('messages').countDocuments({ senderId: bId }),
+  // plan 09 §5: messages stay only in handed-off matches (the other person's real history)
+  messages: await db.collection('messages').countDocuments({ senderId: bId, matchId: { $ne: new mongoose.Types.ObjectId(matchId) } }),
+  chatevents: await db.collection('chatevents').countDocuments({ observerId: bId }),
+  matchdecisions: await db.collection('matchdecisions').countDocuments({ userId: bId }),
 };
-assert.deepEqual(left, { users: 0, profiles: 0, likes: 0, messages: 0 });
+assert.deepEqual(left, { users: 0, profiles: 0, likes: 0, messages: 0, chatevents: 0, matchdecisions: 0 });
+const kept = await db.collection('messages').countDocuments({ senderId: bId, matchId: new mongoose.Types.ObjectId(matchId) });
 const match = await db.collection('matches').findOne({ _id: new mongoose.Types.ObjectId(matchId) });
 assert.equal(match.status, 'closed');
 r = await call('GET', '/matches', { token: A.token });
 assert.equal(r.body.matches.find((m) => m._id === matchId).other.name, 'Deleted user');
-ok('DELETE /me removed user data; match closed and anonymized for the other side');
+ok(`DELETE /me removed user data; match closed and anonymized for the other side (${kept} of their messages kept in the handed-off chat)`);
 
 // --- cleanup
 await call('DELETE', '/me', { token: A.token });
 await call('DELETE', '/me', { token: C.token });
+assert.equal(await db.collection('messages').countDocuments({ matchId: match._id }), 0, 'once both sides are gone, the chat is gone');
 await db.collection('matches').deleteOne({ _id: match._id });
 await mongoose.disconnect();
 for (const s of [sA, sB, sC]) s.close();

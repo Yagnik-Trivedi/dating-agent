@@ -42,6 +42,10 @@ meRouter.delete('/me', async (req, res) => {
   const key = String(me);
   const matches = await Match.find({ users: me });
   const keepHistory = matches.filter((m) => m.status === 'handed_off').map((m) => m._id);
+  // Matches whose other side already deleted their account: nobody needs that history any more.
+  const others = matches.map((m) => m.users.find((u) => String(u) !== key)).filter(Boolean);
+  const alive = new Set((await User.find({ _id: { $in: others } }, { _id: 1 }).lean()).map((u) => String(u._id)));
+  const orphaned = matches.filter((m) => !m.users.some((u) => String(u) !== key && alive.has(String(u)))).map((m) => m._id);
 
   await Promise.all([
     Profile.deleteOne({ userId: me }),
@@ -51,7 +55,7 @@ meRouter.delete('/me', async (req, res) => {
     VoiceSample.deleteMany({ userId: me }),
     VoiceProfile.deleteOne({ userId: me }),
     Like.deleteMany({ $or: [{ fromUserId: me }, { toUserId: me }] }),
-    Message.deleteMany({ senderId: me, matchId: { $nin: keepHistory } }),
+    Message.deleteMany({ $or: [{ senderId: me, matchId: { $nin: keepHistory } }, { matchId: { $in: orphaned } }] }),
     ChatEvent.deleteMany({ observerId: me }),
     MatchDecision.deleteMany({ userId: me }),
     InboxItem.deleteMany({ userId: me }),
