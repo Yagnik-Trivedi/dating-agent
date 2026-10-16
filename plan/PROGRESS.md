@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 16:50 IST, by Claude Code (plan 08 done and merged; waiting for "go" on plan 09)
+- **Last updated:** 2026-10-16 21:30 IST, by Claude Code (waiting for "go" on plan 09; side work 1 (CI) pushed on `side/ci-tests`)
 - **Main-line branch:** `main` (plan 08 merged; plan 09 gets `feat/plan-09-judges` when it starts) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -49,9 +49,9 @@ All plan 08 checks pass: `npm test` 52/52, `agent-check` live, `api-check` 19/19
 3. Map yes → Compatible, unsure → Maybe, no → Not compatible; the match is the lower of the two sides; handoff only on mutual yes.
 4. Carried over from 08: the smart tier (Ultra) often times out on NVIDIA, so the judge needs a fallback tier or a retry, or verdicts degrade to `maybe`.
 
-**Side work (parallel, only while the main line waits at a checkpoint):** none started yet; the checkpoint allows it now. Queue, in order:
+**Side work (parallel, only while the main line waits at a checkpoint):** queue, in order:
 
-1. **CI test workflow** on `side/ci-tests`. Touches only `.github/workflows/ci.yml` (runs `npm test` with the existing `MongoMemoryReplSet`). No app code.
+1. ✅ **CI test workflow** on `side/ci-tests` (`a4751c5`, pushed, not merged). Only `.github/workflows/ci.yml`: Node 22, `npm ci` + `npm test` in `server/`, dummy env (no secrets; `LLM_ENABLED=false`; dummy `MODEL_*` IDs because `createConcept` reads the embed model name), caches the MongoDB binary. Verified locally with exactly that env and no `.env`: 52/52. **Next:** confirm the first GitHub Actions run is green, then merge to `main` on the owner's OK.
 2. **Deploy prep (plan 12)** on `side/deploy-prep`. Touches `render.yaml`, `.github/workflows/keep-alive.yml`, `server/src/keepalive.js` (+ one line in `index.js`), and `DEPLOY.md`. Nothing schema-related.
 3. **README skeleton + "How we use Nemotron + Token Factory"** (plan 13 prep) on `side/readme`.
 4. **Plan 14 dry-run checklist** on `side/nebius-dryrun`: docs only, no key needed.
@@ -97,4 +97,4 @@ This section is kept current, so another session can take over at any moment (fo
 - Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
 - Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
 
-**Last handoff state:** 2026-10-16 16:50 IST. Plan 08 merged to `main`, nothing uncommitted. Next: plan 09 after "go".
+**Last handoff state:** 2026-10-16 21:30 IST. Plan 08 merged to `main`; side work 1 (CI) pushed on `side/ci-tests`, nothing uncommitted. Next: plan 09 after "go"; meanwhile side work 2 (deploy prep).
