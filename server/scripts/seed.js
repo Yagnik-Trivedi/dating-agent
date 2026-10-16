@@ -36,7 +36,7 @@ try {
     );
     await Profile.updateOne({ userId: user._id }, { $set: { userId: user._id, ...p.profile } }, { upsert: true });
     await buildGate(user._id);
-    const hasGraph = await KgFact.exists({ subjectId: user._id, observerId: null, source: 'questionnaire' });
+    const hasGraph = await KgFact.exists({ subjectId: user._id, observerId: null, source: 'questionnaire_choice' }); // v2 graph
     if (hasGraph && !rebuild && user.onboarding.status === 'done') return console.log(`= ${p.profile.name} (${p.email}) already seeded`);
     await User.updateOne({ _id: user._id }, { $set: { 'onboarding.status': 'processing' } });
     try {

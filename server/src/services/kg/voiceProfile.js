@@ -92,3 +92,9 @@ export function computeVoiceProfile(samples, { mirrorsPrior = 0.5, priorWeight =
     },
   };
 }
+
+/** Re-apply the user's corrections after any rebuild ("I never use emojis" must survive re-computation). */
+export function applyCorrections(profile) {
+  if ((profile.neverSay ?? []).includes('emoji')) Object.assign(profile, { emojiPerMessage: 0, topEmojis: [] });
+  return profile;
+}

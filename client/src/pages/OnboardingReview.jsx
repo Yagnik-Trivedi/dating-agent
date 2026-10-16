@@ -20,7 +20,7 @@ export default function OnboardingReview() {
   }, [])
   useEffect(load, [load])
 
-  const facts = useMemo(() => graph?.nodes.filter((n) => !n.center && n.type !== 'trait') ?? [], [graph])
+  const facts = useMemo(() => graph?.nodes.filter((n) => !n.center && !n.hubNode && !['trait', 'voice'].includes(n.type)) ?? [], [graph])
   // reduce, not Object.groupBy: older Safari/Chrome lack it
   const groups = useMemo(() => Object.entries(facts.reduce((acc, f) => ({ ...acc, [f.type]: [...(acc[f.type] ?? []), f] }), {})), [facts])
 

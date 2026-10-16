@@ -10,3 +10,9 @@ export async function embedFacts(facts, { purpose = 'embed-facts', userId } = {}
   const model = embeddingModel();
   return vectors.map((embedding) => ({ embedding, embeddingModel: model }));
 }
+
+/** One fact → { embedding, embeddingModel } (for edits of concept-less facts). */
+export async function factEmbeddingFields(fact, userId) {
+  const [fields] = await embedFacts([fact], { purpose: 'fact-edit-embed', userId });
+  return fields;
+}

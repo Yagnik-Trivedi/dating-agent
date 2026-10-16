@@ -29,7 +29,7 @@ import { tagLanguageHeuristic } from './language.js';
 import { mergeFacts, planResubmit, PROTECTED_SOURCES } from './merge.js';
 import { QUESTIONS } from './questions.js';
 import { questionnaireFacts } from './questionnaireFacts.js';
-import { computeVoiceProfile } from './voiceProfile.js';
+import { applyCorrections, computeVoiceProfile } from './voiceProfile.js';
 
 const LLM_CONCURRENCY = 2; // gentle on the provider's rate limit
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
@@ -168,7 +168,7 @@ export async function buildUserGraph(userId) {
     await VoiceSample.deleteMany({ userId, source: 'onboarding' }, { session });
     if (samples.length) await VoiceSample.insertMany(samples, { session });
     const kept = await VoiceProfile.findOne({ userId }, { corrections: 1, neverSay: 1 }).session(session).lean();
-    const profile = { ...voice, ...style, corrections: kept?.corrections ?? [], neverSay: kept?.neverSay ?? [] };
+    const profile = applyCorrections({ ...voice, ...style, corrections: kept?.corrections ?? [], neverSay: kept?.neverSay ?? [] });
     await VoiceProfile.updateOne({ userId }, { $set: profile }, { upsert: true, session });
     await pruneToCap(KgFact, { subjectId: userId, observerId: null }, KG.MAX_SELF_FACTS, {
       session,
