@@ -1,5 +1,9 @@
-import { KgFact } from '../../models/KgFact.js';
+import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
+import { Profile } from '../../models/Profile.js';
+import { rng, newSeed } from '../../utils/rng.js';
+import { KG } from '../kg/config.js';
+import { passesGate } from '../match/gate.js';
 import { emitToUser } from '../../sockets/io.js';
 import { startConversation } from '../agent/index.js';
 import { buildBriefs } from '../brief/index.js';
@@ -68,7 +72,17 @@ export async function flagMatch(match, flaggerIds, newFlags = []) {
   for (const u of flaggerIds) emitToUser(u, 'trust:flagged', { matchId: String(match._id), flags: trust[String(u)].flags });
 }
 
-/** Step 2 (plan 07): briefs, then an early-dealbreaker verdict (09) or the agent conversation (08). */
+/** One agent conversation for the match: a stored seed + per-side sampled temperature (plan 07 §6, replayable). */
+export async function startConversationDoc(match) {
+  const seed = newSeed();
+  const r = rng(seed);
+  const [lo, hi] = KG.TEMP_RANGE;
+  const agentState = Object.fromEntries(match.users.map((u) => [String(u), { interest: null, lowInterestTurns: 0, turn: 0, toldStoryIds: [], topicsTouched: [], temperature: Math.round((lo + r() * (hi - lo)) * 100) / 100, model: KG.AGENT_MODEL_BY_SIDE?.[String(u)] ?? null }]));
+  const existing = await Conversation.findOne({ matchId: match._id, status: 'active' }).lean();
+  return existing ?? Conversation.create({ matchId: match._id, round: 1 + await Conversation.countDocuments({ matchId: match._id }), seed, agentState });
+}
+
+/** Step 2 (plan 07): briefs (public profile + own graph), the conversation doc, then the agent chat (08). */
 export async function runBrief(match) {
   await setStatus(match, 'briefing');
   const briefs = await buildBriefs(match);
@@ -77,21 +91,27 @@ export async function runBrief(match) {
 
   match.brief = briefs;
   await Match.updateOne({ _id: match._id }, { $set: { brief: briefs } });
-  // The brief's observed facts are the first nodes of each viewer's live graph.
-  for (const u of Object.keys(briefs)) {
-    const facts = await KgFact.find({ matchId: match._id, observerId: u }).lean();
-    emitToUser(u, 'kg:update', { matchId: String(match._id), facts, agenda: briefs[u].agenda });
-  }
-  if (Object.values(briefs).some((b) => b.earlyDealbreaker)) {
-    await setStatus(match, 'evaluating');
-    return queueEvaluation(match, { reason: 'early_dealbreaker' });
-  }
+  for (const u of Object.keys(briefs)) emitToUser(u, 'kg:update', { matchId: String(match._id), facts: [], agenda: briefs[u].agenda });
+  await startConversationDoc(match);
   await setStatus(match, 'agent_chatting');
   return startConversation(match);
 }
 
+/** Gate re-check at match creation (plan 07 §2): answers may have changed since discover. Boolean only, no LLM. */
+export async function gateCheck(match) {
+  const gates = await Profile.find({ userId: { $in: match.users } }, { userId: 1, gate: 1 }).lean();
+  const [a, b] = match.users.map((u) => gates.find((g) => String(g.userId) === String(u))?.gate);
+  if (passesGate(a, b)) return true;
+  await Match.updateOne({ _id: match._id }, { $set: { closedReason: 'gate', 'perUser.$[].agentActive': false } });
+  match.closedReason = 'gate';
+  match.perUser.forEach((p) => { p.agentActive = false; });
+  await setStatus(match, 'closed');
+  return false;
+}
+
 /** Called after a mutual like: trust (06) → brief (07) → agent chat (08). */
 export async function onMatchCreated(match) {
+  if (!(await gateCheck(match))) return;
   if (!(await runTrustCheck(match))) return;
   await runBrief(match);
 }

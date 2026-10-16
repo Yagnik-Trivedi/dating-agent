@@ -13,6 +13,7 @@ const matchSchema = new mongoose.Schema({
   status: { type: String, enum: MATCH_STATUSES, default: 'matched' },
   perUser: [{
     userId: { type: ObjectId, ref: 'User' },
+    name: String, // first name from the public profile, stored at creation: agents/judges never read the other Profile for it
     agentActive: Boolean,
     tookOverAt: Date,
     decision: { type: String, enum: ['continue', 'pass', null], default: null },
@@ -20,7 +21,8 @@ const matchSchema = new mongoose.Schema({
     _id: false,
   }],
   trust: Mixed, // { [userId]: { score, level, flags[] } } (plan 06)
-  brief: Mixed, // { [userId]: { summary, agenda[], openers[], earlyDealbreaker } } (plan 07)
+  brief: Mixed, // { [userId]: { summary, agenda[], openers[], watchouts[] } } (plan 07): nothing about the other user is stored as facts
+  closedReason: { type: String, enum: ['gate', null], default: null }, // 'gate': failed the match-time dealbreaker re-check (no detail)
   agentState: Mixed, // { turnCount, lastAgentAt, stopReason, runningLock } (plan 08)
   report: Mixed, // { [userId]: { verdict, score, reasons[], concerns[], dimensions{}, askYourself[] } } (plan 09)
   lastMessageAt: Date,

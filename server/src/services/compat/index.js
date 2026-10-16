@@ -11,7 +11,7 @@ import { cleanText } from '../agent/guard.js';
 import { cancelReplies } from '../agent/scheduler.js';
 import { sendMessage } from '../chat.js';
 import { chatJSON } from '../llm/client.js';
-import { otherUserId, side } from '../matches.js';
+import { otherUserId, side, nameOf } from '../matches.js';
 import { setStatus } from '../pipeline/index.js';
 import * as windDownPrompt from '../prompts/windDown.js';
 import { scanMessage } from '../trust/rules.js';
@@ -22,10 +22,9 @@ const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'them';
 
 /** One kind closing message from userId's side, in their style. A fixed line if the model fails or says anything risky. */
 export async function windDown(match, userId) {
-  const [user, mine, theirs, count] = await Promise.all([
+  const [user, mine, count] = await Promise.all([
     User.findById(userId, { styleProfile: 1, name: 1 }).lean(),
     Profile.findOne({ userId }, { name: 1 }).lean(),
-    Profile.findOne({ userId: otherUserId(match, userId) }, { name: 1 }).lean(),
     Message.countDocuments({ matchId: match._id }),
   ]);
   const name = firstName(mine?.name ?? user?.name);
@@ -33,7 +32,7 @@ export async function windDown(match, userId) {
   try {
     const out = await chatJSON({
       tier: 'fast', purpose: 'wind-down', userId, matchId: match._id, schema: z.object({ reply: z.string().trim().min(1).max(300) }),
-      messages: windDownPrompt.build({ firstName: name, matchName: firstName(theirs?.name), styleCard: styleCard(user?.styleProfile), hadConversation: count > 0 }),
+      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: styleCard(user?.styleProfile), hadConversation: count > 0 }),
     });
     const draft = cleanText(out.reply, name);
     if (draft && !draft.includes('?') && scanMessage(draft).severity === 0) text = draft;

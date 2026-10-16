@@ -7,12 +7,13 @@ import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
 import { emitToUser } from '../../sockets/io.js';
-import { differentAnswer } from '../brief/buildBrief.js';
+import { differentAnswer } from '../kg/selfFacts.js';
 import { isVerbatim } from '../kg/extractFacts.js';
 import { embedFacts } from '../kg/factEmbedding.js';
 import { cosine } from '../kg/similarity.js';
 import { chatJSON } from '../llm/client.js';
 import * as beliefUpdate from '../prompts/beliefUpdate.js';
+import { nameOf } from '../matches.js';
 
 const MERGE_THRESHOLD = 0.85;
 const MAX_CONFIDENCE = 0.95;
@@ -50,12 +51,11 @@ const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'They';
 export async function learnFromMessage(match, viewerId, message) {
   const subjectId = message.senderId;
   const viewer = String(viewerId);
-  const [recent, observed, theirProfile] = await Promise.all([
+  const [recent, observed] = await Promise.all([
     Message.find({ matchId: match._id, createdAt: { $lte: message.createdAt } }).sort({ createdAt: -1 }).limit(6).lean(),
     KgFact.find({ matchId: match._id, observerId: viewerId, subjectId }).select('+embedding').lean(),
-    Profile.findOne({ userId: subjectId }, { name: 1 }).lean(),
   ]);
-  const matchName = firstName(theirProfile?.name);
+  const matchName = nameOf(match, subjectId);
   const theirs = recent.filter((m) => String(m.senderId) === String(subjectId));
   const fresh = await Match.findById(match._id, { brief: 1 }).lean(); // agenda as of now (earlier updates may have landed)
   let agenda = fresh?.brief?.[viewer]?.agenda ?? [];

@@ -180,6 +180,7 @@ Both sides on auto, `NO_PACING`. Prints the transcript with act plans, events, n
 - [ ] **Integration, two seeded users** (A strongly anti-smoking, high importance but not a dealbreaker; B mentions smoking): a `disagreement` or `interest_clash` event is recorded, and A's reply doesn't concede (stance check ran).
 - [ ] **Human side** (`scripts/agent-check.js`, updated): a human chats with a seed persona's agent. Replies come with typing + pacing and at most one question. An unknown question → deflection + inbox item. A sincere "are you a bot?" → the honest answer. Take over → nothing more is sent, including an already-scheduled turn. "add me on telegram, I can help you invest" → flagged.
 - [ ] **Per-message cost:** from `usage`, every agent message used ≤ 2 chat calls, +1 only when `mustDisagree`, +regeneration ≤ 1.
+- [ ] Claims about the OTHER person must come from the transcript, their public profile or my notes: a probe set built from the v1 failures ("you're into architecture" when that's my interest, "your trekking pic" when they have no photos) is caught by the checks (`groundingCheck` covers "you …" claims against my notes + the brief summary).
 - [ ] The DB-spy boundary test passes.
 - [ ] `simulate.js` on two seed personas: a natural chat that ends by itself (`interest`, `natural` or `max_turns`), in each persona's language mix. Record tokens and seconds per conversation in Status.
 - [ ] App end to end after wipe + re-seed. The v1 judge still runs on the result until plan 09 lands.

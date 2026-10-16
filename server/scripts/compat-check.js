@@ -104,20 +104,13 @@ try {
   const old = await Match.findOne({ users: { $all: [meera._id, kabir._id] } });
   if (old) { await Message.deleteMany({ matchId: old._id }); await old.deleteOne(); }
   await User.updateMany({ _id: { $in: [meera._id, kabir._id] } }, { $set: { agentMode: 'auto' } });
+  // Plan 07: a dealbreaker clash is now caught by the gate at match creation (boolean, no detail, no LLM, no chat).
   const bad = await waitStatus((await createMatch(meera._id, kabir._id))._id, ['closed', 'incompatible', 'flagged_fake']);
-  const mr = bad.report[String(meera._id)];
-  assert.equal(mr.verdict, 'incompatible');
-  assert.equal(mr.dimensions.dealbreakers.score, 0);
-  const winds = await Message.find({ matchId: bad._id }).lean();
-  assert.equal(winds.length, 1, 'exactly one wind-down message');
-  assert.equal(String(winds[0].senderId), String(meera._id));
-  assert.equal(winds[0].authoredBy, 'agent');
-  assert.equal(bad.status, 'closed');
-  console.log(`✓ Meera × Kabir: incompatible (${mr.concerns[0]?.text}); wind-down from Meera's agent: "${winds[0].text}"; closed`);
-  const reopened = await decide(bad._id, meera._id, 'continue');
-  assert.equal(reopened.status, 'maybe');
-  assert.equal(reopened.perUser.find((p) => String(p.userId) === String(meera._id)).agentActive, false);
-  console.log('✓ "Talk anyway" override reopens the match (status maybe, her agent off)');
+  assert.deepEqual([bad.status, bad.closedReason], ['closed', 'gate']);
+  assert.equal(await Message.countDocuments({ matchId: bad._id }), 0, 'no conversation, no wind-down');
+  assert.ok(!bad.report, 'no report: the gate says nothing about why');
+  console.log('✓ Meera × Kabir (her smoking dealbreaker): closed by the gate at match creation, no chat, no report');
+  // "Talk anyway" on an incompatible verdict is re-checked in plan 09 (judge decisions).
   console.log('\nCompatibility checks passed.');
 } finally {
   await flushUsage();

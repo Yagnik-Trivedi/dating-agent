@@ -5,6 +5,7 @@ import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
 import { otherUserId } from '../matches.js';
+import { nameOf } from '../matches.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest-answer rule applies (consent covers AI handling).
 export const AI_QUESTION = /\b(are|r)\s+(you|u)\s+(an?\s+)?(bot|ai|robot|real|human|chatgpt|gpt)\b|talking\s+to\s+(an?\s+)?(bot|ai|robot|machine|chatgpt|real\s+person|human)\b|\b(is\s+this|this\s+is)\s+(an?\s+)?(bot|ai|chatgpt|real\s+person|human)\b|\b(bot|chatgpt|automated)\b[^.!]*\?/i;
@@ -45,16 +46,15 @@ export function styleCard(styleProfile, traits = {}) {
  */
 export async function buildContext(match, userId) {
   const otherId = otherUserId(match, userId);
-  const [user, mine, theirs, self, observed, recent] = await Promise.all([
+  const [user, mine, self, observed, recent] = await Promise.all([
     User.findById(userId, { name: 1, styleProfile: 1 }).lean(),
     Profile.findOne({ userId }, { name: 1 }).lean(),
-    Profile.findOne({ userId: otherId }, { name: 1 }).lean(),
     KgFact.find({ subjectId: userId, observerId: null }).sort({ weight: -1, confidence: -1 }).lean(),
     KgFact.find({ matchId: match._id, observerId: userId, subjectId: otherId, confidence: { $gte: 0.5 } }).sort({ confidence: -1 }).limit(15).lean(),
     Message.find({ matchId: match._id }).sort({ createdAt: -1 }).limit(20).lean(),
   ]);
   const firstName = firstNameOf(mine?.name ?? user?.name);
-  const matchName = firstNameOf(theirs?.name);
+  const matchName = nameOf(match, otherId);
   const traits = Object.fromEntries(self.filter((f) => f.predicate === 'trait').map((f) => [f.object, f.value]));
 
   // Sayable: not private, not a dealbreaker (never mentioned), not a trait; if_asked ones are marked.

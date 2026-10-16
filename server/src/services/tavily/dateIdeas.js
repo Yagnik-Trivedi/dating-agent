@@ -3,6 +3,7 @@ import { tavily } from '@tavily/core';
 import { z } from 'zod';
 import { env } from '../../config/env.js';
 import { Profile } from '../../models/Profile.js';
+import { KgFact } from '../../models/KgFact.js';
 import { SearchCache } from '../../models/SearchCache.js';
 import { httpError } from '../../utils/http.js';
 import { chatJSON } from '../llm/client.js';
@@ -22,10 +23,13 @@ async function tavilySearch(query) {
 /** The search query for a viewer: "<interest> and <interest> spots for a first date in <city>". */
 export async function dateQuery(match, viewerId) {
   const viewer = String(viewerId);
-  const [mine, theirs] = await Promise.all([Profile.findOne({ userId: viewer }).lean(), Profile.findOne({ userId: otherUserId(match, viewer) }).lean()]);
-  const city = mine?.city && theirs?.city && mine.city.toLowerCase() !== theirs.city.toLowerCase() ? `${mine.city} or ${theirs.city}` : (mine?.city || theirs?.city || 'India');
-  const shared = (match.brief?.[viewer]?.overlaps ?? []).map((o) => o.topic);
-  const interests = (shared.length ? shared : mine?.tags?.interests ?? []).slice(0, 2);
+  // Only my own data (plan 07/09 boundary): my city + what my agent's notes say they like, from the transcript.
+  const [mine, notes] = await Promise.all([
+    Profile.findOne({ userId: viewer }, { city: 1, tags: 1 }).lean(),
+    KgFact.find({ matchId: match._id, observerId: viewer, predicate: 'likes', polarity: { $ne: -1 } }, { object: 1, confidence: 1 }).sort({ confidence: -1 }).limit(2).lean(),
+  ]);
+  const city = mine?.city || 'India';
+  const interests = (notes.length ? notes.map((n) => n.object) : mine?.tags?.interests ?? []).slice(0, 2);
   return { city, interests, query: `${interests.join(' and ') || 'cafes and walks'} spots for a first date in ${city}`.toLowerCase() };
 }
 

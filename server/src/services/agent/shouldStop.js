@@ -3,14 +3,11 @@
 import { env } from '../../config/env.js';
 import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
-import { Profile } from '../../models/Profile.js';
-import { findClash, selfFacts } from '../brief/buildBrief.js';
 
 // Agenda-complete never stops a chat this short: 12–24 messages reads as a natural first conversation.
 export const MIN_MESSAGES_FOR_AGENDA_STOP = 12;
 const AGENDA_PRIORITY = 0.5;
 const KNOWN = 0.75;
-const CLASH_CONFIDENCE = 0.7;
 
 /** An agenda is done when every item with priority ≥ 0.5 is answered or known with confidence ≥ 0.75. */
 export const agendaDone = (agenda = []) => agenda
@@ -26,12 +23,7 @@ export async function shouldStop(matchId, { viewerId, touched = [] } = {}) {
   if (!match || match.status !== 'agent_chatting') return null;
   if (count >= env.AGENT_MAX_TURNS) return { reason: 'max_turns' };
 
-  const strong = touched.filter((f) => f.confidence >= CLASH_CONFIDENCE);
-  if (viewerId && strong.length) {
-    const self = await selfFacts(viewerId, await Profile.findOne({ userId: viewerId }, { dealbreakers: 1 }).lean());
-    const clash = await findClash({ self, observed: strong, viewerId, matchId, minConfidence: CLASH_CONFIDENCE, top: 2 });
-    if (clash) return { reason: 'dealbreaker', detail: { viewerId: String(viewerId), ...clash } };
-  }
+  // v1 compared notes with my dealbreakers by embedding here; removed in plan 07 (the gate + plan 08's dealbreaker_hint).
 
   // Every side whose agent is still active has what it needs (a human side doesn't need the agenda).
   const active = match.perUser.filter((p) => p.agentActive).map((p) => String(p.userId));

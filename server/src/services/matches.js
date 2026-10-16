@@ -14,6 +14,8 @@ export { PUBLIC_PROFILE, PUBLIC_PROJECTION } from '../models/Profile.js';
 
 export const side = (match, userId) => match.perUser.find((p) => String(p.userId) === String(userId));
 export const otherUserId = (match, userId) => match.users.find((u) => String(u) !== String(userId));
+/** A user's display name as stored on the match at creation (agents never read the other Profile for it). */
+export const nameOf = (match, userId) => match.perUser?.find((p) => String(p.userId) === String(userId))?.name ?? 'They';
 
 /** The match if `userId` is in it, else 404 (also for bad ids, so membership isn't leaked). */
 export async function getMatchFor(matchId, userId) {
@@ -38,6 +40,7 @@ export async function matchListItem(match, viewerId) {
   return {
     _id: match._id,
     status: statusFor(match, viewerId),
+    closedReason: match.closedReason ?? null,
     createdAt: match.createdAt,
     lastMessageAt: match.lastMessageAt ?? null,
     agentActive: mine?.agentActive ?? false,
@@ -56,6 +59,7 @@ export async function matchDetail(match, viewerId) {
   return {
     _id: match._id,
     status: statusFor(match, viewerId),
+    closedReason: match.closedReason ?? null,
     createdAt: match.createdAt,
     agentActive: mine?.agentActive ?? false,
     tookOverAt: mine?.tookOverAt ?? null,
@@ -75,14 +79,18 @@ export async function createMatch(userA, userB) {
   const existing = await Match.findOne({ pairKey });
   if (existing) return existing;
 
-  const people = await User.find({ _id: { $in: users } }, { agentMode: 1 }).lean();
+  const [people, profiles] = await Promise.all([
+    User.find({ _id: { $in: users } }, { agentMode: 1, name: 1 }).lean(),
+    Profile.find({ userId: { $in: users } }, { userId: 1, name: 1 }).lean(),
+  ]);
   const modeOf = (id) => people.find((u) => String(u._id) === id)?.agentMode ?? 'off';
+  const firstName = (id) => String(profiles.find((p) => String(p.userId) === id)?.name ?? people.find((u) => String(u._id) === id)?.name ?? '').trim().split(/\s+/)[0] || 'They';
   let match;
   try {
     match = await Match.create({
       users,
       pairKey,
-      perUser: users.map((userId) => ({ userId, agentActive: modeOf(userId) !== 'off', decision: null })),
+      perUser: users.map((userId) => ({ userId, name: firstName(userId), agentActive: modeOf(userId) !== 'off', decision: null })),
     });
   } catch (err) {
     if (err.code === 11000) return Match.findOne({ pairKey }); // both liked at the same moment

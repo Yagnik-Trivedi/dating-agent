@@ -4,11 +4,11 @@ import { items } from '../../utils/zodItems.js';
 import { KgFact } from '../../models/KgFact.js';
 import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
-import { selfFacts } from '../brief/buildBrief.js';
+import { selfFacts } from '../kg/selfFacts.js';
 import { cosine } from '../kg/similarity.js';
 import { styleMetrics } from '../kg/styleProfile.js';
 import { chatJSON } from '../llm/client.js';
-import { otherUserId } from '../matches.js';
+import { nameOf, otherUserId } from '../matches.js';
 import * as alignment from '../prompts/alignment.js';
 import * as icebreakersPrompt from '../prompts/icebreakers.js';
 import * as verdictPrompt from '../prompts/verdict.js';
@@ -125,20 +125,19 @@ export async function evaluateFor(match, viewerId) {
   const viewer = String(viewerId);
   const otherId = otherUserId(match, viewer);
   const matchId = match._id;
-  const [viewerProfile, theirProfile, observed, messages] = await Promise.all([
+  const [viewerProfile, observed, messages] = await Promise.all([
     Profile.findOne({ userId: viewer }).lean(),
-    Profile.findOne({ userId: otherId }, { name: 1 }).lean(),
     KgFact.find({ matchId, observerId: viewer, subjectId: otherId }).select('+embedding').lean(),
     Message.find({ matchId }).sort({ createdAt: 1 }).lean(),
   ]);
-  const self = await selfFacts(viewer, viewerProfile);
+  const self = await selfFacts(viewer);
   const traits = Object.fromEntries(self.filter((f) => f.predicate === 'trait').map((f) => [f.object, f.value]));
   const brief = match.brief?.[viewer];
-  const [userName, matchName] = [firstName(viewerProfile?.name), firstName(theirProfile?.name)];
+  const [userName, matchName] = [firstName(viewerProfile?.name), nameOf(match, otherId)];
 
   // Hard gate: a dealbreaker clash found before (plan 07) or during (plan 08) the conversation.
   const stop = match.agentState?.stopReason === 'dealbreaker' && match.agentState.stopDetail?.viewerId === viewer ? match.agentState.stopDetail : null;
-  const clash = brief?.earlyDealbreaker ?? stop;
+  const clash = stop;
 
   messages.forEach((m, i) => { m.prevAt = messages[i - 1]?.createdAt; });
   const mine = messages.filter((m) => String(m.senderId) === viewer);

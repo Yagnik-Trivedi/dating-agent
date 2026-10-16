@@ -4,6 +4,7 @@
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
 import '../src/models/Concept.js';
+import '../src/models/Conversation.js';
 import '../src/models/EmbCache.js';
 import '../src/models/InboxItem.js';
 import '../src/models/Job.js';
@@ -37,7 +38,8 @@ const EXPECTED = {
   kgtombstones: [{ key: { subjectId: 1, key: 1 }, unique: true }],
   voicesamples: [{ key: { userId: 1, createdAt: 1 } }],
   voiceprofiles: [{ key: { userId: 1 }, unique: true }],
-  messages: [{ key: { matchId: 1, createdAt: -1 } }, { key: { archiveAt: 1 }, ttl: true }],
+  messages: [{ key: { matchId: 1, createdAt: -1 } }, { key: { conversationId: 1, createdAt: 1 } }, { key: { archiveAt: 1 }, ttl: true }],
+  conversations: [{ key: { matchId: 1, round: 1 }, unique: true }, { key: { archiveAt: 1 }, ttl: true }],
   jobs: [{ key: { status: 1, runAt: 1 } }, { key: { dedupeKey: 1 }, unique: true }, { key: { finishedAt: 1 }, ttl: true }],
 };
 

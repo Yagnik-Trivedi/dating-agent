@@ -4,6 +4,7 @@ const { ObjectId } = mongoose.Schema.Types;
 
 const messageSchema = new mongoose.Schema({
   matchId: { type: ObjectId, ref: 'Match', required: true },
+  conversationId: { type: ObjectId, ref: 'Conversation', default: null },
   senderId: { type: ObjectId, ref: 'User', required: true }, // for agent messages: the user the agent speaks for
   authoredBy: { type: String, enum: ['human', 'agent'], required: true },
   text: { type: String, required: true, maxlength: 1000 },
@@ -16,6 +17,7 @@ const messageSchema = new mongoose.Schema({
 }, { timestamps: { createdAt: true, updatedAt: false }, versionKey: false });
 
 messageSchema.index({ matchId: 1, createdAt: -1 });
+messageSchema.index({ conversationId: 1, createdAt: 1 });
 messageSchema.index({ archiveAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Message = mongoose.model('Message', messageSchema);

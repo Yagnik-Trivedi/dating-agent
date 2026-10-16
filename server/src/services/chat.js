@@ -1,4 +1,5 @@
 import { Match } from '../models/Match.js';
+import { Conversation } from '../models/Conversation.js';
 import { Message } from '../models/Message.js';
 import { emitToUser } from '../sockets/io.js';
 import { httpError } from '../utils/http.js';
@@ -26,7 +27,8 @@ export async function sendMessage({ match, senderId, authoredBy, text, meta }) {
   if (clean.length > MAX_MESSAGE_LENGTH) throw httpError(400, 'VALIDATION', `Message exceeds ${MAX_MESSAGE_LENGTH} characters`);
   if (['closed', 'flagged_fake'].includes(match.status)) throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
 
-  const message = await Message.create({ matchId: match._id, senderId, authoredBy, text: clean, meta });
+  const conversation = await Conversation.findOne({ matchId: match._id, status: 'active' }, { _id: 1 }).lean();
+  const message = await Message.create({ matchId: match._id, conversationId: conversation?._id ?? null, senderId, authoredBy, text: clean, meta });
   await Match.updateOne({ _id: match._id }, { $set: { lastMessageAt: message.createdAt } });
   for (const uid of match.users) {
     emitToUser(uid, 'message:new', { message: serializeMessage(message, uid, match.status) });
