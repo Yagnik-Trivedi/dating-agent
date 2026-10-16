@@ -62,8 +62,8 @@ test('reply language: never outside my mix; mirrors at the configured rate', () 
   }
   let mirrored = 0;
   for (let i = 0; i < 1000; i++) if (pickLanguage({ mix: { en: 0.8, hi_latn: 0.2 }, mirrorsLanguage: 0.8 }, ['hi_latn'], r).primary === 'hi_latn') mirrored++;
-  // P(hi) = 0.8 (mirror) + 0.2 × 0.2 (sampled anyway) = 0.84
-  assert.ok(Math.abs(mirrored / 1000 - 0.84) < 0.05, `mirrored ${mirrored}/1000`);
+  // hi weighted up by 1 + 2 × 0.8 = 2.6: P(hi) = 0.52 / (0.52 + 0.8) ≈ 0.39 (more than the mix's 0.2, but no runaway)
+  assert.ok(Math.abs(mirrored / 1000 - 0.39) < 0.05, `mirrored ${mirrored}/1000`);
 });
 
 test('steering: after the warm-up, every other turn names my next open agenda topic', () => {

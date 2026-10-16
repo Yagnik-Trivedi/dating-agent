@@ -83,3 +83,11 @@ test('an invented clause is caught even when the rest of the sentence is grounde
   });
   assert.ok(r.unsupported.some((c) => c.includes('since i was a kid')) && r.drop.length === 1);
 });
+
+test('style: a draft opening like a recent message is rejected', () => {
+  const plan = { targetWords: 12, burst: 1, language: { primary: 'hi_latn', codeSwitch: true } };
+  const voice = { language: { mix: { en: 0.7, hi_latn: 0.3 } } };
+  const p = styleCheck('Arre yaar, startup life sounds fun', plan, voice, ['Arre yaar, CrossFit and comedy nights?']);
+  assert.ok(p.some((x) => x.startsWith('starts like a recent message')), p.join('; '));
+  assert.ok(!styleCheck('haha startup life sounds fun', plan, voice, ['Arre yaar, CrossFit?']).some((x) => x.startsWith('starts like')));
+});

@@ -49,6 +49,9 @@ export function styleCheck(text, plan, voice = {}, recentTexts = []) {
   const mix = voice.language?.mix ?? { en: 1 };
   if (usesHindi && !mix.hi_latn && !mix.hi) problems.push('uses Hindi words, which this person never uses');
   if (usesHindi && plan.language?.primary === 'en' && !plan.language.codeSwitch) problems.push('the plan says English only this time');
+  // Same first two words as a recent message ("Arre yaar, …" ×13 in sim h): vary how messages start.
+  const start = (t) => words(ascii(t)).slice(0, 2).join(' ').toLowerCase();
+  if (words(text).length >= 3 && recentTexts.some((t) => start(t) === start(text))) problems.push(`starts like a recent message ("${start(text)}"); open differently`);
   const echo = echoOf(text, recentTexts);
   if (echo) problems.push(`repeats earlier phrasing ("${echo}")`);
   // Reordered mirroring ("sunrise trek to sinhagad then misal" → "sinhagad sunrise trek then misal") slips past the

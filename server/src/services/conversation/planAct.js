@@ -13,18 +13,18 @@ function pickWeighted(dist, rng) {
 }
 
 /**
- * Reply language (replaces the v1 Hinglish guard): mirror the incoming language with probability mirrorsLanguage, but
- * only into languages I actually use; otherwise sample my mix. Code-switch at my rate, more in my trigger moods.
+ * Reply language (replaces the v1 Hinglish guard): sample my mix, with languages they just used (and I use) weighted up
+ * by (1 + 2 × mirrorsLanguage). A hard "mirror with probability p" looped: two 70%-English users both drifted into
+ * all-Hinglish (sim h, 9/13 replies). Code-switch at my rate, more in my trigger moods.
  */
 export function pickLanguage(language = {}, incoming = [], rng, mood = null) {
   const mix = Object.keys(language.mix ?? {}).length ? language.mix : { en: 1 };
   const mine = Object.keys(mix).filter((l) => mix[l] > 0);
-  const dominant = mine.sort((a, b) => mix[b] - mix[a])[0];
-  const foreign = incoming.find((l) => l !== dominant && mine.includes(l));
-  const primary = foreign && rng() < (language.mirrorsLanguage ?? 0.5) ? foreign : pickWeighted(mix, rng);
-  const boost = mood && (language.switchTriggers ?? []).includes(mood) ? 1.5 : 1;
+  const boost = 1 + 2 * (language.mirrorsLanguage ?? 0.5);
+  const primary = pickWeighted(Object.fromEntries(mine.map((l) => [l, mix[l] * (incoming.includes(l) ? boost : 1)])), rng);
+  const moodBoost = mood && (language.switchTriggers ?? []).includes(mood) ? 1.5 : 1;
   const others = mine.filter((l) => l !== primary);
-  const codeSwitch = others.length > 0 && rng() < Math.min(1, (language.codeSwitchRate ?? 0) * boost);
+  const codeSwitch = others.length > 0 && rng() < Math.min(1, (language.codeSwitchRate ?? 0) * moodBoost);
   return { primary, secondary: codeSwitch ? pickWeighted(Object.fromEntries(others.map((l) => [l, mix[l]])), rng) : null, codeSwitch };
 }
 
