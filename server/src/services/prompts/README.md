@@ -19,3 +19,4 @@ Prompt text lives here only, never inline in business logic. Every JSON output i
 | `icebreakers.js` | 3 conversation starters for after the handoff, using the match's name | fast | `{ icebreakers: [] }` | `compat/evaluate.js` |
 | `windDown.js` | One kind closing message in the user's style (incompatible verdict or Pass) | fast | `{ reply }` (fixed line if it has a question or a risky phrase) | `compat/index.js` |
 | `dateIdeas.js` | Tavily results → 3 first-date ideas tied to shared interests | fast | `{ ideas: [{ title, why, link }] }` (links not in the results are dropped) | `tavily/dateIdeas.js` |
+| `generatePersona.js` | Offline only: the voice of a seed persona whose values, interests and dealbreakers are fixed in code (bio, prompts, stories, texting samples, Big Five sketch); variants for mild inconsistency, thin and scam profiles | mid, reasoning off | `{ bio, prompts, stories, samples, personality }` | `scripts/generate-personas.js` |

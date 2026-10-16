@@ -17,6 +17,7 @@ const schema = z.object({
   MONGODB_URI: field(z.string({ error: 'MONGODB_URI is required' }).trim()),
   JWT_SECRET: field(z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters')),
   ADMIN_TOKEN: optional,
+  SEED_PASSWORD: optional, // shared login for seed personas (scripts/seed.js); never committed
 
   // LLM provider: Nebius Token Factory (final) or NVIDIA build.nvidia.com (temporary). Same variables, env-only switch.
   LLM_PROVIDER: field(z.enum(['nvidia', 'nebius']).default('nebius')), // logging + README notes only

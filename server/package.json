@@ -14,7 +14,8 @@
     "api-check": "node scripts/api-check.js",
     "seed": "node scripts/seed.js",
     "simulate": "node scripts/simulate.js",
-    "eval": "node scripts/eval.js"
+    "eval": "node scripts/eval.js",
+    "generate-personas": "node scripts/generate-personas.js"
   },
   "dependencies": {
     "@tavily/core": "^0.7.14",

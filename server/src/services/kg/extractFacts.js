@@ -27,7 +27,8 @@ export const isVerbatim = (quote, text) => norm(quote).length >= 3 && norm(text)
 export async function extractFacts({ question, answer, userId, source, confidence, purpose = 'extract-story-facts' }) {
   const text = String(answer ?? '').trim();
   if (!text) return { facts: [], dropped: 0 };
-  const out = await chatJSON({ tier: 'mid', messages: extractStoryFacts.build({ question, answer: text }), schema, purpose, userId });
+  // Reasoning off: literal extraction (quotes are verified below); with reasoning it timed out at 120 s on NVIDIA.
+  const out = await chatJSON({ tier: 'mid', reasoning: false, messages: extractStoryFacts.build({ question, answer: text }), schema, purpose, userId });
 
   const kept = out.facts.filter((f) => isVerbatim(f.quote, text)).slice(0, MAX_FACTS);
   const facts = kept.map((f) => ({

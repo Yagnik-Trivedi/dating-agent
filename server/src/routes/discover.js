@@ -25,6 +25,19 @@ discoverRouter.get('/discover', async (req, res) => {
   res.json({ profiles });
 });
 
+// Demo: a seed persona likes every real user who likes them, after a short human-looking pause (2–8 s).
+// ponytail: in-process timer, a restart in those seconds drops the like-back; fine for a demo.
+function seedLikesBack(seedId, userId) {
+  setTimeout(async () => {
+    try {
+      await Like.updateOne({ fromUserId: seedId, toUserId: userId }, { $set: { liked: true } }, { upsert: true });
+      await createMatch(seedId, userId);
+    } catch (err) {
+      console.error(`seed like-back failed: ${err.message}`);
+    }
+  }, 2000 + Math.random() * 6000);
+}
+
 discoverRouter.post('/likes', async (req, res) => {
   const { toUserId, liked } = parse(z.object({ toUserId: objectId, liked: z.boolean() }), req.body);
   const me = req.user._id;
@@ -33,7 +46,10 @@ discoverRouter.post('/likes', async (req, res) => {
 
   await Like.updateOne({ fromUserId: me, toUserId }, { $set: { liked } }, { upsert: true });
   const mutual = liked && await Like.exists({ fromUserId: toUserId, toUserId: me, liked: true });
-  if (!mutual) return res.json({ matched: false });
+  if (!mutual) {
+    if (liked && !req.user.isSeed && await User.exists({ _id: toUserId, isSeed: true })) seedLikesBack(toUserId, me);
+    return res.json({ matched: false });
+  }
 
   const match = await createMatch(me, toUserId);
   res.json({ matched: true, matchId: match._id });
