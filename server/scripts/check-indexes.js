@@ -40,6 +40,7 @@ const EXPECTED = {
   voiceprofiles: [{ key: { userId: 1 }, unique: true }],
   messages: [{ key: { matchId: 1, createdAt: -1 } }, { key: { conversationId: 1, createdAt: 1 } }, { key: { archiveAt: 1 }, ttl: true }],
   conversations: [{ key: { matchId: 1, round: 1 }, unique: true }, { key: { archiveAt: 1 }, ttl: true }],
+  chatevents: [{ key: { conversationId: 1, observerId: 1 } }, { key: { archiveAt: 1 }, ttl: true }],
   jobs: [{ key: { status: 1, runAt: 1 } }, { key: { dedupeKey: 1 }, unique: true }, { key: { finishedAt: 1 }, ttl: true }],
 };
 
