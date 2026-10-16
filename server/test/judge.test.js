@@ -47,12 +47,11 @@ test('empty frictions need a justification', () => {
   assert.deepEqual(validateDecision(parse({ noFrictionJustification: 'Everything that matters lined up.' }), { transcript }).problems, []);
 });
 
-test('a dealbreaker_hint event without dealbreakerRisk → re-ask; and never an automatic yes', () => {
+test('a dealbreaker_hint event without dealbreakerRisk → re-ask', () => {
   const hints = [{ type: 'dealbreaker_hint', label: 'smoking: socially', quote: 'I smoke a bit on treks' }];
   const out = parse({ noFrictionJustification: 'ok' });
   const { value, problems } = validateDecision(out, { transcript, hints });
   assert.ok(problems.some((p) => p.includes('dealbreakerRisk is empty')));
-  assert.equal(value.decision, 'unsure');
   const ok = validateDecision(parse({ decision: 'no', dealbreakerRisk: [{ attribute: 'smoking', quote: 'I smoke a bit on treks' }], frictions: [{ quote: 'I smoke a bit on treks', why: 'x' }] }), { transcript, hints });
   assert.deepEqual(ok.problems, []);
   assert.equal(ok.value.decision, 'no');

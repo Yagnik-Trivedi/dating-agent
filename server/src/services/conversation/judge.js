@@ -74,7 +74,6 @@ export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDG
 
   let { decision } = out;
   if (decision === 'yes' && out.confidence < yesMin) decision = 'unsure';
-  if (decision === 'yes' && hints.length) decision = 'unsure'; // a dealbreaker came up: never an automatic yes
   return {
     value: { ...out, decision, positives, frictions, dealbreakerRisk, noFrictionJustification: frictions.length ? null : justification },
     problems, dropped,
@@ -83,7 +82,7 @@ export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDG
 
 /** Smart tier (JUDGE_MODEL if set) at t=0; if it's unavailable, mid with reasoning off. → { out, model } */
 async function callJudge({ messages, userId, matchId, purpose, prefer }) {
-  const smart = { tier: 'smart', model: KG.JUDGE_MODEL ?? undefined, retries: 1 };
+  const smart = { tier: 'smart', model: KG.JUDGE_MODEL ?? undefined, retries: 0 }; // one 180 s attempt: the mid fallback covers Ultra's free-tier timeouts
   const mid = { tier: 'mid', reasoning: false };
   for (const opt of prefer ? [prefer] : [smart, mid]) {
     try {
