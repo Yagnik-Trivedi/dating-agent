@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 15:35 IST, by Claude Code (plan 08: language + same-start fixes; re-running the Hinglish sim)
+- **Last updated:** 2026-10-16 15:55 IST, by Claude Code (plan 08: Hinglish sim passes; agent-check running)
 - **Main-line branch:** `feat/plan-08-engine` (plan 08 WIP) · **main:** `916f89d` (plans 02–07 + 17 done)
 - **Last commit (main line):** `a38dc7d` on `feat/plan-08-engine`
 
@@ -44,13 +44,14 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 - Simulation g (Meera × Ishaan) ran 12 natural messages: grounded opener, steering to looking-for / smoking / kids / location, honest answers. Then the fast-tier stance check timed out 3× and the reply failed, so the run was stopped.
 - **Done:** the stance check now fails open (`7ec810c`): on an LLM error it logs and keeps the draft. `npm test` 51/51.
 - **Next** (continue from the first unchecked item):
-  1. [~] Hinglish pair `node scripts/simulate.js seed13@demo.local seed14@demo.local` (Pooja × Rohit, both ~70% English).
+  1. [x] Hinglish pair `node scripts/simulate.js seed13@demo.local seed14@demo.local` (Pooja × Rohit, both ~70% English).
      - Run h: natural end at 13 messages, 70.8k tokens / 46 calls (~12 min), 1 stance timeout handled.
      - Run h bugs, fixed in `a38dc7d`: mirroring looped into 9/13 Hinglish replies (now it weights the mix), and every message started "Arre yaar" (now a hard check).
-     - **Re-run i is pending:** check each message's `actPlan.language` in Mongo against the mix (about 30–40% `hi_latn` primary) and that openings vary.
+     - Re-run i passes: mostly English with Hinglish touches (`Arre yaar` in 3/14), varied openings, natural end at 14 messages, 76k tokens / 50 calls.
+     - Cosmetic leftovers: one neutral fallback ("ha that makes sense") and short echo questions ("Chai after a WOD?").
      - Also seen: both verdicts came back "maybe" because the smart tier (Ultra) timed out. That's the v1 judge, which plan 09 replaces.
   2. [ ] A fresh `simulate.js seed01@demo.local seed04@demo.local`: record end reason, tokens and time.
-  3. [ ] `node scripts/agent-check.js` live (written, never run): inbox question, honest bot answer, anti-smoking stance, take over, scam flag, ≤ 2 calls + stance + 1 regen per message, DB-spy boundary. Fix failures.
+  3. [~] `node scripts/agent-check.js` live (first run in progress; written, never run before): inbox question, honest bot answer, anti-smoking stance, take over, scam flag, ≤ 2 calls + stance + 1 regen per message, DB-spy boundary. Fix failures.
   4. [ ] `npm test`, `node scripts/check-indexes.js` (add the `chatevents` indexes to EXPECTED), then with `npm run dev` running: `npm run api-check`, `node scripts/seed-check.js`.
   5. [ ] CLAUDE.md Status line for 08. Deviations to record: T_ASKED 0.45 / T_LEAK 0.62; hard vs soft style checks; steering every other turn with the instruction placed last; ask-back floor 0.7; MEETING / mirror checks; top-3 relevant facts guaranteed; opener ≤ 3 sentences / 40 words; stance check fails open. Known gaps: a claim citing a fact but stating a different value; evasive hedges ("still figuring that out").
   6. [ ] Merge `feat/plan-08-engine` → `main` as `feat(plan-08): ...`, push, then plan 09.
@@ -104,4 +105,4 @@ This section is kept current, so another session can take over at any moment (fo
 - Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
 - Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
 
-**Last handoff state:** 2026-10-16 15:35 IST (owner's usage nearly exhausted). Plan 08 WIP is pushed on `feat/plan-08-engine`. No background jobs need to survive; the local dev DB can be recreated with `npm run dev-db` + `npm run seed`.
+**Last handoff state:** 2026-10-16 15:55 IST (owner's usage nearly exhausted). Plan 08 WIP is pushed on `feat/plan-08-engine`. No background jobs need to survive; the local dev DB can be recreated with `npm run dev-db` + `npm run seed`.
