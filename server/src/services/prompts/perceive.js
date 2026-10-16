@@ -19,7 +19,7 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         '- "lowEffort": a minimal reply ("ok", "lol", one word) that adds nothing. "humor": they joke. "warmth": friendly/affectionate.',
         '- "acknowledgesDifference": they accept a difference of opinion without either side giving in ("agree to disagree").',
         `- "answeredMyQuestion": ${myName}'s last message asked a question and they answered it (true), ignored it (false), or there was no question (null).`,
-        `- "dealbreakerHint": the attribute their message reveals (from the list), if any, else null.`,
+        `- "dealbreakerHint": the attribute their message reveals about THEMSELVES (from the list), if any, else null. A question they ask ("do you smoke?", "do you want kids someday?") reveals nothing about them: null, and no claim.`,
         '- "language": languages used (ISO 639-1; add "_latn" for romanised Hindi/Gujarati/…: "hi_latn"), script, codeSwitch.',
         '- "mood": one of greeting, curious, opinion, excited, disagree, plan, apologetic, tease, closing, long_reply, casual.',
         `- "notes": facts about ${theirName} learned from these messages. "quote" must be copied EXACTLY from their message.`,
