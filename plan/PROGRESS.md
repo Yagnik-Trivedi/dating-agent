@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 23:30 IST, by Claude Code (plan 09: live checks running; local wipe + re-seed in progress)
+- **Last updated:** 2026-10-17 00:25 IST, by Claude Code (plan 09: live checks running; simulate re-run after a judge fix)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -47,9 +47,10 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 
 **Next:**
 1. ✅ `server/.env` added by the owner (NVIDIA key; smoke test OK). Its `MONGODB_URI` is Atlas, so every check overrides it inline with the local dev-db URI.
-2. Live on NVIDIA (dev-db, wipe + re-seed): `node scripts/simulate.js seed01@demo.local seed04@demo.local` (designed compatible → both yes), then `node scripts/judge-check.js`, `seed-check`, `agent-check`; tune `JUDGE_YES_MIN` only if the compatible pair lands on unsure.
-3. CLAUDE.md Status line for plan 09, final commit `feat(plan-09): …`, merge to `main`, stop for "go".
-4. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
+2. ✅ Wipe + re-seed on the local dev-db: 30/30 graphs in 1,720 s. ✅ First live `simulate` (Meera × Ishaan, `78f…`→ see `796cc82`): judges ran end to end (Ultra timed out → Super fallback recorded; verbatim receipts; one re-ask for a missing dealbreakerRisk; settle → lower side), 14 messages, ~80k tokens / 55 calls, **but unsure/unsure → maybe** (expected both yes). Causes: Meera's judge took his *question* "do you ever smoke…?" as smoking evidence; Ishaan's was capped by a perceive misreading ("not sure yet… family someday" → a `looking_for` dealbreaker hint) plus my "hint = never yes" rule. Fixed in `796cc82` (evidence = their own statements; hints still require dealbreakerRisk but the judge decides; one 180 s Ultra attempt before the fallback). Re-run in progress.
+3. Live on NVIDIA (dev-db, wipe + re-seed): `node scripts/simulate.js seed01@demo.local seed04@demo.local` (designed compatible → both yes), then `node scripts/judge-check.js`, `seed-check`, `agent-check`; tune `JUDGE_YES_MIN` only if the compatible pair lands on unsure.
+4. CLAUDE.md Status line for plan 09, final commit `feat(plan-09): …`, merge to `main`, stop for "go".
+5. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
 
 **Side work (parallel, only while the main line waits at a checkpoint):** queue, in order:
 
