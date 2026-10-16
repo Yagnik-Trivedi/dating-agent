@@ -45,6 +45,7 @@ kgFactSchema.index({ subjectId: 1, observerId: 1, predicate: 1, conceptId: 1 });
 kgFactSchema.index({ subjectId: 1, observerId: 1, attribute: 1 });
 kgFactSchema.index({ observerId: 1, conversationId: 1 });
 kgFactSchema.index({ matchId: 1 });
+kgFactSchema.index({ isCurrent: 1, lastConfirmed: 1 }, { partialFilterExpression: { isCurrent: true } }); // reconfirm job
 kgFactSchema.index({ archiveAt: 1 }, { expireAfterSeconds: 0 });
 
 export const KgFact = mongoose.model('KgFact', kgFactSchema);

@@ -8,6 +8,7 @@ import { resolveConcept } from '../services/kg/canonicalize.js';
 import { extractFacts } from '../services/kg/extractFacts.js';
 import { embedFacts } from '../services/kg/factEmbedding.js';
 import { tagLanguageHeuristic } from '../services/kg/language.js';
+import { noteSelfFacts, noteVoiceSample } from '../services/kg/learning.js';
 import { embed, embeddingModel } from '../services/llm/client.js';
 import { httpError, objectId, parse } from '../utils/http.js';
 
@@ -35,6 +36,7 @@ export async function learnFromAnswer(item) {
   const saved = docs.length ? await KgFact.insertMany(docs) : [];
   await VoiceSample.create({ userId: item.userId, incoming: item.question, text: item.answer, source: 'inbox', mood: 'casual', lang: tagLanguageHeuristic(item.answer), embedding: vector, embeddingModel: embeddingModel() });
   await User.updateOne({ _id: item.userId }, { $inc: { graphVersion: 1 } });
+  await Promise.all([noteVoiceSample(item.userId), noteSelfFacts(item.userId)]);
   return saved;
 }
 

@@ -5,6 +5,7 @@ import { resumeConversations } from '../agent/index.js';
 import { runAgentTurn } from '../agent/scheduler.js';
 import { startEvaluation } from '../compat/index.js';
 import { runUserGraphBuild } from '../kg/buildUserGraph.js';
+import { conceptCleanup, rebuildVoice, reconfirm, reflect } from '../kg/learning.js';
 import { createMatch } from '../matches.js';
 import { runMatchCreated } from '../pipeline/index.js';
 import { archiveNotes } from './archive.js';
@@ -24,3 +25,7 @@ registerJob('seedLikeBack', async ({ seedId, userId }) => {
   await createMatch(seedId, userId);
 });
 registerJob('archiveNotes', archiveNotes);
+registerJob('rebuildVoice', rebuildVoice);
+registerJob('reflect', reflect);
+registerJob('reconfirm', reconfirm);
+registerJob('conceptCleanup', conceptCleanup);

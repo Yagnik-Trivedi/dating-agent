@@ -3,10 +3,13 @@
 // Plans 05/08/09 add their collections' indexes to EXPECTED.
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
+import '../src/models/Concept.js';
 import '../src/models/EmbCache.js';
 import '../src/models/InboxItem.js';
 import '../src/models/Job.js';
+import '../src/models/KgEdge.js';
 import '../src/models/KgFact.js';
+import '../src/models/KgTombstone.js';
 import '../src/models/Like.js';
 import '../src/models/Match.js';
 import '../src/models/Message.js';
@@ -14,6 +17,8 @@ import '../src/models/Profile.js';
 import '../src/models/SearchCache.js';
 import '../src/models/Usage.js';
 import '../src/models/User.js';
+import '../src/models/VoiceProfile.js';
+import '../src/models/VoiceSample.js';
 import { GATE_ATTRIBUTES } from '../src/services/match/gate.js';
 
 const EXPECTED = {
@@ -23,7 +28,15 @@ const EXPECTED = {
     ...GATE_ATTRIBUTES.map((k) => ({ key: { [`gate.values.${k}`]: 1 } })),
     { key: { geo: '2dsphere' } },
   ],
-  kgfacts: [{ key: { archiveAt: 1 }, ttl: true }],
+  kgfacts: [
+    { key: { subjectId: 1, observerId: 1, predicate: 1, conceptId: 1 } }, { key: { subjectId: 1, observerId: 1, attribute: 1 } },
+    { key: { observerId: 1, conversationId: 1 } }, { key: { archiveAt: 1 }, ttl: true },
+  ],
+  concepts: [{ key: { type: 1, name: 1 }, unique: true }, { key: { aliases: 1 } }],
+  kgedges: [{ key: { subjectId: 1, observerId: 1, type: 1 } }],
+  kgtombstones: [{ key: { subjectId: 1, key: 1 }, unique: true }],
+  voicesamples: [{ key: { userId: 1, createdAt: 1 } }],
+  voiceprofiles: [{ key: { userId: 1 }, unique: true }],
   messages: [{ key: { matchId: 1, createdAt: -1 } }, { key: { archiveAt: 1 }, ttl: true }],
   jobs: [{ key: { status: 1, runAt: 1 } }, { key: { dedupeKey: 1 }, unique: true }, { key: { finishedAt: 1 }, ttl: true }],
 };

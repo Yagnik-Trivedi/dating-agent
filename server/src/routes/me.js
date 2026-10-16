@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { InboxItem } from '../models/InboxItem.js';
 import { KgFact } from '../models/KgFact.js';
+import { KgEdge } from '../models/KgEdge.js';
+import { KgTombstone } from '../models/KgTombstone.js';
+import { VoiceProfile } from '../models/VoiceProfile.js';
+import { VoiceSample } from '../models/VoiceSample.js';
 import { Like } from '../models/Like.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
@@ -37,7 +41,11 @@ meRouter.delete('/me', async (req, res) => {
 
   await Promise.all([
     Profile.deleteOne({ userId: me }),
-    KgFact.deleteMany({ $or: [{ subjectId: me }, { observerId: me }] }),
+    KgFact.deleteMany({ $or: [{ subjectId: me }, { observerId: me }] }), // my graph, my notes, and notes about me
+    KgEdge.deleteMany({ $or: [{ subjectId: me }, { observerId: me }] }),
+    KgTombstone.deleteMany({ subjectId: me }),
+    VoiceSample.deleteMany({ userId: me }),
+    VoiceProfile.deleteOne({ userId: me }),
     Like.deleteMany({ $or: [{ fromUserId: me }, { toUserId: me }] }),
     Message.deleteMany({ senderId: me }),
     InboxItem.deleteMany({ userId: me }),
