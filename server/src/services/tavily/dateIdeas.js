@@ -48,9 +48,17 @@ async function ideas(match, viewerId, { search = tavilySearch } = {}) {
     return { ideas: hit.ideas, icebreakers, cached: true };
   }
   const results = (await search(query)).filter((r) => r.url);
-  const out = await chatJSON({ tier: 'fast', schema: ideasSchema, purpose: 'date-ideas', userId: viewerId, matchId: match._id, messages: dateIdeasPrompt.build({ city, interests, results }) });
   const urls = new Set(results.map((r) => r.url));
-  const ideas = out.ideas.filter((i) => urls.has(i.link)).slice(0, 3); // only links that came from the search
+  let ideas;
+  try {
+    const out = await chatJSON({ tier: 'fast', schema: ideasSchema, purpose: 'date-ideas', userId: viewerId, matchId: match._id, messages: dateIdeasPrompt.build({ city, interests, results }) });
+    ideas = out.ideas.filter((i) => urls.has(i.link)).slice(0, 3); // only links that came from the search
+  } catch (err) {
+    if (err.name === 'BudgetExceededError') throw err;
+    // The model timed out (free tier): the search results themselves are still good ideas.
+    console.warn(`date-ideas: writing ideas failed (${err.message}); using the search results as they are`);
+    ideas = results.slice(0, 3).map((r) => ({ title: String(r.title ?? r.url).slice(0, 120), why: String(r.content ?? '').slice(0, 200), link: r.url }));
+  }
   if (ideas.length) await SearchCache.updateOne({ query }, { $setOnInsert: { query, ideas } }, { upsert: true });
   console.log(`date-ideas: searched "${query}" → ${ideas.length} ideas`);
   return { ideas, icebreakers, cached: false };

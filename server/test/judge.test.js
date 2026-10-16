@@ -17,9 +17,9 @@ import { start, stop } from '../scripts/lib/testDb.js';
 
 const oid = () => new mongoose.Types.ObjectId();
 const transcript = [
-  { id: 'm1', _id: oid(), text: 'hey! loved your trekking pics, where was the last one?' },
-  { id: 'm2', _id: oid(), text: 'Kudremukh! I smoke a bit on treks though, hope that is ok' },
-  { id: 'm3', _id: oid(), text: 'haha that sounds fun, I mostly do Sahyadri day hikes' },
+  { id: 'm1', _id: oid(), mine: true, text: 'hey! loved your trekking pics, where was the last one?' },
+  { id: 'm2', _id: oid(), mine: false, text: 'Kudremukh! I smoke a bit on treks though, hope that is ok' },
+  { id: 'm3', _id: oid(), mine: true, text: 'haha that sounds fun, I mostly do Sahyadri day hikes' },
 ];
 const parse = (o) => judgeSchema.parse({ decision: 'yes', confidence: 0.8, positives: [], frictions: [], dealbreakerRisk: [], noFrictionJustification: null, summaryForUser: 's', ...o });
 
@@ -55,6 +55,12 @@ test('a dealbreaker_hint event without dealbreakerRisk → re-ask', () => {
   const ok = validateDecision(parse({ decision: 'no', dealbreakerRisk: [{ attribute: 'smoking', quote: 'I smoke a bit on treks' }], frictions: [{ quote: 'I smoke a bit on treks', why: 'x' }] }), { transcript, hints });
   assert.deepEqual(ok.problems, []);
   assert.equal(ok.value.decision, 'no');
+});
+
+test('a dealbreakerRisk quote must be their words, not mine', () => {
+  const out = parse({ noFrictionJustification: 'x', dealbreakerRisk: [{ attribute: 'smoking', quote: 'I mostly do Sahyadri day hikes' }, { attribute: 'smoking', quote: 'I smoke a bit on treks' }] });
+  const { value } = validateDecision(out, { transcript });
+  assert.deepEqual(value.dealbreakerRisk.map((d) => d.quote), ['I smoke a bit on treks']);
 });
 
 test('a low-confidence yes becomes unsure', () => {

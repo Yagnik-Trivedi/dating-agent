@@ -156,10 +156,10 @@ try {
   // 4. The simulate pair: both continue → handed_off + reveal; a handed-off match keeps its notes.
   const [meera, ishaan] = await Promise.all([User.findOne({ email: 'seed01@demo.local' }), User.findOne({ email: 'seed04@demo.local' })]);
   const good = meera && ishaan && await Match.findOne({ users: { $all: [meera._id, ishaan._id] } });
-  if (good && ['compatible', 'maybe'].includes(good.status)) {
+  if (good && ['compatible', 'maybe', 'handed_off'].includes(good.status)) {
     for (const u of [meera, ishaan]) show(u.name, await MatchDecision.findOne({ matchId: good._id, userId: u._id }).lean());
-    await decide(good._id, meera._id, 'continue');
-    const after = await decide(good._id, ishaan._id, 'continue');
+    if (good.status !== 'handed_off') await decide(good._id, meera._id, 'continue');
+    const after = good.status === 'handed_off' ? good : await decide(good._id, ishaan._id, 'continue');
     assert.equal(after.status, 'handed_off');
     const reveal = await revealFor(after);
     assert.match(reveal.text, /^The first \d+ messages were handled by your agents/);

@@ -63,9 +63,12 @@ export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDG
 
   const positives = evidence(out.positives, 'positive');
   const frictions = evidence(out.frictions, 'friction');
+  // A dealbreaker risk is about THEM: its quote must be their own words (not mine, not my agent's).
   const dealbreakerRisk = out.dealbreakerRisk.filter((d) => {
-    if (!d.quote || locate(d.quote)) return true;
-    dropped.push(`dealbreakerRisk not verbatim: ${d.quote}`);
+    if (!d.quote) return true;
+    const msg = transcript.find((m) => !m.mine && isVerbatim(d.quote, m.text));
+    if (msg) return true;
+    dropped.push(`dealbreakerRisk not their words: ${d.quote}`);
     return false;
   });
   const justification = out.noFrictionJustification?.trim() || null;
@@ -138,7 +141,7 @@ export async function judgeSide({ conversationId, userId }) {
     ]);
     const userName = nameOf(match, me);
     const matchName = nameOf(match, otherId);
-    const transcript = messages.map((m, i) => ({ id: `m${i + 1}`, _id: m._id, text: m.text, mine: String(m.senderId) === me }));
+    const transcript = messages.map((m, i) => ({ id: `m${i + 1}`, _id: m._id, text: m.text, mine: String(m.senderId) === me, agent: m.authoredBy === 'agent' }));
     const hints = events.filter((e) => e.type === 'dealbreaker_hint');
     const base = { conversationId, matchId: match._id, userId: me, otherUserId: otherId };
 
@@ -159,7 +162,7 @@ export async function judgeSide({ conversationId, userId }) {
         events: events.map((e) => `${e.type}${e.label ? ` (${e.label})` : ''}, ${Math.round((e.weight ?? 0.5) * 100) / 100}${e.quote ? `: "${e.quote}"` : ''}`),
         agenda: (match.brief?.[me]?.agenda ?? []).map((a) => `${a.topic}${a.dealbreaker ? ' [dealbreaker]' : ''}: ${a.status}`),
         endedBy: conv.endedBy,
-        transcript: transcript.map((m) => `[${m.id}] ${m.mine ? `${userName} (agent)` : matchName}: ${m.text}`),
+        transcript: transcript.map((m) => `[${m.id}] ${m.mine ? userName : matchName}${m.agent ? ' (agent)' : ''}: ${m.text}`),
       };
       const first = await callJudge({ messages: judgePrompt.build(prompt), userId: me, matchId: match._id, purpose: 'judge' });
       judgeModel = first.model;
