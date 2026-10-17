@@ -1,89 +1,120 @@
-// Step 4: verdicts for both users, then handoff or a kind wind-down. Decisions (continue / pass / override) live here too.
+// Step 4 (plan 09): one independent judge per side → MatchDecision; the match is the lower of the two; handoff only on
+// mutual yes. Decisions (continue / pass / "Talk anyway"), the wind-down, the reveal and the report view live here.
 import { z } from 'zod';
+import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
+import { MatchDecision } from '../../models/MatchDecision.js';
 import { Message } from '../../models/Message.js';
-import { Profile } from '../../models/Profile.js';
-import { User } from '../../models/User.js';
+import { ChatEvent } from '../../models/ChatEvent.js';
+import { KgFact } from '../../models/KgFact.js';
+import { VoiceProfile } from '../../models/VoiceProfile.js';
+import { VoiceSample } from '../../models/VoiceSample.js';
 import { emitToUser } from '../../sockets/io.js';
 import { httpError } from '../../utils/http.js';
-import { VoiceProfile } from '../../models/VoiceProfile.js';
-import { cleanText } from '../persona/text.js';
 import { cancelReplies } from '../agent/scheduler.js';
 import { sendMessage } from '../chat.js';
+import { enqueue } from '../jobs/queue.js';
 import { chatJSON } from '../llm/client.js';
-import { otherUserId, side, nameOf } from '../matches.js';
+import { nameOf, otherUserId, side } from '../matches.js';
+import { cleanText } from '../persona/text.js';
 import { setStatus } from '../pipeline/index.js';
 import * as windDownPrompt from '../prompts/windDown.js';
 import { scanMessage } from '../trust/rules.js';
-import { lowerVerdict } from './config.js';
-import { evaluateFor } from './evaluate.js';
+import { LABEL, lowerVerdict, myDecision } from './report.js';
 
-const firstName = (name) => String(name ?? '').trim().split(/\s+/)[0] || 'them';
+export { LABEL, lowerVerdict, myDecision, reportFor } from './report.js';
 
-/** One kind closing message from userId's side, in their style. A fixed line if the model fails or says anything risky. */
+/** One kind closing message from userId's side, in their voice. A fixed line if the model fails or says anything risky. */
 export async function windDown(match, userId) {
-  const [user, mine, count, voice] = await Promise.all([
-    User.findById(userId, { name: 1 }).lean(),
-    Profile.findOne({ userId }, { name: 1 }).lean(),
+  const [count, voice, samples] = await Promise.all([
     Message.countDocuments({ matchId: match._id }),
     VoiceProfile.findOne({ userId }, { description: 1, doList: 1, dontList: 1, closingStyle: 1 }).lean(),
+    VoiceSample.find({ userId }, { text: 1 }).sort({ createdAt: -1 }).limit(30).lean(),
   ]);
-  const name = firstName(mine?.name ?? user?.name);
-  const card = [voice?.description, voice?.doList?.length && `Do: ${voice.doList.join('; ')}`, voice?.dontList?.length && `Don't: ${voice.dontList.join('; ')}`, voice?.closingStyle && `Ends chats like: "${voice.closingStyle}"`].filter(Boolean).join('\n') || 'Casual, warm, short messages.';
+  const name = nameOf(match, userId);
+  const card = [voice?.description, voice?.doList?.length && `Do: ${voice.doList.join('; ')}`, voice?.dontList?.length && `Don't: ${voice.dontList.join('; ')}`].filter(Boolean).join('\n') || 'Casual, warm, short messages.';
+  // A few short real messages as style exemplars (copy the style, never the content).
+  const exemplars = samples.map((s) => s.text).filter((t) => t.length <= 140).sort((a, b) => a.length - b.length).slice(0, 4);
   let text = "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
   try {
     const out = await chatJSON({
       tier: 'fast', purpose: 'wind-down', userId, matchId: match._id, schema: z.object({ reply: z.string().trim().min(1).max(300) }),
-      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: card, hadConversation: count > 0 }),
+      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: card, exemplars, closingStyle: voice?.closingStyle ?? null, hadConversation: count > 0 }),
     });
     const draft = cleanText(out.reply, name);
     if (draft && !draft.includes('?') && scanMessage(draft).severity === 0) text = draft;
   } catch (err) {
-    console.error(`wind-down for ${match._id}: using the fixed line (${err.message})`);
+    console.error(`wind-down for ${match._id}: using the fixed line (${err.message})`); // also when AI is paused: a Pass must still close kindly
   }
   return sendMessage({ match, senderId: userId, authoredBy: 'agent', text });
 }
 
-/**
- * Both verdicts, saved; status = the lower verdict. Incompatible → one wind-down message from an incompatible side whose
- * agent is still active, then closed (if that side's human took over, nothing is sent and the status stays incompatible).
- */
+/** The conversation ended (match is `evaluating`): queue one independent judge job per side. */
 export async function startEvaluation(match, { reason } = {}) {
-  const fresh = await Match.findById(match._id);
+  const fresh = await Match.findById(match._id).lean();
   if (fresh?.status !== 'evaluating') return;
-  const [a, b] = fresh.users.map(String);
-  const [ra, rb] = await Promise.all([evaluateFor(fresh, a), evaluateFor(fresh, b)]);
-  const report = { [a]: ra, [b]: rb };
-  const saved = await Match.findOneAndUpdate({ _id: fresh._id, status: 'evaluating' }, { $set: { report } }, { new: true });
-  if (!saved) return; // closed meanwhile (account deleted)
-  const overall = lowerVerdict(ra.verdict, rb.verdict);
-  console.log(`evaluation ${fresh._id} (${reason ?? 'stopped'}): ${ra.verdict} / ${rb.verdict} → ${overall}`);
-
-  if (overall === 'incompatible') {
-    const closer = [a, b].find((u) => report[u].verdict === 'incompatible' && side(saved, u)?.agentActive);
-    if (closer) {
-      await windDown(saved, closer);
-      await setStatus(saved, 'closed');
-    } else {
-      await setStatus(saved, 'incompatible');
-    }
-  } else {
-    await setStatus(saved, overall);
+  const conv = await Conversation.findOne({ matchId: fresh._id }).sort({ round: -1 }).lean();
+  if (!conv) return;
+  console.log(`evaluation ${fresh._id} (${reason ?? 'stopped'}): judging conversation ${conv._id}`);
+  for (const u of fresh.users.map(String)) {
+    await enqueue('judge', { conversationId: String(conv._id), userId: u }, { dedupeKey: `judge:${conv._id}:${u}` });
   }
-  for (const u of [a, b]) emitToUser(u, 'report:ready', { matchId: String(saved._id) });
 }
 
 /**
- * continue: the user takes over from here (agent off); both continue → handed_off. On an incompatible verdict of their own
- * this is the "Talk anyway" override: the match reopens as "maybe" so the other side can decide too.
- * pass: the user's agent sends a kind wind-down (unless already handed off) and the match closes.
+ * Both judges done → status = the lower label. Not compatible: the first "no" side whose agent is still active sends ONE
+ * wind-down, then closed; if every "no" side took over, nothing is sent and the status stays incompatible.
+ * Runs once per conversation (atomic claim), whichever judge finishes second.
+ */
+export async function settle(matchId, conversationId) {
+  const decisions = await MatchDecision.find({ conversationId }).lean();
+  if (decisions.length < 2) return null;
+  const match = await Match.findOneAndUpdate(
+    { _id: matchId, status: 'evaluating', 'agentState.settledConversation': { $ne: String(conversationId) } },
+    { $set: { 'agentState.settledConversation': String(conversationId) } },
+    { new: true },
+  );
+  if (!match) return null; // settled already, or the match moved on (closed, flagged, deleted)
+  const of = (u) => decisions.find((d) => String(d.userId) === String(u));
+  const [a, b] = match.users.map(String);
+  const overall = lowerVerdict(LABEL[of(a).decision], LABEL[of(b).decision]);
+  console.log(`settle ${match._id}: ${of(a).decision} / ${of(b).decision} → ${overall}`);
+
+  if (overall === 'incompatible') {
+    const closer = [a, b].find((u) => of(u).decision === 'no' && side(match, u)?.agentActive);
+    if (closer) {
+      await windDown(match, closer);
+      await setStatus(match, 'closed');
+    } else {
+      await setStatus(match, 'incompatible');
+    }
+  } else {
+    await setStatus(match, overall);
+  }
+  for (const u of [a, b]) emitToUser(u, 'report:ready', { matchId: String(match._id) });
+  return overall;
+}
+
+/** Reopening a closed match ("Talk anyway"): its notes, moments and agent messages are no longer up for archiving. */
+async function unarchive(matchId) {
+  await Promise.all([
+    KgFact.updateMany({ matchId, observerId: { $ne: null }, archiveAt: { $ne: null } }, { $unset: { archiveAt: 1 } }),
+    ChatEvent.updateMany({ matchId, archiveAt: { $ne: null } }, { $unset: { archiveAt: 1 } }),
+    Message.updateMany({ matchId, archiveAt: { $ne: null } }, { $unset: { archiveAt: 1 } }),
+  ]);
+}
+
+/**
+ * continue: the user takes over from here (agent off); both continue → handed_off. When MY OWN decision is "no" this is
+ * the "Talk anyway" override: the match reopens as "maybe" with my agent off, so the other side decides too.
+ * pass: my agent sends a kind wind-down (unless already handed off) and the match closes.
  */
 export async function decide(matchId, userId, decision) {
   const me = String(userId);
   let match = await Match.findById(matchId);
   if (match.status === 'flagged_fake') throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
-  const ownVerdict = match.report?.[me]?.verdict;
-  const override = decision === 'continue' && ownVerdict === 'incompatible' && ['closed', 'incompatible'].includes(match.status);
+  const mine = await myDecision(match._id, me);
+  const override = decision === 'continue' && mine?.decision === 'no' && ['closed', 'incompatible'].includes(match.status);
   if (decision === 'continue' && ['closed', 'incompatible'].includes(match.status) && !override) {
     throw httpError(409, 'MATCH_CLOSED', 'This match has been closed');
   }
@@ -97,6 +128,7 @@ export async function decide(matchId, userId, decision) {
     if (!['closed', 'handed_off'].includes(match.status)) await windDown(match, me);
     if (match.status !== 'closed') await setStatus(match, 'closed');
   } else if (override) {
+    await unarchive(match._id);
     await setStatus(match, 'maybe');
   } else if (match.status !== 'handed_off' && match.perUser.every((p) => p.decision === 'continue')) {
     await setStatus(match, 'handed_off');

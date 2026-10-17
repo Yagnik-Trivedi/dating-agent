@@ -13,6 +13,7 @@ import '../src/models/KgFact.js';
 import '../src/models/KgTombstone.js';
 import '../src/models/Like.js';
 import '../src/models/Match.js';
+import '../src/models/MatchDecision.js';
 import '../src/models/Message.js';
 import '../src/models/Profile.js';
 import '../src/models/SearchCache.js';
@@ -41,6 +42,8 @@ const EXPECTED = {
   messages: [{ key: { matchId: 1, createdAt: -1 } }, { key: { conversationId: 1, createdAt: 1 } }, { key: { archiveAt: 1 }, ttl: true }],
   conversations: [{ key: { matchId: 1, round: 1 }, unique: true }, { key: { archiveAt: 1 }, ttl: true }],
   chatevents: [{ key: { conversationId: 1, observerId: 1 } }, { key: { archiveAt: 1 }, ttl: true }],
+  matchdecisions: [{ key: { userId: 1, matchId: 1 } }, { key: { conversationId: 1, userId: 1 }, unique: true }],
+  inboxitems: [{ key: { userId: 1, topicKey: 1, status: 1 } }],
   jobs: [{ key: { status: 1, runAt: 1 } }, { key: { dedupeKey: 1 }, unique: true }, { key: { finishedAt: 1 }, ttl: true }],
 };
 

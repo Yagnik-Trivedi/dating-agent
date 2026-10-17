@@ -72,8 +72,11 @@ export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs
 
   // Dealbreaker hint: an attribute I marked as a dealbreaker, with a value I don't accept (my own gate).
   const g = persona.gate ?? {};
-  const hinted = [out.dealbreakerHint, ...out.claims.map((c) => c.attribute)].filter(Boolean);
-  const dbClaim = out.claims.find((c) => c.attribute && hinted.includes(c.attribute) && (g.dealbreakers ?? []).includes(c.attribute) && c.value && !(g.accepts?.[c.attribute] ?? []).includes(c.value));
+  // A question they asked is never a claim about themselves (live run: "do you ever think about cooking for a family someday?" → looking_for).
+  const statements = theirMsgs.flatMap((m) => m.text.split(/(?<=[.!?])\s+/)).filter((s) => !s.trim().endsWith('?'));
+  const stated = (c) => !c.text.trim().endsWith('?') && statements.length > 0;
+  const hinted = [statements.length ? out.dealbreakerHint : null, ...out.claims.filter(stated).map((c) => c.attribute)].filter(Boolean);
+  const dbClaim = out.claims.filter(stated).find((c) => c.attribute && hinted.includes(c.attribute) && (g.dealbreakers ?? []).includes(c.attribute) && c.value && !(g.accepts?.[c.attribute] ?? []).includes(c.value));
 
   // Notes about them: verbatim quotes only, merged by factKey within (me, them, this conversation).
   const notes = [];

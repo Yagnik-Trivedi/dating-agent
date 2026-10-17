@@ -43,6 +43,8 @@ function modelFor(tier) {
 
 /** The model new embeddings are made with; store it next to every vector. */
 export const embeddingModel = () => modelFor('embed');
+/** The model ID a tier runs on (to record which model made a decision). */
+export const modelId = (tier) => modelFor(tier);
 
 // --- global rate limit: at most LLM_MAX_RPM requests in any 60 s window (NVIDIA free tier ≈ 40/min total).
 const stamps = [];
@@ -61,16 +63,16 @@ async function acquireSlot() {
 const retryable = (err) => err.status === 429 || err.status >= 500 || (err.status === undefined && /Connection|Timeout/.test(err.name ?? ''));
 
 /** Run one API request through the limiter, retrying 429/5xx/network errors with backoff + jitter. */
-async function request(label, fn) {
+async function request(label, fn, retries = MAX_RETRIES) {
   for (let attempt = 0; ; attempt++) {
     await acquireSlot();
     try {
       return await fn();
     } catch (err) {
-      if (!retryable(err) || attempt >= MAX_RETRIES) throw err;
+      if (!retryable(err) || attempt >= retries) throw err;
       const retryAfter = Number(err.headers?.get?.('retry-after'));
       const delay = retryAfter > 0 ? retryAfter * 1000 : Math.min(30_000, 2000 * 2 ** attempt) + Math.random() * 1000;
-      console.warn(`llm ${label}: ${err.status ?? err.name}, retry ${attempt + 1}/${MAX_RETRIES} in ${Math.round(delay / 1000)}s`);
+      console.warn(`llm ${label}: ${err.status ?? err.name}, retry ${attempt + 1}/${retries} in ${Math.round(delay / 1000)}s`);
       await sleep(delay);
     }
   }
@@ -98,9 +100,12 @@ const REASONING_ENV = { fast: 'LLM_REASONING_FAST', mid: 'LLM_REASONING_MID', sm
 let sendThinkingSwitch = true;
 const thinkingOff = (tier, reasoning) => sendThinkingSwitch && (reasoning ?? env[REASONING_ENV[tier]]) === false;
 
-/** → { text, usage, model, latencyMs, costUsd }. `reasoning` overrides the tier's LLM_REASONING_* default. */
-export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId, reasoning }) {
-  const model = modelFor(tier);
+/**
+ * → { text, usage, model, latencyMs, costUsd }. `reasoning` overrides the tier's LLM_REASONING_* default; `model` overrides
+ * the tier's model ID (budget + limits still follow the tier); `retries` caps our retries (default MAX_RETRIES).
+ */
+export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId, reasoning, model: modelOverride, retries }) {
+  const model = modelOverride ?? modelFor(tier);
   await checkBudget({ tier, userId });
   let max = maxTokens ?? DEFAULT_MAX_TOKENS[tier];
 
@@ -112,11 +117,11 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
       { timeout: TIMEOUT_MS[tier] },
     );
     try {
-      res = await request(`${purpose}/${tier}`, call).catch(async (err) => {
+      res = await request(`${purpose}/${tier}`, call, retries).catch(async (err) => {
         if (!(thinkingOff(tier, reasoning) && err.status === 400 && /chat_template_kwargs|extra/i.test(err.message))) throw err;
         sendThinkingSwitch = false;
         console.warn(`llm: provider rejects chat_template_kwargs; reasoning stays on from now on`);
-        return request(`${purpose}/${tier}`, call);
+        return request(`${purpose}/${tier}`, call, retries);
       });
     } catch (err) {
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
@@ -143,7 +148,7 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
 }
 
 /** → schema-validated object; one corrective retry, then LLMJsonError. */
-export async function chatJSON({ tier = 'fast', messages, schema, purpose, userId, matchId, maxTokens, temperature = 0.3, reasoning }) {
+export async function chatJSON({ tier = 'fast', messages, schema, purpose, userId, matchId, maxTokens, temperature = 0.3, reasoning, model, retries }) {
   // Some chat templates reject a second system message, so merge into the first.
   const base = messages[0]?.role === 'system'
     ? [{ ...messages[0], content: `${messages[0].content}\n\n${JSON_RULE}` }, ...messages.slice(1)]
@@ -152,7 +157,7 @@ export async function chatJSON({ tier = 'fast', messages, schema, purpose, userI
   let msgs = base;
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { text } = await chat({ tier, messages: msgs, maxTokens, temperature, purpose, userId, matchId, reasoning });
+    const { text } = await chat({ tier, messages: msgs, maxTokens, temperature, purpose, userId, matchId, reasoning, model, retries });
     try {
       return schema.parse(extractJSON(text));
     } catch (err) {

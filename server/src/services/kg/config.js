@@ -9,6 +9,7 @@ export const KG = Object.freeze({
   DECAY_HALF_LIFE_DAYS: 365, CURRENT_FACT_TTL_DAYS: 180,
   SELECT_K: 10, EXEMPLARS_K: 4, MIN_STORIES: 4, TOPIC_TEMP: 0.7,
   MAX_REGENERATIONS: 1, // Checkpoint A: one regeneration per message, max
+  MAX_INBOX_PER_CONVERSATION: 3, // new "ask my human" items per match; repeats of an open topic merge instead
   STYLE_REBUILD_EVERY: 20, REFLECT_EVERY: 10,
   // caps & retention
   MAX_SELF_FACTS: 150, MAX_VOICE_SAMPLES: 200, NOTES_RETENTION_DAYS: 30,

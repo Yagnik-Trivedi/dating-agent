@@ -129,7 +129,7 @@ export default function Report() {
     <li>
       <button onClick={() => showReceipts(item.messageIds)} className="flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-surface-2">
         <span className={`mt-0.5 font-bold ${tone}`} aria-hidden="true">{icon}</span>
-        <span className="flex-1">{item.text}</span>
+        <span className="flex-1">{item.text}{item.quote && <span className="mt-0.5 block text-sm text-muted">“{item.quote}”</span>}</span>
         {item.messageIds?.length > 0 && <span className="shrink-0 text-xs font-semibold text-accent">{item.messageIds.length} receipt{item.messageIds.length > 1 ? 's' : ''}</span>}
       </button>
     </li>
@@ -158,10 +158,11 @@ export default function Report() {
               </li>
             ))}
           </ul>
-          {report.dimensions?.dealbreakers && asDim(report.dimensions.dealbreakers).score === 0 && (
-            <p className="mt-4 rounded-xl bg-bad/10 p-3 text-sm font-medium text-bad">One of your dealbreakers came up.</p>
-          )}
         </Card>
+      )}
+
+      {report.dealbreakerRisk?.length > 0 && (
+        <p className="rounded-xl bg-bad/10 p-3 text-sm font-medium text-bad">One of your dealbreakers came up{report.dealbreakerRisk[0].quote ? `: “${report.dealbreakerRisk[0].quote}”` : '.'}</p>
       )}
 
       <div className="grid gap-5 md:grid-cols-2">
@@ -171,7 +172,7 @@ export default function Report() {
         </Card>
         <Card>
           <h2 className="mb-2 font-display text-xl font-semibold">Worth noting</h2>
-          {report.concerns?.length ? <ul className="-mx-3">{report.concerns.map((c) => <Item key={c.text} item={c} icon="⚠" tone="text-warn" />)}</ul> : <p className="text-sm text-muted">Nothing stood out.</p>}
+          {report.concerns?.length ? <ul className="-mx-3">{report.concerns.map((c) => <Item key={c.text} item={c} icon="⚠" tone="text-warn" />)}</ul> : <p className="text-sm text-muted">{report.noFrictionJustification ?? 'Nothing stood out.'}</p>}
         </Card>
       </div>
 

@@ -6,8 +6,11 @@ import { Message } from '../models/Message.js';
 import { cancelReplies } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
-import { decide, revealFor } from '../services/compat/index.js';
-import { emitStatus } from '../services/pipeline/index.js';
+import { decide, reportFor, revealFor } from '../services/compat/index.js';
+import { ChatEvent } from '../models/ChatEvent.js';
+import { Conversation } from '../models/Conversation.js';
+import mongoose from 'mongoose';
+import { emitStatus, statusFor } from '../services/pipeline/index.js';
 import { dateIdeasFor } from '../services/tavily/dateIdeas.js';
 import { httpError, parse } from '../utils/http.js';
 
@@ -64,6 +67,32 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { _id } = await getMatchFor(req.params.id, req.user._id);
   const match = await decide(_id, req.user._id, decision);
   res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// My judge's decision + the label I see (plan 09 §2). Never the other side's decision or reasons.
+matchesRouter.get('/matches/:id/report', async (req, res) => {
+  const match = await getMatchFor(req.params.id, req.user._id);
+  res.json({ report: await reportFor(match._id, req.user._id), status: statusFor(match, req.user._id) });
+});
+
+// Replay (plan 09 §2): messages, MY chat moments, MY decision and the final mutual result; never the other side's.
+matchesRouter.get('/conversations/:id/replay', async (req, res) => {
+  const me = req.user._id;
+  const conv = mongoose.isValidObjectId(req.params.id) && await Conversation.findById(req.params.id).lean();
+  if (!conv) throw httpError(404, 'NOT_FOUND', 'Conversation not found');
+  const match = await getMatchFor(conv.matchId, me);
+  const [messages, events, report] = await Promise.all([
+    Message.find({ matchId: match._id, conversationId: conv._id }).sort({ createdAt: 1 }).lean(),
+    ChatEvent.find({ conversationId: conv._id, observerId: me }).sort({ createdAt: 1 }).lean(),
+    reportFor(match._id, me),
+  ]);
+  res.json({
+    conversation: { _id: conv._id, round: conv.round, status: conv.status, endedBy: conv.endedBy, startedAt: conv.startedAt, endedAt: conv.endedAt },
+    messages: messages.map((m) => serializeMessage(m, me, match.status)),
+    events,
+    report,
+    result: statusFor(match, me),
+  });
 });
 
 // What the requester's agent has learned about the other person.
