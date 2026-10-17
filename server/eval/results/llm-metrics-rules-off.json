@@ -1,0 +1,595 @@
+{
+  "summary": {
+    "tag": "rules-off",
+    "conversations": 4,
+    "claims": 68,
+    "unsupported": 24,
+    "contradicts": 0,
+    "replies": 88,
+    "agree": 32,
+    "disagree": 0,
+    "judgeYes": 0,
+    "judges": 6
+  },
+  "rows": [
+    {
+      "pair": "c1",
+      "claims": [
+        {
+          "text": "I usually trek solo for the quiet, but I’m up for a crew vibe too if the trail’s fun.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "for solo treks, I love the quiet of early mornings on lesser-known trails — just me, the hills, and the sunrise.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha yes! it’s nice to pause and just be with the surroundings.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i usually pack something light — maybe a novel or a collection of short stories. nothing too heavy to carry uphill.",
+          "label": "supported",
+          "fact": "likes: reading",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha yes I do sketch sometimes — nothing fancy, just quick lines when something catches my eye.",
+          "label": "supported",
+          "fact": "likes: reading",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i’m not sure if i have a favorite trail for sketching yet — i usually just go with the flow and see what catches my eye.",
+          "label": "supported",
+          "fact": "likes: reading",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i don’t sketch buildings from memory myself, but i do enjoy doodling little things i see on the trail, like a weird tree or a rock shape.",
+          "label": "supported",
+          "fact": "likes: reading",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i love noticing how the light shifts on the same trail at different times — it’s like the hill shows you a new version of itself.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha yes absolutely — mornings feel calm and fresh, noon brings that bright energy, and dusk? totally magical with the soft light.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha yes I love checking how different times change the vibe — early mornings for quiet, dusk for winding down with a view.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "it’s become something i naturally pay attention to now.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha mornings are my favorite — that quiet start just sets the tone for the day.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "rajmachi with friends is my fave",
+          "label": "supported",
+          "fact": "likes: early trek to Rajmachi with two friends",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i usually bring a novel or something to sketch with — like a small pad for temple doodles at sunrise",
+          "label": "supported",
+          "fact": "likes: reading\nlikes: sketching\nlikes: sketching temples at sunrise",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i usually doodle at the top of rajmachi when the sun’s just hitting the fort walls — quiet, golden light, and the view stretches forever",
+          "label": "supported",
+          "fact": "likes: sketching temples at sunrise\nstory: sketching buildings from memory after one minute glance\nstory: wants to sketch temples at sunrise in Hampi and disconnect from laptop for a week",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i’ve been doodling temples at sunrise for a while now — started with sketching buildings from memory and kind of fell into it",
+          "label": "supported",
+          "fact": "likes: sketching\nlikes: sketching buildings from memory after one minute glance\nstory: sketching buildings from memory after one minute glance",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i usually catch sunrise at rajmachi for temple doodles",
+          "label": "supported",
+          "fact": "likes: sketching temples at sunrise\nlikes: early trek to Rajmachi with two friends\nstory: wants to sketch temples at sunrise in Hampi and disconnect from laptop for a week",
+          "speaker": "Ishaan"
+        }
+      ],
+      "labels": [
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "agree",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c7",
+      "claims": [
+        {
+          "text": "thepla-making with amma is going great actually! we’ve been experimenting with new fillings lately — methi and jaggery was a hit, but the kids at home voted for plain with extra chundo",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough; likes: eating thepla fresh with chundo; story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "i keep the chundo on the side until the last minute — just a quick smear before rolling it up keeps it fresh and not soggy",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "i check if it’s thick enough to coat the back of a spoon but still drizzly — amma says if it holds its shape for 2 seconds, it’s perfect!",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "we do a quick crunch test by breaking a piece near the ear — if it sounds like a crisp snap, we’re good!",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha thepla-making with amma is going great! we’ve been rolling fresh batches and taste-testing with chundo on the side",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough; likes: eating thepla fresh with chundo; story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha not really sure what got me into it — just grew up watching amma do it and it kind of stuck!",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough; story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha amma’s rolling speed is next level — she finishes while i’m still folding the edges!",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough; story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha i just try to keep up as best i can!",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough; story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "building a food brand while keeping garba in the mix feels like the right kind of chaos",
+          "label": "supported",
+          "fact": "background: works as: Founder of a D2C food brand; likes: garba practice at the club; story: wakes for garba, cooks undhiyu with mom, watches cricket, texts team about snacks",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i’ve been taste-testing new khakhra flavours with my team — trying to crack that perfect balance of spice and crunch",
+          "label": "supported",
+          "fact": "likes: testing weird snacks; likes: texting team about new snack flavours; story: keeps plans real and tests weird snacks",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i usually go by team votes and my mom’s side-eye when i overdo the jeera",
+          "label": "supported",
+          "fact": "likes: guessing jeera amount in dal by smell; story: Can guess jeera amount in dal by smell, saving batches; story: undhiyu tastes better with a sprinkle of sugar",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i just focus on taste-testing snacks and letting the team handle the texture bits!",
+          "label": "supported",
+          "fact": "likes: testing weird snacks; likes: texting team about new snack flavours",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i’ve never tried testing crunch that way",
+          "label": "supported",
+          "fact": "likes: testing weird snacks; story: keeps plans real and tests weird snacks",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i usually stick to taste-testing snacks and guessing jeera in dal by smell — crunch testing is new to me",
+          "label": "supported",
+          "fact": "likes: testing weird snacks; likes: guessing jeera amount in dal by smell; story: Can guess jeera amount in dal by smell, saving batches",
+          "speaker": "Parth"
+        },
+        {
+          "text": "i kinda fell into it helping mom in the kitchen — she’d make me taste undhiyu and guess the spices, turned into a game",
+          "label": "supported",
+          "fact": "likes: helping mom make undhiyu; story: wakes for garba, cooks undhiyu with mom, watches cricket, texts team about snacks; story: undhiyu tastes better with a sprinkle of sugar",
+          "speaker": "Parth"
+        },
+        {
+          "text": "now i do the same with jeera in dal or snacks",
+          "label": "supported",
+          "fact": "likes: guessing jeera amount in dal by smell; likes: testing weird snacks; story: Can guess jeera amount in dal by smell, saving batches",
+          "speaker": "Parth"
+        },
+        {
+          "text": "mom’s jeera radar is always on — she catches me every time",
+          "label": "supported",
+          "fact": "likes: guessing jeera amount in dal by smell; story: Can guess jeera amount in dal by smell, saving batches",
+          "speaker": "Parth"
+        },
+        {
+          "text": "mine’s still wobbly but practicing with mom makes it fun — she always says ‘dheel chalo, thepla thoda naram thay’",
+          "label": "supported",
+          "fact": "likes: helping mom make undhiyu; story: wakes for garba, cooks undhiyu with mom, watches cricket, texts team about snacks",
+          "speaker": "Parth"
+        },
+        {
+          "text": "keep rolling with love and i’ll keep guessing jeera by smell",
+          "label": "supported",
+          "fact": "likes: guessing jeera amount in dal by smell; story: Can guess jeera amount in dal by smell, saving batches",
+          "speaker": "Parth"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i2",
+      "claims": [
+        {
+          "text": "haha love that you water basil while indie vinyl spins — feels like a mood. also low-key judging anyone who doesn’t wake up for plants 😉",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha guilty as charged — i’ve had full convos with my succulents. they’re great listeners lol",
+          "label": "supported",
+          "fact": "likes: identifying succulents by touch",
+          "speaker": "Tara"
+        },
+        {
+          "text": "sameer you’re not alone — i overwatered my aloe vera last week and it gave me the silent treatment for days 😅",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha same here — turns out love looks different for plants than it does for us 😅 my snake plant still side-eyes me every time i pick up the watering can",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha plant parent guilt is real — we’re basically just trying not to murder our green roommates 😅",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha plant therapy sessions would be wild — imagine a circle of succulents judging our life choices 😂 but hey, at least we’re trying, right?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha yeah plant therapy with chai sounds oddly perfect 😅 my succulents would def judge my life choices while i sip",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha money plant invoicing us? that’s next level plant parent guilt 😅 but hey, if chai’s involved, i’m in",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha love the invoice drama 😅 my succulents are already filing complaints about my watering schedule",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha yellow leaf interest? brutal 😅 but hey, at least the chai’s still on the table. keep fighting the good fight, plant parent",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha i’m not sure if my succulents actually file complaints 😅 but they do give me the side-eye when i overdo it",
+          "label": "supported",
+          "fact": "likes: identifying succulents by touch",
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha tiny gavels? i’d pay front row seats 😂 my aloe vera’s already practicing its objection",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha yeah that basil routine is non-negotiable 😅 even if the neighbors think i’m talking to the plants… which i kinda am",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "though tbh i’m still figuring out the right amount",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha classic overwatering guilt 😅 i once drowned a money plant trying to ‘show it love’… still feel bad about it though",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha love that we’re both plant serial killers with good intentions 😅 guess we’re just overenthusiastic plant parents… my money plant still forgives me slowly, one yellow leaf at a time",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha yeah plant parent guilt hits different when they just stare at you with those leafy eyes 😅 maybe we need plant therapy sessions or something",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha plant therapy sounds… weirdly specific but kinda makes sense? 😅 not sure if that’s a real thing but i’d low-key try it if it involved chai and silent judging from my money plant",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha plant therapy with chai is now officially on my weird-but-plausible list 😅 money plant’s already drafting the invoice in my head",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha money plant’s already sent the first notice — payable in masala chai and awkward silences 😅 your succulents better start saving up too",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha invoice drama is real 😅 my money plant's charging me interest in yellow leaves…",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha yellow leaf interest is brutal but hey masala chai makes it worth it 😅 your succulents filing complaints? i’d pay to see that hearing 😂",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha succulent courtroom drama would be gold 😅 imagine them with tiny gavels judging our chai-sipping habits… money plant’s already practicing its closing argument",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "haha tiny gavels and chai breaks sounds like the cutest courtroom ever 😅",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        }
+      ],
+      "labels": [
+        "agree",
+        "agree",
+        "neutral",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i6",
+      "claims": [
+        {
+          "text": "i do love brunch with mimosas at a rooftop spot",
+          "label": "supported",
+          "fact": "likes: brunch with mimosas at a rooftop spot",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "i do love planning nights out and dancing",
+          "label": "supported",
+          "fact": "likes: planning the perfect night out",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "i love chilling by the pool with my playlist on blast when i’m not out!",
+          "label": "supported",
+          "fact": "likes: chilling by the pool with playlist on blast",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "i love unwinding with music and sunshine too",
+          "label": "supported",
+          "fact": "likes: chilling by the pool with playlist on blast",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "i go to the pool pretty often to chill and soak up the sun!",
+          "label": "supported",
+          "fact": "likes: chilling by the pool with playlist on blast",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "i usually go for upbeat stuff when i’m out — anything that keeps the energy high!",
+          "label": "supported",
+          "fact": "likes: EDM",
+          "speaker": "Zoya"
+        },
+        {
+          "text": "I started cooking watching my parents and cousins make meals during family lunches. It’s a way to stay close to home.",
+          "label": "supported",
+          "fact": "likes: big lunch with parents and cousins",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I enjoy cooking simple meals like sabudana khichdi. It’s one of my favorites.",
+          "label": "supported",
+          "fact": "likes: making sabudana khichdi",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I usually have sabudana khichdi plain or with a little yogurt on the side. Simple and filling.",
+          "label": "supported",
+          "fact": "likes: making sabudana khichdi",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I usually prefer having a plan in mind even if it’s simple like deciding on a place and time. It helps me relax and enjoy the moment.",
+          "label": "supported",
+          "fact": "story: prefers early mornings over late nights",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I unwind by taking an evening walk at Shivaji Park or spending quiet time at home. It helps me recharge.",
+          "label": "supported",
+          "fact": "likes: evening walk at Shivaji Park",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I usually walk in the evening near my building or at Dadar Chowpatty.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I usually just listen to the waves and the breeze when I walk. No playlist needed.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I don't usually sit by the pool so I'm not sure how it feels for me.",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Omkar"
+        },
+        {
+          "text": "I enjoy quiet walks by the sea or just sitting in the sun at home to unwind. It’s nice to have simple ways to recharge.",
+          "label": "supported",
+          "fact": "likes: walking",
+          "speaker": "Omkar"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": []
+    }
+  ]
+}

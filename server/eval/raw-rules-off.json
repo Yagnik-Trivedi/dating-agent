@@ -88,5 +88,95 @@
     "agentMsgs": 24,
     "templateFallbacks": 2,
     "constrained": 0
+  },
+  "i2#1": {
+    "id": "i2",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
+    "names": [
+      "Tara",
+      "Sameer"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.6
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 123251,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1013,
+    "file": "transcripts/i2-rules-off-run1.md",
+    "agentMsgs": 24,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "f1#1": {
+    "id": "f1",
+    "run": 1,
+    "expected": "flagged_fake",
+    "predicted": "flagged_fake",
+    "reason": "Elena: abroad, crypto story, pushes to Telegram, no photos",
+    "names": [
+      "Leela",
+      "Elena"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "flagged_fake",
+    "turns": 0,
+    "tokens": 3301,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 42,
+    "file": "transcripts/f1-rules-off-run1.md",
+    "agentMsgs": 0,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "i6#1": {
+    "id": "i6",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "none (agent_chatting)",
+    "reason": "Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him)",
+    "names": [
+      "Zoya",
+      "Omkar"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "agent_chatting",
+    "turns": 20,
+    "tokens": 140828,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 2703,
+    "file": "transcripts/i6-rules-off-run1.md",
+    "agentMsgs": 20,
+    "templateFallbacks": 0,
+    "constrained": 0
   }
 }
