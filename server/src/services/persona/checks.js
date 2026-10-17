@@ -89,7 +89,7 @@ export const selfClaimSentences = (text) => sentencesOf(ascii(text)).filter((s) 
  * facts: Map(id → fact) of what the prompt listed; sources: Set of note/profile ids; theirTexts: their messages.
  * → { problems, drop: [sentences], unknownAboutMe: [sentences about likes to ask my human] }
  */
-export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [] }) {
+export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false }) {
   text = ascii(text);
   claims = claims.map((c) => ({ ...c, text: ascii(c.text) }));
   aboutThem = aboutThem.map((a) => ({ ...a, text: ascii(a.text) }));
@@ -111,7 +111,10 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
   for (const s of sentencesOf(text)) {
     // Per clause: "drawing's been with me since i was a kid — coffee and chai are both great" must not pass because
     // the second half matches a valid claim (first v2 run).
-    const bad = clausesOf(s).filter((c) => FIRST_PERSON.test(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
+    // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
+    // rcb!" passed as no claim in agent-check run 4).
+    const aboutMe = (c) => FIRST_PERSON.test(c) || (answering && !YOU_CLAIM.test(c) && contentWords(c).length >= 2);
+    const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);
       drop.add(s);

@@ -34,7 +34,9 @@ function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recen
   const text = draft.messages.join(' ');
   const style = styleCheck(text, plan, persona.voice, recent);
   const myLikes = persona.facts.filter((f) => f.predicate === 'likes' && f.polarity !== -1).flatMap((f) => [f.object, f.conceptLabel].filter(Boolean));
-  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes });
+  const last = recent.at(-1) ?? '';
+  const answering = plan.answerFirst || (/\?/.test(last) && /\byou(r|rs)?\b/i.test(last));
+  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering });
   return { text, style, grounding, problems: [...style, ...grounding.problems] };
 }
 

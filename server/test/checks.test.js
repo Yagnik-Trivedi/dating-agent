@@ -97,3 +97,10 @@ test('hedges are detected so the question goes to my human', () => {
   assert.equal(hedgeSentences('haven’t tried that yet!').length, 1);
   assert.equal(hedgeSentences('i love trekking on weekends').length, 0);
 });
+
+test('grounding: answering a question about me, a clause without "I" still needs a fact', () => {
+  const facts = new Map();
+  const g = groundingCheck({ text: 'haha cheering for rcb! do you smoke?', facts, answering: true });
+  assert.ok(g.unsupported.some((c) => /rcb/i.test(c)), JSON.stringify(g));
+  assert.equal(groundingCheck({ text: 'haha cheering for rcb! do you smoke?', facts }).unsupported.length, 0, 'not answering: no claim');
+});
