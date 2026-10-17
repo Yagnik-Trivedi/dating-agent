@@ -1,0 +1,62 @@
+{
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "incompatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "incompatible",
+      "incompatible"
+    ],
+    "scores": [
+      0.9,
+      0.9
+    ],
+    "stopReason": "dealbreaker",
+    "status": "closed",
+    "turns": 9,
+    "tokens": 41399,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 649,
+    "file": "transcripts/c1-full-run1.md",
+    "agentMsgs": 9,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "c2#1": {
+    "id": "c2",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term",
+    "names": [
+      "Riya",
+      "Aditya"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.65
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 85392,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 820,
+    "file": "transcripts/c2-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 1,
+    "constrained": 0
+  }
+}

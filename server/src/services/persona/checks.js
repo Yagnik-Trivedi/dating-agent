@@ -103,7 +103,34 @@ export const selfClaimSentences = (text) => sentencesOf(ascii(text)).filter((s) 
  * facts: Map(id → fact) of what the prompt listed; sources: Set of note/profile ids; theirTexts: their messages.
  * → { problems, drop: [sentences], unknownAboutMe: [sentences about likes to ask my human] }
  */
-export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false }) {
+// Structured answers stated in a message, checked against MY answers in code (B5 c1: Ishaan's agent said "i'm looking
+// for something casual" and "not sure yet, just exploring" while his answer, a dealbreaker, is long-term). Negations first.
+const STATED = {
+  looking_for: [[/\b(something|nothing) (casual|serious)\b|\bshort[- ]term\b|\bnothing serious\b|\bjust (having fun|casual)\b/i, (m) => (/serious/i.test(m) && !/nothing serious/i.test(m) ? 'long_term' : 'short_term')],
+    [/\b(not sure (yet|what i want)|just exploring|figuring (it|things) out)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
+  smoking: [[/\b(don'?t|never|do not) smoke\b|\bnon[- ]?smoker\b|\bquit smoking\b/i, () => 'never'], [/\bsmoke (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bi smoke\b|\bi'?m a smoker\b/i, () => 'regularly']],
+  drinking: [[/\b(don'?t|never|do not) drink\b|\bteetotal\b|\bsober\b/i, () => 'never'], [/\bdrink (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bdrink (a lot|regularly|every day|daily)\b/i, () => 'regularly']],
+  kids: [[/\b(don'?t|do not|never) want (kids|children)\b|\bno kids for me\b/i, () => 'no'], [/\b(open to|not sure about|maybe) (kids|children)\b/i, () => 'open'], [/\b(want|see) (kids|children)\b/i, () => 'yes']],
+};
+// Answers close enough not to count as a contradiction.
+const NEAR = { looking_for: [['long_term', 'open_to_long_term']], kids: [['yes', 'open'], ['open', 'no']], smoking: [], drinking: [['socially', 'regularly']] };
+export function attributeContradictions(text, myAttributes = {}) {
+  const out = [];
+  for (const s of sentencesOf(ascii(text)).filter((x) => !x.trim().endsWith('?') && FIRST_PERSON.test(x))) {
+    for (const [attr, rules] of Object.entries(STATED)) {
+      const mine = myAttributes[attr];
+      if (!mine) continue;
+      const rule = rules.find(([re]) => re.test(s));
+      if (!rule) continue;
+      const stated = rule[1](s.match(rule[0])[0]);
+      const near = (NEAR[attr] ?? []).some((pair) => pair.includes(stated) && pair.includes(mine));
+      if (stated !== mine && !near) out.push({ sentence: s, attribute: attr, stated, mine });
+    }
+  }
+  return out;
+}
+
+export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false, myAttributes = {} }) {
   text = ascii(text);
   claims = claims.map((c) => ({ ...c, text: ascii(c.text) }));
   aboutThem = aboutThem.map((a) => ({ ...a, text: ascii(a.text) }));
@@ -139,6 +166,10 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
       // A reaction to their own words ("your sunday sounds perfect") is grounded by the transcript itself.
       if (!ok && !contentWords(s).some((w) => theirWords.has(w))) { problems.push(`says something about them nobody said: "${s}"`); drop.add(s); }
     }
+  }
+  for (const c of attributeContradictions(text, myAttributes)) {
+    problems.push(`says "${c.sentence}" but your answer on ${c.attribute.replace(/_/g, ' ')} is ${c.mine.replace(/_/g, ' ')}: say what's true for you.`);
+    drop.add(c.sentence);
   }
   if (unsupported.length) problems.push(`claims about me with no fact behind them: ${unsupported.map((s) => `"${s}"`).join('; ')}. List each one in "claims" with the id of the fact that supports it (e.g. a trekking fact), or remove it`);
   return { problems, drop: [...drop], unsupported };

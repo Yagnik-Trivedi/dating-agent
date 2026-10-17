@@ -61,7 +61,8 @@ function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recen
   const text = draft.messages.join(' ');
   const style = styleCheck(text, plan, persona.voice, recent);
   const myLikes = persona.facts.filter((f) => f.predicate === 'likes' && f.polarity !== -1).flatMap((f) => [f.object, f.conceptLabel].filter(Boolean));
-  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering });
+  const myAttributes = Object.fromEntries(persona.facts.filter((f) => f.attribute && typeof f.value === 'string').map((f) => [f.attribute, f.value]));
+  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering, myAttributes });
   return { text, style, grounding, problems: [...style, ...grounding.problems] };
 }
 

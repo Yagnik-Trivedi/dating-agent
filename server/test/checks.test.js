@@ -1,7 +1,7 @@
 // Plan 08: styleCheck, groundingCheck (incl. claims about the other person), leakCheck.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { groundingCheck, hedgeSentences, leakCheck, styleCheck } from '../src/services/persona/checks.js';
+import { attributeContradictions, groundingCheck, hedgeSentences, leakCheck, styleCheck } from '../src/services/persona/checks.js';
 
 const plan = { targetWords: 10, burst: 1, askBack: true, language: { primary: 'en', codeSwitch: false } };
 
@@ -125,4 +125,17 @@ test('leak: a one-word private fact is caught by one hit, stems included; unrela
   assert.equal(leakCheck(['haha true, I do love a good trek'], priv).length, 1);
   assert.equal(leakCheck(['I like games'], priv).length, 0, 'a 2-word fact still needs 2 hits');
   assert.equal(leakCheck(['what are you hoping to find here?'], priv).length, 0);
+});
+
+test('structured answers stated in a message must match mine (B5: "something casual" vs long-term)', () => {
+  const mine = { looking_for: 'long_term', smoking: 'never', kids: 'open' };
+  assert.equal(attributeContradictions("i'm looking for something casual right now", mine)[0]?.stated, 'short_term');
+  assert.equal(attributeContradictions("i'm honestly not sure yet just exploring what feels right", mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions("i'm looking for something serious, long-term", mine).length, 0);
+  assert.equal(attributeContradictions("i don't smoke at all", mine).length, 0);
+  assert.equal(attributeContradictions('i smoke a bit after work', mine)[0]?.attribute, 'smoking');
+  assert.equal(attributeContradictions("i want kids someday", mine).length, 0, 'yes vs open is near enough');
+  assert.equal(attributeContradictions('do you smoke?', mine).length, 0, 'questions are not statements');
+  const g = groundingCheck({ text: "i'm looking for something casual right now", facts: new Map(), myAttributes: mine });
+  assert.ok(g.problems.some((p) => p.includes('looking for is long term')) && g.drop.length === 1);
 });
