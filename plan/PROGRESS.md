@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (owner's 3-step plan done; plan 11A merged; waiting for the owner)
-- **Main-line branch:** `main` · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
-- **Last commit (main line):** `3966f5a` merge of `feat/plan-11-personas`
+- **Last updated:** 2026-10-17, by Claude Code (plan 11 tuning on `feat/plan-11-tuning`; eval subset re-running)
+- **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
+- **Last commit (main line):** `46edda7` tune(plan-11) on `feat/plan-11-tuning`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -80,7 +80,13 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - Why the misses: (1) the engine's neutral fallback replies ("haha fair 😄", "oh nice, i like that") read as low effort to the judges; (2) i2 ended "naturally" at 14 messages without smoking coming up.
 - **Step 3 ✅ merged** (`3966f5a`). **Waiting for the owner.**
 - **Plan 11 remaining (11B + tuning):**
-  1. Tuning: fewer neutral fallbacks (send the best draft minus failing clauses instead), and no natural end until high-importance agenda topics are answered. Then re-run the subset.
+  1. 🔄 Tuning (`46edda7`, owner said go):
+     - important agenda topics are retried until answered;
+     - the model's own "end" counts only when my agenda is settled (otherwise it triggers a regeneration);
+     - the best draft is the clean one, or the one keeping the most words; the fallback is a question on my topic, not filler;
+     - a META check catches "reacting to your …";
+     - agenda likes are ≤ 3 words.
+     `npm test` 77/77. **Now:** eval re-run on c1, c7, i2, i6 (~35 min).
   2. `scripts/eval/` metric scripts: style/language fidelity, conversation stats, observer accuracy, judge agreement (human-labelled CSV), consistency, leak probe, unsupported-claims (offline LLM judge).
   3. Ablations (`RULES=on|off`, etc.).
   4. Scale test (2,000 synthetic users, no LLM).
