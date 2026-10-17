@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (B3 + B4 scripts written; B1 iteration 2 running)
+- **Last updated:** 2026-10-17, by Claude Code (B1 iteration 2: 4/6, fallback 5%; iteration 3 running; owner: continue B1→B6 without waiting for go)
 - **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
 - **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
