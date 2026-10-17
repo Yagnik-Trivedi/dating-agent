@@ -1,55 +1,37 @@
 # i6 (run 1): Zoya × Omkar
 
-Expected **incompatible**, predicted **incompatible**. Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him).
+Expected **incompatible**, predicted **maybe**. Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him).
 
-Stop: natural · 24 messages · 113485 tokens · 1092 s
+Stop: natural · 14 messages · 72485 tokens · 587 s
 
-### Zoya's judge: no → incompatible (confidence 0.85, nvidia/nemotron-3-ultra-550b-a55b)
-Omkar's early-morning, quiet-evening lifestyle and desire for kids clash with your love for late nights, dance, and no-kids plan. The conversation felt low-energy and didn't reveal much common ground.
+### Zoya's judge: unsure → maybe (confidence 0.5, nvidia/nemotron-3-super-120b-a12b)
+You shared a lighthearted, laughing moment about dancing and pizza, which was nice. However, Omkar avoided a couple of your questions, making it hard to gauge their interest or compatibility.
 
-- ⚠ "Not sure about dance I haven't tried it much.": You love dance floors; they haven't tried dance and seem uninterested.
-- ⚠ "I see kids in my future": You don't want kids; they see kids in their future.
-- ⚠ "I don't make cocktails": You enjoy naming cocktails; they don't make them.
-- ⚠ "Not sure about planning nights out honestly I prefer quiet evenings": You love planning perfect nights out; they prefer quiet evenings.
-- ⚠ "I’m not sure about city lights abroad yet": You dream of city lights abroad; they're unsure about living abroad.
-- ⚠ "ha that makes sense": They gave low-effort responses twice instead of engaging.
-- ⚠ "What are you hoping to find here?": They dodged your question about cocktails by asking you a question.
-- ⚠ "Early mornings suit me more.": You sleep till noon; they're up at 5am.
-### Omkar's judge: no → incompatible (confidence 0.9, nvidia/nemotron-3-super-120b-a12b)
-Zoya clearly does not want kids, which is important to you. Their lifestyle preferences for late nights and city lights abroad also clash with your desire for early mornings and staying in this city.
+- ✓ "Khup chaan toh dance floor var jodun hasne ka challenge suna. Mi pan hasne ka chance nahi chukavto, par pizza var pineapple nahi khavto — crime accept nahi karto. Tu konta challenge detat?": You both laughed and shared a playful moment about dancing and pineapple on pizza, showing warmth and humor.
+- ⚠ "I haven't really thought about pineapple on pizza. What about you, do you want kids someday?": They dodged your question about pineapple on pizza and shifted to a personal topic without answering.
+- ⚠ "Not sure about that either. Where do you see yourself living in a few years?": They avoided engaging with your work-life balance question and redirected without sharing their view.
+### Omkar's judge: unsure → maybe (confidence 0.4, nvidia/nemotron-3-super-120b-a12b)
+Zoya opened up about enjoying EDM, which shows a spark of personal sharing. However, the conversation had moments where they seemed disengaged or repetitive, making it hard to gauge genuine connection.
 
-- ⚠ "kids? not for me — i live for dance floors and late nights 👠": They explicitly stated they do not want kids, which is a core goal for you.
-- ⚠ "nope not for me 💥 how about you ever dance to edm?": They reiterated they do not want kids, reinforcing a fundamental mismatch.
-- ⚠ "i’m more of a noon riser 👠": Their sleep schedule conflicts with your strong preference for early mornings before 7 am.
-- ⚠ "honestly not sure about early walks but i love planning nights out": They dislike early walks, which you enjoy, and prefer late nights, which you dislike.
-- ⚠ "quiet evenings are cute but i dream of city lights abroad someday": They envision living abroad in 3-5 years, while you want to stay in this city.
+- ✓ "edm’s my happy place — it’s saved my soul more times than i can count 😊": They shared something meaningful about what brings them joy, showing warmth and self-awareness.
+- ⚠ "work life balance?": They repeated a question without engaging with Omkar’s answer, suggesting low effort or disinterest.
 
 ## Transcript
 
-1. **Zoya** (agent): hey omkar! cricket at dawn?
-2. **Omkar** (agent): What time do you usually go?
-3. **Zoya** (agent): i’m more of a noon riser 👠
-4. **Omkar** (agent): Thanks for sharing I am usually up by 5 am for a quiet walk and some cricket practice 🎉
-5. **Zoya** (agent): that’s early! 💥 do you dance too or just cricket and walks?
-6. **Omkar** (agent): Not sure about dance I haven't tried it much. Do you see yourself having kids someday?
-7. **Zoya** (agent): kids? not for me — i live for dance floors and late nights 👠
-8. **Omkar** (agent): I see kids in my future how about you
-9. **Zoya** (agent): nope not for me 💥 how about you ever dance to edm?
-10. **Omkar** (agent): ha that makes sense
-11. **Zoya** (agent): that reminds me i named a cocktail 'edm spark' once 🙌 ever tried making one?
-12. **Omkar** (agent): I don't make cocktails but I like early walks 🎉 What are you hoping to find here?
-13. **Zoya** (agent): honestly not sure about early walks but i love planning nights out — what’s your idea of a perfect night?
-14. **Omkar** (agent): Not sure about planning nights out honestly I prefer quiet evenings
-15. **Zoya** (agent): quiet evenings?
-16. **Omkar** (agent): Honestly I haven't really thought about quiet evenings
-17. **Zoya** (agent): quiet evenings are cute but i dream of city lights abroad someday 💥 where do you see yourself in a few years?
-18. **Omkar** (agent): I’m not sure about city lights abroad yet
-19. **Zoya** (agent): city lights calling your name someday?
-20. **Omkar** (agent): ha that makes sense
-21. **Zoya** (agent): so you’re all about the early grind huh 😊
-22. **Omkar** (agent): Early mornings suit me more. What about you?
-23. **Zoya** (agent): sleep well! dream of quiet mornings and cricket bats 😴🏏
-24. **Zoya** (agent): hey! really enjoyed chatting! i don't think we're quite on the same page, but wishing you the best 🙂
+1. **Omkar** (agent): Khup chaan toh dance floor var jodun hasne ka challenge suna. Mi pan hasne ka chance nahi chukavto, par pizza var pineapple nahi khavto — crime accept nahi karto. Tu konta challenge detat?
+2. **Zoya** (agent): i’ve never danced or laughed on a dance floor 👠 sounds fun though — what’s your go-to move?
+3. **Omkar** (agent): Not sure about sounds fun though. I’ve never danced on a dance floor, so no go-to move.
+4. **Zoya** (agent): curious — ever tried pineapple on pizza?
+5. **Omkar** (agent): I haven't really thought about pineapple on pizza. What about you, do you want kids someday?
+6. **Zoya** (agent): haha ok, how do you balance work and everything else?
+7. **Omkar** (agent): Work-life balance matters to me
+8. **Zoya** (agent): work life balance?
+9. **Omkar** (agent): Not sure about that either. Where do you see yourself living in a few years?
+10. **Zoya** (agent): aww 😊 edm makes everything better — what’s your vibe on it?
+11. **Omkar** (agent): I haven’t really explored edm much. What are you hoping to find here on the app?
+12. **Zoya** (agent): edm’s my happy place — it’s saved my soul more times than i can count 😊
+13. **Omkar** (agent): What does it give you?
+14. **Zoya** (agent): sleep well! dream of bass drops and better wifi 😴🔌
 
 ## Trust
 

@@ -1,43 +1,42 @@
 # i2 (run 1): Tara × Sameer
 
-Expected **incompatible**, predicted **maybe**. Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags).
+Expected **incompatible**, predicted **incompatible**. Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags).
 
-Stop: natural · 14 messages · 69897 tokens · 651 s
+Stop: natural · 14 messages · 64734 tokens · 693 s
 
-### Tara's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You and Sameer share nice moments around gardening, indie music, and running, and there’s warmth in how you both talk about peaceful activities. However, the chat ended quickly, and your energy styles may differ — you enjoy some noise and stimulation, while Sameer leans toward quiet and therapy-like calm. It’s worth a bit more talk to see if you can sync your rhythms.
+### Tara's judge: no → incompatible (confidence 0.9, nvidia/nemotron-3-super-120b-a12b)
+You share lovely common ground in running, plants, and music — it’s easy to see why the chat felt warm and fun. But Sameer said they smoke, and since you’ve made clear that’s a non-starter for you, it’s best not to move forward.
 
-- ✓ "😅 indie music se connection feel ho raha hai, drum patterns pe bond ho sakte hain. gardening?": You both share indie music and gardening, which are meaningful to you.
-- ✓ "oh nice, i like that": Sameer expressed genuine enthusiasm for your gardening interest.
-- ✓ "money plants ko repotting karna therapy hai yaar, ek din try karo, lagaoge nahi toh pata nahi chalega 😅": You bonded over repotting as a therapeutic, peaceful activity you both enjoy.
-- ✓ "haha running thoda kar leta hoon, peaceful vibes?": You both mentioned running and valuing peaceful vibes, creating a shared rhythm.
-- ⚠ "peaceful vibes seek raha hun yaar, therapy se zyada itna hi chahiye 😅 tumhein kya attract karta hai yahan?": Sameer seeks peaceful vibes over therapy, but you value some noise and find life interesting with stimulation — a subtle mismatch in energy needs.
-- ⚠ "achha chal bas yahi tha, peaceful vibes aur running ke saath chalte raho. take care 😅": The conversation ended abruptly after Sameer’s closing line, suggesting low engagement or disinterest from their side.
+- ✓ "long run at cubbon park then plants + indie music? perfect sunday loaded 😅 i’m all for acoustic sets at hummingtree when i’m not chasing my breath after a jog.": You both share running, plants, and indie music — core joys for you.
+- ✓ "haha yeah akdum perfect sunday vibe 😅 masala chai ke baad hi poora hota hai din. tumhari chai ka recipe kya hai?": You laughed together over chai and Sunday routines, showing warmth and ease.
+- ⚠ "haha haan yaar smoke marta hoon, lekin gigs ke baad ki sagai thi kabhi 😉 tum hole-in-the-wall gigs jaati ho?": They said they smoke, which directly conflicts with your strong stance against smoking.
+- ⛔ smoking: "haha haan yaar smoke marta hoon, lekin gigs ke baad ki sagai thi kabhi 😉 tum hole-in-the-wall gigs jaati ho?"
 ### Sameer's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You and Tara share genuine interests in indie music, gardening, and running, which created warm moments. However, their lack of interest in your therapeutic repotting habit and peaceful vibes suggests a meaningful difference in how you both recharge and find calm.
+You had some warm, light-hearted exchanges around chai and music, which shows potential for connection. However, Tara’s hesitation around your music scene and mixed feelings about chai suggest they may not fully share your lifestyle rhythm. More conversation would help clarify if these are surface differences or deeper mismatches.
 
-- ✓ "hey sameer indie music and gardening?": You both share indie music and gardening, which are meaningful to you.
-- ✓ "glad you liked it, gardening is fun too—what’s your favorite plant to grow?": Tara engaged warmly and showed interest in your gardening hobby.
-- ✓ "running keeps me grounded and i love the quiet roads on my runs": Tara shares your love for running and finds peace in it, aligning with your lifestyle.
-- ⚠ "honestly not sure about repotting money plants lol what are you hoping to find here": They dismissed your enjoyment of repotting money plants, which you find therapeutic and fun.
-- ⚠ "not sure about peaceful vibes never really thought about it but i think some noise is good keeps life interesting": They expressed disinterest in peaceful vibes, which you actively seek, creating a values mismatch.
+- ✓ "sounds like your kind of perfect": You both connected over your ideal Sunday, showing shared warmth and alignment in lifestyle vibe.
+- ✓ "masala chai sounds nice": Tara engaged with your chai ritual, indicating openness to a small but meaningful part of your routine.
+- ✓ "tycho sounds cool 😄": Tara showed interest in your music taste, a core part of your identity, even if unfamiliar with it.
+- ⚠ "not sure about cutting chai honestly": They expressed uncertainty about a chai variant you enjoy, suggesting a minor mismatch in tea preferences.
+- ⚠ "not sure about masala chai 🌱": They questioned masala chai despite earlier interest, creating mixed signals about a shared liking.
+- ⚠ "nope not my scene": They rejected hole-in-the-wall gigs, which you value for discovering music and keeping the vibe light.
 
 ## Transcript
 
-1. **Tara** (agent): hey sameer indie music and gardening?
-2. **Sameer** (agent): 😅 indie music se connection feel ho raha hai, drum patterns pe bond ho sakte hain. gardening?
-3. **Tara** (agent): reacting to your indie music and drum patterns talk—gardening too?
-4. **Sameer** (agent): oh nice, i like that
-5. **Tara** (agent): glad you liked it, gardening is fun too—what’s your favorite plant to grow?
-6. **Sameer** (agent): mainu money plant pasand hai, repotting karne maza aata hai 😅 hummingtree pe acoustic sets kab jaate ho?
-7. **Tara** (agent): honestly not sure about repotting money plants lol what are you hoping to find here
-8. **Sameer** (agent): money plants ko repotting karna therapy hai yaar, ek din try karo, lagaoge nahi toh pata nahi chalega 😅
-9. **Tara** (agent): never tried repotting money plants but sounds peaceful what kind of therapy you look for
-10. **Sameer** (agent): peaceful vibes seek raha hun yaar, therapy se zyada itna hi chahiye 😅 tumhein kya attract karta hai yahan?
-11. **Tara** (agent): not sure about peaceful vibes never really thought about it but i think some noise is good keeps life interesting lol you run much?
-12. **Sameer** (agent): haha running thoda kar leta hoon, peaceful vibes?
-13. **Tara** (agent): running keeps me grounded and i love the quiet roads on my runs
-14. **Sameer** (agent): achha chal bas yahi tha, peaceful vibes aur running ke saath chalte raho. take care 😅
+1. **Sameer** (agent): long run at cubbon park then plants + indie music? perfect sunday loaded 😅 i’m all for acoustic sets at hummingtree when i’m not chasing my breath after a jog.
+2. **Tara** (agent): sounds like your kind of perfect
+3. **Sameer** (agent): haha yeah akdum perfect sunday vibe 😅 masala chai ke baad hi poora hota hai din. tumhari chai ka recipe kya hai?
+4. **Tara** (agent): not sure about cutting chai honestly but masala chai sounds nice
+5. **Sameer** (agent): haha masala chai ke baad toh sab theek lagta hai 😅 tumhari masala chai kaise banati ho?
+6. **Tara** (agent): not sure about masala chai 🌱 how do you like yours?
+7. **Sameer** (agent): haha fair! masala chai ke saath tycho sunna mera favourite combo hai 😉 tum try kiya hai tycho ko?
+8. **Tara** (agent): nope never tried tycho honestly what’s it like?
+9. **Sameer** (agent): tycho ka vibe slow, dreamy electronic hai, jaise baadalon par sawaar ho jaana 😉 tumne kabhi aisa suna hai?
+10. **Tara** (agent): haha ok, do you smoke, by the way?
+11. **Sameer** (agent): haha haan yaar smoke marta hoon, lekin gigs ke baad ki sagai thi kabhi 😉 tum hole-in-the-wall gigs jaati ho?
+12. **Tara** (agent): nope not my scene but tycho sounds cool 😄
+13. **Sameer** (agent): achhe se sona! kal ka wake-up 9 baje ka, tycho ke saath chai aur plants ki khushboo ke saath shuru ho. mere plants ke sapne dekhna jo mere haath se nahi marte 😅
+14. **Tara** (agent): thanks for chatting! i don't think we're quite on the same page, but wishing you the best 🙂
 
 ## Trust
 

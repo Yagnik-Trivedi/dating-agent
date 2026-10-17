@@ -2,41 +2,39 @@
 
 Expected **compatible**, predicted **maybe**. Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke.
 
-Stop: natural · 14 messages · 57569 tokens · 533 s
+Stop: natural · 13 messages · 77064 tokens · 579 s
 
-### Meera's judge: yes → compatible (confidence 0.85, nvidia/nemotron-3-super-120b-a12b)
-You and Ishaan share several important values: you both don’t smoke, are open to having kids, value work-life balance, and enjoy trekking. The conversation felt warm and aligned, with no red flags on your dealbreakers.
+### Meera's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-ultra-550b-a55b)
+You share a love for trekking and he doesn't smoke, which matches your dealbreakers. However, he didn't answer your question about kids and the chat stayed quite surface-level.
 
-- ✓ "i don't smoke": They confirmed they don't smoke, matching your dealbreaker.
-- ✓ "i'm open to having kids someday": They expressed openness to having kids, aligning with your goal.
-- ✓ "immediate family close but i make my own choices": They value family closeness with personal autonomy, which fits your preference for somewhat family involvement.
-- ✓ "balance work life matters to me": They prioritize work-life balance, matching your value of balanced career ambition.
-- ✓ "rajmachi trail early morning is my go-to": They enjoy trekking, a shared interest you both care about.
-### Ishaan's judge: unsure → maybe (confidence 0.5, nvidia/nemotron-3-super-120b-a12b)
-You both share openness to kids and appreciate work-life balance, which is promising. However, Meera’s responses were often brief and disengaged, and they didn’t address your question about handling disagreements, leaving some uncertainty about mutual investment.
+- ✓ "rajmachi sunrise trek last week gave me some cool temple sketches": You both enjoy trekking and sketching, a shared interest that matters to you.
+- ✓ "never smoke myself": He doesn't smoke, matching your dealbreaker.
+- ✓ "how about long-term hopes, what does that look like for you?": He's asking about long-term connection, aligning with your goal.
+- ✓ "haha ok, what are you hoping to find on here?": He showed interest in your dating intentions early on.
+- ⚠ "haha that's thoughtful 😄 where do you see yourself living in a few years?": He didn't answer your question about kids, instead changed the topic.
+- ⛔ smoking: "never smoke myself"
+- ⛔ looking_for: "how about long-term hopes, what does that look like for you?"
+### Ishaan's judge: yes → compatible (confidence 0.85, nvidia/nemotron-3-super-120b-a12b)
+Meera shares your desire for a long-term connection, doesn’t smoke, and values talking things out and work-life balance. These align well with what matters most to you.
 
-- ✓ "im open to having kids too 🍍": You both share openness to having children, which aligns with your goal.
-- ✓ "same here 🎉 what's your go-to trail for a quick escape?": They affirmed shared value on work-life balance and showed interest in your trekking habit.
-- ⚠ "haha fair 😄": Repeated minimal responses suggest low engagement or dodging deeper conversation.
-- ⚠ "haha fair 😄": Continued use of minimal replies after your question about motivation beyond trails and books indicates avoidance.
-- ⚠ "sleep well!! hope tomorrow’s smooth ☀️": The conversation ended abruptly with a generic sign-off after you asked about conflict style, leaving it unresolved.
+- ✓ "haha I'm here to see if I can meet someone kind and genuine for a long-term connection, hopefully in this city 😄 as for smoking, I never do—how about you?": You both value long-term connection and non-smoking, which are key dealbreakers for you.
+- ✓ "haha nice to hear you don't smoke either 😄 for me long-term means building a life with shared values, like talking things out and balancing work with downtime—what about you, do you see kids as part of that future?": They affirmed non-smoking, long-term thinking, shared values, and constructive conflict style—all aligned with your values.
 
 ## Transcript
 
-1. **Ishaan** (agent): hey meera, saw you love trekking in the sahyadris—any favorite trail you keep going back to?
-2. **Meera** (agent): haha fair 😄
-3. **Ishaan** (agent): haha nice 😏 which one’s your go-to for a quick escape?
-4. **Meera** (agent): haha fair 😄
-5. **Ishaan** (agent): so what brings you here beyond the trails and books
-6. **Meera** (agent): i work as a product designer here and enjoy balanced work life haha do you smoke
-7. **Ishaan** (agent): i don't smoke and balance work life matters to me
-8. **Meera** (agent): same here 🎉 what's your go-to trail for a quick escape?
-9. **Ishaan** (agent): rajmachi trail early morning is my go-to
-10. **Meera** (agent): i haven't done rajmachi but it sounds nice do you ever think about having kids someday
-11. **Ishaan** (agent): i'm open to having kids someday, what about you?
-12. **Meera** (agent): im open to having kids too 🍍 how involved is your family in your relationships
-13. **Ishaan** (agent): immediate family close but i make my own choices how do you usually handle disagreements
-14. **Meera** (agent): sleep well!! hope tomorrow’s smooth ☀️
+1. **Meera** (agent): hey Ishaan, I saw you enjoy trekking and sketching—what’s a recent trail that inspired your drawings?
+2. **Ishaan** (agent): rajmachi sunrise trek last week gave me some cool temple sketches
+3. **Meera** (agent): that sounds amazing—trekking and sketching together?
+4. **Ishaan** (agent): oh nice, how did that start?
+5. **Meera** (agent): not sure how it started for me 🍍 what do you enjoy most about sketching on treks?
+6. **Ishaan** (agent): oh nice, how did that start?
+7. **Meera** (agent): oh nice, how did that start?
+8. **Ishaan** (agent): haha ok, what are you hoping to find on here?
+9. **Meera** (agent): haha I'm here to see if I can meet someone kind and genuine for a long-term connection, hopefully in this city 😄 as for smoking, I never do—how about you?
+10. **Ishaan** (agent): haha never smoke myself — how about long-term hopes, what does that look like for you?
+11. **Meera** (agent): haha nice to hear you don't smoke either 😄 for me long-term means building a life with shared values, like talking things out and balancing work with downtime—what about you, do you see kids as part of that future?
+12. **Ishaan** (agent): haha that’s thoughtful 😄 where do you see yourself living in a few years?
+13. **Meera** (agent): sleep well!! hope tomorrow’s smooth ☀️
 
 ## Trust
 

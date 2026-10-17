@@ -10,21 +10,24 @@
       "Ishaan"
     ],
     "verdicts": [
-      "compatible",
-      "maybe"
+      "maybe",
+      "compatible"
     ],
     "scores": [
-      0.85,
-      0.5
+      0.6,
+      0.85
     ],
     "stopReason": "natural",
     "status": "maybe",
-    "turns": 14,
-    "tokens": 57569,
+    "turns": 13,
+    "tokens": 77064,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 533,
-    "file": "transcripts/c1-run1.md"
+    "seconds": 579,
+    "file": "transcripts/c1-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 4,
+    "constrained": 1
   },
   "i1#1": {
     "id": "i1",
@@ -51,7 +54,10 @@
     "smartCalls": 0,
     "costUsd": 0,
     "seconds": 4,
-    "file": "transcripts/i1-run1.md"
+    "file": "transcripts/i1-run1.md",
+    "agentMsgs": 0,
+    "templateFallbacks": 0,
+    "constrained": 0
   },
   "c7#1": {
     "id": "c7",
@@ -69,43 +75,49 @@
     ],
     "scores": [
       0.6,
-      0.5
+      0.6
     ],
-    "stopReason": "max_turns",
+    "stopReason": "natural",
     "status": "maybe",
-    "turns": 24,
-    "tokens": 116761,
+    "turns": 13,
+    "tokens": 83348,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 1061,
-    "file": "transcripts/c7-run1.md"
+    "seconds": 808,
+    "file": "transcripts/c7-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 1,
+    "constrained": 0
   },
   "i2#1": {
     "id": "i2",
     "run": 1,
     "expected": "incompatible",
-    "predicted": "maybe",
+    "predicted": "incompatible",
     "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
     "names": [
       "Tara",
       "Sameer"
     ],
     "verdicts": [
-      "maybe",
+      "incompatible",
       "maybe"
     ],
     "scores": [
-      0.6,
+      0.9,
       0.6
     ],
     "stopReason": "natural",
-    "status": "maybe",
+    "status": "closed",
     "turns": 14,
-    "tokens": 69897,
+    "tokens": 64734,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 651,
-    "file": "transcripts/i2-run1.md"
+    "seconds": 693,
+    "file": "transcripts/i2-run1.md",
+    "agentMsgs": 14,
+    "templateFallbacks": 1,
+    "constrained": 1
   },
   "f1#1": {
     "id": "f1",
@@ -128,37 +140,43 @@
     "stopReason": null,
     "status": "flagged_fake",
     "turns": 0,
-    "tokens": 2933,
+    "tokens": 3036,
     "smartCalls": 0,
     "costUsd": 0,
-    "seconds": 18,
-    "file": "transcripts/f1-run1.md"
+    "seconds": 26,
+    "file": "transcripts/f1-run1.md",
+    "agentMsgs": 0,
+    "templateFallbacks": 0,
+    "constrained": 0
   },
   "i6#1": {
     "id": "i6",
     "run": 1,
     "expected": "incompatible",
-    "predicted": "incompatible",
+    "predicted": "maybe",
     "reason": "Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him)",
     "names": [
       "Zoya",
       "Omkar"
     ],
     "verdicts": [
-      "incompatible",
-      "incompatible"
+      "maybe",
+      "maybe"
     ],
     "scores": [
-      0.85,
-      0.9
+      0.5,
+      0.4
     ],
     "stopReason": "natural",
-    "status": "closed",
-    "turns": 24,
-    "tokens": 113485,
+    "status": "maybe",
+    "turns": 14,
+    "tokens": 72485,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 1092,
-    "file": "transcripts/i6-run1.md"
+    "seconds": 587,
+    "file": "transcripts/i6-run1.md",
+    "agentMsgs": 14,
+    "templateFallbacks": 1,
+    "constrained": 0
   }
 }

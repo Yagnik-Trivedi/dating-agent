@@ -2,50 +2,38 @@
 
 Expected **compatible**, predicted **maybe**. Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency).
 
-Stop: max_turns · 24 messages · 116761 tokens · 1061 s
+Stop: natural · 13 messages · 83348 tokens · 808 s
 
 ### Hetal's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You and Parth share excitement around dance, food, and long-term intentions, with nice moments of warmth. However, the conversation had some dodged questions and low-effort replies that made it hard to gauge deeper compatibility.
+You and Parth share a genuine spark around food, startups, and garba — it’s clear you both light up talking about these things. That said, their repeated low-effort question at the end makes me wonder if they’re fully present, so it’s hard to tell if this could grow.
 
-- ✓ "Ma long-term thi joi shu chhu, dance ane food ma khoj chu. Tame?": You both value long-term goals and share a passion for dance and food, which are central to your lifestyle.
-- ✓ "Food ane garba ma family nu saath mazi ne che, tame?": They emphasized family involvement in cultural activities like food and garba, aligning closely with your value of family in relationship decisions.
-- ⚠ "Not sure about buttermilk, honestly 😄 How long you dancing today?": They dodged your question about buttermilk habits, showing low engagement on a topic you care about (food/drink preferences).
-- ⚠ "ha that makes sense": Repeated minimal responses suggest low effort in sustaining meaningful conversation, especially after you shared about your startup.
-### Parth's judge: unsure → maybe (confidence 0.5, nvidia/nemotron-3-super-120b-a12b)
-You and Hetal share some fun overlaps — dancing, startups, and a love for garba and food — which created moments of warmth. However, Hetal often replied with minimal or deflecting responses, making it hard to gauge real interest or depth. More conversation would help clarify if there’s a genuine spark.
+- ✓ "Testing flavors daily is my thing — lately loved a smoky masala khakhra batch. Still learning the art of taste-testing snacks like you do.": You both share a deep, daily practice of taste-testing snacks, which is a core part of your identity and joy.
+- ✓ "Hu khub garba khelu chhu undhiyu ma sugar mix thai 😊": You both light up talking about garba and food traditions, showing warmth and cultural resonance.
+- ⚠ "Still figuring startup life?": They repeated a low-effort question after you’d already shared your journey, suggesting disengagement.
+### Parth's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
+You shared real warmth and common ground around food, startups, and garba — it felt lively and aligned. But Hetal hasn’t thought about family life yet, which is important to you since you want kids and value family in decisions. Until that aligns, it’s hard to see a long-term fit.
 
-- ✓ "dancing keeps me going": You both value dancing as a source of energy and joy, which aligns with Parth’s love for garba and movement.
-- ✓ "oh nice, i like that": Hetal responded warmly and repeatedly to Parth’s mentions of food, garba, and family, showing engagement and shared appreciation.
-- ✓ "snack startup ma kaam nakhu chhu par startups ma interest che": You both show interest in startups — a meaningful overlap given Parth’s founder background and passion for food innovation.
-- ⚠ "haha fair 😄": This response was used multiple times to deflect or avoid deeper engagement, suggesting low effort or disinterest in continuing meaningful conversation.
-- ⚠ "chhe?": Repeated use of minimal responses like 'chhe?' indicates disengagement or lack of investment in building rapport.
+- ✓ "hii parth! saw you left ca for d2c food brand 😊 that’s bold—what made you take the leap?": They showed warmth and genuine interest in your career move, which matters to you.
+- ✓ "i taste-test snacks daily for my venture—what’s your fav flavor you’ve tested lately?": You both share a hands-on passion for snack testing, a meaningful interest for you.
+- ✓ "smoky masala khakhra sounds fire! haven't tried that yet, curious how it tastes 😼": They engaged warmly with your food interest, matching your love for bold flavors.
+- ✓ "haha love that garba + undhiyu combo! 😼": They lit up over your cultural combo of garba and undhiyu, showing shared joy in your traditions.
+- ⚠ "honestly, haven't really thought much about family life yet — still figuring out startup life and snacks 😊": They haven’t considered family life, which conflicts with your goal of wanting children and close family involvement.
 
 ## Transcript
 
-1. **Parth** (agent): Garba for 5 hours straight? That’s serious stamina — do you hydrate with buttermilk or something stronger mid-dance? 😅
-2. **Hetal** (agent): haha fair 😄
-3. **Parth** (agent): Chhe, buttermilk keeps me going strong
-4. **Hetal** (agent): chhe? garba ma pani piyu chhu, buttermilk nahi thodi 😊🎉
-5. **Parth** (agent): ha that makes sense
-6. **Hetal** (agent): chhe?
-7. **Parth** (agent): oh nice, i like that
-8. **Hetal** (agent): parth chhe buttermilk pilavu che?
-9. **Parth** (agent): Not sure about buttermilk, honestly 😄 How long you dancing today?
-10. **Hetal** (agent): not sure about buttermilk either 😼 dancing keeps me going, what are you looking for here?
-11. **Parth** (agent): Ma long-term thi joi shu chhu, dance ane food ma khoj chu. Tame?
-12. **Hetal** (agent): oh nice, i like that
-13. **Parth** (agent): Food ane garba ma family nu saath mazi ne che, tame?
-14. **Hetal** (agent): oh nice, i like that
-15. **Parth** (agent): Mota maza aavi chhe! Snack startup ma kaam kem balance karu chhu tane?
-16. **Hetal** (agent): snack startup ma kaam nakhu chhu par startups ma interest che 😊 tane kem balance karyu che?
-17. **Parth** (agent): ha that makes sense
-18. **Hetal** (agent): chhe?
-19. **Parth** (agent): oh nice, i like that
-20. **Hetal** (agent): parth ne chhe, garba ma energy kem maja chhu?
-21. **Parth** (agent): Garba ma?
-22. **Hetal** (agent): haha fair 😄
-23. **Parth** (agent): Energy maja chhu garba ma, especially with dhol beats 😄 Kem chhu tane?
-24. **Hetal** (agent): chhe? thoda rest karjo, maja karo garba ma 😊
+1. **Hetal** (agent): hii parth! saw you left ca for d2c food brand 😊 that’s bold—what made you take the leap?
+2. **Parth** (agent): Left CA for my D2C food brand — startup life pulled me in. Still testing flavors daily. What bold move are you proud of?
+3. **Hetal** (agent): i taste-test snacks daily for my venture—what’s your fav flavor you’ve tested lately?
+4. **Parth** (agent): Testing flavors daily is my thing — lately loved a smoky masala khakhra batch. Still learning the art of taste-testing snacks like you do.
+5. **Hetal** (agent): smoky masala khakhra sounds fire! haven't tried that yet, curious how it tastes 😼 do you see kids in your future someday?
+6. **Parth** (agent): About kids, haan, would love to have them someday. What’s your take on family life?
+7. **Hetal** (agent): honestly, haven't really thought much about family life yet — still figuring out startup life and snacks 😊 what about you, any favorite garba memory with family?
+8. **Parth** (agent): Still figuring startup life? Not quite — taste-testing snacks daily keeps me sharp. That reminds me: undhiyu tastes better with a sprinkle of sugar, balances the fenugreek.
+9. **Hetal** (agent): haha tell me more?
+10. **Parth** (agent): Hu khub garba khelu chhu undhiyu ma sugar mix thai 😊
+11. **Hetal** (agent): haha love that garba + undhiyu combo! 😼 what are you hoping to find here on the app?
+12. **Parth** (agent): Still figuring startup life?
+13. **Hetal** (agent): best of luck with your startup and taste-testing, parth! hope you find what you're looking for 😊
 
 ## Trust
 
