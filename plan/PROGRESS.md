@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (plan 09 resumed on the owner's machine: npm test 64/64, judge-check running)
+- **Last updated:** 2026-10-17, by Claude Code (STOPPED: plan 09 step 1 failed at agent-check's inbox step; waiting for the owner)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -74,7 +74,14 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - NVIDIA notes: Ultra (`MODEL_SMART`) now returns **404** for this key; the Super fallback handled every judge. The fast model (Lightning) times out often at night.
 - `judge-check` runs 2–3: no result (one NVIDIA outage, one stopped at bedtime: the laptop can't stay on overnight).
 
-**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. `agent-check` run 1 on 09 failed at the inbox step again ("favourite IPL team?" → "i don't follow IPL much…", no item): yesterday's fix relied on perceive tagging the topic unknown. Now code-only: a question to me + a hedged reply ("don't follow", "haven't tried", "not sure") → inbox. `npm test` 65/65; agent-check re-running. Then `seed-check` / `api-check` / `check-indexes`.
+**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. `agent-check` run 1 on 09 failed at the inbox step again ("favourite IPL team?" → "i don't follow IPL much…", no item): yesterday's fix relied on perceive tagging the topic unknown. Now code-only: a question to me + a hedged reply ("don't follow", "haven't tried", "not sure") → inbox. `npm test` 65/65. **agent-check run 2 on 09 also failed:** "favourite IPL team?" → "haha cheering for rcb!", an invented fact with no "I", so the grounding check didn't see a claim, and there was no inbox item. **STOPPED per the owner's approved plan** (step 1: report and stop on failure).
+
+**Owner's approved plan (2026-10-17):**
+1. Close 09 (agent-check, then seed/API/index checks, merge).
+2. Make "ask my human" structural on `fix/ask-my-human`: question detection (English + Hinglish) → concept dictionary → "do I have any fact on it?" → inbox if not; hedge regex as fallback; dedupe per concept; max 3 per conversation; tests; agent-check 3× in a row.
+3. Plan 11 personas on `feat/plan-11-personas`: quotas file, restyle script, check-personas script, incremental seeding, re-run checks + eval `--limit 6`.
+
+⏸ **`fix/ask-my-human`** (`eadde47`, pushed): unfinished WIP of an "answering mode" in `groundingCheck`, where clauses without "I" count as claims when answering a question about me. Its new test fails ("haha cheering for rcb" is skipped as a reaction clause). Step 2 replaces it with the concept-based rule; the hedge regex from `c821773` stays as the fallback. Then `seed-check` / `api-check` / `check-indexes`.
 
 **Plan 11A coverage today** (`seed/personas.json`, measured from the E samples + the gate code):
 - **Languages: all 30 personas are English.** Plan 11 needs Hinglish ≥ 6, Devanagari ≥ 2, Gujarati ≥ 2, Tamil/Marathi ≥ 2. Pooja/Rohit/Arjun code-switch a little (~5% Hinglish).
@@ -103,7 +110,7 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - **`TAVILY_API_KEY` is empty:** date ideas return 503 `DATE_IDEAS_UNAVAILABLE`.
 - **Nebius account + promo credits** for plan 14 (switch by Oct 26). Until then dev runs on NVIDIA's free API (~40 requests/min; it sometimes times out).
 - **Plan 18:** 19 and 20 are not for Claude Code (owner, 2026-10-17). Plan 18 §2–§11 ideas get folded in only where plans 09–11 already call for them; no retro-fit of 05/17 unless the owner asks.
-- **"go" checkpoints:** each plan stops for "go" after its checks pass. Plan 09 got "go".
+- **Waiting for the owner:** step 1 failed on the "ask my human" check. Options: run step 2 first (it fixes exactly this), then finish step 1.
 
 ## How to continue
 
