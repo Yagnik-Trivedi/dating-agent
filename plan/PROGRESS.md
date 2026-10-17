@@ -74,7 +74,13 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - NVIDIA notes: Ultra (`MODEL_SMART`) now returns **404** for this key; the Super fallback handled every judge. The fast model (Lightning) times out often at night.
 - `judge-check` runs 2–3: no result (one NVIDIA outage, one stopped at bedtime: the laptop can't stay on overnight).
 
-**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. Now: `agent-check`, then `seed-check` / `api-check` / `check-indexes`.
+**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. `agent-check` run 1 on 09 failed at the inbox step again ("favourite IPL team?" → "i don't follow IPL much…", no item): yesterday's fix relied on perceive tagging the topic unknown. Now code-only: a question to me + a hedged reply ("don't follow", "haven't tried", "not sure") → inbox. `npm test` 65/65; agent-check re-running. Then `seed-check` / `api-check` / `check-indexes`.
+
+**Plan 11A coverage today** (`seed/personas.json`, measured from the E samples + the gate code):
+- **Languages: all 30 personas are English.** Plan 11 needs Hinglish ≥ 6, Devanagari ≥ 2, Gujarati ≥ 2, Tamil/Marathi ≥ 2. Pooja/Rohit/Arjun code-switch a little (~5% Hinglish).
+- **Styles:** long 12, emoji 6, formal 5, terse 1. Needs terse ≥ 4.
+- **Gate coverage** (a typical new user, common answers, no dealbreakers): Pune 4 / 1 (new woman / new man), Mumbai 1 / 2, Delhi 3 / 1, the other cities 1–2. Needs ≥ 3 in each demo city for both genders.
+- So 11A means rewriting E samples for ~14 personas and adding or re-homing seeds per city. Then re-seed (~30 min).
 
 **Next (resume here; ~45 min, all automatic):**
 1. `cd server && npm run dev-db` (keep it running; the seeded data is still there).
