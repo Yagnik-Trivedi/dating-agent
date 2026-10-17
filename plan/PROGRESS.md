@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (step 2 "ask my human" built on `fix/ask-my-human`; agent-check ×3 running)
-- **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
-- **Last commit (main line):** `3072867` feat(plan-08)
+- **Last updated:** 2026-10-17, by Claude Code (plan 09 merged to main; starting step 3: plan 11 personas)
+- **Main-line branch:** `feat/plan-11-personas` (from `main`) · **main:** `cbd8faa` (plans 02–09 + 17 done)
+- **Last commit (main line):** `857aff1` feat(plan-09), merged in `cbd8faa`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -23,14 +23,14 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 06 | Trust check (v2) | ✅ Done | main | `d8d1a80` | The DB spy proves it reads only the public profile. |
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
-| 09 | Independent judges, handoff, compaction, date ideas (v2) | 🔄 In progress | `feat/plan-09-judges` | `10844d9` | Code + fixes done, `npm test` 64/64. Live: judge-check passed all but date ideas (fixed since); needs one more judge-check + agent-check + seed-check. |
+| 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
 | 11 | Seed personas + evaluation (v2) | ⏸ Paused | `wip/plan-11b` | `a8fc99c` | **Stopped at:** the v1 eval harness (partial), superseded by v2. **Resume:** after 10, write v2 on a new branch reusing `scripts/lib/runPair.js` + the `eval.js` report from `wip/plan-11b`; add ≥ 3 eligible seeds per demo city. |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
 | 14 | Switch back to Nebius Token Factory | ⬜ Not started | — | — | **Due Oct 26.** Needs the Nebius account. The dry-run checklist is queued as side work. |
 | 15 | Knowledge graph: final design | ✅ Done (design doc) | main | `f91d072` | Source of truth for the KG. |
-| 16 | KG upgrade execution | 🔄 In progress | — | — | Steps 1–3 done; step 4: 17, 05, 06, 07, 08 done, 09 in progress. |
+| 16 | KG upgrade execution | 🔄 In progress | — | — | Steps 1–3 done; step 4: 17, 05–09 done; 11 next (owner's order: backend first, 10 later). |
 | 17 | Jobs, storage and indexes | ✅ Done | main | `3522f63` | Job queue, compact vectors, gate query, indexes. |
 | 18 | Architecture decisions | ⬜ Not started | main | (this commit) | Decision doc, now committed. Not folded into the plans yet; §13 maps it to 05/08/09/10/11/17 and a new 19. Needs a decision (see Blocked). |
 | 19 | Verification (liveness + face match) | 🚫 Not for Claude Code | — | — | Owner's decision 2026-10-17. No file. |
@@ -61,48 +61,17 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
 
 ## Currently working on
 
-**Plan 09 on `feat/plan-09-judges`** (owner said "go" 2026-10-16 ~21:45 IST).
+**Owner's approved plan, step 3: plan 11 personas on `feat/plan-11-personas`.**
 
-**Done so far** (`4c08336`, pushed): judge job per side (`services/conversation/judge.js`, smart at t=0 → mid reasoning-off fallback, `judgeModel` recorded; last failed attempt writes an honest `unsure` so a match never hangs) → `MatchDecision`; code validators (verbatim quotes mapped to real message ids, generic positives rejected, frictions or a justification, `dealbreakerRisk` when a `dealbreaker_hint` exists, yes below `JUDGE_YES_MIN` → unsure, a hinted dealbreaker is never an automatic yes) with one re-ask (`judge-reask`); `settle` (lower label, atomic, wind-down with exemplars + closing style from a "no" side whose agent is active); `decide` / "Talk anyway" on `MatchDecision` (reopening un-archives); `compactNotes` job on closed/flagged_fake; `GET /matches/:id/report`, `GET /conversations/:id/replay`; date ideas from my `shared_interest` events + my city; account deletion (ChatEvents, MatchDecisions, "Deleted user", messages kept only in handed-off matches). Removed v1 `compat/evaluate.js`, `compat/config.js`, prompts `alignment` + `verdict`, `Match.report`. `npm test` 63/63 (11 new: validators + settle/handoff/wind-down/Talk anyway/compaction).
-
-Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js` (anti-smoking friction, a dealbreaker that surfaces only in chat → no + dealbreakerRisk + one wind-down + compaction + "Talk anyway", one judge call per side, DB spy, handoff on the simulate pair, date ideas cache/503/spy); `simulate.js` prints MatchDecisions; `runPair` also clears decisions, moments and conversations; `check-indexes` covers `matchdecisions`; Report page shows quotes, the dealbreaker notice from `dealbreakerRisk` and the no-friction justification; account deletion also removes chats once both sides are gone. **Verified without an LLM key:** `npm test` 63/63, `api-check` 19/19 (local dev-db, placeholder env, AI off), `check-indexes` all ✓ incl. TTL, client build OK.
-
-**Live results so far (NVIDIA, local dev-db):**
-- Wipe + re-seed: 30/30 graphs in 1,720 s. **The seeded data is kept on disk in `server/.dev-db/`: do NOT re-seed tomorrow.**
-- `simulate` Meera × Ishaan, twice: judges work end to end, but both runs ended **unsure/unsure → Maybe** (expected Compatible). The chats were weak (looping on dal-chawal, Meera contradicting herself, filler replies), so "unsure" is a fair read; conversation quality is plan 11's tuning job. Two judge-input bugs found and fixed (a question counted as a dealbreaker; a perceive misreading).
-- `judge-check` run 1: **passed** anti-smoking friction, dealbreaker-in-chat → no + dealbreakerRisk + one wind-down + closed, compaction (summary + archiveAt), "Talk anyway" (409 for the yes side), exactly 1 judge call per side, DB spy (36 judge reads, none of the other user), handoff + reveal. **Failed** only at date ideas (fast-model timeout crashed it). Also found: a human side's judge mixed up who said what. Both fixed in `10844d9` (speaker labels, dealbreaker quotes must be their words, date ideas fall back to raw search results).
-- NVIDIA notes: Ultra (`MODEL_SMART`) now returns **404** for this key; the Super fallback handled every judge. The fast model (Lightning) times out often at night.
-- `judge-check` runs 2–3: no result (one NVIDIA outage, one stopped at bedtime: the laptop can't stay on overnight).
-
-**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. `agent-check` run 1 on 09 failed at the inbox step again ("favourite IPL team?" → "i don't follow IPL much…", no item): yesterday's fix relied on perceive tagging the topic unknown. Now code-only: a question to me + a hedged reply ("don't follow", "haven't tried", "not sure") → inbox. `npm test` 65/65. **agent-check run 2 on 09 also failed:** "favourite IPL team?" → "haha cheering for rcb!", an invented fact with no "I", so the grounding check didn't see a claim, and there was no inbox item. **STOPPED per the owner's approved plan** (step 1: report and stop on failure).
-
-**Owner's approved plan (2026-10-17):**
-1. Close 09 (agent-check, then seed/API/index checks, merge).
-2. Make "ask my human" structural on `fix/ask-my-human`: question detection (English + Hinglish) → concept dictionary → "do I have any fact on it?" → inbox if not; hedge regex as fallback; dedupe per concept; max 3 per conversation; tests; agent-check 3× in a row.
-3. Plan 11 personas on `feat/plan-11-personas`: quotas file, restyle script, check-personas script, incremental seeding, re-run checks + eval `--limit 6`.
-
-🔄 **Step 2 on `fix/ask-my-human`** (owner said "do it": step 2 first, then finish step 1):
-- `21742b6`: structural detection.
-  - Question to me (en + Hinglish) → topic (B attribute words, then the longest concept-dictionary n-gram; dictionary only, never creates) → any fact on it.
-  - No fact → inbox even if the reply sounds confident; a fact → no inbox; unresolved → the hedge fallback (now with Hinglish).
-  - Grounding "answering" mode catches uncited answers like "cheering for rcb!" → regeneration.
-  - Prompt line for an unknown topic.
-  - Inbox: `topicKey` dedupe (repeats merge into `askedAgain`), max 3 new per match.
-- `522b2fb`: agent-check counts a merge as filed.
-- `npm test` 74/74 (8 new). **Now:** agent-check must pass 3× in a row, then merge into `feat/plan-09-judges` → finish step 1 (seed/API/index checks) → merge 09 to `main`.
-
-**Plan 11A coverage today** (`seed/personas.json`, measured from the E samples + the gate code):
-- **Languages: all 30 personas are English.** Plan 11 needs Hinglish ≥ 6, Devanagari ≥ 2, Gujarati ≥ 2, Tamil/Marathi ≥ 2. Pooja/Rohit/Arjun code-switch a little (~5% Hinglish).
-- **Styles:** long 12, emoji 6, formal 5, terse 1. Needs terse ≥ 4.
-- **Gate coverage** (a typical new user, common answers, no dealbreakers): Pune 4 / 1 (new woman / new man), Mumbai 1 / 2, Delhi 3 / 1, the other cities 1–2. Needs ≥ 3 in each demo city for both genders.
-- So 11A means rewriting E samples for ~14 personas and adding or re-homing seeds per city. Then re-seed (~30 min).
-
-**Next (resume here; ~45 min, all automatic):**
-1. `cd server && npm run dev-db` (keep it running; the seeded data is still there).
-2. In a second terminal, from `server/`: `MONGODB_URI='mongodb://127.0.0.1:27999/dating_agent?replicaSet=testset' node scripts/judge-check.js` (~15 min). `.env` points at Atlas, so always pass the local URI inline.
-3. Same way: `node scripts/agent-check.js` and `node scripts/seed-check.js` (plan 08 still works).
-4. CLAUDE.md Status line for plan 09 (incl. the Maybe result + why), final commit `feat(plan-09): …`, merge to `main`, stop for "go" on plan 10.
-5. Not doing: the optional round-2 follow-up chat (plan 09 §2 "Optional").
+- **Step 1 ✅:** plan 09 merged (`cbd8faa`). judge-check passed every step, agent-check 3× in a row, api-check 19/19, seed-check end to end, check-indexes ✓, `npm test` 74/74.
+- **Step 2 ✅:** "ask my human" is structural (`21742b6`, `522b2fb`). Tests: IPL with no cricket fact → inbox; with a "dislikes cricket" fact → none, honest dislike grounded; Hinglish "tera favourite IPL team kaunsa hai?" → inbox; a repeat → merged; a confident uncited reply → grounding problem (regeneration) + inbox. In all 3 agent-check runs Meera answered honestly ("not sure about ipl teams honestly") and the inbox item was filed.
+- **Step 3 (now):**
+  - a) `seed/persona-quotas.json`
+  - b) `scripts/seed/restyle-personas.js` (voice answers only, cached by spec hash)
+  - c) `scripts/seed/check-personas.js` (pure code, non-zero exit on a quota miss)
+  - d) incremental seeding (`contentHash`, `--force`)
+  - e) re-run the 08/09 checks + eval `--limit 6`, then merge
+- **Baseline before step 3:** all 30 English; styles long 12 / emoji 6 / formal 5 / terse 1; a new user sees 1–4 seeds per city.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
