@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (estimates added to the owner's order; resuming plan 09 checks)
+- **Last updated:** 2026-10-17, by Claude Code (plan 09 resumed on the owner's machine: npm test 64/64, judge-check running)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -83,6 +83,8 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - `judge-check` run 1: **passed** anti-smoking friction, dealbreaker-in-chat → no + dealbreakerRisk + one wind-down + closed, compaction (summary + archiveAt), "Talk anyway" (409 for the yes side), exactly 1 judge call per side, DB spy (36 judge reads, none of the other user), handoff + reveal. **Failed** only at date ideas (fast-model timeout crashed it). Also found: a human side's judge mixed up who said what. Both fixed in `10844d9` (speaker labels, dealbreaker quotes must be their words, date ideas fall back to raw search results).
 - NVIDIA notes: Ultra (`MODEL_SMART`) now returns **404** for this key; the Super fallback handled every judge. The fast model (Lightning) times out often at night.
 - `judge-check` runs 2–3: no result (one NVIDIA outage, one stopped at bedtime: the laptop can't stay on overnight).
+
+**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64; `judge-check` run 4 in progress.
 
 **Next (resume here; ~45 min, all automatic):**
 1. `cd server && npm run dev-db` (keep it running; the seeded data is still there).
