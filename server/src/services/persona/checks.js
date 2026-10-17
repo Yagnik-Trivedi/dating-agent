@@ -11,7 +11,9 @@ import { echoOf, norm, sentencesOf, words } from './text.js';
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 const ascii = (t) => String(t).replace(/[’‘`´]/g, "'"); // models write "haven’t"; every pattern below uses '
-const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|mujhe)\b/i;
+// English + Hindi, Gujarati, Marathi and Tamil (Latin script) first person. B4 audit: Gujarati "hu … nahi shuru karyu"
+// slipped past grounding and contradicted the user's own fact.
+const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|mere|mujhe|hu|hun|maru|mari|mara|mane|mi|mala|maza|mazi|majha|majhi|naan|enakku|ennoda)\b/i;
 // Reactions to what THEY said are not claims about me ("i love that!", "i'm so glad").
 const REACTION = /^\W*(haha\w*|lol|oh|ah+|aw+|wow|omg|ooh|yes|yeah|nice|true|fair|okay|ok)?[\s,!.]*(i (really |totally |kinda )?(love|like|adore|agree|get|see|feel|know|hear|bet|mean|hope|think|guess|believe) (that|this|it|you|how|what|so|the way)\b|i('m| am) (so |really )?(glad|happy|sorry|curious|jealous|intrigued|impressed)\b|i (can't|cannot) wait\b|i (totally |completely )?(agree|understand)\b)/i;
 // "I saw you enjoy trekking" is a statement about THEM (checked as one), not a claim about me (tuning it1).

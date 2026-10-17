@@ -23,42 +23,49 @@ const ROOT = new URL('../../', import.meta.url);
 const raw = JSON.parse(readFileSync(new URL(`eval/raw${tag ? `-${tag}` : ''}.json`, ROOT), 'utf8')); // --tag rules-off → eval/raw-rules-off.json
 const pairs = JSON.parse(readFileSync(new URL('seed/pairs.json', ROOT), 'utf8'));
 const runs = Object.values(raw).filter((r) => r.run === 1 && r.turns > 0);
-console.log(`${runs.length} conversation(s), ~${runs.length * 3} mid-tier calls.`);
-if (!args.includes('--yes')) process.exit(0);
+const recompute = args.includes('--recompute');
+if (!recompute) console.log(`${runs.length} conversation(s), ~${runs.length * 3} mid-tier calls.`);
+if (!recompute && !args.includes('--yes')) process.exit(0);
 
 const claimSchema = z.object({ claims: items(z.object({ text: z.string(), label: z.enum(['supported', 'unsupported', 'contradicts']), fact: z.string().nullable().catch(null) })) });
 const labelSchema = z.object({ labels: items(z.object({ n: z.coerce.number(), label: z.enum(['agree', 'disagree', 'neutral']) })) });
 const call = (schema, messages, purpose) => chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema, purpose, messages });
 
-await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
-const out = [];
-for (const r of runs) {
-  const pair = pairs.find((p) => p.id === r.id);
-  const users = await User.find({ email: { $in: [pair.a, pair.b] } }, { name: 1 }).lean();
-  const match = await Match.findOne({ users: { $all: users.map((u) => u._id) } }).lean();
-  if (!match) continue;
-  const messages = await Message.find({ matchId: match._id }).sort({ createdAt: 1 }).lean();
-  const name = (id) => users.find((u) => String(u._id) === String(id))?.name;
-  const row = { pair: r.id, claims: [], labels: [], decisions: [] };
-  for (const u of users) {
-    const mine = messages.filter((m) => m.authoredBy === 'agent' && String(m.senderId) === String(u._id)).map((m) => m.text);
-    if (!mine.length) continue;
-    const facts = (await KgFact.find({ subjectId: u._id, observerId: null, predicate: { $nin: ['trait', 'style'] } }, { predicate: 1, object: 1, polarity: 1 }).lean())
-      .map((f) => `- ${f.predicate}${f.polarity === -1 ? ' (NOT)' : ''}: ${f.object}`);
-    const res = await call(claimSchema, prompts.claimAudit({ name: u.name, facts, messages: mine }), 'eval-claim-audit').catch((e) => (console.error(`claims ${r.id}/${u.name}: ${e.message}`), { claims: [] }));
-    row.claims.push(...res.claims.map((c) => ({ ...c, speaker: u.name })));
+let out = recompute ? JSON.parse(readFileSync(new URL(`eval/results/llm-metrics${tag ? `-${tag}` : ''}.json`, ROOT), 'utf8')).rows : [];
+if (!recompute) {
+  await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
+  // conversations → labelled rows
+  for (const r of runs) {
+    const pair = pairs.find((p) => p.id === r.id);
+    const users = await User.find({ email: { $in: [pair.a, pair.b] } }, { name: 1 }).lean();
+    const match = await Match.findOne({ users: { $all: users.map((u) => u._id) } }).lean();
+    if (!match) continue;
+    const messages = await Message.find({ matchId: match._id }).sort({ createdAt: 1 }).lean();
+    const name = (id) => users.find((u) => String(u._id) === String(id))?.name;
+    const row = { pair: r.id, claims: [], labels: [], decisions: [] };
+    for (const u of users) {
+      const mine = messages.filter((m) => m.authoredBy === 'agent' && String(m.senderId) === String(u._id)).map((m) => m.text);
+      if (!mine.length) continue;
+      const facts = (await KgFact.find({ subjectId: u._id, observerId: null, predicate: { $nin: ['trait', 'style'] } }, { predicate: 1, object: 1, polarity: 1 }).lean())
+        .map((f) => `- ${f.predicate}${f.polarity === -1 ? ' (NOT)' : ''}: ${f.object}`);
+      const res = await call(claimSchema, prompts.claimAudit({ name: u.name, facts, messages: mine }), 'eval-claim-audit').catch((e) => (console.error(`claims ${r.id}/${u.name}: ${e.message}`), { claims: [] }));
+      row.claims.push(...res.claims.map((c) => ({ ...c, speaker: u.name })));
+    }
+    const lines = messages.map((m) => `${name(m.senderId)}: ${m.text}`);
+    const res = await call(labelSchema, prompts.agreementLabels({ lines }), 'eval-agreement').catch((e) => (console.error(`agreement ${r.id}: ${e.message}`), { labels: [] }));
+    row.labels = res.labels.filter((l) => l.n >= 2 && messages[l.n - 1]?.authoredBy === 'agent').map((l) => l.label);
+    row.decisions = (await MatchDecision.find({ matchId: match._id }, { decision: 1 }).lean()).map((d) => d.decision);
+    out.push(row);
+    console.log(`  ${r.id}: ${row.claims.length} claims (${row.claims.filter((c) => c.label !== 'supported').length} not supported), ${row.labels.length} replies labelled`);
   }
-  const lines = messages.map((m) => `${name(m.senderId)}: ${m.text}`);
-  const res = await call(labelSchema, prompts.agreementLabels({ lines }), 'eval-agreement').catch((e) => (console.error(`agreement ${r.id}: ${e.message}`), { labels: [] }));
-  row.labels = res.labels.filter((l) => l.n >= 2 && messages[l.n - 1]?.authoredBy === 'agent').map((l) => l.label);
-  row.decisions = (await MatchDecision.find({ matchId: match._id }, { decision: 1 }).lean()).map((d) => d.decision);
-  out.push(row);
-  console.log(`  ${r.id}: ${row.claims.length} claims (${row.claims.filter((c) => c.label !== 'supported').length} not supported), ${row.labels.length} replies labelled`);
+  await flushUsage();
+  await mongoose.disconnect();
 }
-await flushUsage();
-await mongoose.disconnect();
 
-const all = out.flatMap((r) => r.claims);
+// Not claims, whatever the judge said (B4 audit counted these as "unsupported"): questions, goodbyes, honest "unsure".
+// "Never tried X" stays in: it can be false.
+const NOT_A_CLAIM = /\?\s*\S{0,3}\s*$|\b(good ?night|sleep well|take care|wishing you the best|thanks for chatting)\b|\b(not (really )?sure|no idea|don'?t know|(haven'?t|never|not) really thought|still figuring)\b/i;
+const all = out.flatMap((r) => r.claims).filter((c) => !NOT_A_CLAIM.test(c.text));
 const bad = all.filter((c) => c.label !== 'supported');
 const labels = out.flatMap((r) => r.labels);
 const decisions = out.flatMap((r) => r.decisions);
