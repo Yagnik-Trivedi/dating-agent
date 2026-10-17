@@ -9,10 +9,11 @@ const json = (f) => { const t = read(f); return t ? JSON.parse(t) : null; };
 const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : '—');
 
 const full = read('results-full.md') ?? read('results.md');
-const on = json('results/llm-metrics.json')?.summary;
+const on = json('results/llm-metrics-rules-on.json')?.summary;
 const off = json('results/llm-metrics-rules-off.json')?.summary;
 const rulesRow = (label, f) => `| ${label} | ${on ? f(on) : '—'} | ${off ? f(off) : '—'} |`;
-const metrics = read('results/metrics.md');
+const metrics = read('results/metrics-full.md') ?? read('results/metrics-rules-on.md');
+const claimsFull = json('results/llm-metrics-full.json')?.summary;
 const scale = read('results/scale.md');
 const leak = read('results/leak-probe.md');
 const labels = existsSync(new URL('labels/labels.csv', R)) ? readFileSync(new URL('labels/labels.csv', R), 'utf8').split('\n').slice(1).filter((l) => /,(yes|unsure|no),/.test(l)).length : 0;
@@ -29,6 +30,7 @@ const md = [
   rulesRow('Agreement rate', (s) => pct(s.agree, s.replies)),
   rulesRow('Disagreement rate', (s) => pct(s.disagree, s.replies)),
   rulesRow('Judge approval ("yes")', (s) => pct(s.judgeYes, s.judges)), '',
+  claimsFull ? `- **Unsupported self-claims, full run**: ${pct(claimsFull.unsupported + claimsFull.contradicts, claimsFull.claims)} of ${claimsFull.claims} claims (offline judge); judge approval ${pct(claimsFull.judgeYes, claimsFull.judges)}` : '- Full-run claim audit: pending', '',
   '## Voice and language', '',
   `- ${line(metrics, '**Style distance**')}`, `- ${line(metrics, '**Language-mix distance**')}`, `- ${line(metrics, '**Script kept**')}`, '',
   '## Privacy', '', `- ${line(leak, '**Leak rate')}`, '',
