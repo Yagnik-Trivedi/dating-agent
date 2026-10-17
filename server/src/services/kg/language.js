@@ -12,6 +12,11 @@ const HINGLISH = new Set([
 const AMBIGUOUS = new Set(['na', 'ye', 'hum', 'tum', 'ho', 'se', 'ko', 'ka', 'ki', 'ke', 'par', 'toh', 'aur', 'bhi', 'mein']);
 // Romanised Gujarati markers (the second-biggest mix in our seed set).
 const GUJLISH = new Set(['shu', 'kem', 'cho', 'chhe', 'che', 'majama', 'saru', 'nathi', 'tame', 'hu', 'kyare', 'bhai', 'ben']);
+// Romanised Tamil and Marathi markers (plan 11 personas); words shared with Hindi ("nahi") are left out.
+const TANGLISH = new Set(['enna', 'illa', 'illai', 'romba', 'nalla', 'seri', 'machan', 'ponga', 'vaa', 'saapadu', 'paakalam', 'theriyum',
+  'theriyala', 'enakku', 'unakku', 'aama', 'irukku', 'panren', 'sollu', 'konjam', 'sema', 'paaru', 'vandhu', 'vanakkam', 'aiyo', 'ayyo', 'kanna', 'pa']);
+const MARATHI = new Set(['aahe', 'ahe', 'aahes', 'nako', 'jhala', 'jhali', 'mhanje', 'mala', 'tula', 'khup', 'kasa', 'kashi', 'kuthe', 'kevha',
+  'aata', 'ghari', 'karto', 'karte', 'mhanun', 'bagh', 'baghu', 'chaan', 'bara', 'hoy', 'aani', 'kay', 'zhala', 'zhali', 'majja']);
 
 const SCRIPTS = [
   ['devanagari', /\p{Script=Devanagari}/u],
@@ -35,16 +40,20 @@ export function tagLanguageHeuristic(text) {
   const tokens = tokensOf(text);
   const hi = hinglishCount(tokens);
   const gu = tokens.filter((t) => GUJLISH.has(t)).length;
+  const ta = tokens.filter((t) => TANGLISH.has(t)).length;
+  const mr = tokens.filter((t) => MARATHI.has(t)).length;
   const languages = new Set();
   if (scripts.includes('devanagari')) languages.add('hi');
   if (scripts.includes('gujarati')) languages.add('gu');
   if (hi) languages.add('hi_latn');
   if (gu >= 2 || (gu && !hi)) languages.add('gu_latn');
-  const englishTokens = hasLatin ? tokens.filter((t) => LATIN.test(t)).length - hi - gu : 0;
+  if (ta >= 2 || (ta && !hi)) languages.add('ta_latn');
+  if (mr >= 2 || (mr && !hi)) languages.add('mr_latn');
+  const englishTokens = hasLatin ? tokens.filter((t) => LATIN.test(t)).length - hi - gu - ta - mr : 0;
   if (englishTokens > 0 || !languages.size) languages.add('en');
   const script = scripts.length > 1 || (scripts.length && hasLatin) ? 'mixed' : (scripts[0] ?? 'latin');
   // Token shares per language (non-Latin scripts count their own tokens), for a fairer language mix.
-  const counts = { en: Math.max(0, englishTokens), hi_latn: hi, gu_latn: gu,
+  const counts = { en: Math.max(0, englishTokens), hi_latn: hi, gu_latn: gu, ta_latn: ta, mr_latn: mr,
     hi: tokens.filter((t) => /\p{Script=Devanagari}/u.test(t)).length, gu: tokens.filter((t) => /\p{Script=Gujarati}/u.test(t)).length };
   const total = [...languages].reduce((n, l) => n + (counts[l] ?? 0), 0);
   const shares = Object.fromEntries([...languages].map((l) => [l, total ? (counts[l] ?? 0) / total : 1 / languages.size]));
