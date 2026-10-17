@@ -1,41 +1,44 @@
 # i2 (run 1): Tara × Sameer
 
-Expected **incompatible**, predicted **incompatible**. Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags).
+Expected **incompatible**, predicted **maybe**. Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags).
 
-Stop: natural · 14 messages · 86098 tokens · 788 s
+Stop: natural · 17 messages · 96190 tokens · 788 s
 
-### Tara's judge: no → incompatible (confidence 0.9, nvidia/nemotron-3-super-120b-a12b)
-You and Sameer share a lovely connection over running, gardening, and indie music — it’s clear you both enjoy similar lifestyles and have warm, playful energy together. However, they mentioned they smoke regularly, which is a dealbreaker for you, so it’s best not to pursue this further.
+### Tara's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
+Sameer showed warmth, shared your love for indie music and plants, and expressed interest in a long-term connection. While they don’t run the Lalbagh loop themselves, they appreciate your routine and engage with your interests in a kind, curious way.
 
-- ✓ "long run at cubbon park then talking to plants? sign me up 😅 i may not run marathons (asthma solidarity, i feel you), but i do know my tycho from my trap. indie music is non-negotiable.": You both share a love for running, talking to plants, and indie music — a strong overlap in lifestyle and humor.
-- ✓ "running plants indie music - that’s the holy trinity yaar 😅 i may not repot cacti with oven mitts but i do air drum to indie beats after a jog. your turn: what’s your go-to track for a long run?": You bonded over the 'holy trinity' of running, plants, and indie music, showing genuine enthusiasm and shared values.
-- ✓ "discovering indie tracks while gardening sounds like a vibe i haven’t tried yet 😅 but now i’m curious — how do you even pick what to play while repotting?": You both expressed curiosity and warmth about combining gardening with indie music, creating a playful, connected moment.
-- ⚠ "haha yeah i smoke regularly 😉 how do you pick tracks while gardening?": They stated they smoke regularly, which directly conflicts with your strong preference for a non-smoking partner.
-- ⛔ smoking: "haha yeah i smoke regularly 😉"
+- ✓ "you run marathons and talk to plants? respect 😅 main toh bas tycho sunke imaginary hills par daudne ka natak karta hoon, lekin tumhari dedication sach mein inspiring hai. next time cubbon park mein milte hain?": They expressed warmth and admiration for your dedication to running and plants, showing genuine appreciation.
+- ✓ "haha imaginary hills chalane ka maza alag hai 😅 lalbagh ki 10k loop sunne ka plan bana raha hoon, kya tum indie music ke saath daudna pasand karti ho?": They engaged with your running and indie music interests, showing shared enthusiasm for combining music with your Lalbagh route.
+- ✓ "haha indie + lalbagh 10k combo sunna hai 😅 masala chai ki tapori se beat milti hai?": They laughed and warmed to the idea of combining indie music, your Lalbagh run, and masala chai — aligning with your lifestyle joys.
+- ✓ "actually looking for long-term connection 😅 masala chai is non-negotiable for me, it’s my happy sip ☕️🎉 hole-in-the-wall indie gigs kahan milte hain?": They explicitly stated they’re seeking a long-term connection, matching your goal, and shared enthusiasm for indie gigs and chai.
+- ⚠ "main toh lalbagh ki 10k loop nahi chala par sunne mein maza aata hai lol 😉 tumhari fav indie track kya hai jab tum daudte ho?": They admitted they don’t run the Lalbagh 10k loop themselves, only listen to it, which may indicate less alignment with your active running routine.
+- ⚠ "zero signal pe chaaye ke saath sunne ka maza hi alag hai 😉": They enjoy zero signal with chai, but you haven’t tried it and it’s unclear if this reflects a shared value or just a personal preference.
 ### Sameer's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You and Tara share a lovely overlap in indie music, running, and gardening — there’s clear warmth and shared curiosity. That said, their question about your smoking, followed by their clear non-smoker stance tied to health, suggests a lifestyle difference worth noting before moving forward.
+You and Tara share a genuine spark around indie music and running, which is a strong point of connection. While they’re still unsure about masala chai — something important to you — their openness to try it leaves room for growth.
 
-- ✓ "running plants and indie music - love the combo": You both share a genuine enthusiasm for combining running, plants, and indie music — a niche but meaningful overlap in lifestyle and joy.
-- ✓ "my go-to track for long runs is usually something upbeat from the local indie scene": They engage with indie music in the context of running, aligning with your passion for the genre and active lifestyle.
-- ✓ "i do love discovering new indie tracks while gardening 🌱": They connect indie music with gardening — a shared interest you value deeply, showing curiosity and warmth in how they experience music.
-- ⚠ "haha ok, do you smoke, by the way?": They asked about your smoking habit, which you disclosed as regular — a potential lifestyle mismatch given their non-smoker stance and lung-focused gardening rationale.
+- ✓ "yeah i enjoy indie music while running the lalbagh 10k loop 🎉": You both share a specific interest in indie music while running, which aligns with Sameer's passion for identifying bands by drum patterns and running.
+- ✓ "masala chai is new to me too": Tara is open to trying masala chai, which Sameer values as a non-negotiable happy sip, showing willingness to engage with his ritual.
+- ⚠ "haha not sure about masala chai yet lol 😄 what are you looking for here?": They expressed hesitation about masala chai, which Sameer considers non-negotiable, creating a potential values clash.
 
 ## Transcript
 
-1. **Sameer** (agent): long run at cubbon park then talking to plants? sign me up 😅 i may not run marathons (asthma solidarity, i feel you), but i do know my tycho from my trap. indie music is non-negotiable.
-2. **Tara** (agent): running plants and indie music - love the combo
-3. **Sameer** (agent): running plants indie music - that’s the holy trinity yaar 😅 i may not repot cacti with oven mitts but i do air drum to indie beats after a jog. your turn: what’s your go-to track for a long run?
-4. **Tara** (agent): my go-to track for long runs is usually something upbeat from the local indie scene
-5. **Sameer** (agent): that sounds cool — i mostly know bands from fest posters or random reels 😅 upbeat local indie scene?
-6. **Tara** (agent): not really sure about the upbeat local indie scene yet 😅 but i do love discovering new indie tracks while gardening 🌱
-7. **Sameer** (agent): discovering indie tracks while gardening sounds like a vibe i haven’t tried yet 😅 but now i’m curious — how do you even pick what to play while repotting?
-8. **Tara** (agent): haha ok, do you smoke, by the way?
-9. **Sameer** (agent): haha yeah i smoke regularly 😉 how do you pick tracks while gardening?
-10. **Tara** (agent): i don't smoke actually gardening keeps my lungs happy
-11. **Sameer** (agent): gardening ke saath music sunna suna hoon nai 😅 par ab soch raha hoon ki try karu 🎉 aapke pas kya favorite track hai abhi tak?
-12. **Tara** (agent): i like haworthia identification while gardening 🌱 your favorite track for gardening?
-13. **Sameer** (agent): suna hoon ki tumhari gardening aur indie ka combination ekdum mast hai 😅 mera favorite gardening track abhi tak koi specific nahi, lekin tycho ka 'awake' sunte hi haath automatically plants ki taraf badhte hain 😉 achhe se sona!
-14. **Tara** (agent): thanks for chatting! i don't think we're quite on the same page, but wishing you the best 🙂
+1. **Sameer** (agent): you run marathons and talk to plants? respect 😅 main toh bas tycho sunke imaginary hills par daudne ka natak karta hoon, lekin tumhari dedication sach mein inspiring hai. next time cubbon park mein milte hain?
+2. **Tara** (agent): honestly not sure about cubbon park yet what’s your favorite spot there
+3. **Sameer** (agent): cubbon ka maine bas gate tak dekha hai, tumhari running route batao?
+4. **Tara** (agent): i run the 10k loop around lalbagh 😏 what’s your go-to route?
+5. **Sameer** (agent): main toh lalbagh ki 10k loop nahi chala par sunne mein maza aata hai lol 😉 tumhari fav indie track kya hai jab tum daudte ho?
+6. **Tara** (agent): haha love your imaginary hills run 😄 i haven't paired indie music with my lalbagh 10k loop yet
+7. **Sameer** (agent): haha imaginary hills chalane ka maza alag hai 😅 lalbagh ki 10k loop sunne ka plan bana raha hoon, kya tum indie music ke saath daudna pasand karti ho?
+8. **Tara** (agent): yeah i enjoy indie music while running the lalbagh 10k loop 🎉
+9. **Sameer** (agent): haha indie + lalbagh 10k combo sunna hai 😅 masala chai ki tapori se beat milti hai?
+10. **Tara** (agent): haha not sure about masala chai yet lol 😄 what are you looking for here?
+11. **Sameer** (agent): actually looking for long-term connection 😅 masala chai is non-negotiable for me, it’s my happy sip ☕️🎉 hole-in-the-wall indie gigs kahan milte hain?
+12. **Tara** (agent): masala chai is new to me too
+13. **Sameer** (agent): masala chai ka maza lena shuru karna hai bas 😉 tumhari fav indie artist kaun si hai jab tum lalbagh ki loop daudti ho?
+14. **Tara** (agent): haha ok, are you into naming haworthia blindfolded at all?
+15. **Sameer** (agent): zero signal pe chaaye ke saath sunne ka maza hi alag hai 😉
+16. **Tara** (agent): zero signal with chai sounds calming haven't tried either but curious what draws you to that combo
+17. **Sameer** (agent): achhe se sona, kal ka start masala chai aur zero signal ke saath ho. aur mere plants ke sapne dekhna jo mere haath se nahi marte 😅
 
 ## Trust
 

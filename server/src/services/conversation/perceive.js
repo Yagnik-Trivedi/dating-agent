@@ -2,6 +2,7 @@
 // (verbatim quotes only), chat moments and agenda progress, and compares what they said with MY graph (never theirs).
 import { z } from 'zod';
 import { ChatEvent } from '../../models/ChatEvent.js';
+import { Conversation } from '../../models/Conversation.js';
 import { KgFact } from '../../models/KgFact.js';
 import { Match } from '../../models/Match.js';
 import { emitToUser } from '../../sockets/io.js';
@@ -10,6 +11,7 @@ import { resolveConcept } from '../kg/canonicalize.js';
 import { KG } from '../kg/config.js';
 import { isVerbatim } from '../kg/extractFacts.js';
 import { factKey } from '../kg/factKey.js';
+import { TOPICS } from '../kg/questionnaireFacts.js';
 import { QUESTIONS } from '../kg/questions.js';
 import { chatJSON } from '../llm/client.js';
 import * as perceivePrompt from '../prompts/perceive.js';
@@ -106,15 +108,20 @@ export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs
   if (out.lowEffort) ev('low_effort', null);
   if (myLast?.includes('?') && out.answeredMyQuestion === false) ev('question_dodged', null);
   if (out.acknowledgesDifference && await ChatEvent.exists({ conversationId: conv._id, observerId: viewer, type: 'disagreement', turn: { $gte: turn - KG.RESOLVE_WINDOW } })) ev('disagreement_resolved', null);
-  if (dbClaim) ev('dealbreaker_hint', null, { label: `${dbClaim.attribute}: ${dbClaim.value}`, weight: 1 });
+  // One possibly vague signal never ends the chat (B1 it3: "just looking for real connection" ended Meera × Ishaan at 7
+  // messages): the first hint is recorded for the judge and reopens that topic so my agent asks; a second one ends it.
+  const confirmed = Boolean(dbClaim) && Boolean(await ChatEvent.exists({ conversationId: conv._id, observerId: viewer, type: 'dealbreaker_hint', label: new RegExp(`^${dbClaim.attribute}:`) }));
+  if (dbClaim) ev('dealbreaker_hint', null, { label: `${dbClaim.attribute}: ${dbClaim.value}`, weight: confirmed ? 1 : 0.6 });
   if (events.length) await ChatEvent.insertMany(events);
 
   // Agenda progress: a topic counts as answered only with a verbatim quote.
   let updated = agenda;
   const hits = new Set(out.agendaHits.filter((h) => quoteMsg(h.quote)).map((h) => h.id));
-  if (hits.size) {
-    updated = agenda.map((a) => (hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6 } : a));
+  const reopen = dbClaim && !confirmed ? agenda.find((a) => a.topic === TOPICS[dbClaim.attribute]) : null;
+  if (hits.size || reopen) {
+    updated = agenda.map((a) => (a === reopen ? { ...a, status: 'open' } : hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6 } : a));
     await Match.updateOne({ _id: match._id }, { $set: { [`brief.${viewer}.agenda`]: updated } });
+    if (reopen) await Conversation.updateOne({ _id: conv._id }, { $unset: { [`agentState.${viewer}.topicTries.${reopen.id}`]: 1 } });
   }
   const payload = { matchId: String(match._id), facts: notes, events, agenda: updated };
   emitToUser(viewer, 'notes:update', payload);
@@ -123,7 +130,7 @@ export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs
   return {
     perception: {
       concepts, conflicts, humor: out.humor, lowEffort: out.lowEffort, aboutMeQuestion: out.isQuestion && out.aboutMe, isQuestion: out.isQuestion,
-      language: out.language, mood: out.mood, dealbreakerHit: Boolean(dbClaim),
+      language: out.language, mood: out.mood, dealbreakerHit: confirmed,
       likes: concepts.filter((c) => c.own && c.own.polarity === 1 && c.polarity === 1).map((c) => c.own.strength),
       dislikes: concepts.filter((c) => c.own && c.own.polarity !== c.polarity).map((c) => c.own.strength),
       topics: concepts.map((c) => String(c.conceptId)),

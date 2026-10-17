@@ -2,37 +2,40 @@
 
 Expected **compatible**, predicted **maybe**. Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency).
 
-Stop: natural · 13 messages · 68315 tokens · 573 s
+Stop: natural · 17 messages · 113626 tokens · 887 s
 
-### Hetal's judge: unsure → maybe (confidence 0.5, nvidia/nemotron-3-super-120b-a12b)
-You and Parth bonded over Gujarati food like undhiyu and khakhra, which was warm and fun. But they seemed more focused on their own questions than really engaging with yours, leaving the connection feeling one-sided.
+### Hetal's judge: yes → compatible (confidence 0.85, nvidia/nemotron-3-super-120b-a12b)
+You both share a love for food, especially playful twists like sugar in Undhiyu, and see kids in your long-term future. The conversation flowed with warmth and laughter, indicating genuine connection.
 
-- ✓ "Undhiyu is life, khakhra sabad sako chhu 😄": You both share enthusiasm for Gujarati food, especially undhiyu and khakhra, showing a warm, lively connection over shared culinary joy.
-- ⚠ "Haha ok, what are you hoping to find on here?": They dodged Hetal’s repeated questions about undhiyu and shifted focus to their own agenda, suggesting low engagement with Hetal’s interests.
-### Parth's judge: unsure → maybe (confidence 0.4, nvidia/nemotron-3-super-120b-a12b)
-Hetal showed some warmth and liked undhiyu, which is nice, but the conversation stayed shallow with repeated low-effort replies. It’s hard to tell if there’s real connection or just politeness.
+- ✓ "Ha, ma pan kids future ma dekhu chu, long term che rakhvay chhe": They explicitly want kids long-term, matching Hetal's goal.
+- ✓ "Hu veg chhu": They are vegetarian, aligning with Hetal's diet.
+- ✓ "Undhiyu ma sugar mix karvu j pasand chhe 😅": They enjoy Undhiyu with sugar, a food preference Hetal shares through liking layered flavors and food experimentation.
+### Parth's judge: unsure → maybe (confidence 0.55, nvidia/nemotron-3-super-120b-a12b)
+You and Hetal shared some warm, lighthearted moments around food and startups, which shows potential for connection. However, the conversation didn’t go deep enough to confirm alignment on important topics like family or long-term goals, so more talk would help clarify.
 
-- ✓ "hey parth! saw you left ca for a d2c food brand – that’s bold 😊 what inspired the switch?": They acknowledged your career move with warmth and curiosity.
-- ✓ "haha undhiyu is life!": They shared enthusiasm for undhiyu, a food you love, creating a moment of connection.
-- ⚠ "undhiyu?": They repeated the same minimal question multiple times, showing low engagement.
-- ⚠ "undhiyu chhe?": They kept asking the same thing without building on the conversation, indicating disinterest.
-- ⚠ "undhiyu chhe?": They persisted with a low-effort repeat, suggesting they weren’t investing in deeper talk.
+- ✓ "haha fair question!": You both laughed together, showing warmth and ease in the conversation.
+- ✓ "haha ok, what do you usually eat, any rules?": You both shared a light moment about food habits, indicating mutual interest and comfort.
+- ⚠ "haha undhiyu ma sugar?": They questioned your undhiyu preference with sugar, which could hint at a mismatch in food openness, though delivered playfully.
 
 ## Transcript
 
-1. **Hetal** (agent): hey parth! saw you left ca for a d2c food brand – that’s bold 😊 what inspired the switch?
-2. **Parth** (agent): Bold chhe, par CA nahi chhu 😄
-3. **Hetal** (agent): tame toh gujarati ma boljo?
-4. **Parth** (agent): Hetal, maa thi undhiyu banavu chhu 🎉 Tame khakhra ma jevi sabad tried chhe?
-5. **Hetal** (agent): undhiyu?
-6. **Parth** (agent): Undhiyu chhu F1, tame khakhra ma koi sabad tried chhe?
-7. **Hetal** (agent): undhiyu?
-8. **Parth** (agent): Undhiyu is life, khakhra sabad sako chhu 😄
-9. **Hetal** (agent): undhiyu chhe?
-10. **Parth** (agent): Haha ok, what are you hoping to find on here?
-11. **Hetal** (agent): haha undhiyu is life!
-12. **Parth** (agent): Undhiyu chhe, jevinu maja ma thai gaya?
-13. **Hetal** (agent): sleep well! fresh uthjo, sweet dreams 😊
+1. **Hetal** (agent): parth profile padya... d2c food brand ma CA chhodvu?
+2. **Parth** (agent): Food brand ma hu pan founder chu, startup vibe chhe.
+3. **Hetal** (agent): hu pan snack startup ma chu, food brand vibe kem chhe?
+4. **Parth** (agent): Ha fair, what got you into that?
+5. **Hetal** (agent): haha ok, do you see kids in your future?
+6. **Parth** (agent): Ha, ma pan kids future ma dekhu chu, long term che rakhvay chhe
+7. **Hetal** (agent): haha fair question!
+8. **Parth** (agent): Kids ma future dekhu chhu, long term vision che. Tamaro snack startup ma kem start karyo?
+9. **Hetal** (agent): haha ok, what do you usually eat, any rules?
+10. **Parth** (agent): Hu veg chhu, tame kem khavu chhu?
+11. **Hetal** (agent): hu veg chhu, tane kem khavu chhu?
+12. **Parth** (agent): Undhiyu ma sugar mix karvu j pasand chhe 😅
+13. **Hetal** (agent): ha! undhiyu ma sugar?
+14. **Parth** (agent): Ha! Undhiyu ma thoda sugar - mom ne sikhavu chhe.
+15. **Hetal** (agent): haha undhiyu ma sugar?
+16. **Parth** (agent): Haha tell me more?
+17. **Hetal** (agent): sweet! good luck with the food brand, hope your undhiyu stays sugary 😊
 
 ## Trust
 

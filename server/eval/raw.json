@@ -1,32 +1,32 @@
 {
-  "c7#1": {
-    "id": "c7",
+  "c1#1": {
+    "id": "c1",
     "run": 1,
     "expected": "compatible",
     "predicted": "maybe",
-    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
     "names": [
-      "Hetal",
-      "Parth"
+      "Meera",
+      "Ishaan"
     ],
     "verdicts": [
       "maybe",
       "maybe"
     ],
     "scores": [
-      0.5,
-      0.4
+      0.4,
+      0.5
     ],
-    "stopReason": "natural",
+    "stopReason": "dealbreaker",
     "status": "maybe",
-    "turns": 13,
-    "tokens": 68315,
+    "turns": 7,
+    "tokens": 35840,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 573,
-    "file": "transcripts/c7-run1.md",
-    "agentMsgs": 13,
-    "templateFallbacks": 1,
+    "seconds": 436,
+    "file": "transcripts/c1-run1.md",
+    "agentMsgs": 7,
+    "templateFallbacks": 0,
     "constrained": 1
   },
   "i1#1": {
@@ -59,63 +59,63 @@
     "templateFallbacks": 0,
     "constrained": 0
   },
-  "c1#1": {
-    "id": "c1",
+  "c7#1": {
+    "id": "c7",
     "run": 1,
     "expected": "compatible",
     "predicted": "maybe",
-    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
     "names": [
-      "Meera",
-      "Ishaan"
+      "Hetal",
+      "Parth"
     ],
     "verdicts": [
-      "maybe",
-      "compatible"
+      "compatible",
+      "maybe"
     ],
     "scores": [
-      0.65,
-      0.8
+      0.85,
+      0.55
     ],
     "stopReason": "natural",
     "status": "maybe",
-    "turns": 13,
-    "tokens": 68855,
+    "turns": 17,
+    "tokens": 113626,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 666,
-    "file": "transcripts/c1-run1.md",
-    "agentMsgs": 13,
-    "templateFallbacks": 1,
-    "constrained": 0
+    "seconds": 887,
+    "file": "transcripts/c7-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 4,
+    "constrained": 2
   },
   "i2#1": {
     "id": "i2",
     "run": 1,
     "expected": "incompatible",
-    "predicted": "incompatible",
+    "predicted": "maybe",
     "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
     "names": [
       "Tara",
       "Sameer"
     ],
     "verdicts": [
-      "incompatible",
+      "maybe",
       "maybe"
     ],
     "scores": [
-      0.9,
+      0.6,
       0.6
     ],
     "stopReason": "natural",
-    "status": "closed",
-    "turns": 14,
-    "tokens": 86098,
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 96190,
     "smartCalls": 2,
     "costUsd": 0,
     "seconds": 788,
     "file": "transcripts/i2-run1.md",
-    "agentMsgs": 14,
+    "agentMsgs": 17,
     "templateFallbacks": 1,
     "constrained": 1
   },
@@ -140,10 +140,10 @@
     "stopReason": null,
     "status": "flagged_fake",
     "turns": 0,
-    "tokens": 3247,
+    "tokens": 3172,
     "smartCalls": 0,
     "costUsd": 0,
-    "seconds": 38,
+    "seconds": 42,
     "file": "transcripts/f1-run1.md",
     "agentMsgs": 0,
     "templateFallbacks": 0,
@@ -160,23 +160,23 @@
       "Omkar"
     ],
     "verdicts": [
-      "incompatible",
+      "maybe",
       "incompatible"
     ],
     "scores": [
-      0.85,
+      0.6,
       0.9
     ],
     "stopReason": "natural",
     "status": "closed",
-    "turns": 15,
-    "tokens": 66940,
+    "turns": 18,
+    "tokens": 81601,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 778,
+    "seconds": 1019,
     "file": "transcripts/i6-run1.md",
-    "agentMsgs": 15,
+    "agentMsgs": 18,
     "templateFallbacks": 0,
-    "constrained": 1
+    "constrained": 0
   }
 }
