@@ -119,3 +119,10 @@ test('grounding: being unsure about a combination of things I like is honest; de
   assert.ok(groundingCheck({ text: "i've never tried trekking", facts, myLikes }).problems.length, 'a like denied');
   assert.deepEqual(groundingCheck({ text: 'i saw you enjoy trekking', facts, sources: new Set(['P1']), aboutThem: [{ text: 'you enjoy trekking', sourceIds: ['P1'] }] }).unsupported, [], '"I saw you…" is about them');
 });
+
+test('leak: a one-word private fact is caught by one hit, stems included; unrelated text is not', () => {
+  const priv = [{ object: 'trekking' }, { object: 'board games night' }];
+  assert.equal(leakCheck(['haha true, I do love a good trek'], priv).length, 1);
+  assert.equal(leakCheck(['I like games'], priv).length, 0, 'a 2-word fact still needs 2 hits');
+  assert.equal(leakCheck(['what are you hoping to find here?'], priv).length, 0);
+});

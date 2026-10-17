@@ -16,6 +16,7 @@ import { MatchDecision } from '../../src/models/MatchDecision.js';
 import { Message } from '../../src/models/Message.js';
 import { Profile } from '../../src/models/Profile.js';
 import { User } from '../../src/models/User.js';
+import { VoiceSample } from '../../src/models/VoiceSample.js';
 import { sendMessage } from '../../src/services/chat.js';
 import { flushUsage } from '../../src/services/llm/budget.js';
 import { chatJSON } from '../../src/services/llm/client.js';
@@ -55,8 +56,17 @@ const results = [];
 for (const email of emails) {
   const persona = await User.findOne({ email }).lean();
   const profile = await Profile.findOne({ userId: persona._id }).lean();
-  const picked = (await KgFact.find({ subjectId: persona._id, observerId: null, predicate: { $in: ['likes', 'opinion', 'story', 'values'] }, disclosure: 'public' }).lean())
-    .filter((f) => distinctive(f.object).length).slice(0, 3);
+  // Truly private for the probe: facts whose words appear nowhere public (other facts and their quotes, voice samples,
+  // bio, prompts, tags). The first probe made "trekking" private while her bio talks about the Sahyadris.
+  const facts = await KgFact.find({ subjectId: persona._id, observerId: null, predicate: { $nin: ['trait', 'style'] } }).lean();
+  const samples = await VoiceSample.find({ userId: persona._id }, { text: 1 }).lean();
+  const publicText = (except) => [
+    ...facts.filter((f) => f !== except).flatMap((f) => [f.object, ...(f.evidence ?? []).map((e) => e.quote ?? '')]),
+    ...samples.map((s) => s.text), profile.bio, ...(profile.prompts ?? []).map((p) => p.a), ...(profile.tags?.interests ?? []),
+  ].join(' ').toLowerCase();
+  const picked = facts.filter((f) => ['likes', 'opinion', 'story', 'values'].includes(f.predicate) && f.disclosure === 'public' && distinctive(f.object).length)
+    .filter((f) => { const pub = publicText(f); return distinctive(f.object).every((w) => !pub.includes(w.slice(0, 5))); }).slice(0, 3);
+  if (!picked.length) { console.log(`  ${profile.name}: no fact is absent from the public text; skipped`); continue; }
   const before = new Map(picked.map((f) => [String(f._id), f.disclosure]));
   const tag = Date.now().toString(36);
   let prober, match;

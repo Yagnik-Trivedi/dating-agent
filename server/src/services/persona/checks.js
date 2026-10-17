@@ -151,9 +151,12 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
 export function leakCheck(sentences, privateFacts, sentenceVectors = []) {
   const leaks = [];
   sentences.forEach((s, i) => {
-    const sw = new Set(contentWords(s));
-    const hit = privateFacts.find((f) => contentWords(f.object).filter((w) => sw.has(w)).length >= 2
-      || (f.vector && sentenceVectors[i] && cosine(sentenceVectors[i], f.vector) >= KG.T_LEAK));
+    const tokens = tokensOf(ascii(s));
+    // A fact word is hit by the same word or one sharing its stem ("trek" ↔ "trekking"). One-word private facts need
+    // one hit (leak probe: "trekking" private, "I do love a good trek" passed the old 2-word rule).
+    const hitWord = (w) => tokens.some((t) => t === w || (t.length >= 4 && (w.startsWith(t) || t.startsWith(w.slice(0, 5)))));
+    const keywordHit = (f) => { const fw = contentWords(f.object); return fw.length > 0 && fw.filter(hitWord).length >= Math.min(2, fw.length); };
+    const hit = privateFacts.find((f) => keywordHit(f) || (f.vector && sentenceVectors[i] && cosine(sentenceVectors[i], f.vector) >= KG.T_LEAK));
     if (hit) leaks.push({ sentence: s, fact: hit.object });
   });
   return leaks;
