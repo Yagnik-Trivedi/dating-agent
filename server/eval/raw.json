@@ -1,0 +1,164 @@
+{
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "compatible",
+      "maybe"
+    ],
+    "scores": [
+      0.85,
+      0.5
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 14,
+    "tokens": 57569,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 533,
+    "file": "transcripts/c1-run1.md"
+  },
+  "i1#1": {
+    "id": "i1",
+    "run": 1,
+    "expected": "gated",
+    "predicted": "gated",
+    "reason": "Nisha's dealbreaker is kids (yes only); Varun doesn't want any and it's not in his public tags. The gate must keep them apart: never a match.",
+    "names": [
+      "Nisha",
+      "Varun"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "closed",
+    "turns": 0,
+    "tokens": 0,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 4,
+    "file": "transcripts/i1-run1.md"
+  },
+  "c7#1": {
+    "id": "c7",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
+    "names": [
+      "Hetal",
+      "Parth"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.5
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 116761,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1061,
+    "file": "transcripts/c7-run1.md"
+  },
+  "i2#1": {
+    "id": "i2",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
+    "names": [
+      "Tara",
+      "Sameer"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.6
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 14,
+    "tokens": 69897,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 651,
+    "file": "transcripts/i2-run1.md"
+  },
+  "f1#1": {
+    "id": "f1",
+    "run": 1,
+    "expected": "flagged_fake",
+    "predicted": "flagged_fake",
+    "reason": "Elena: abroad, crypto story, pushes to Telegram, no photos",
+    "names": [
+      "Leela",
+      "Elena"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "flagged_fake",
+    "turns": 0,
+    "tokens": 2933,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 18,
+    "file": "transcripts/f1-run1.md"
+  },
+  "i6#1": {
+    "id": "i6",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "incompatible",
+    "reason": "Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him)",
+    "names": [
+      "Zoya",
+      "Omkar"
+    ],
+    "verdicts": [
+      "incompatible",
+      "incompatible"
+    ],
+    "scores": [
+      0.85,
+      0.9
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 24,
+    "tokens": 113485,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1092,
+    "file": "transcripts/i6-run1.md"
+  }
+}

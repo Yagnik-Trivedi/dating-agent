@@ -1,0 +1,28 @@
+{
+  "_doc": "Plan 11A quotas, checked by scripts/seed/check-personas.js (code only). Language and style are measured on each persona's 15 E replies. A persona counts for a language when that language's share of its tokens is >= languageShareMin.",
+  "languageShareMin": 0.12,
+  "languages": {
+    "hi_latn": { "min": 6, "label": "Hinglish (Latin script)" },
+    "hi": { "min": 2, "label": "Hindi in Devanagari + English" },
+    "gu_latn": { "min": 2, "label": "Gujarati-English (Latin script)" },
+    "ta_latn|mr_latn": { "min": 2, "label": "Tamil-English or Marathi-English" }
+  },
+  "codeSwitchPersonas": { "min": 4, "label": "personas whose replies switch language mid-sentence (>= 3 of 15 replies)" },
+  "styles": {
+    "terse": { "min": 4, "rule": "avg words <= 6 and < 30% of replies end with . ! ?" },
+    "emoji": { "min": 4, "rule": ">= 0.8 emoji per reply" },
+    "long": { "min": 4, "rule": "avg words >= 18" },
+    "formal": { "min": 3, "rule": ">= 80% of replies start with a capital and >= 70% end with . ! ?, < 0.2 emoji per reply" }
+  },
+  "cities": {
+    "demo": ["Ahmedabad", "Mumbai", "Bengaluru", "Pune", "Delhi"],
+    "minPersonasPerCity": 5,
+    "minVisibleSeedsPerNewUser": 3,
+    "newUsers": [
+      { "gender": "woman", "interestedIn": ["man"], "age": 27 },
+      { "gender": "man", "interestedIn": ["woman"], "age": 29 }
+    ],
+    "_visible": "a seed is visible when it passes the gate both ways against a typical new user (the most common B answer per attribute, no dealbreakers); fake personas don't count"
+  },
+  "pairs": "every pair in seed/pairs.json must be in one city and pass the gate, except expected 'gated' pairs, which must fail it"
+}

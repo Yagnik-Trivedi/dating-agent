@@ -17,3 +17,9 @@ test('heuristic tags scripts, mixes and code-switching', () => {
   assert.equal(tagLanguageHeuristic('बहुत nice yaar').script, 'mixed');
   assert.ok(tagLanguageHeuristic('kem cho, shu kare che?').languages.includes('gu_latn'));
 });
+
+test('romanised Tamil and Marathi are tagged (plan 11 personas)', () => {
+  assert.deepEqual(tagLanguageHeuristic('romba nice da, enakku filter coffee is life').languages.sort(), ['en', 'ta_latn']);
+  assert.deepEqual(tagLanguageHeuristic('khup majja aali yesterday, trek was amazing').languages.sort(), ['en', 'mr_latn']);
+  assert.deepEqual(tagLanguageHeuristic('see you at the gym tomorrow').languages, ['en']);
+});

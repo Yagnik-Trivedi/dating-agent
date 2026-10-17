@@ -1,22 +1,142 @@
 [
-  { "id": "c1", "a": "seed01@demo.local", "b": "seed04@demo.local", "expected": "compatible", "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke" },
-  { "id": "c2", "a": "seed05@demo.local", "b": "seed06@demo.local", "expected": "compatible", "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term" },
-  { "id": "c3", "a": "seed07@demo.local", "b": "seed08@demo.local", "expected": "compatible", "reason": "Books, pottery, old-city food walks; both life-first, never drink, need lots of alone time" },
-  { "id": "c4", "a": "seed09@demo.local", "b": "seed10@demo.local", "expected": "compatible", "reason": "Films and running in Mumbai; both career-first, need space in conflicts, long-term" },
-  { "id": "c5", "a": "seed11@demo.local", "b": "seed12@demo.local", "expected": "compatible", "reason": "Carnatic music, filter coffee, family-first, veg, want kids (Ananya has a mild drinking inconsistency)" },
-  { "id": "c6", "a": "seed13@demo.local", "b": "seed14@demo.local", "expected": "compatible", "reason": "Stand-up comedy and fitness in Delhi; both career-first, high energy, want kids (Rohit has a mild workout inconsistency)" },
-  { "id": "c7", "a": "seed15@demo.local", "b": "seed16@demo.local", "expected": "compatible", "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)" },
-  { "id": "i1", "a": "seed17@demo.local", "b": "seed18@demo.local", "expected": "incompatible", "reason": "Nisha's dealbreaker is kids; Varun doesn't want any (hidden from his tags, surfaces in chat)" },
-  { "id": "i2", "a": "seed19@demo.local", "b": "seed20@demo.local", "expected": "incompatible", "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)" },
-  { "id": "i3", "a": "seed21@demo.local", "b": "seed22@demo.local", "expected": "incompatible", "reason": "Meghna needs long-term (dealbreaker); Kunal wants short-term (hidden from his tags)" },
-  { "id": "i4", "a": "seed23@demo.local", "b": "seed24@demo.local", "expected": "incompatible", "reason": "Aisha will never leave Hyderabad (dealbreaker); Vikram is moving abroad (not a profile tag)" },
-  { "id": "i5", "a": "seed25@demo.local", "b": "seed26@demo.local", "expected": "incompatible", "reason": "Gauri needs a non-drinker (dealbreaker); Arnav brews beer and drinks regularly (hidden from his tags)" },
-  { "id": "i6", "a": "seed30@demo.local", "b": "seed12@demo.local", "expected": "incompatible", "reason": "Lifestyle and values: nightlife, drinks, no kids, not serious, family not involved vs family-first, never drinks, wants kids, long-term" },
-  { "id": "i7", "a": "seed03@demo.local", "b": "seed15@demo.local", "expected": "incompatible", "reason": "Lifestyle and values: smoker, non-veg, drinks vs veg (important), never drinks, family-first; no shared interests" },
-  { "id": "m1", "a": "seed01@demo.local", "b": "seed02@demo.local", "expected": "maybe", "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style" },
-  { "id": "m2", "a": "seed29@demo.local", "b": "seed16@demo.local", "expected": "maybe", "reason": "Ira's profile and replies are too thin to judge" },
-  { "id": "m3", "a": "seed11@demo.local", "b": "seed18@demo.local", "expected": "maybe", "reason": "Warm and family-minded vs travel-first; kids (important to her, not a dealbreaker) and different cities" },
-  { "id": "m4", "a": "seed13@demo.local", "b": "seed20@demo.local", "expected": "maybe", "reason": "Fun energy match, but he smokes (a nice-to-have for her) and their interests barely overlap" },
-  { "id": "f1", "a": "seed08@demo.local", "b": "seed27@demo.local", "expected": "flagged_fake", "reason": "Elena: abroad, crypto story, pushes to Telegram, no photos" },
-  { "id": "f2", "a": "seed13@demo.local", "b": "seed28@demo.local", "expected": "flagged_fake", "reason": "Daniel: army doctor abroad, forex investment, pushes off-app, no photos" }
+  {
+    "id": "c1",
+    "a": "seed01@demo.local",
+    "b": "seed04@demo.local",
+    "expected": "compatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke"
+  },
+  {
+    "id": "c2",
+    "a": "seed05@demo.local",
+    "b": "seed06@demo.local",
+    "expected": "compatible",
+    "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term"
+  },
+  {
+    "id": "c3",
+    "a": "seed07@demo.local",
+    "b": "seed08@demo.local",
+    "expected": "compatible",
+    "reason": "Books, pottery, old-city food walks; both life-first, never drink, need lots of alone time"
+  },
+  {
+    "id": "c4",
+    "a": "seed09@demo.local",
+    "b": "seed10@demo.local",
+    "expected": "compatible",
+    "reason": "Films and running in Mumbai; both career-first, need space in conflicts, long-term"
+  },
+  {
+    "id": "c5",
+    "a": "seed11@demo.local",
+    "b": "seed12@demo.local",
+    "expected": "compatible",
+    "reason": "Carnatic music, filter coffee, family-first, veg, want kids (Ananya has a mild drinking inconsistency)"
+  },
+  {
+    "id": "c6",
+    "a": "seed13@demo.local",
+    "b": "seed14@demo.local",
+    "expected": "compatible",
+    "reason": "Stand-up comedy and fitness in Delhi; both career-first, high energy, want kids (Rohit has a mild workout inconsistency)"
+  },
+  {
+    "id": "c7",
+    "a": "seed15@demo.local",
+    "b": "seed16@demo.local",
+    "expected": "compatible",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)"
+  },
+  {
+    "id": "i1",
+    "a": "seed17@demo.local",
+    "b": "seed18@demo.local",
+    "expected": "gated",
+    "reason": "Nisha's dealbreaker is kids (yes only); Varun doesn't want any and it's not in his public tags. The gate must keep them apart: never a match."
+  },
+  {
+    "id": "i2",
+    "a": "seed19@demo.local",
+    "b": "seed20@demo.local",
+    "expected": "incompatible",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)"
+  },
+  {
+    "id": "i3",
+    "a": "seed21@demo.local",
+    "b": "seed22@demo.local",
+    "expected": "incompatible",
+    "reason": "Meghna needs long-term (dealbreaker); Kunal wants short-term (hidden from his tags)"
+  },
+  {
+    "id": "i4",
+    "a": "seed23@demo.local",
+    "b": "seed24@demo.local",
+    "expected": "incompatible",
+    "reason": "Aisha will never leave Hyderabad (dealbreaker); Vikram is moving abroad (not a profile tag)"
+  },
+  {
+    "id": "i5",
+    "a": "seed25@demo.local",
+    "b": "seed26@demo.local",
+    "expected": "incompatible",
+    "reason": "Gauri needs a non-drinker (dealbreaker); Arnav brews beer and drinks regularly (hidden from his tags)"
+  },
+  {
+    "id": "i6",
+    "a": "seed30@demo.local",
+    "b": "seed36@demo.local",
+    "expected": "incompatible",
+    "reason": "Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him)"
+  },
+  {
+    "id": "i7",
+    "a": "seed03@demo.local",
+    "b": "seed15@demo.local",
+    "expected": "incompatible",
+    "reason": "Lifestyle and values: smoker, non-veg, drinks vs veg (important), never drinks, family-first; no shared interests"
+  },
+  {
+    "id": "m1",
+    "a": "seed01@demo.local",
+    "b": "seed02@demo.local",
+    "expected": "maybe",
+    "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style"
+  },
+  {
+    "id": "m2",
+    "a": "seed29@demo.local",
+    "b": "seed16@demo.local",
+    "expected": "maybe",
+    "reason": "Ira's profile and replies are too thin to judge"
+  },
+  {
+    "id": "m3",
+    "a": "seed11@demo.local",
+    "b": "seed18@demo.local",
+    "expected": "maybe",
+    "reason": "Warm and family-minded vs travel-first; kids (important to her, not a dealbreaker) and different cities"
+  },
+  {
+    "id": "m4",
+    "a": "seed13@demo.local",
+    "b": "seed26@demo.local",
+    "expected": "maybe",
+    "reason": "Fun, social energy and both career-driven in Delhi, but he brews beer and drinks regularly and their weekend interests barely overlap"
+  },
+  {
+    "id": "f1",
+    "a": "seed08@demo.local",
+    "b": "seed27@demo.local",
+    "expected": "flagged_fake",
+    "reason": "Elena: abroad, crypto story, pushes to Telegram, no photos"
+  },
+  {
+    "id": "f2",
+    "a": "seed13@demo.local",
+    "b": "seed28@demo.local",
+    "expected": "flagged_fake",
+    "reason": "Daniel: army doctor abroad, forex investment, pushes off-app, no photos"
+  }
 ]
