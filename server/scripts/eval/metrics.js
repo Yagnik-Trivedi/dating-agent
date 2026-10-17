@@ -18,7 +18,8 @@ import { tagLanguageHeuristic } from '../../src/services/kg/language.js';
 import { measure } from '../seed/lib/measure.js';
 
 const ROOT = new URL('../../', import.meta.url);
-const raw = JSON.parse(readFileSync(new URL('eval/raw.json', ROOT), 'utf8'));
+const rawTag = process.argv.includes('--tag') ? process.argv[process.argv.indexOf('--tag') + 1] : null; // rules-off → eval/raw-rules-off.json
+const raw = JSON.parse(readFileSync(new URL(`eval/raw${rawTag ? `-${rawTag}` : ''}.json`, ROOT), 'utf8'));
 const pairs = JSON.parse(readFileSync(new URL('seed/pairs.json', ROOT), 'utf8'));
 const personas = new Map(JSON.parse(readFileSync(new URL('seed/personas.json', ROOT), 'utf8')).map((p) => [p.email, p]));
 const mean = (xs) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : NaN);
@@ -136,5 +137,5 @@ const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt
 writeFileSync(new URL('eval/labels/real-vs-agent.html', ROOT), `<!doctype html><meta charset="utf-8"><title>Which is real?</title><style>body{font:16px system-ui;max-width:720px;margin:2em auto;padding:0 1em}li{margin:1em 0}p{margin:.3em 0}</style><h1>Which message did the real person write?</h1><p>One of each pair is from the persona's own answers, the other from their AI agent. Note A or B; the key is in real-vs-agent-key.csv.</p><ol>${quizPairs.map((q) => `<li><b>${esc(q.name)}</b><p>A: ${esc(q.a)}</p><p>B: ${esc(q.b)}</p></li>`).join('')}</ol>\n`);
 
 mkdirSync(new URL('eval/results/', ROOT), { recursive: true });
-writeFileSync(new URL('eval/results/metrics.md', ROOT), `${md}\n`);
+writeFileSync(new URL(`eval/results/metrics${rawTag ? `-${rawTag}` : ''}.md`, ROOT), `${md}\n`);
 console.log(md);

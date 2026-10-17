@@ -53,6 +53,7 @@ const schema = z.object({
   AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
   DEMO_FAST: bool(false),
+  RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
 });
 

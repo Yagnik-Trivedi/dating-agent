@@ -6,6 +6,7 @@ const LANG = { en: 'English', hi: 'Hindi (Devanagari)', hi_latn: 'Hinglish (Hind
 const langName = (l) => LANG[l] ?? l;
 
 function planLines(plan, firstName) {
+  if (plan.plain) return ['- Reply naturally, the way ' + firstName + ' would.']; // RULES=off ablation: no act plan
   if (plan.end) return [`- END the conversation now: one short, kind closing line in ${firstName}'s own closing style${plan.closingStyle ? ` (e.g. "${plan.closingStyle}")` : ''}. No question.`];
   const lines = [
     `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}.`,

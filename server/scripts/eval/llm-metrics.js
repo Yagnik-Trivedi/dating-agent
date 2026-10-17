@@ -20,7 +20,7 @@ import * as prompts from './prompts.js';
 const args = process.argv.slice(2);
 const tag = args.includes('--tag') ? args[args.indexOf('--tag') + 1] : null;
 const ROOT = new URL('../../', import.meta.url);
-const raw = JSON.parse(readFileSync(new URL('eval/raw.json', ROOT), 'utf8'));
+const raw = JSON.parse(readFileSync(new URL(`eval/raw${tag ? `-${tag}` : ''}.json`, ROOT), 'utf8')); // --tag rules-off → eval/raw-rules-off.json
 const pairs = JSON.parse(readFileSync(new URL('seed/pairs.json', ROOT), 'utf8'));
 const runs = Object.values(raw).filter((r) => r.run === 1 && r.turns > 0);
 console.log(`${runs.length} conversation(s), ~${runs.length * 3} mid-tier calls.`);

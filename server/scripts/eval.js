@@ -21,7 +21,11 @@ const opt = (name, fallback) => (args.includes(`--${name}`) ? args[args.indexOf(
 const runs = Number(opt('runs', 1));
 const concurrency = Number(opt('concurrency', 2));
 const DIR = new URL('../eval/', import.meta.url);
-const RAW = new URL('raw.json', DIR);
+// --rules off (plan 11 B4 ablation) runs plain agents; --tag keeps that run's files apart (raw-<tag>.json, results-<tag>.md).
+const rules = opt('rules', 'on');
+const tag = opt('tag', rules === 'off' ? 'rules-off' : null);
+const suffix = tag ? `-${tag}` : '';
+const RAW = new URL(`raw${suffix}.json`, DIR);
 // Measured on NVIDIA (v2 plans 08/09): ~76k tokens per conversation + ~10k for the two judges; a fake stops at the trust check.
 const EST = { normal: 90_000, fake: 6_000 };
 
@@ -37,7 +41,7 @@ if (!args.includes('--yes')) {
   process.exit(0);
 }
 
-Object.assign(env, NO_PACING);
+Object.assign(env, NO_PACING, { RULES: rules });
 // Personas are bots: each appears in several pairs, so the per-user daily call cap would stop them mid-eval.
 // The global daily token budget and the all-time USD cap still apply.
 env.LLM_DAILY_CALLS_PER_USER = Math.max(env.LLM_DAILY_CALLS_PER_USER, 5000);
@@ -100,7 +104,7 @@ await mapLimit(jobs, concurrency, async (job) => {
   const decisions = await MatchDecision.find({ matchId: res.match._id }).lean();
   const predicted = predictedOf(res.match, decisions);
   const costUsd = (await Usage.aggregate([{ $match: { matchId: res.match._id } }, { $group: { _id: null, usd: { $sum: '$costUsd' } } }]))[0]?.usd ?? 0;
-  const file = `transcripts/${job.pair.id}-run${job.run}.md`;
+  const file = `transcripts/${job.pair.id}${suffix}-run${job.run}.md`;
   writeFileSync(new URL(file, DIR), transcriptMd(job, a, b, res, predicted, decisions));
   raw[job.key] = {
     id: job.pair.id, run: job.run, expected: job.pair.expected, predicted, reason: job.pair.reason,
@@ -153,7 +157,7 @@ const md = [
   ...rows.map((r) => `| ${r.id}${r.run > 1 ? ` #${r.run}` : ''} | ${r.names.join(' × ')} | ${r.expected} | ${r.predicted === r.expected ? '✓ ' : '✖ '}${r.predicted} | ${r.verdicts.map((v, i) => `${v ?? '—'}${r.scores[i] != null ? ` (${r.scores[i]})` : ''}`).join(' / ')} | ${r.stopReason ?? '—'} | ${r.turns} | ${r.templateFallbacks ?? '—'}/${r.agentMsgs ?? '—'} | ${r.tokens.toLocaleString('en')} | ${r.reason} | [link](${r.file}) |`),
   '',
 ].filter((l) => l !== null).join('\n');
-writeFileSync(new URL('results.md', DIR), `${md}\n`);
-console.log(`\nWrote eval/results.md (${first.length} pairs).`);
+writeFileSync(new URL(`results${suffix}.md`, DIR), `${md}\n`);
+console.log(`\nWrote eval/results${suffix}.md (${first.length} pairs, RULES=${rules}).`);
 await flushUsage();
 await mongoose.disconnect();

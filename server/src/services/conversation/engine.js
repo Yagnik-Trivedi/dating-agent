@@ -2,6 +2,7 @@
 // regeneration) → the messages to send. Inputs are MY persona + the transcript (+ my brief built from their public
 // profile); nothing else about the other user. The caller (agent/scheduler.js) handles locks, pacing and sending.
 import { createHash } from 'node:crypto';
+import { env } from '../../config/env.js';
 import { ChatEvent } from '../../models/ChatEvent.js';
 import { Conversation } from '../../models/Conversation.js';
 import { KgFact } from '../../models/KgFact.js';
@@ -33,6 +34,16 @@ const TOPIC_QUESTIONS = {
   'looking for': "what are you hoping to find on here?", 'living in 3-5 years': 'where do you see yourself living in a few years?',
   'family involvement in relationship decisions': 'how involved is your family in this stuff?', 'career ambition': 'how do you balance work and everything else?',
   'conflict style': 'how do you usually handle disagreements?', 'alone time needed': 'how much alone time do you need?', diet: 'what do you usually eat, any rules?',
+};
+/**
+ * RULES=off (plan 11 B4 ablation): a plain agent. No act plan (no sampled length, emoji, steering, disagreement or
+ * language choice), no stance check (mustDisagree is never set), no exemplars, no interest meter; only MAX_TURNS ends
+ * it, or the model's own end after the minimum. Grounding, leak and style safety checks stay on in both modes.
+ */
+const plainPlan = (voice, msgCount) => {
+  const mix = voice.language?.mix ?? { en: 1 };
+  const primary = Object.keys(mix).sort((a, b) => mix[b] - mix[a])[0] ?? 'en';
+  return { plain: true, targetWords: 15, burst: 1, answerFirst: false, askBack: false, emoji: null, laugh: null, reactions: [], mustDisagree: false, disagreeOn: null, topic: null, language: { primary, secondary: null, codeSwitch: Object.keys(mix).length > 1 }, end: msgCount + 1 >= KG.MAX_TURNS ? 'max_turns' : null };
 };
 const constrainedWarning = (problems) => `every sentence of your drafts broke a rule (${problems.join(' ') || 'nothing could be sent'}). `
   + 'Write ONE short message (under 12 words) that reacts to what they just said: either one thing about yourself backed by a listed fact (cite it) '
@@ -83,17 +94,20 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   }
 
   const opening = history.length === 0;
+  const rulesOn = env.RULES !== 'off';
   let perception = {};
   if (!opening) {
     const myLast = lastMineIdx >= 0 ? history[lastMineIdx].text : null;
     const context = { theirName: matchName, lines: history.slice(Math.max(0, lastMineIdx - 6), lastMineIdx + 1).map((m) => `${String(m.senderId) === me ? persona.firstName : matchName}: ${m.text}`) };
     ({ perception } = await perceiveObserve({ match, conv, persona, otherId, theirMsgs, context, myLast, agenda, turn: state.turn }));
-    Object.assign(state, updateInterest(state, { ...perception, laughsEasily: (persona.voice.laughRate ?? 0) > 0.2 }, { extraversion: persona.traits.extraversion }));
-    if (state.interest < KG.LOW_INTEREST) await ChatEvent.create({ conversationId: conv._id, matchId: match._id, observerId: me, turn: state.turn, messageId: theirMsgs.at(-1)._id, type: 'boredom', weight: 1 - state.interest });
+    if (rulesOn) Object.assign(state, updateInterest(state, { ...perception, laughsEasily: (persona.voice.laughRate ?? 0) > 0.2 }, { extraversion: persona.traits.extraversion }));
+    if (rulesOn && state.interest < KG.LOW_INTEREST) await ChatEvent.create({ conversationId: conv._id, matchId: match._id, observerId: me, turn: state.turn, messageId: theirMsgs.at(-1)._id, type: 'boredom', weight: 1 - state.interest });
   }
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
   const stories = storyCandidates(persona, state.toldStoryIds);
-  const plan = planAct({ state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: agendaSettled(freshAgenda) });
+  const plan = rulesOn
+    ? planAct({ state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: agendaSettled(freshAgenda) })
+    : plainPlan(persona.voice, history.length);
   plan.closingStyle = persona.voice.closingStyle ?? null;
   plan.opening = opening;
   // "Ask my human", structurally: their question to me → its topic (dictionary only) → does my graph have ANY fact on it?
@@ -128,7 +142,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const prompt = {
     firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, plan,
     style: [persona.voice.description, persona.voice.doList?.length && `Do: ${persona.voice.doList.join('; ')}`, persona.voice.dontList?.length && `Don't: ${persona.voice.dontList.join('; ')}`, persona.voice.corrections?.length && `Corrections from ${persona.firstName}: ${persona.voice.corrections.map((c) => c.rule).join('; ')}`].filter(Boolean).join('\n'),
-    exemplars: selectExemplars(persona, { incomingVec, rng }), guidance: privateGuidance(persona), tone: toneRules(persona),
+    exemplars: rulesOn ? selectExemplars(persona, { incomingVec, rng }) : [], guidance: privateGuidance(persona), tone: toneRules(persona),
   };
   // What counts as said by/about them: their messages + my brief summary of their PUBLIC profile (allowed source).
   const theirTexts = [...history.filter((m) => String(m.senderId) !== me).map((m) => m.text), brief.summary ?? '', `${matchName} profile`];
@@ -139,7 +153,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= MIN_MESSAGES_FOR_NATURAL_END && agendaSettled(freshAgenda);
+  const mayEnd = history.length >= MIN_MESSAGES_FOR_NATURAL_END && (!rulesOn || agendaSettled(freshAgenda));
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     const draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
