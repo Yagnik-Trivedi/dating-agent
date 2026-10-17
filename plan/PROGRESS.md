@@ -74,7 +74,7 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 - NVIDIA notes: Ultra (`MODEL_SMART`) now returns **404** for this key; the Super fallback handled every judge. The fast model (Lightning) times out often at night.
 - `judge-check` runs 2–3: no result (one NVIDIA outage, one stopped at bedtime: the laptop can't stay on overnight).
 
-**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64; `judge-check` run 4 in progress.
+**2026-10-17:** resumed on the owner's machine from `10844d9` (the code is there; only the live checks were missing). `npm test` 64/64. **`judge-check` run 4 passed every step:** anti-smoking friction, dealbreaker → no + one wind-down, compaction, Talk anyway, boundary (48 reads), Meera × Ishaan **yes/yes → Compatible** (0.85 each, Super fallback since Ultra 404s) → handed_off + reveal, date ideas cache/503/spy. Now: `agent-check`, then `seed-check` / `api-check` / `check-indexes`.
 
 **Next (resume here; ~45 min, all automatic):**
 1. `cd server && npm run dev-db` (keep it running; the seeded data is still there).
