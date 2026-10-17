@@ -104,3 +104,9 @@ test('grounding: answering a question about me, a clause without "I" still needs
   assert.ok(g.unsupported.some((c) => /rcb/i.test(c)), JSON.stringify(g));
   assert.equal(groundingCheck({ text: 'haha cheering for rcb! do you smoke?', facts }).unsupported.length, 0, 'not answering: no claim');
 });
+
+test('style: the instruction wording leaking into a message is rejected', () => {
+  const plan = { targetWords: 12, burst: 1, language: { primary: 'en' } };
+  assert.ok(styleCheck('reacting to your indie music talk, gardening too?', plan, {}, []).some((p) => p.startsWith('talks about the instructions')));
+  assert.ok(!styleCheck('love indie music! any gigs lately?', plan, {}, []).some((p) => p.startsWith('talks about the instructions')));
+});

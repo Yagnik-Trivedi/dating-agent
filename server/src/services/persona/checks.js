@@ -21,6 +21,7 @@ const HONEST = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tri
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
 const MEETING = /\b(what time|which time|meet (up|you|there)|let'?s (meet|go|do it|grab)|see you (at|on|there)|pick you up|tomorrow at|(this|next) (saturday|sunday|weekend|friday)|at \d{1,2}(:\d{2})? ?(am|pm)|around \d{1,2} ?(am|pm))\b/i;
+const META = /\b(reacting to (your|their|what|the)|steer(ing)? (to|toward)|the plan (says|is)|my agenda|(listed|cited) facts?|fact id)\b/i;
 const STOP = new Set(['about', 'their', 'there', 'these', 'those', 'which', 'would', 'could', 'should', 'really', 'sounds', 'something', 'things', 'thing', 'always', 'never', 'other', 'being', 'still', 'maybe']);
 
 const clausesOf = (s) => s.split(/\s*[—–;]\s*|,\s+(?=(?:and |but |so |though )?(?:i|i'm|i've|my|me)\b)/i).map((c) => c?.trim()).filter((c) => c && /[\p{L}]/u.test(c));
@@ -60,6 +61,9 @@ export function styleCheck(text, plan, voice = {}, recentTexts = []) {
   const mine = [...new Set(contentWords(text))];
   const theirLast = new Set(contentWords(recentTexts.at(-1) ?? ''));
   if (mine.length >= 3 && mine.filter((w) => theirLast.has(w)).length / mine.length >= 0.6) problems.push('mirrors their last message; react in your own words and add something new');
+  // The instruction's own wording leaking into the message (eval i2: "reacting to your indie music and drum patterns talk").
+  const meta = text.match(META);
+  if (meta) problems.push(`talks about the instructions ("${meta[0]}"); just write the message`);
   if (MEETING.test(text)) problems.push("makes real-world plans; the agent never arranges to meet (say you'd like to keep chatting here first)");
   const scan = scanMessage(text);
   if (scan.severity >= 2) problems.push(`shares contact details or talks about money (${scan.flags.join(', ')})`);

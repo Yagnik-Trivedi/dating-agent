@@ -17,16 +17,27 @@ import { lookupConcept } from '../kg/canonicalize.js';
 import { inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
-import { echoOf, oneQuestion, sentencesOf } from '../persona/text.js';
+import { echoOf, oneQuestion, sentencesOf, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
 import { generate } from './generate.js';
 import { updateInterest } from './interest.js';
 import { perceiveObserve } from './perceive.js';
-import { planAct } from './planAct.js';
+import { MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest answer (consent covers AI handling).
 export const AI_QUESTION = /\b(are|r)\s+(you|u)\s+(an?\s+)?(bot|ai|robot|real|human|chatgpt|gpt)\b|talking\s+to\s+(an?\s+)?(bot|ai|robot|machine|chatgpt|real\s+person|human)\b|\b(is\s+this|this\s+is)\s+(an?\s+)?(bot|ai|chatgpt|real\s+person|human)\b|\b(bot|chatgpt|automated)\b[^.!]*\?/i;
-const NEUTRAL = ['haha fair 😄', 'oh nice, i like that', 'ha that makes sense'];
+// When every sentence of the best draft was dropped: a short, engaged question (on my planned topic when there is one),
+// never a filler line (eval: "haha fair 😄" repeated read as low effort to both judges).
+const TOPIC_QUESTIONS = {
+  smoking: 'do you smoke, by the way?', drinking: 'how do you feel about drinking?', 'wants children': 'do you see kids in your future?',
+  'looking for': "what are you hoping to find on here?", 'living in 3-5 years': 'where do you see yourself living in a few years?',
+  'family involvement in relationship decisions': 'how involved is your family in this stuff?', 'career ambition': 'how do you balance work and everything else?',
+  'conflict style': 'how do you usually handle disagreements?', 'alone time needed': 'how much alone time do you need?', diet: 'what do you usually eat, any rules?',
+};
+const OPEN_QUESTIONS = ['haha tell me more?', 'oh nice, how did that start?', 'ha fair, what got you into that?'];
+const fallbackQuestion = (topic, rng) => (topic?.kind === 'agenda'
+  ? `haha ok, ${TOPIC_QUESTIONS[topic.text] ?? `are you into ${topic.text} at all?`}`
+  : OPEN_QUESTIONS[Math.floor(rng() * OPEN_QUESTIONS.length)]);
 const turnSeed = (seed, userId, turn) => (seed + parseInt(createHash('md5').update(`${userId}:${turn}`).digest('hex').slice(0, 8), 16)) >>> 0;
 
 /** Is my agenda settled enough for a natural end? Dealbreaker topics and everything with priority ≥ 0.5 answered. */
@@ -124,6 +135,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Generate → checks → at most ONE regeneration (MAX_REGENERATIONS) → send the best draft minus failing sentences.
   const attempts = [];
   let warning = null;
+  // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
+  const mayEnd = history.length >= MIN_MESSAGES_FOR_NATURAL_END && agendaSettled(freshAgenda);
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     const draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
@@ -131,12 +144,17 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
+    if (draft.end && !plan.end && !mayEnd) c.problems.push("you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");
     attempts.push({ draft, ...c });
     if (!c.problems.length) break;
     warning = c.problems.join(' ');
     console.warn(`agent ${match._id}: draft rejected: ${warning}`);
   }
-  const best = attempts.reduce((a, b) => (b.problems.length < a.problems.length ? b : a));
+  // A clean draft wins; otherwise the one that keeps the most words once failing sentences are dropped (eval: picking
+  // by fewest problems often left nothing, and the fixed fallback read as low effort to the judges).
+  const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !echoOf(s, recent)).join(' ')).length;
+  const best = attempts.find((a) => !a.problems.length)
+    ?? attempts.reduce((a, b) => (kept(b) > kept(a) || (kept(b) === kept(a) && b.problems.length < a.problems.length) ? b : a));
   // Leak check on every outgoing message: keywords + embeddings against my private facts.
   let sentences = best.draft.messages.flatMap((m) => sentencesOf(m));
   const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
@@ -147,7 +165,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   let messages = best.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean);
   if (!messages.length) {
     const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    messages = [plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? (lower ? opener : opener[0].toUpperCase() + opener.slice(1)) : NEUTRAL[Math.floor(rng() * NEUTRAL.length)]];
+    const fallback = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(plan.topic, rng);
+    messages = [lower || plan.end ? fallback : fallback[0].toUpperCase() + fallback.slice(1)];
   }
   // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
   // a topic I have a fact on → none. Unresolved → the draft's own unknown, an unsupported claim, or a hedge (fallback).
@@ -162,9 +181,10 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns,
     ...(plan.topic && { lastTopicTurn: state.turn }),
     topicsTouched: [...new Set([...(state.topicsTouched ?? []), ...(plan.topic ? [plan.topic.id] : []), ...(perception.topics ?? [])])],
+    ...(plan.topic?.kind === 'agenda' && { topicTries: { ...(state.topicTries ?? {}), [plan.topic.id]: (state.topicTries?.[plan.topic.id] ?? 0) + 1 } }),
     toldStoryIds: [...(state.toldStoryIds ?? []), ...told],
   });
-  const end = plan.end ?? (best.draft.end && history.length >= 12 ? 'natural' : null);
+  const end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
   return {
     messages, end, unknownAboutMe, inbox, usedFactIds: used,
     actPlan: { ...plan, interest: state.interest },

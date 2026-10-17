@@ -64,7 +64,12 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   let topic = null;
   if (!opening && (state.turn ?? 0) >= 1) {
     const shift = KG.TOPIC_SHIFT + (interest < KG.LOW_INTEREST ? 0.25 : 0);
-    const nextAgenda = agenda.filter((a) => a.status !== 'answered' && !(state.topicsTouched ?? []).includes(a.id)).sort((a, b) => b.priority - a.priority)[0];
+    const tries = (a) => state.topicTries?.[a.id] ?? ((state.topicsTouched ?? []).includes(a.id) ? 1 : 0);
+    const steerable = (a) => a.status !== 'answered' && (tries(a) === 0 || ((a.dealbreaker || a.priority >= KG.STEER_RETRY_PRIORITY) && tries(a) < KG.STEER_TRIES));
+    // Untried important topics first, then retries of important ones, then minor topics; by priority within each.
+    const important = (a) => a.dealbreaker || a.priority >= KG.STEER_RETRY_PRIORITY;
+    const rank = (a) => (important(a) ? (tries(a) ? 1 : 0) : 2);
+    const nextAgenda = agenda.filter(steerable).sort((a, b) => rank(a) - rank(b) || b.priority - a.priority)[0];
     // After the warm-up, every other turn steers to my next open agenda topic (v1 measured: a soft chance was ignored
     // and chats looped on one topic); in between, a random shift (more likely when bored) or a story.
     const steerTurn = (state.turn ?? 0) >= KG.STEER_AFTER_TURNS && (state.lastTopicTurn ?? -2) < (state.turn ?? 0) - 1;
