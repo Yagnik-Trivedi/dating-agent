@@ -39,6 +39,7 @@ const hasDevanagari = (texts) => texts.some((t) => /\p{Script=Devanagari}/u.test
 
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
 const voiceRows = [], convRows = [], obsRows = [];
+const samples = []; // { name, real: [...], agent: [...] } for the human "which is real?" export
 for (const r of Object.values(raw).filter((x) => x.run === 1)) {
   const pair = pairs.find((p) => p.id === r.id);
   const users = await User.find({ email: { $in: [pair.a, pair.b] } }, { email: 1, name: 1 }).lean();
@@ -58,6 +59,7 @@ for (const r of Object.values(raw).filter((x) => x.run === 1)) {
     if (mine.length && real.length) {
       const a = features(mine), b = features(real);
       const switchRate = (texts) => texts.filter((t) => tagLanguageHeuristic(t).codeSwitch).length / texts.length;
+      samples.push({ name: u.name, real, agent: mine });
       voiceRows.push({
         pair: r.id, name: u.name, n: mine.length, style: l1(a.vector, b.vector), lang: mixL1(a.m.mix, b.m.mix),
         cs: Math.abs(switchRate(mine) - switchRate(real)), scriptKept: hasDevanagari(real) ? hasDevanagari(mine) : null,
@@ -116,6 +118,23 @@ const md = [
   '| pair | observer | notes | checkable | correct | mentioned by them | noted |', '|---|---|---|---|---|---|---|',
   ...obsRows.map((o) => `| ${o.pair} | ${o.name} | ${o.notes} | ${o.checkable} | ${o.correct} | ${o.mentioned} | ${o.caught} |`), '',
 ].join('\n');
+// "Which is real?" export for the team (plan 11 B3): 20 randomised real-vs-agent pairs, key kept separately.
+mkdirSync(new URL('eval/labels/', ROOT), { recursive: true });
+let seed = 7;
+const rnd = () => { seed = (seed * 1103515245 + 12345) % 2 ** 31; return seed / 2 ** 31; };
+const pickR = (xs) => xs[Math.floor(rnd() * xs.length)];
+const quizPairs = samples.length ? Array.from({ length: 20 }, (_, i) => {
+  const s = samples[i % samples.length];
+  const realFirst = rnd() < 0.5;
+  const [real, agent] = [pickR(s.real), pickR(s.agent)];
+  return { id: i + 1, name: s.name, a: realFirst ? real : agent, b: realFirst ? agent : real, real: realFirst ? 'A' : 'B' };
+}) : [];
+const csvCell = (t) => `"${String(t).replace(/"/g, '""')}"`;
+writeFileSync(new URL('eval/labels/real-vs-agent.csv', ROOT), `${['id,persona,A,B,your_guess (A|B)', ...quizPairs.map((q) => [q.id, q.name, csvCell(q.a), csvCell(q.b), ''].join(','))].join('\n')}\n`);
+writeFileSync(new URL('eval/labels/real-vs-agent-key.csv', ROOT), `${['id,real', ...quizPairs.map((q) => `${q.id},${q.real}`)].join('\n')}\n`);
+const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+writeFileSync(new URL('eval/labels/real-vs-agent.html', ROOT), `<!doctype html><meta charset="utf-8"><title>Which is real?</title><style>body{font:16px system-ui;max-width:720px;margin:2em auto;padding:0 1em}li{margin:1em 0}p{margin:.3em 0}</style><h1>Which message did the real person write?</h1><p>One of each pair is from the persona's own answers, the other from their AI agent. Note A or B; the key is in real-vs-agent-key.csv.</p><ol>${quizPairs.map((q) => `<li><b>${esc(q.name)}</b><p>A: ${esc(q.a)}</p><p>B: ${esc(q.b)}</p></li>`).join('')}</ol>\n`);
+
 mkdirSync(new URL('eval/results/', ROOT), { recursive: true });
 writeFileSync(new URL('eval/results/metrics.md', ROOT), `${md}\n`);
 console.log(md);
