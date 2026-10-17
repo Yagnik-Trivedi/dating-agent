@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (B3 + B4 runs in progress: rules on → rules off → leak probe)
+- **Last updated:** 2026-10-17 21:40 IST, by Claude Code (B4 rules-on arm done, rules-off arm running; 2 correctness fixes for B5)
 - **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
 - **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
@@ -33,7 +33,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
-| 11 | Seed personas + evaluation (v2) | 🔄 In progress | `feat/plan-11-tuning` | `56a0ebc` | Part A ✅ (`3966f5a`). Part B: B1 tuning 🔄 (iteration 1: 3/6, fallback 13%; iteration 2 next) · B2 scale test ✅ (`107c852`: discover p50 2.1 / p95 4.6 ms, context miss 9.9 / hit 1.7 ms, 88 KB/user ≈ 5,900 users in M0, stubbed judge queue ~5,900 jobs/min, 0 LLM calls) · B3 metrics 🔄 (scripts done `24f6075`: metrics.js, llm-metrics.js, leak-probe.js, judge-eval.js; run after B1) · B4 ablation 🔄 (running: 6-pair subset `--tag rules-on`, then `--rules off`, each followed by metrics + llm-metrics; then the leak probe) · B5 one full run ⬜ (ask the owner first) · B6 results ⬜ |
+| 11 | Seed personas + evaluation (v2) | 🔄 In progress | `feat/plan-11-tuning` | `56a0ebc` | Part A ✅ (`3966f5a`). Part B: B1 tuning 🔄 (iteration 1: 3/6, fallback 13%; iteration 2 next) · B2 scale test ✅ (`107c852`: discover p50 2.1 / p95 4.6 ms, context miss 9.9 / hit 1.7 ms, 88 KB/user ≈ 5,900 users in M0, stubbed judge queue ~5,900 jobs/min, 0 LLM calls) · B3 metrics 🔄 (scripts done `24f6075`: metrics.js, llm-metrics.js, leak-probe.js, judge-eval.js; run after B1) · B4 ablation 🔄 (rules on ✅: 2/6 correct (gated, fake), c1 → incompatible (harmful), c7 stalled, i6 maybe; unsupported self-claims 40% (27/68), agreement 3% / disagreement 3%, judge approval 0/6. Rules off running, then the leak probe) · B5 one full run ⬜ (ask the owner first) · B6 results ⬜ |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
 | 14 | Switch back to Nebius Token Factory | ⬜ Not started | — | — | **Due Oct 26.** Needs the Nebius account. The dry-run checklist is queued as side work. |
@@ -76,6 +76,9 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   1. Compatible pairs land on "maybe": one judge says yes (0.85) while the other says unsure (0.5–0.55). Calibrating `JUDGE_YES_MIN` in B5 may move some.
   2. Run-to-run variance on 6 pairs is large (i2 flipped in iteration 3).
   3. Fixed after the cap, measured by B4/B5 (`fix(plan-11)`): one vague dealbreaker hint ended c1 at 7 messages; now the first hint reopens the topic and only a second ends the chat.
+- **Correctness fixes found in the B4 rules-on run** (commit `fix(plan-11): reply retries…`), measured by B5:
+  - c7 stalled for 45 min after 3 quick NVIDIA failures. Replies now back off 30 s → 8 min before the sweep takes over.
+  - c1 came out incompatible because Meera's agent said "haven't thought much about kids yet" while her answer is "open". When they ask about a topic my graph covers, its facts are now always in the prompt, and a hedge on it triggers the regeneration.
 
 **Owner's approved plan, step 3: plan 11 personas on `feat/plan-11-personas`.**
 
