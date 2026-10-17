@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (plan 09 merged to main; starting step 3: plan 11 personas)
+- **Last updated:** 2026-10-17, by Claude Code (plan 11A personas pass every quota on `feat/plan-11-personas`; full re-seed running)
 - **Main-line branch:** `feat/plan-11-personas` (from `main`) · **main:** `cbd8faa` (plans 02–09 + 17 done)
-- **Last commit (main line):** `857aff1` feat(plan-09), merged in `cbd8faa`
+- **Last commit (main line):** `d5fdbea` feat(plan-11a) on `feat/plan-11-personas`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -71,7 +71,10 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - c) `scripts/seed/check-personas.js` (pure code, non-zero exit on a quota miss)
   - d) incremental seeding (`contentHash`, `--force`)
   - e) re-run the 08/09 checks + eval `--limit 6`, then merge
-- **Baseline before step 3:** all 30 English; styles long 12 / emoji 6 / formal 5 / terse 1; a new user sees 1–4 seeds per city.
+- **Step 3 progress (`d5fdbea`):**
+  - a) quotas ✓, b) restyle script ✓ (NVIDIA Super returned inputs unchanged even with measured retries, so most voices were hand-written), c) `check-personas` exits 0 ✓, d) incremental seed ✓ (`User.seedHash`, `--force`).
+  - 38 personas (8 new). Before → after: Hinglish 1 → 7, Devanagari 0 → 3, Gujarati 0 → 2, Tamil/Marathi 0 → 2, code-switching 3 → 17, terse 1 → 5. Cities: 7 → 5 demo cities, each with ≥ 3 visible seeds for both new users (was 1–4). Pairs failing the gate: 10 → 0.
+  - **Now:** the one full re-seed (~20 min), then e) re-run the 08/09 checks + eval `--limit 6`, merge.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
