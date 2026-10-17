@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   graphVersion: { type: Number, default: 0 }, // $inc on every self-graph or voice write: plan 08's cache key
   settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
   isSeed: { type: Boolean, default: false },
+  seedHash: { type: String, default: null }, // scripts/seed.js: hash of the persona the graph was built from
 }, {
   timestamps: { createdAt: true, updatedAt: false },
   versionKey: false,

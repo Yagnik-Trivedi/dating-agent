@@ -2,40 +2,16 @@
 // script via the voice-sample heuristic, texting style from the E replies, city + gate coverage, labelled pairs.
 //   node scripts/seed/check-personas.js [--personas seed/personas.json]   → table; exit 1 if any quota fails
 import { readFileSync } from 'node:fs';
-import { tagLanguageHeuristic } from '../../src/services/kg/language.js';
 import { gateFrom, GATE_ATTRIBUTES, passesGate } from '../../src/services/match/gate.js';
+import { measure as measureWith } from './lib/measure.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const root = new URL('../../', import.meta.url);
 const personas = JSON.parse(readFileSync(new URL(arg('--personas', 'seed/personas.json'), root), 'utf8'));
 const pairs = JSON.parse(readFileSync(new URL('seed/pairs.json', root), 'utf8'));
 const Q = JSON.parse(readFileSync(new URL('seed/persona-quotas.json', root), 'utf8'));
-const EMOJI = /\p{Extended_Pictographic}/gu;
+const measure = (p) => measureWith(p, Q.languageShareMin);
 const kindOf = (p) => (p.designNotes ?? '').match(/^(fake|thin|mild|normal):/)?.[1] ?? 'normal';
-
-/** Measured voice of one persona: language shares, code-switching, style tags. */
-export function measure(p) {
-  const e = Object.values(p.answers?.E ?? {}).filter((t) => String(t).trim());
-  const n = e.length || 1;
-  const mix = {};
-  let switches = 0;
-  for (const t of e) {
-    const tag = tagLanguageHeuristic(t);
-    if (tag.codeSwitch) switches++;
-    for (const [l, v] of Object.entries(tag.shares)) mix[l] = (mix[l] ?? 0) + v / n;
-  }
-  const words = e.map((t) => t.split(/\s+/).filter(Boolean).length);
-  const avgWords = words.reduce((a, b) => a + b, 0) / n;
-  const emoji = e.reduce((k, t) => k + (t.match(EMOJI)?.length ?? 0), 0) / n;
-  const endPunct = e.filter((t) => /[.!?]["')\]]?$/.test(t.trim())).length / n;
-  const caps = e.filter((t) => /^\p{Lu}/u.test(t.trim())).length / n;
-  const styles = [
-    avgWords <= 6 && endPunct < 0.3 && 'terse', emoji >= 0.8 && 'emoji', avgWords >= 18 && 'long',
-    caps >= 0.8 && endPunct >= 0.7 && emoji < 0.2 && 'formal',
-  ].filter(Boolean);
-  const langs = Object.entries(mix).filter(([, v]) => v >= Q.languageShareMin).map(([l]) => l);
-  return { mix, langs, switches, avgWords, emoji, styles };
-}
 
 // The typical new user: the most common B answer per attribute, no dealbreakers.
 const common = {};

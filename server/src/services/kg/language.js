@@ -11,12 +11,18 @@ const HINGLISH = new Set([
 // Short words that are also English or other languages ("na", "ye", "hum", "tum"): counted only next to a clear one.
 const AMBIGUOUS = new Set(['na', 'ye', 'hum', 'tum', 'ho', 'se', 'ko', 'ka', 'ki', 'ke', 'par', 'toh', 'aur', 'bhi', 'mein']);
 // Romanised Gujarati markers (the second-biggest mix in our seed set).
-const GUJLISH = new Set(['shu', 'kem', 'cho', 'chhe', 'che', 'majama', 'saru', 'nathi', 'tame', 'hu', 'kyare', 'bhai', 'ben']);
+const GUJLISH = new Set(['shu', 'kem', 'cho', 'chhe', 'che', 'majama', 'saru', 'nathi', 'tame', 'hu', 'kyare', 'bhai', 'ben', 'mane', 'tane',
+  'aavjo', 'kevu', 'jordar', 'tamaru', 'maru', 'chhu', 'chho', 'thayu', 'saras', 'bau', 'kai', 'jaish', 'avje', 'nai',
+  'tamaro', 'tamari', 'tamara', 'thayo', 'pachi', 'karyo', 'hatu', 'hati', 'karu', 'aavyu', 'karvo', 'haji', 'sathe', 'maro',
+  'mari', 'saanje', 'vage', 'paase', 'vaat', 'vaato', 'aakho', 'aakhi', 'jovo', 'rehvanu', 'aapish', 'vishwas', 'etle']);
 // Romanised Tamil and Marathi markers (plan 11 personas); words shared with Hindi ("nahi") are left out.
 const TANGLISH = new Set(['enna', 'illa', 'illai', 'romba', 'nalla', 'seri', 'machan', 'ponga', 'vaa', 'saapadu', 'paakalam', 'theriyum',
-  'theriyala', 'enakku', 'unakku', 'aama', 'irukku', 'panren', 'sollu', 'konjam', 'sema', 'paaru', 'vandhu', 'vanakkam', 'aiyo', 'ayyo', 'kanna', 'pa']);
+  'theriyala', 'enakku', 'unakku', 'aama', 'irukku', 'panren', 'sollu', 'konjam', 'sema', 'paaru', 'vandhu', 'vanakkam', 'aiyo', 'ayyo', 'kanna', 'pa',
+  'panniruken', 'paathirukeengala', 'pidikum', 'dhaan', 'thoongu', 'sonnadhu', 'appa', 'nalla']);
 const MARATHI = new Set(['aahe', 'ahe', 'aahes', 'nako', 'jhala', 'jhali', 'mhanje', 'mala', 'tula', 'khup', 'kasa', 'kashi', 'kuthe', 'kevha',
-  'aata', 'ghari', 'karto', 'karte', 'mhanun', 'bagh', 'baghu', 'chaan', 'bara', 'hoy', 'aani', 'kay', 'zhala', 'zhali', 'majja']);
+  'aata', 'ghari', 'karto', 'karte', 'mhanun', 'bagh', 'baghu', 'chaan', 'bara', 'hoy', 'aani', 'kay', 'zhala', 'zhali', 'majja',
+  'aali', 'gela', 'kela', 'karuya', 'jamnar', 'sangta', 'nantar', 'madhe', 'kadhi', 'udya', 'maza', 'tujha', 'kuthla', 'vatla', 'jhop', 'aai',
+  'chaltat', 'chalel', 'jhopa', 'jatoy', 'hasla', 'sagla', 'khup']);
 
 const SCRIPTS = [
   ['devanagari', /\p{Script=Devanagari}/u],

@@ -1,0 +1,18 @@
+{
+  "_doc": "Applied: only seed25 was restyled by the model (Devanagari). The other 16 personas from the first pass were hand-written or hand-fixed (NVIDIA Super returned the input unchanged), so their specs and cache files were removed to keep a re-run from overwriting them.",
+  "seed25@demo.local": {
+    "mix": {
+      "en": 0.6,
+      "hi": 0.4
+    },
+    "script": "devanagari",
+    "codeSwitch": true,
+    "terseness": "medium",
+    "emojiRate": 0.6,
+    "laughForm": "haha",
+    "petPhrases": [
+      "बहुत प्यारा"
+    ],
+    "stories": true
+  }
+}

@@ -452,21 +452,21 @@
         ]
       },
       "E": {
-        "e1": "Haha thanks, yours was way better though 😄",
-        "e2": "Mostly cooking or losing at Catan with friends. Weekends are for food basically",
-        "e3": "Yes, but only with jalapeños. Plain pineapple is too much yaar",
-        "e4": "I have done a couple! Still slow on the climbs though. Which one?",
-        "e5": "Arre no problem at all, hope it got better",
-        "e6": "Good food and a long walk. Easy to talk that way",
-        "e7": "Haha I try my best",
-        "e8": "Texting mostly, calls are for when the story is too long",
-        "e9": "Wah!! Congrats yaar 🎉 That’s awesome!! What’s the role?",
-        "e10": "Haha bold take but I’ll hear you out. What’s got you anti-dog?",
-        "e11": "Coffee sounds good! I’m free most evenings after work. How about Thursday?",
-        "e12": "Hey, so sorry but something urgent came up at work and I won’t be able to make it tomorrow. Really sorry for the last minute—can we reschedule?",
-        "e13": "Arre yaar… guilty as charged 😅 I’m working on it, promise!",
-        "e14": "Haan ji, sleep ki taraf badh rahe hain. Good night! 😴",
-        "e15": "Waah, that’s a lot! Pottery class and you’re a natural?? No way you’re underselling yourself. My week’s been standard—work, cooking experiments, and trying not to die on stairs during trek practice. Respect for surviving all that."
+        "e1": "Haha thanks yaar, yours was way better though 😄",
+        "e2": "Mostly cooking ya phir Catan mein haarna with friends. Weekends are basically for khana",
+        "e3": "Haan, but only with jalapeños. Sirf pineapple is too much yaar",
+        "e4": "Haan, a couple kiye hain! Climbs pe abhi bhi slow hoon though. Kaunsa wala?",
+        "e5": "Arre koi baat nahi, hope the day got better",
+        "e6": "Accha khana and a long walk. Baatein aaram se hoti hain that way",
+        "e7": "Haha koshish toh poori hai",
+        "e8": "Texting mostly, calls tab jab story bahut lambi ho",
+        "e9": "Wah!! Congrats yaar 🎉 Kya role hai?",
+        "e10": "Haha bold take, but sun leta hoon. Dogs se kya problem hai?",
+        "e11": "Coffee sounds good! Kaam ke baad most evenings free hoon. Thursday chalega?",
+        "e12": "Hey, sorry yaar, kal kaam pe kuch urgent aa gaya and I won't be able to make it. Last minute ke liye sorry, reschedule karein?",
+        "e13": "Arre yaar… guilty as charged 😅 Working on it, pakka!",
+        "e14": "Haan ji, sone ka time. Good night! 😴",
+        "e15": "Waah, that's a lot! Pottery class and you're a natural?? Mujhe toh lagta hai you're underselling yourself. Meri week normal thi, kaam, cooking experiments, aur trek practice mein seedhiyon pe almost mar gaya. Respect for surviving all that."
       },
       "I": {
         "job": "backend engineer",
@@ -485,7 +485,7 @@
     "profile": {
       "name": "Kabir",
       "age": 30,
-      "city": "Pune",
+      "city": "Ahmedabad",
       "gender": "man",
       "interestedIn": [
         "woman"
@@ -493,15 +493,15 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Kabir"
       ],
-      "bio": "Sales lead, weekend cricketer, chai and a smoke after the match. Always up for a road trip.",
+      "bio": "sales lead weekend cricketer chai and a smoke after the match always up for a road trip",
       "prompts": [
         {
-          "q": "A perfect Sunday",
-          "a": "Gully cricket in the morning, biryani for lunch, a long drive in the evening."
+          "q": "a perfect sunday",
+          "a": "gully cricket in the morning biryani for lunch a long drive in the evening"
         },
         {
-          "q": "My friends call me",
-          "a": "the guy who knows a dhaba on every highway."
+          "q": "my friends call me",
+          "a": "the guy who knows a dhaba on every highway"
         }
       ],
       "tags": {
@@ -663,12 +663,12 @@
         }
       },
       "C": {
-        "sunday": "Gully cricket with the society boys in the morning, a huge biryani lunch, and a long evening drive towards Lavasa with music on.",
-        "hill": "Test cricket is the only real cricket. T20 is fun but it is not the same thing.",
-        "weirdly_good": "Finding a good dhaba on any highway in India, even at two in the morning.",
-        "laugh": "My nephew asked Alexa to call me and it ordered twelve kilos of onions instead.",
-        "place": "Ladakh on a bike, because I have been planning that trip with my college friends for six years.",
-        "friends_rely": "Driving everyone home after a late night and remembering everyone's birthday."
+        "sunday": "gully cricket with the society boys in the morning a huge biryani lunch and a long evening drive towards kankaria lake with music on",
+        "hill": "test cricket is the only real cricket t20 is fun but it is not the same thing",
+        "weirdly_good": "finding a good dhaba on any highway in india even at two in the morning",
+        "laugh": "my nephew asked alexa to call me and it ordered twelve kilos of onions instead",
+        "place": "the rann of kutch on a bike because i have been planning that trip with my college friends for six years",
+        "friends_rely": "driving everyone home after a late night and remembering everyones birthday"
       },
       "D": {
         "interests": [
@@ -687,21 +687,21 @@
         ]
       },
       "E": {
-        "e1": "Haha thanks, nice profile too",
-        "e2": "Mostly cricket and drives, sometimes just chilling with friends",
-        "e3": "Pineapple on pizza is a crime bro",
-        "e4": "Not a big trekker honestly, I prefer drives",
-        "e5": "No worries, happens",
-        "e6": "Chai and a long drive, easy conversation",
-        "e7": "Haha I try",
-        "e8": "Calls, texting is too slow",
-        "e9": "Congrats!! 🎉 That’s awesome, celebrate with chai and a drive?",
-        "e10": "LMAO dogs are underrated bro, loyal af",
-        "e11": "Sure! How about tomorrow evening? I’m free after 6",
-        "e12": "Hey, something came up at work, gotta cancel tomorrow. Raincheck?",
-        "e13": "Guilty as charged 😏 but worth the wait",
-        "e14": "Sleep well, crush it tomorrow!",
-        "e15": "Whoa that’s a lot 😅 Glad you’re trying pottery though! Mine’s been standard — work, cricket, chai breaks. You teaching me pottery someday?"
+        "e1": "haha thanks nice profile",
+        "e2": "cricket drives chilling",
+        "e3": "crime bro",
+        "e4": "not really prefer drives",
+        "e5": "no worries",
+        "e6": "chai and a drive",
+        "e7": "haha i try",
+        "e8": "calls texting is slow",
+        "e9": "congrats 🎉 chai on me",
+        "e10": "dogs are underrated bro",
+        "e11": "sure tomorrow after 6",
+        "e12": "work thing gotta cancel sorry",
+        "e13": "guilty 😏 worth the wait",
+        "e14": "gn crush it",
+        "e15": "whoa a lot 😅 pottery cool though"
       },
       "I": {
         "job": "Sales lead",
@@ -1436,7 +1436,7 @@
     "profile": {
       "name": "Sana",
       "age": 31,
-      "city": "Hyderabad",
+      "city": "Mumbai",
       "gender": "woman",
       "interestedIn": [
         "woman"
@@ -1444,11 +1444,11 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Sana"
       ],
-      "bio": "Sana, 31, children's book illustrator in Hyderabad. Weekends are for pottery wheels and hunting down the best old-city biryani.",
+      "bio": "Sana, 31, children's book illustrator in Mumbai. Weekends are for pottery wheels and hunting down the best old-city biryani.",
       "prompts": [
         {
           "q": "A perfect Sunday",
-          "a": "Slow morning with chai and sketching, then a food walk through Charminar lanes, ending with clay under my nails."
+          "a": "Slow morning with chai and sketching, then a food walk through Colaba Causeway lanes, ending with clay under my nails."
         },
         {
           "q": "I'll fall for you if",
@@ -1615,8 +1615,8 @@
         }
       },
       "C": {
-        "sunday": "I wake up to the sound of my neighbour’s parrot, make masala chai, and sketch storybook characters while it brews. By noon, I’m in the old city, following the smell of kebabs to a hidden stall near Mecca Masjid. Evening is spent wedging clay, quiet and steady, until my hands remember the rhythm.",
-        "hill": "I’ll die on the hill that Hyderabadi haleem should never be rushed — it’s a three-day meditation, not a lunch order.",
+        "sunday": "I wake up to the sound of my neighbour’s parrot, make masala chai, and sketch storybook characters while it brews. By noon, I’m in the old city, following the smell of kebabs to a hidden stall on Mohammed Ali Road. Evening is spent wedging clay, quiet and steady, until my hands remember the rhythm.",
+        "hill": "I’ll die on the hill that haleem should never be rushed — it’s a three-day meditation, not a lunch order.",
         "weirdly_good": "I can tell how well a story will illustrate just by the way someone describes their chai — strong, sweet, or somewhere in between.",
         "laugh": "Last week, my niece tried to ‘help’ me center clay and flung a wet lump at my forehead. We both snorted laughing, covered in slip.",
         "place": "I want to go to Kyoto — not for the temples, but to sit in a pottery village and watch how they fire wood kilns at dawn.",
@@ -1646,18 +1646,18 @@
         "e1": "Thank you — that made my day. Hope your morning’s off to a gentle start.",
         "e2": "When I’m not illustrating or potting, I’m usually walking through the old city, chasing the next good bite of khubani ka meetha.",
         "e3": "I’ve never tried it, but I respect the courage. Pineapple belongs on fruit chaat, not pizza — though I won’t judge your slice.",
-        "e4": "I’ve done a few short treks around Ananthagiri — nothing too high. The quiet up there is worth the sore legs.",
+        "e4": "I’ve done a few short treks around Matheran — nothing too high. The quiet up there is worth the sore legs.",
         "e5": "No worries at all — hope your day eased up by the end. Mine was all glazes and giggles from a workshop.",
-        "e6": "A good first date? Sharing a plate of biryani at Paradise, then walking silently beside the Hussain Sagar lake.",
+        "e6": "A good first date? Sharing a plate of biryani near Mohammed Ali Road, then walking silently along Marine Drive.",
         "e7": "I try to find the quiet humour in things — glad it comes through. What made you smile today?",
         "e8": "I prefer texting — it lets me think my words through. But I’ll always make time for a call if it matters.",
         "e9": "Congratulations!! 🎉 That’s amazing — so happy for you. What’s the role?",
         "e10": "Hmm, I think dogs get a lot of love for good reason — loyal, goofy, always happy to see you. But I’ll admit, I’m more of a quiet cat person myself.",
-        "e11": "I’d love that. How about Saturday morning around 10? There’s this little place near Charminar that does the best filter coffee.",
+        "e11": "I’d love that. How about Saturday morning around 10? There’s this little place near Kala Ghoda that does the best filter coffee.",
         "e12": "Hey, I’m really sorry but something came up and I won’t be able to make it tomorrow. I hate to cancel — can we reschedule for early next week?",
         "e13": "Guilty as charged 😏 Time just slips away when I’m lost in a sketch or kneading clay. I’m working on it… slowly.",
         "e14": "Sleep well — hope tomorrow starts off calm and kind. Dream of good biryani.",
-        "e15": "Wow, that’s a lot to carry in one week — major respect for keeping going. So glad to hear the pottery class is going well, even if you don’t believe the teacher yet. Mine’s been steady — quiet studio time, a few new illustrations, and yes, I finally tried that biryani place near Shah Ali Banda. Worth every bite."
+        "e15": "Wow, that’s a lot to carry in one week — major respect for keeping going. So glad to hear the pottery class is going well, even if you don’t believe the teacher yet. Mine’s been steady — quiet studio time, a few new illustrations, and yes, I finally tried that biryani place in Bhendi Bazaar. Worth every bite."
       },
       "I": {
         "job": "children's book illustrator",
@@ -1675,7 +1675,7 @@
     "profile": {
       "name": "Leela",
       "age": 29,
-      "city": "Hyderabad",
+      "city": "Mumbai",
       "gender": "woman",
       "interestedIn": [
         "woman"
@@ -1683,7 +1683,7 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Leela"
       ],
-      "bio": "Leela runs a quiet bookshop in Hyderabad, spends her afternoons shaping lopsided pots, and believes the best conversations happen over chai and secondhand novels.",
+      "bio": "Leela runs a quiet bookshop in Mumbai, spends her afternoons shaping lopsided pots, and believes the best conversations happen over chai and secondhand novels.",
       "prompts": [
         {
           "q": "A perfect Sunday",
@@ -1855,7 +1855,7 @@
         }
       },
       "C": {
-        "sunday": "Woke to bird calls, made masala chai, walked the Charminar area just to smell the old stone and samosas, then read Tagore under my neem tree till the light turned gold.",
+        "sunday": "Woke to bird calls, made masala chai, walked the old Fort lanes just to smell the old stone and samosas, then read Tagore under my neem tree till the light turned gold.",
         "hill": "I’ll die on the hill that library fines should be paid in book recommendations — it teaches more responsibility than rupees ever could.",
         "weirdly_good": "I can tell exactly which book someone needs just by how they hover near the shelves — it’s like they leak curiosity.",
         "laugh": "My apprentice tried to glaze a pot with turmeric water and turned it bright yellow — we both snorted chai laughing at the disaster.",
@@ -2363,21 +2363,21 @@
         ]
       },
       "E": {
-        "e1": "hey! thanks 😊 made my day",
-        "e2": "running, films, or trying not to burn dinner",
-        "e3": "no. fruit belongs in raita, not on pizza",
-        "e4": "done sahyadris once. tough but worth the view. you?",
-        "e5": "no worries! hope it’s better now",
-        "e6": "coffee, walk, see if we can talk past the awkward bits",
-        "e7": "haha thanks! you seem fun too",
-        "e8": "texting usually. calls for deep convos or bad network",
-        "e9": "woohoo!! 🎉 congrats!! what’s the role?",
-        "e10": "haha bold take. but have you seen a pupper zoomie? instant serotonin.",
-        "e11": "love it! how about tomorrow morning after my run? seaface view + coffee?",
-        "e12": "hey! something urgent came up at work, got to reschedule tomorrow. how about the day after? same time?",
-        "e13": "guilty as charged 😅 but only if it’s worth the wait… like biryani or a good film.",
-        "e14": "sleep well! dream of pineapple-free pizza 😉",
-        "e15": "woah that’s a lot!! pottery class win though — natural or not, you’re making things. my week’s been steady: runs, films, and finally perfected my biryani stress-cook. all good on the chaos front!"
+        "e1": "hey thanks",
+        "e2": "running films burnt dinners",
+        "e3": "fruit belongs in raita",
+        "e4": "sahyadris once worth it",
+        "e5": "no worries",
+        "e6": "coffee and a walk",
+        "e7": "haha you too",
+        "e8": "texting mostly",
+        "e9": "congrats what role",
+        "e10": "pupper zoomies though",
+        "e11": "tomorrow after my run",
+        "e12": "work thing day after",
+        "e13": "guilty but worth it",
+        "e14": "sleep well",
+        "e15": "pottery win though"
       },
       "I": {
         "job": "Product Manager at a fintech",
@@ -2391,11 +2391,11 @@
     "email": "seed11@demo.local",
     "agentMode": "auto",
     "isSeed": true,
-    "designNotes": "mild: Junior data analyst, trained in Carnatic vocals, loves filter coffee and beach walks, family-oriented. Inconsistency: her tags say drinking \"never\", but one prompt answer mentions \"a glass of wine with friends on Fridays\".",
+    "designNotes": "mild: Junior data analyst, trained in Carnatic vocals, loves filter coffee and lake walks (misses the beach back home), family-oriented. Inconsistency: her tags say drinking \"never\", but one prompt answer mentions \"a glass of wine with friends on Fridays\".",
     "profile": {
       "name": "Ananya",
       "age": 24,
-      "city": "Chennai",
+      "city": "Pune",
       "gender": "woman",
       "interestedIn": [
         "man"
@@ -2403,15 +2403,15 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Ananya"
       ],
-      "bio": "Ananya, 24 from Chennai. Junior data analyst who sings Carnatic, loves filter coffee and beach walks. Family means everything to me.",
+      "bio": "Ananya, 24 from Pune. Junior data analyst who sings Carnatic, loves filter coffee and long lake walks. Family means everything to me.",
       "prompts": [
         {
           "q": "A perfect Sunday",
-          "a": "Start with filter coffee, sing a raga, then a long beach walk with amma and appa. Simple joys."
+          "a": "Start with filter coffee, sing a raga, then a long walk around Pashan lake with amma and appa. Simple joys."
         },
         {
           "q": "A perfect Friday",
-          "a": "Office done, a glass of wine with friends at a quiet cafe in Besant Nagar, then home to practise a varnam."
+          "a": "Office done, a glass of wine with friends at a quiet cafe in Koregaon Park, then home to practise a varnam."
         }
       ],
       "tags": {
@@ -2575,8 +2575,8 @@
         }
       },
       "C": {
-        "sunday": "I wake up to the smell of filter coffee, practice Carnatic for an hour, then walk Marina Beach with my parents. We eat mango slices and talk about nothing. Peace.",
-        "hill": "I’ll die on the hill that filter coffee should always be served in a steel tumbler — nothing beats that authentic chennai experience.",
+        "sunday": "I wake up to the smell of filter coffee, practice Carnatic for an hour, then walk around Pashan lake with my parents (I still miss the beach back home). We eat mango slices and talk about nothing. Peace.",
+        "hill": "I’ll die on the hill that filter coffee should always be served in a steel tumbler — nothing beats how we drink it back home in Chennai.",
         "weirdly_good": "I’m weirdly good at remembering obscure Tamil film songs from the 90s — hum a tune and I’ll likely name the movie, year, and singer.",
         "laugh": "",
         "place": "",
@@ -2604,21 +2604,21 @@
         ]
       },
       "E": {
-        "e1": "Thank you! That made my day 🙂",
-        "e2": "I practice vocals, code a bit, and call my family. Keeps me grounded.",
-        "e3": "No, pineapple doesn't belong on pizza. Savory only for me.",
-        "e4": "I've done small treks in Yelagiri. Loved the view, but prefer beaches.",
-        "e5": "No worries! Hope your day got better.",
-        "e6": "Filter coffee at a quiet cafe, then a walk where we can talk easily.",
-        "e7": "Why thank you! You seem nice too 🙂",
-        "e8": "Texting is fine for quick chats, but calls feel more personal for real talk.",
-        "e9": "Congrats!! 🎉 That’s amazing news — so happy for you!",
-        "e10": "Haha, I won’t fight you on that… but have you met a golden retriever? Pure joy on four legs 🐶",
-        "e11": "I’d love that! How about tomorrow evening around 5 at that filter coffee place near Elliot’s?",
-        "e12": "Hey, I’m really sorry but something came up with family and I need to cancel our plans for tomorrow. Can we reschedule for later this week?",
-        "e13": "Guilty as charged 😅 But hey, better late than never, right?",
-        "e14": "Sleep well! Hope you wake up refreshed for your early day 😊",
-        "e15": "Whoa, that’s a lot — pottery class win though! Teacher’s right, you’ve got this. My week’s been steady: work, vocals, and too much filter coffee. Hope things calm down for you soon."
+        "e1": "Thank you! That made my day, romba nice 🙂",
+        "e2": "I practice vocals, konjam coding, and call my family. Keeps me grounded, seri.",
+        "e3": "Illa, pineapple doesn't belong on pizza. Savory only for me, haha.",
+        "e4": "Small treks in Lonavala panniruken. View was romba nalla, but I miss beaches from back home.",
+        "e5": "No worries! Hope your day got better, seri?",
+        "e6": "Filter coffee at a quiet café, then a walk where we can talk easily. Simple and nalla.",
+        "e7": "Aiyo thank you! You seem nice too, haha 🙂",
+        "e8": "Texting is fine for quick chats, but calls feel more personal for real talk. Enakku calls dhaan pidikum.",
+        "e9": "Congrats!! 🎉 Sema news, so happy for you!",
+        "e10": "Haha, I won't fight you… but golden retriever paathirukeengala? Pure joy on four legs 🐶",
+        "e11": "I'd love that! Tomorrow evening around 5 at that filter coffee place near Koregaon Park? Seri?",
+        "e12": "Hey, I'm really sorry, family la something came up and I need to cancel tomorrow. Can we reschedule later this week?",
+        "e13": "Aiyo guilty as charged 😅 But better late than never, illa?",
+        "e14": "Sleep well! Hope you wake up refreshed, nalla thoongu 😊",
+        "e15": "Whoa, that's a lot, but pottery class win! Teacher sonnadhu correct, you've got this. My week was steady: work, vocals, and romba too much filter coffee. Hope things calm down for you soon."
       },
       "I": {
         "job": "Junior data analyst",
@@ -2632,11 +2632,11 @@
     "email": "seed12@demo.local",
     "agentMode": "auto",
     "isSeed": true,
-    "designNotes": "normal: Software engineer who plays mridangam, morning beach walks with his dad, earnest and kind.",
+    "designNotes": "normal: Software engineer who plays mridangam, morning hill walks with his dad, earnest and kind.",
     "profile": {
       "name": "Karthik",
       "age": 26,
-      "city": "Chennai",
+      "city": "Pune",
       "gender": "man",
       "interestedIn": [
         "woman"
@@ -2644,11 +2644,11 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Karthik"
       ],
-      "bio": "Karthik, 26, Chennai. Software engineer who plays mridangam, walks the beach with his dad every morning, and believes kindness is the quietest strength.",
+      "bio": "Karthik, 26, Pune. Software engineer who plays mridangam, walks up Vetal hill with his dad every morning, and believes kindness is the quietest strength.",
       "prompts": [
         {
           "q": "A perfect Sunday",
-          "a": "Morning beach walk with Dad, filter coffee at home, then mridangam practice — simple, slow, and full of peace."
+          "a": "Morning hill walk with Dad, filter coffee at home, then mridangam practice — simple, slow, and full of peace."
         },
         {
           "q": "I'll fall for you if",
@@ -2816,10 +2816,10 @@
         }
       },
       "C": {
-        "sunday": "I wake up at 6, walk Marina Beach with my dad — we don’t talk much, just watch the waves. Then filter coffee, mridangam practice, and a long chat with Amma over lunch.",
+        "sunday": "I wake up at 6, walk the Sahyadri foothills with my dad — we don’t talk much, just watch the city wake up. Then filter coffee, mridangam practice, and a long chat with Amma over lunch.",
         "hill": "I think filter coffee is better than cappuccino — not because it’s trendy, but because it’s honest. No foam, just depth.",
         "weirdly_good": "I can tap the exact mridangam rhythm for any song just by humming it once. My friends say it’s weirdly useful.",
-        "laugh": "Last week, my dad tried to take a selfie with a crab and it pinched his toe. We both laughed till we cried.",
+        "laugh": "Last week, my dad tried to take a selfie with a monkey on the hill and it grabbed his glasses. We both laughed till we cried.",
         "place": "I’d love to go to Hampi — not just for the temples, but to sit by the Tungabhadra at dawn and listen to the silence.",
         "friends_rely": "They rely on me to stay calm when things get loud. I’m the one who says, ‘Let’s pause and talk it through.’"
       },
@@ -2844,21 +2844,21 @@
         ]
       },
       "E": {
-        "e1": "Hey! Thanks, that made my day 😊",
-        "e2": "When I’m not coding, I’m either at the beach with Dad or practicing mridangam. Keeps me grounded.",
-        "e3": "Nope — pineapple on pizza feels like a mistake. But I won’t judge if you like it!",
-        "e4": "I’ve done a few small treks in the Western Ghats. Nothing too tough — just walks with good views and quiet.",
-        "e5": "No worries at all! Hope your day eased up a bit.",
-        "e6": "A good first date? Filter coffee, a quiet walk somewhere shady, and talking like we’ve known each other forever.",
-        "e7": "Thanks! I try to be — life’s too short for anything else.",
-        "e8": "I prefer calls for real talks, but texting’s fine for quick hellos. Whatever feels natural.",
-        "e9": "Omg congrats!! 🎉 That’s awesome — what’s the role? So happy for you!",
-        "e10": "Haha I get that take — but have you met a golden retriever? Instant mood booster. Still, to each their own!",
-        "e11": "I’d love that! How about tomorrow morning after my walk with Dad? Filter coffee and a quiet corner?",
-        "e12": "Hey, I’m really sorry but something came up at work and I have to cancel our plans for tomorrow. I feel awful — can we reschedule for sometime soon?",
-        "e13": "Guilty as charged 😅 Dad says I inherit it from him — ‘Chennai time’, he calls it. Working on it, promise!",
-        "e14": "Sleep well! Hope tomorrow starts off calm and good for you.",
-        "e15": "Whoa, that’s a lot — huge launch, flatmate drama, AND pottery? You’re juggling like a pro. Glad the teacher sees potential — trust them, you’re doing better than you think. My week’s been steady: code, beach, mridangam practice. Quiet wins."
+        "e1": "Hey! Thanks, that made my day, romba nice 😊",
+        "e2": "When I'm not coding, I'm either on a morning walk with Appa or practicing mridangam. Keeps me grounded.",
+        "e3": "Illa, pineapple on pizza feels like a mistake. But I won't judge if you like it!",
+        "e4": "Konjam small treks in the Sahyadri hills panniruken. Nothing tough, just nalla views and quiet.",
+        "e5": "No worries at all! Hope your day eased up a bit, seri?",
+        "e6": "Filter coffee, a quiet walk somewhere shady, and talking like we've known each other forever. Enakku that's perfect.",
+        "e7": "Thanks! I try to be, life is too short for anything else.",
+        "e8": "Calls for real talks, texting for quick hellos. Whatever feels natural, seri.",
+        "e9": "Congrats!! 🎉 Sema news! What's the role? So happy for you!",
+        "e10": "Haha I get that take, but golden retriever paathirukeengala? Instant mood booster. Still, to each their own!",
+        "e11": "I'd love that! Tomorrow morning after my walk with Appa? Filter coffee and a quiet corner?",
+        "e12": "Hey, I'm really sorry, work la something came up and I have to cancel tomorrow. Romba feel panren, can we reschedule soon?",
+        "e13": "Guilty as charged 😅 Appa says I get it from him, 'Chennai time', he calls it. Working on it, promise!",
+        "e14": "Sleep well! Hope tomorrow starts off calm and nalla for you.",
+        "e15": "Whoa, that's a lot. Huge launch, flatmate drama, AND pottery? You're juggling like a pro. Trust the teacher, you're doing better than you think. My week was steady: code, walks with Appa, mridangam practice. Quiet wins, romba nice."
       },
       "I": {
         "job": "Software Engineer",
@@ -3057,7 +3057,7 @@
         }
       },
       "C": {
-        "sunday": "Sleeping in till 9, then a brutal CrossFit WOD, followed by chai and paratha at my favourite stall near Lodi Gardens, and ending the day at a comedy open mic in Hauz Khas with my squad.",
+        "sunday": "Slept in till 9, then a brutal CrossFit WOD, chai-paratha at my favourite stall near Lodi Gardens, ended the day at a comedy open mic in Hauz Khas with my squad.",
         "hill": "I’ll die on the hill that pineapple on pizza is a crime against humanity — sweet and savory don’t mix, and it ruins the cheese pull!",
         "weirdly_good": "I’m weirdly good at remembering everyone’s coffee order — even if I met them once at a work event six months ago.",
         "laugh": "Last thing that made me laugh out loud? My buddy did a spot-on impression of our boss yelling ‘synergy’ during a Zoom call — I snorted chai through my nose.",
@@ -3086,20 +3086,20 @@
       },
       "E": {
         "e1": "Arre yaar, thanks! Made my day 😄",
-        "e2": "When not working? Either lifting heavy, hunting new comedy shows, or plotting my next food trip!",
-        "e3": "Pineapple on pizza? HELL NO. It’s a felony, fight me.",
-        "e4": "Trek? YES! Done Triund and Hampta — next is Kedarkantha. You in?",
-        "e5": "Arre no worries! Crazy days happen — hope yours calmed down 😊",
-        "e6": "Good first date? Comedy show + street food crawl. If we laugh and eat badly, we’re golden.",
-        "e7": "Haha thanks! Gotta keep the energy high — life’s too short for boring convos.",
-        "e8": "Texting for quick yaars, calls for deep talks — best of both worlds!",
-        "e9": "Arre yaar, CONGRATS!!! 🎉 That’s huge — celebrate with protein shakes and bad jokes, I demand details!",
-        "e10": "Dogs overrated?!? Yaar, have you even met a wagging tail after a long day? Fight me, but I’ll bring treats.",
-        "e11": "Coffee? YES! I’m free tomorrow evening post-workout — say 6:30? My treat, you pick the spot (just no pineapple pizza vibes).",
-        "e12": "Arre yaar, so sorry — just got hit with an urgent work thing tomorrow AM. Can we shift to Friday? Same comedy spot, I’ll bring the chai.",
-        "e13": "Haha guilty as charged! But hey, better late than never — especially when it’s for you. My CrossFit schedule’s wild, but I’ll try!",
-        "e14": "Sleep ka funda! Early to rise, early to grind — sweet dreams, and don’t let the burpees bite 😴💪",
-        "e15": "Omg that’s a whole Netflix drama in one week!!! Pottery natural? Pfft, we’ll see about that — mine’s been mad too: back-to-back client calls, survived a 5AM CrossFit session, and finally tried that new stand-up open mic. Alive, but barely. Chai?"
+        "e2": "Kaam ke alawa? Either lifting heavy, comedy shows dhoondhna, ya next food trip plan karna!",
+        "e3": "Pineapple on pizza? Bilkul nahi. It's a felony, fight me.",
+        "e4": "Trek? Haan! Triund aur Hampta ho gaye, next Kedarkantha hai. Tu chalega?",
+        "e5": "Arre koi baat nahi! Crazy days hote hain, hope yours calmed down 😊",
+        "e6": "Comedy show + street food crawl. Agar hum hasein aur ganda khayein, we're golden.",
+        "e7": "Haha thanks! Energy high rakhni padti hai, boring baatein ke liye life bahut chhoti hai",
+        "e8": "Quick baaton ke liye texting, deep talks ke liye calls. Best of both!",
+        "e9": "Arre yaar, CONGRATS!!! 🎉 Bahut badi baat hai, saari details chahiye mujhe!",
+        "e10": "Dogs overrated?! Yaar, long day ke baad wagging tail dekhi hai kabhi? Fight me, but treats main laungi.",
+        "e11": "Coffee? Haan! Kal shaam workout ke baad free hoon, 6:30? Spot tu choose kar",
+        "e12": "Arre yaar, sorry, kal subah ek urgent work cheez aa gayi. Friday pe shift karein? Same comedy spot, chai meri taraf se.",
+        "e13": "Haha guilty! But better late than never, aur CrossFit schedule bhi pagal hai. Try karungi!",
+        "e14": "Chal so ja! Early to rise, early to grind. Sweet dreams 😴💪",
+        "e15": "Omg ek hi week mein poora Netflix drama!!! Pottery natural? Dekhte hain 😄 Meri bhi pagal thi, back-to-back client calls, 5 baje CrossFit, aur finally woh naya stand-up open mic try kiya. Zinda hoon, barely. Chai?"
       },
       "I": {
         "job": "Consultant",
@@ -3327,21 +3327,21 @@
         ]
       },
       "E": {
-        "e1": "Arre yaar, smile wala comment made my day 😂",
-        "e2": "Running, open-mic prep, or hustling startup ideas – never a dull moment, bhai!",
-        "e3": "Pineapple on pizza? Only if it’s a dare after tequila. Otherwise, sacrilege! 😂",
-        "e4": "Trek? Done Dhauj last monsoon – muddy, epic, almost cried. You in?",
-        "e5": "No worries, bhai! Hope your crazy day had at least one chai break.",
-        "e6": "First date? Morning run together, then street food crawl. If we survive both, we’re good.",
-        "e7": "Aw shucks, you made me blush! Keep the good vibes coming 😂",
-        "e8": "Texting for quick yaars, calls for deep bakwaas. Depends on the mood, bhai!",
-        "e9": "Arre yaar, CONGRATS!! 🎉 That calls for chai and bad dance moves! Tell me all! 😄",
-        "e10": "Omg dogs overrated? *gasps in Hindi and English* Next you’ll say biryani is just rice! Fight me, but I’ll bring treats 😂",
-        "e11": "Coffee? Ha! I’m free Sunday post-10k run — sweaty but sincere. Or weekday 7pm if you can handle startup brain dump ☕😂",
-        "e12": "Arre yaar, sorry! Startup fire drill hit — gotta pivot tomorrow. Raincheck? I’ll make it up with extra chai and worse jokes ☕😂",
-        "e13": "Late? Only fashionably! Or because I was rehearsing a joke that bombed. Sue me… but buy me chai first? 😏",
-        "e14": "Sleep ka baap! Sweet dreams — hope your tomorrow’s less insane and more chai-filled. ☕😴",
-        "e15": "Oof, flatmate vanishing act? Pottery natural? Sounds like a Netflix special. Mine’s been hustle + hills + half-baked punchlines. Surviving, basically! 😂"
+        "e1": "Arre yaar, smile wala comment ne din bana diya 😂",
+        "e2": "Running, open-mic prep, ya startup ideas pe hustle. Kabhi boring nahi hota, bhai!",
+        "e3": "Pineapple on pizza? Sirf dare pe. Warna bilkul nahi! 😂",
+        "e4": "Trek? Dhauj kiya tha last monsoon, mud mein almost ro diya tha 😂 Tu chalega?",
+        "e5": "Koi baat nahi bhai! Hope crazy day mein ek chai break toh mila 😄",
+        "e6": "First date? Subah saath mein run, phir street food crawl. Dono survive kiye toh we're good 😂",
+        "e7": "Arre sharma gaya main 😂 Vibes aise hi rakho",
+        "e8": "Quick baaton ke liye texting, lambi bakwaas ke liye calls. Mood pe depend karta hai bhai! 😄",
+        "e9": "Arre yaar, CONGRATS!! 🎉 Iske liye toh chai aur bekaar dance moves banta hai! Sab batao 😄",
+        "e10": "Dogs overrated?? Agla tu bolega biryani bas chawal hai 😱 Fight me, treats main laaunga 😂",
+        "e11": "Coffee? Haan! Sunday 10k run ke baad free hoon, thoda sweaty but sincere ☕😂",
+        "e12": "Arre yaar sorry! Startup mein aag lag gayi, kal pivot karna padega. Raincheck? Extra chai aur bekaar jokes se make up karunga ☕😂",
+        "e13": "Late? Sirf fashionably! Ya phir ek joke rehearse kar raha tha jo flop ho gaya 😏",
+        "e14": "Chal so ja! Kal ka din kam pagal aur zyada chai wala ho ☕😴",
+        "e15": "Oof, flatmate ka vanishing act? Aur pottery natural? Netflix special lag raha hai 😂 Meri week bas hustle, hills aur aadhe-adhoore punchlines. Survive kar raha hoon basically! 😄"
       },
       "I": {
         "job": "Logistics startup founder",
@@ -3568,21 +3568,21 @@
         ]
       },
       "E": {
-        "e1": "hey! your profile made me smile 😊",
-        "e2": "when not working, i’m either testing new snack flavours or practicing garba steps with cousins 😊",
-        "e3": "pineapple on pizza? only if it’s sweet and tangy like ananas shaak… but honestly, nope 😊",
-        "e4": "trek? not yet, but i’d love to try one with friends—maybe sachin or girnar next monsoon? 😊",
-        "e5": "no worries! hope your day calmed down. mine was full of fryer tests and dough rolls 😊",
-        "e6": "good first date? sharing a thali at a quiet spot, talking about dreams and favourite snacks. simple and real 😊",
-        "e7": "haha thanks! i try to keep things light—life’s too long to be serious all the time 😊",
-        "e8": "i prefer texting for quick updates, but calls for long chats—especially with Amma. best of both 😊",
-        "e9": "omg congrats!! 🎉 so proud of you—celebrate with something sweet? maybe jalebi? 😊",
-        "e10": "haha overrated? coming from a cat person? 😼 but hey, to each their own—more cuddles for me then 😊",
-        "e11": "love that! how about tomorrow evening around 5? there’s this cute iranian cafe near law garden—my treat 😊",
-        "e12": "hey, so sorry—something urgent came up at the startup, gotta handle a supplier issue. can we shift to day after? really don’t wanna miss our coffee ☕😊",
-        "e13": "guilty as charged! 😅 amma says i run on ‘indian stretchable time’—working on it, promise 😊",
-        "e14": "sleep well! hope you wake up refreshed—sweet dreams 😊",
-        "e15": "whoa, that’s a lot! pottery class? now i need to see your first mug—hope it’s snack-shaped 😄 mine’s been good—finalised a new masala khakra batch and danced garba in the kitchen. life’s full, alhamdulillah 😊"
+        "e1": "aww thank you! tamaru profile pan bau cute che 😊",
+        "e2": "kaam pachi? either new snack flavours test karu chhu ya cousins sathe garba practice 😊",
+        "e3": "pineapple on pizza? ananas nu shaak hoy toh chale… but honestly, nai 😊",
+        "e4": "trek? haji nathi karyo, but friends sathe try karvo che, maybe girnar next monsoon? 😊",
+        "e5": "no worries! hope tamaro day calm thayo. maro aakho day fryer tests ane dough rolls ma gayo 😊",
+        "e6": "good first date? ek quiet jagya e thali share karvi, sapna ane favourite snacks ni vaato. simple ane real 😊",
+        "e7": "haha thanks! hu life light rakhu chhu, always serious rehvanu nai 😊",
+        "e8": "quick updates mate texting, lambi vaato mate calls, especially mummy sathe. best of both 😊",
+        "e9": "omg congrats!! 🎉 bau proud of you, kai sweet thi celebrate karo? jalebi? 😊",
+        "e10": "haha overrated? tame cat person cho ke shu? 😼 to each their own, more cuddles for me 😊",
+        "e11": "majja aavse! kale saanje 5 vage? law garden paase ek cute cafe che, maro treat 😊",
+        "e12": "hey sorry, startup ma urgent supplier issue aavyo che, kale nai thai shake. parmdivse karie? coffee miss nathi karvi ☕😊",
+        "e13": "guilty! 😅 mummy kahe che hu 'indian stretchable time' par chalu chhu, working on it 😊",
+        "e14": "sleep well! fresh uthjo, sweet dreams 😊",
+        "e15": "whoa, aakhi week ma aatlu badhu! pottery class? have tamaro pehlo mug jovo che, snack-shaped hoy toh best 😄 maro week saras gayo, navo masala khakra batch final karyo ane kitchen ma garba karyo. life full che 😊"
       },
       "I": {
         "job": "snack startup founder",
@@ -3809,21 +3809,21 @@
         ]
       },
       "E": {
-        "e1": "Hey! Thanks, that made my day 😊",
-        "e2": "When I’m not working, I’m either dancing garba, testing new snack recipes, or rewatching old IPL matches. You?",
-        "e3": "Nope. Pineapple on pizza is a crime against cheese. Fight me 😄",
-        "e4": "Yes! Did Girnar last monsoon — tough but worth it. You thinking of Dhosi or Saputara?",
-        "e5": "No worries! Hope your day calmed down. Chai?",
-        "e6": "Garba practice followed by street food — pani puri and jalebi. Low pressure, high joy. What about you?",
-        "e7": "Thanks! I try to keep things light — life’s too short for dull convos 😊",
-        "e8": "Texting for quick chats, calls for deeper talks. But I’ll always reply to your texts — promise.",
-        "e9": "Congrats!! 🎉 That’s huge — celebrate with garba moves and your favorite snack? I’m so happy for you!",
-        "e10": "Oof, strong take 😅 But hey, to each their own — I’ll keep loving my pupper while you enjoy your cat life 😄",
-        "e11": "Love that! How about tomorrow evening? Say 6 at that cute café near Law Garden? Chai or filter coffee?",
-        "e12": "Hey, so sorry — something urgent came up at work and I won’t be able to make it tomorrow. Raincheck? Let me make it up to you with extra jalebi next time 😅",
-        "e13": "Guilty as charged 😏 But only because I’m busy perfecting garba steps and snack recipes — worth the wait, promise!",
-        "e14": "Sleep well! Hope tomorrow’s smooth — dream of garba and donuts 😄",
-        "e15": "Whoa, that’s a rollercoaster week! 😅 Pottery natural? I don’t believe it either — but I’d love to see your first piece. Mine’s been all startup chaos and late-night recipe tests… but hey, at least the chai’s strong."
+        "e1": "Hey! Thanks, majama, that made my day 😊",
+        "e2": "Kaam pachi, I'm either dancing garba, new snack recipes test karu chhu, or rewatching old IPL matches. Tame?",
+        "e3": "Nai. Pineapple on pizza is a crime against cheese. Fight me 😄",
+        "e4": "Haa! Girnar karyo last monsoon. Tough hatu but worth it. Tame Saputara vicharo cho?",
+        "e5": "No worries! Hope tamaro day calm thayo. Chai?",
+        "e6": "Garba practice, pachi street food. Pani puri ane jalebi. Low pressure, high joy. Tame?",
+        "e7": "Thanks! Hu life light rakhu chhu, dull convos mate time nathi 😊",
+        "e8": "Quick vaato mate texting, deeper talks mate calls. Pan tamara texts no reply hu always aapish.",
+        "e9": "Congrats!! 🎉 Bau moti vaat che. Garba moves ane favourite snack thi celebrate karo? Hu bau khush chhu tamara mate!",
+        "e10": "Oof, strong take 😅 To each their own, hu maro pupper love karto rahish 😄",
+        "e11": "Saras! Kale saanje 6 vage, Law Garden paase te cute café ma? Chai ke filter coffee?",
+        "e12": "Hey, sorry, kaam ma kai urgent aavyu che ane kale nai aavi shaku. Raincheck? Next time extra jalebi maari taraf thi 😅",
+        "e13": "Guilty 😏 But only because hu garba steps ane snack recipes perfect karu chhu. Worth the wait, promise!",
+        "e14": "Sleep well! Kale no day smooth jaay. Garba ane donuts na sapna jojo 😄",
+        "e15": "Whoa, su week hati! 😅 Pottery natural? Mane pan vishwas nathi, but tamaro first piece jovo che. Maro week startup chaos ane late-night recipe tests ma gayo… pan chai strong hati, etle chale."
       },
       "I": {
         "job": "Founder of a D2C food brand",
@@ -4346,9 +4346,7 @@
         "relationshipGoal": "long-term",
         "religionImportance": "somewhat"
       },
-      "dealbreakers": [
-        "smoking: never"
-      ]
+      "dealbreakers": []
     },
     "answers": {
       "A": {
@@ -4409,7 +4407,7 @@
         "smoking": {
           "answer": "never",
           "importance": "high",
-          "dealbreaker": true,
+          "dealbreaker": false,
           "accepts": [
             "never"
           ]
@@ -4748,21 +4746,21 @@
         ]
       },
       "E": {
-        "e1": "aww ty! made my day too 😅",
-        "e2": "not working? either at a gig, tending to my jungle of plants, or pretending i’m a runner while gasping on jayanagar roads",
-        "e3": "pineapple on pizza? only if it’s got chili flakes and i’m pretending it’s a tropical vacation. otherwise, hard no 😅",
-        "e4": "done a few! last was skandagiri — sunrise view was worth the 4am start and my lungs screaming. you?",
-        "e5": "no worries! hope the crazy day brought at least one good chai break 😅",
-        "e6": "good first date? chai at a quiet spot, then walk around lalbagh talking nonsense. if the vibe’s right, maybe a low-key gig after.",
-        "e7": "haha thanks! i try — though my jokes are worse than my attempts at quitting smoking 😅",
-        "e8": "texting for quick laughs, calls for deep convos or when i wanna hear your voice after a long day. balance, you know?",
-        "e9": "no way!! congrats!!! 🎉 what’s the gig? gotta celebrate — chai and bad jokes on me? 😅",
-        "e10": "lol bold take — but i’ll admit, cats low-key judge us harder. still, a wagging tail after a long day? kinda magic. you just haven’t met the right floof 😅",
-        "e11": "yes please! how about tomorrow evening? say 6 at that chai spot near indiranagar? or whenever works — i’m flexible (unlike my attempts at yoga) 😅",
-        "e12": "hey so… something came up and i’ve gotta cancel tomorrow 😅 really sorry — work call i can’t push. raincheck? i owe you chai and a plant pun as apology 😅",
-        "e13": "guilty as charged 😅 but hey, better late than never… especially if it means i get to see your face. you’ll just have to bring extra chai for the wait 😉",
-        "e14": "sleep well! hope tomorrow’s early start brings good vibes (and decent coffee). dream of plants that don’t die under my care 😅",
-        "e15": "whoa that’s a lot — major respect for starting pottery though! natural or not, you’re trying — that’s the win. mine’s been… loud. gigs, smoke breaks, and trying not to kill my monstera. surviving, basically 😅"
+        "e1": "aww ty yaar! made my day too 😅",
+        "e2": "kaam nahi toh? either kisi gig pe, mere plants ke jungle ko paani dena, ya jayanagar ki roads pe runner banne ka natak while gasping 😅",
+        "e3": "pineapple on pizza? sirf chili flakes ke saath, warna hard no yaar 😅",
+        "e4": "haan kuch kiye hain! last wala skandagiri tha, 4 baje ka start aur lungs chilla rahe the but sunrise was worth it. tum?",
+        "e5": "koi baat nahi! hope crazy day mein ek accha chai break toh mila 😅",
+        "e6": "first date? kisi quiet spot pe chai, phir lalbagh mein ghoomte hue bakwaas baatein. vibe sahi lagi toh ek low-key gig after 🎶",
+        "e7": "haha thanks yaar! koshish karta hoon, though mere jokes smoking chhodne ki koshish se bhi bure hain 😅",
+        "e8": "quick laughs ke liye texting, aur deep baatein ya long day ke baad tumhari awaaz sunni ho toh calls. balance, you know?",
+        "e9": "kya baat hai!! congrats!!! 🎉 kaunsa gig mila? celebrate karna padega, chai aur bekaar jokes meri taraf se 😅",
+        "e10": "lol bold take yaar, cats toh aur zyada judge karte hain. but long day ke baad wagging tail? kuch alag hi magic hai. tumhe bas sahi floof nahi mila abhi tak 😅",
+        "e11": "haan please! kal shaam? indiranagar wale chai spot pe 6 baje? ya jab bhi tumhe theek lage, main flexible hoon (yoga mein nahi though) 😅",
+        "e12": "hey sorry yaar, kal cancel karna padega 😅 ek work call aa gaya jo push nahi ho sakta. raincheck? chai aur ek plant pun udhaar raha 😅",
+        "e13": "guilty as charged 😅 but late hi sahi, aa toh jaata hoon. wait ke liye extra chai le aana 😉",
+        "e14": "achhe se sona! kal ka early start acchi vibes (aur decent coffee) ke saath ho. aur mere plants ke sapne dekhna jo mere haath se nahi marte 😅",
+        "e15": "whoa itna kuch ek hi week mein, pottery shuru karne ke liye major respect yaar! natural ho ya nahi, try toh kiya, wahi jeet hai. meri week loud thi, gigs, smoke breaks, aur monstera ko zinda rakhne ki koshish. survive kar raha hoon basically 😅"
       },
       "I": {
         "job": "sound engineer",
@@ -4815,9 +4813,7 @@
         "relationshipGoal": "long-term",
         "religionImportance": "somewhat"
       },
-      "dealbreakers": [
-        "looking for: long-term"
-      ]
+      "dealbreakers": []
     },
     "answers": {
       "A": {
@@ -4918,7 +4914,7 @@
         "looking_for": {
           "answer": "long_term",
           "importance": "high",
-          "dealbreaker": true,
+          "dealbreaker": false,
           "accepts": [
             "long_term"
           ]
@@ -5216,21 +5212,21 @@
         ]
       },
       "E": {
-        "e1": "hey! thanks 😄 made my day",
-        "e2": "when not working? chasing light, editing reels, or hunting the next chai spot with a view",
-        "e3": "pineapple on pizza? hell yes. sweet heat fight change my mind",
-        "e4": "trek this weekend? done sahyadris monsoon trails—wet, wild, worth it. you going solo?",
-        "e5": "no worries! hope the crazy was good crazy",
-        "e6": "good first date? chai at bandstand, walk the fort, see where the convo takes us. no pressure.",
-        "e7": "haha thanks! tryin to keep it real",
-        "e8": "texting for quick, calls when the story’s good. voice notes too if i’m on a cliff",
-        "e9": "I GOT THE JOB!! 🎉 → hell yes!!! congrats 🎉 what’d you land? celebrating with chai or something stronger?",
-        "e10": "honestly I think dogs are overrated → oof hot take 😂 but I’ll fight you on this—puppy cuddles > your opinion. change my mind?",
-        "e11": "we should grab coffee sometime, when are you free? → coffee? yes. tell me when & where, I’ll bring the good vibes (and maybe a croissant if i’m feeling fancy)",
-        "e12": "hey, sorry but something came up tomorrow—gotta reschedule. raincheck? let me know when you’re free next week, i’ll make it up to you",
-        "e13": "you're definitely the type who's late everywhere 😏 → guilty as charged 😅 but hey, good things come to those who wait… and i’m worth the wait, right?",
-        "e14": "anyway I should sleep, early day tomorrow → sleep tight! hope your early day starts with good coffee and zero alarms. sweet dreams 😌",
-        "e15": "ok long story but my week has been insane... how's yours been? → woah that’s a lot!!! proud of you for trying pottery—natural or not, you showed up. mine? messy but good. more chai, less sleep, same vibe"
+        "e1": "hey! thanks yaar 😄 din bana diya",
+        "e2": "kaam ke baad? light chase karna, reels edit karna, ya view wala next chai spot dhoondhna",
+        "e3": "pineapple on pizza? haan bilkul. sweet heat, change my mind",
+        "e4": "haan sahyadri ke monsoon trails kiye hain, geela, wild, worth it. tum akele ja rahe ho?",
+        "e5": "koi baat nahi! hope crazy wala din good crazy tha",
+        "e6": "bandstand pe chai, fort mein walk, phir dekhte hain baatein kahan le jaati hain. no pressure",
+        "e7": "haha thanks! bas real rehne ki koshish",
+        "e8": "quick cheezon ke liye texting, story acchi ho toh calls. aur cliff pe hoon toh voice notes lol",
+        "e9": "hell yes!!! congrats yaar 🎉 kya mila? chai se celebrate ya kuch aur?",
+        "e10": "oof hot take lol 😂 puppy cuddles tumhari opinion se better hain. change my mind?",
+        "e11": "coffee? haan. kab aur kahan batao, good vibes main laaunga (aur shayad ek croissant bhi)",
+        "e12": "hey sorry yaar, kal kuch aa gaya, reschedule karna padega. next week kab free ho? make up kar dunga",
+        "e13": "guilty 😅 but wait karne walon ko acchi cheezein milti hain… aur main worth it hoon, hai na?",
+        "e14": "sleep tight! kal ka early din acchi coffee aur zero alarms se shuru ho lol 😌",
+        "e15": "woah itna kuch!!! pottery try kiya, proud of you yaar, natural ho ya nahi, gaye toh. meri week messy but good. zyada chai, kam neend, same vibe"
       },
       "I": {
         "job": "travel-content creator",
@@ -5245,11 +5241,11 @@
     "email": "seed23@demo.local",
     "agentMode": "auto",
     "isSeed": true,
-    "designNotes": "normal: Doctor with her own clinic in Hyderabad, will never leave the city (parents, practice), loves badminton.",
+    "designNotes": "normal: Doctor with her own clinic in Ahmedabad, will never leave the city (parents, practice), loves badminton.",
     "profile": {
       "name": "Aisha",
       "age": 29,
-      "city": "Hyderabad",
+      "city": "Ahmedabad",
       "gender": "woman",
       "interestedIn": [
         "man"
@@ -5257,11 +5253,11 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Aisha"
       ],
-      "bio": "Hyderabad-based doctor running my own clinic. Badminton obsessed, love food walks and films. Never leaving this city — it’s home.",
+      "bio": "Ahmedabad-based doctor running my own clinic. Badminton obsessed, love food walks and films. Never leaving this city — it’s home.",
       "prompts": [
         {
           "q": "A perfect Sunday",
-          "a": "Morning badminton at Indira Park, then biryani at Paradise, followed by a Telugu film matinee. Simple, sweet, and full of movement."
+          "a": "Morning badminton at the club, then a Gujarati thali lunch, followed by a film matinee. Simple, sweet, and full of movement."
         },
         {
           "q": "My most controversial opinion",
@@ -5284,9 +5280,7 @@
         "relationshipGoal": "long-term",
         "religionImportance": "somewhat"
       },
-      "dealbreakers": [
-        "living in 3-5 years: this city"
-      ]
+      "dealbreakers": []
     },
     "answers": {
       "A": {
@@ -5336,7 +5330,7 @@
         "location": {
           "answer": "this_city",
           "importance": "high",
-          "dealbreaker": true,
+          "dealbreaker": false,
           "accepts": [
             "this_city"
           ]
@@ -5483,7 +5477,7 @@
     "profile": {
       "name": "Vikram",
       "age": 31,
-      "city": "Hyderabad",
+      "city": "Ahmedabad",
       "gender": "man",
       "interestedIn": [
         "woman"
@@ -5491,15 +5485,15 @@
       "photos": [
         "https://api.dicebear.com/9.x/notionists/svg?seed=Vikram"
       ],
-      "bio": "Aerospace engineer from Hyderabad. Obsessed with badminton, love food walks and dreaming about new places to explore.",
+      "bio": "aerospace engineer from ahmedabad. obsessed with badminton, love food walks and dreaming about new places to explore.",
       "prompts": [
         {
-          "q": "A perfect Sunday",
-          "a": "Morning badminton with friends, then a long food walk through Old City, ending with chai and laughing till sunset."
+          "q": "a perfect sunday",
+          "a": "morning badminton with friends, then a long food walk through old city, ending with chai and laughing till sunset."
         },
         {
-          "q": "I'll fall for you if",
-          "a": "You can match my badminton smash and still want to share the last piece of biryani after."
+          "q": "i'll fall for you if",
+          "a": "you can match my badminton smash and still want to share the last piece of biryani after."
         }
       ],
       "tags": {
@@ -5662,12 +5656,12 @@
         }
       },
       "C": {
-        "sunday": "I wake up by 8, hit the court for a doubles game with my regular crew, then we hit up that hole-in-the-wall place near Charminar for Irani chai and keema pav. Afternoon is for wandering the food streets, tasting new snacks, and ending the day with a slow walk around Hussain Sagar as the sun goes down.",
-        "hill": "I think pineapple on pizza is actually a solid move — sweet, tangy, cuts through the cheese. Fight me.",
-        "weirdly_good": "I can predict shuttlecock trajectories weirdly well — like, I’ll call where it’s going to land before my opponent even hits it.",
-        "laugh": "My friend tried to serve underarm in a league match and the shuttle went sideways into the next court. We had to pause the game because we were laughing so hard.",
-        "place": "I want to go to Kyoto — I’ve heard the food walks there are unreal, and I’d love to play badminton in one of those old temple courtyards if they let me.",
-        "friends_rely": "They rely on me to be the one who organizes our weekend games and finds the best new street food spots — basically, I’m the plan guy."
+        "sunday": "i wake up by 8, hit the court for a doubles game with my regular crew, then we hit up that hole-in-the-wall place near manjipur darwaza for iranian chai and keema pav. afternoon is for wandering the food streets, tasting new snacks, and ending the day with a slow walk around kankaria lake as the sun goes down.",
+        "hill": "i think pineapple on pizza is actually a solid move — sweet, tangy, cuts through the cheese. fight me.",
+        "weirdly_good": "i can predict shuttlecock trajectories weirdly well — like, i’ll call where it’s going to land before my opponent even hits it.",
+        "laugh": "my friend tried to serve underarm in a league match and the shuttle went sideways into the next court. we had to pause the game because we were laughing so hard.",
+        "place": "i want to go to kyoto — i’ve heard the food walks there are unreal, and i’d love to play badminton in one of those old temple courtyards if they let me.",
+        "friends_rely": "they rely on me to be the one who organizes our weekend games and finds the best new street food spots — basically, i’m the plan guy."
       },
       "D": {
         "interests": [
@@ -5686,21 +5680,21 @@
         ]
       },
       "E": {
-        "e1": "Hey! Thanks, that made my day 🙂",
-        "e2": "When I'm not working, I'm usually on the badminton court or exploring food walks around the city.",
-        "e3": "Yes, pineapple on pizza is a vibe — sweet and salty works for me 🙂",
-        "e4": "I've done a few treks! Last one was to Ananthagiri Hills — great views, worth the climb.",
-        "e5": "No worries at all! Hope your day got better 🙂",
-        "e6": "A good first date? Let's grab coffee, walk around a market or food street, and see if we can make each other laugh.",
-        "e7": "Haha thanks! I try to keep things light and fun — life's too short otherwise.",
-        "e8": "I like texting for quick chats, but calls are better for real conversations. Depends on the mood!",
-        "e9": "No way!! 🎉 Huge congrats — you totally earned it! What’s the role?",
-        "e10": "Haha bold take — but I’ll hear you out. What’s your ideal pet then?",
-        "e11": "Yes please! How’s tomorrow evening around 6? Know a great spot near Tank Bund.",
-        "e12": "Hey, so sorry — something urgent came up at work and I won’t be able to make it tomorrow. Really want to reschedule though — how about the day after?",
-        "e13": "Guilty as charged 😏 But hey, better late than never, right?",
-        "e14": "Sleep well! Hope you wake up refreshed 😴",
-        "e15": "Whoa, that’s a lot — flatmate drama AND pottery? Respect for trying something new. I’m proud of you for showing up. My week’s been steady — prepping for the move, hitting the court when I can. You surviving?"
+        "e1": "thanks 🙂 made my day",
+        "e2": "badminton and food walks",
+        "e3": "yes sweet and salty",
+        "e4": "saputara last time great views",
+        "e5": "no worries",
+        "e6": "coffee and a food street",
+        "e7": "haha try to",
+        "e8": "texts quick calls real",
+        "e9": "huge congrats 🎉 what role",
+        "e10": "bold take what pet then",
+        "e11": "tomorrow 6 near kankaria",
+        "e12": "sorry work emergency day after",
+        "e13": "guilty 😏",
+        "e14": "sleep well 😴",
+        "e15": "whoa respect for pottery"
       },
       "I": {
         "job": "aerospace engineer",
@@ -5753,9 +5747,7 @@
         "relationshipGoal": "long-term",
         "religionImportance": "somewhat"
       },
-      "dealbreakers": [
-        "drinking: never"
-      ]
+      "dealbreakers": []
     },
     "answers": {
       "A": {
@@ -5826,7 +5818,7 @@
         "drinking": {
           "answer": "never",
           "importance": "high",
-          "dealbreaker": true,
+          "dealbreaker": false,
           "accepts": [
             "never"
           ]
@@ -5897,12 +5889,12 @@
         }
       },
       "C": {
-        "sunday": "I start with riyaaz at 7, ghungroo tied tight, then walk to my favorite chaiwala for cutting chai and biscuits. Afternoon is for marking papers with green pen, evening for reading Natya Shastra under the fan.",
-        "hill": "I believe classical dance deserves prime-time TV slots — not just reality shows, but proper Kathak or Bharatanatyam performances on weekends.",
-        "weirdly_good": "I can tell a student’s mood just by how they tie their ghungroo straps — tight means anxious, loose means distracted, just right means ready.",
-        "laugh": "My niece tried to do a chakkar and ended up spinning into the sofa cushions, giggling uncontrollably — I haven’t laughed that hard in weeks.",
-        "place": "I want to go to Kerala to watch Kathakali — the facial expressions, the elaborate makeup, the way stories live in every finger tremor.",
-        "friends_rely": "They rely on me to remember birthdays, bring homemade gujiya, and calm them down with a breathing exercise when they’re overwhelmed."
+        "sunday": "सुबह 7 से riyaaz शुरू करती हूँ, ghungroo कसकर बाँधती हूँ, फिर अपने पसंदीदा चाइवाले पर कटिंग चाय और बिस्किट के लिए चल देती हूँ। दोपहर में हरी पेन से पेपर्स चेक करती हूँ, शाम को पंखे के नीचे नाट्य शास्त्र पढ़ती हूँ।",
+        "hill": "मैं मानती हूँ कि शास्त्रीय नृत्य को प्राइम-टाइम टीवी स्लॉट मिलना चाहिए — सिर्फ रियलिटी शोज़ नहीं, बल्कि वीकेंड्स पर proper कथक या भरतनाट्यम के शो।",
+        "weirdly_good": "मैं एक स्टूडेंट का मूड बस उनकी घुंघरू की पट्टी बाँधने के तरीके से समझ जाती हूँ — टाइट बाँधना मतलब चिंता, ढीला मतलब मन भटक रहा है, ठीक बाँधना मतलब तैयार है।",
+        "laugh": "मेरी भांजी ने चक्कर लगाने की कोशिश की और सोफे के कुशनों में जा घुसी, हँसते-हँसते लोटपोट हो गयी — मैं हफ्तों बाद इस कदर नहीं हँसी।",
+        "place": "मैं केरल जाना चाहती हूँ ताकि कथकली देख सकूँ — चेहरे के भाव, विस्तृत मेकअप, और वो तरीका जिससे हर उंगली के क tremor में कहानी बसी हुई हो।",
+        "friends_rely": "वे मुझ पर निर्भर हैं कि मैं जन्मदिन याद रखूँ, घर का बना गुझिया लाऊँ, और जब वे ओवरवhelm्ड महसूस कर रहे हों तो साँस लेने का व्यायाम सिखाकर शांत कर दूँ।"
       },
       "D": {
         "interests": [
@@ -5921,21 +5913,21 @@
         ]
       },
       "E": {
-        "e1": "Thank you 🌸 Your words made my morning brighter.",
-        "e2": "I dance, read, or sip coffee at my favourite corner stall — simple joys keep me grounded.",
-        "e3": "Nope 🌸 Pineapple belongs in fruit chaat, not on pizza — savoury and sweet should stay separate.",
-        "e4": "I’ve done easy trails near Delhi — nothing too steep. Would love to try something gentle with good company.",
-        "e5": "No worries at all 🌸 Hope your day eased up — chai helps, doesn’t it?",
-        "e6": "A quiet coffee place where we can talk, maybe catch a short play afterwards if we vibe.",
-        "e7": "Thank you 🌸 I try to find joy in small things — like a perfect tatkar or a good joke.",
-        "e8": "I like both 🌸 Texts for quick thoughts, calls when we want to hear each other’s laughter.",
-        "e9": "Congratulations! 🎉 That’s amazing news — I’m so happy for you. What’s the role?",
-        "e10": "Haha, to each their own 🌸 I grew up around street dogs — they’ve got more loyalty and soul than most people I know.",
-        "e11": "I’d love that ☕ How about Saturday morning? Around 10 at the usual spot near Connaught Place?",
-        "e12": "Hey, I’m really sorry — something urgent came up at school and I won’t be able to make it tomorrow. Can we reschedule for Sunday?",
-        "e13": "Guilty as charged 😏 But only when I’m lost in a rhythm or a good book — time just slips away. I’ll try to be better!",
-        "e14": "Sleep well 🌸 Hope you wake up refreshed — and don’t forget your chai!",
-        "e15": "Wow, that’s a lot to unpack! 🌸 Proud of you for trying pottery — and if the teacher says you’re a natural, trust them. My week’s been full of tatkar practice and grading papers — same old, same old. Glad you’re finding joy in new things."
+        "e1": "धन्यवाद 🌸 आपके शब्दों ने मेरी सुबह और भी खूबसूरत बना दी।",
+        "e2": "मैं नाचती हूँ, पढ़ती हूँ, या अपने पसंदीदा स्टॉल पर कॉफ़ी पीती हूँ — ये छोटी-छोटी खुशियों से मैं खुद को महसूस करती हूँ।",
+        "e3": "नहीं 🌸 अनानास तो फ्रूट चाट में है, पिज़्ज़ा पर नहीं — नमकीन और मीठे को अलग रखना चाहिए।",
+        "e4": "मैंने दिल्ली के आसपास के आसान ट्रेल्स किये हैं — बहुत steep नहीं। अच्छा लगे तो कुछ हल्का ट्रेक साथ में करना पसंद करूंगी।",
+        "e5": "कोई बात नहीं 🌸 उम्मीद है आपका दिन शांत हुआ होगा — चाय से तो मदद मिलती ही है, न?",
+        "e6": "एक शांत कॉफ़ी की जगह जहाँ हम बात कर सकें, अगर vibe अच्छा लगा तो बाद में कोई छोटा नाटक देख सकते हैं।",
+        "e7": "धन्यवाद 🌸 मैं छोटी-छोटी बातों में खुशी ढूँढने की कोशिश करती हूँ — जैसे सही ततkar या एक अच्छा जोक।",
+        "e8": "मुझे दोनों पसंद हैं 🌸 टेक्स्ट्स के लिए जल्दी-जल्दी के विचार, कॉल्स के लिए जब हम एक-दूसरे की हँसी सुनना चाहते हों।",
+        "e9": "बधाई हो! 🎉 ये बहुत अच्छी खबर है — मैं आपके लिए बहुत खुश हूँ। роль क्या है?",
+        "e10": "हहा, हर किसी की अपनी राय होती है 🌸 मैं स्ट्रीट डॉग्स के साथ बड़ी हुई हूँ — उनके पास इंसानों से ज्यादा वफादारी और दिल होता है।",
+        "e11": "मुझे भी बहुत खुशी होगी ☕ शनिवार की सुबह कैसे रहेगी? कॉन्स्टिट्यूट प्लेस के पास usual spot पर 10 बजे?",
+        "e12": "अरे, बहुत खेद है — स्कूल में कुछ अर्जेंट आ गया है, इसलिए मैं कल नहीं आ पाउँगी। क्या हम रविवार को मिल सकते हैं?",
+        "e13": "सच कहूँ तो हाँ 😏 लेकिन केवल तब जब मैं किसी ताल में खो जाऊँ या किसी अच्छी किताब में — फिर समय खुद ही उड़ जाता है। सुधरने की कोशिश करूँगी!",
+        "e14": "अच्छी नींद 🌸 उम्मीद है आप ताज़ा होकर जागेंगे — और अपनी चाय नहीं भूलना!",
+        "e15": "वाह, ये बहुत कुछ है! 🌸 पोट्टरी क्लास शुरू करने पर गर्व है — और अगर टीचर कहती हैं आपナチュ럴 हैं, तो उन्हें विश्वास कीजिए। मेरे हफ्ते में ततkar की प्रैक्टिस और पेपर्स चेक करने का काम रहा — पुराना जैसा ही। खुशी हो रही है कि आप नई चीज़ में मज़ा ले रहे हैं।"
       },
       "I": {
         "job": "Kathak dancer and school teacher",
@@ -6131,12 +6123,12 @@
         }
       },
       "C": {
-        "sunday": "I wake up late, brew a small test batch of coffee stout while reheating last night’s dal, then head to Lodhi Gardens to run lines under the trees.",
-        "hill": "I’ll die on the hill that Naseeruddin Shah’s theatre work is criminally underrated compared to his film roles—fight me.",
-        "weirdly_good": "I can identify any beer style blindfolded just by smell—my friends call it my party trick, but it’s just years of obsession.",
-        "laugh": "My mate tripped over a prop sword during rehearsal and yelled ‘I’m slain!’—we had to pause the scene for ten minutes because we were crying.",
-        "place": "I want to go to Prague—not just for the beer, but to see how their centuries-old brewing traditions live in modern microbreweries.",
-        "friends_rely": "They rely on me to bring the right beer to any gathering and to calm them down before auditions with a terrible joke and a shoulder tap."
+        "sunday": "i wake up late, brew a small test batch of coffee stout while reheating last night’s dal, then head to lodhi gardens to run lines under the trees.",
+        "hill": "i’ll die on the hill that naseeruddin shah’s theatre work is criminally underrated compared to his film roles—fight me.",
+        "weirdly_good": "i can identify any beer style blindfolded just by smell—my friends call it my party trick, but it’s just years of obsession.",
+        "laugh": "my mate tripped over a prop sword during rehearsal and yelled ‘i’m slain!’—we had to pause the scene for ten minutes because we were crying.",
+        "place": "i want to go to prague—not just for the beer, but to see how their centuries-old brewing traditions live in modern microbreweries.",
+        "friends_rely": "they rely on me to bring the right beer to any gathering and to calm them down before auditions with a terrible joke and a shoulder tap."
       },
       "D": {
         "interests": [
@@ -6155,21 +6147,21 @@
         ]
       },
       "E": {
-        "e1": "hey! your profile made me smile 😄",
-        "e2": "when i’m not brewing or acting, i’m hunting for rare coffee beans or arguing about shakespeare with my mates",
-        "e3": "pineapple on pizza? only if it’s paired with a sour ale—otherwise, it’s a crime against dough",
-        "e4": "i’ve done a few treks—nothing too crazy, but i love how the quiet clears my head before a big show",
-        "e5": "no worries at all—hope your day slowed down a bit now!",
-        "e6": "a good first date? sharing a flight of weird beers at my taproom, then catching a street play in hauz khas",
-        "e7": "haha you seem fun",
-        "e8": "i prefer calls for real talk, but texts for quick laughs and beer recs—best of both worlds",
-        "e9": "I GOT THE JOB!! 🎉",
-        "e10": "dogs are overrated? bold take—i’ll trade you a stout for that opinion any day",
-        "e11": "coffee sounds perfect—how about saturday morning? i know a spot with beans so good they’ll make you forget chai exists",
-        "e12": "hey, so sorry—last-minute rehearsal ran long and i won’t make it tomorrow. raincheck? i’ll bring the next round",
-        "e13": "you’re definitely the type who’s late everywhere 😏",
-        "e14": "anyway i should sleep, early day tomorrow",
-        "e15": "oh wow—pottery class? i low-key respect that. mine’s been all about perfecting a new sour and memorizing monologues. chaos, but the good kind"
+        "e1": "arre thanks! tumhari profile bhi mast hai 😄",
+        "e2": "jab brewing ya acting nahi kar raha, toh rare coffee beans dhoondh raha hota hoon ya doston ke saath shakespeare pe behas",
+        "e3": "pineapple on pizza? sirf sour ale ke saath. warna dough ke saath crime hai yaar",
+        "e4": "kuch treks kiye hain, bahut crazy nahi, but bade show se pehle wahan ki shanti dimaag saaf kar deti hai",
+        "e5": "koi baat nahi! hope ab din thoda slow ho gaya",
+        "e6": "mere taproom pe weird beers ki flight share karna, phir hauz khas mein ek street play. mast plan",
+        "e7": "haha thoda bahut, stage pe zyada 😄",
+        "e8": "real baaton ke liye calls, quick laughs aur beer recs ke liye texts. dono chalega",
+        "e9": "arre wah! bahut badhiya yaar, congrats 🎉 iske liye toh ek round banta hai",
+        "e10": "dogs overrated? bold take. us opinion ke badle ek stout de sakta hoon, tab bhi nahi maanunga",
+        "e11": "coffee perfect! saturday subah? ek jagah pata hai jahan ke beans itne acche hain ki chai bhool jaoge",
+        "e12": "hey sorry yaar, rehearsal lambi chal gayi aur kal nahi ho payega. raincheck? next round meri taraf se",
+        "e13": "haha bilkul nahi, theatre mein late hone ka matlab hai role gaya 😏",
+        "e14": "good night! kal ka din accha jaye",
+        "e15": "arre pottery class? respect yaar. meri week bas naya sour perfect karne aur monologues yaad karne mein gayi. chaos, but accha wala"
       },
       "I": {
         "job": "craft-beer brewer and theatre actor",
@@ -7087,6 +7079,1943 @@
         "job": "events manager",
         "languages": [
           "english"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed31@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Climate-tech analyst in Bengaluru, bouldering + sourdough + a balcony jungle. Emoji-heavy lowercase texter. Added in plan 11A for Bengaluru gate coverage.",
+    "profile": {
+      "name": "Kavya",
+      "age": 28,
+      "city": "Bengaluru",
+      "gender": "woman",
+      "interestedIn": [
+        "man"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Kavya"
+      ],
+      "bio": "Climate-tech analyst by day, bouldering gym regular by night. My sourdough starter has a name and a fan club.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "early bouldering session, a slow brunch, then repotting plants on the balcony with a podcast on 🌿"
+        },
+        {
+          "q": "I'll fall for you if",
+          "a": "you cheer the loudest when i finally send a route i've been stuck on for weeks 🧗‍♀️"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "climbing",
+          "baking",
+          "gardening",
+          "podcasts"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "no preference"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "not really"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 4,
+        "a2": 4,
+        "a3": 4,
+        "a4": 2,
+        "a5": 4,
+        "a6": 2,
+        "a7": 4,
+        "a8": 2,
+        "a9": 4,
+        "a10": 2,
+        "a11": 4,
+        "a12": 4,
+        "a13": 4,
+        "a14": 2,
+        "a15": 4,
+        "a16": 2,
+        "a17": 4,
+        "a18": 2,
+        "a19": 4,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "not_really",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "no_preference",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "bouldering at 8 before the gym gets crowded, a long brunch with my climbing crew, then an afternoon of feeding my sourdough starter and repotting whatever plant looks sad 🌱",
+        "hill": "carbon footprints of air fryers are way more interesting than people think and i will explain it at parties 😅",
+        "argue": "whether a hot dog counts as a sandwich. i've lost friends over this (temporarily) 🌭",
+        "weirdly_good": "guessing a bouldering grade just by looking at the holds. scary accurate 🧗‍♀️",
+        "laugh": "my starter overflowed in the fridge and my flatmate thought something had died in there 😭",
+        "place": "the coffee estates in Coorg in the monsoon, everything smells like rain and roasted beans ☕",
+        "friends_rely": "keeping their plants alive while they travel. i run a whole plant daycare 🪴"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "climbing",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "baking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "gardening",
+            "intensity": "into_it"
+          },
+          {
+            "name": "podcasts",
+            "intensity": "casual"
+          }
+        ]
+      },
+      "E": {
+        "e1": "aww thank you!! yours made me grin too 😄🌿",
+        "e2": "climbing walls, baking bread, talking to my plants 🧗‍♀️🍞 the usual chaos",
+        "e3": "yes!! sweet + salty is elite, fight me 🍍🍕",
+        "e4": "omg yes!! did kudremukh last year, my legs cried for 3 days 😭 which one are you doing?",
+        "e5": "no stress at all!! hope you got a breather 🫶",
+        "e6": "something active then food 😋 like a climbing session and then dosas",
+        "e7": "haha i try 😌✨",
+        "e8": "texting!! calls make me panic a little 📱😅",
+        "e9": "WAIT YESSS 🎉🎉 so happy for you!! when do you start??",
+        "e10": "noooo 😭 dogs are pure sunshine, take it back 🐶",
+        "e11": "ooh coffee sounds lovely ☕ my weekends are usually free-ish!",
+        "e12": "hey i'm so sorry 😔 work dumped a deadline on me for tomorrow, can we move our plan? i'll make it up to you with bread 🍞",
+        "e13": "rude!! but… accurate 😅⏰",
+        "e14": "sleep well!! 😴🌙",
+        "e15": "omg that's SO much in one week 😭 flatmate leaving without telling anyone is wild. but pottery!! that's so exciting 🏺 how was the first class? mine was all deadlines and one very dramatic sourdough"
+      },
+      "I": {
+        "job": "climate-tech analyst",
+        "languages": [
+          "english",
+          "kannada"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed32@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Product designer in Bengaluru, Sunday football, filter-coffee nerd, vinyl. Terse lowercase texter. Added in plan 11A for Bengaluru gate coverage.",
+    "profile": {
+      "name": "Siddharth",
+      "age": 30,
+      "city": "Bengaluru",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Siddharth"
+      ],
+      "bio": "Product designer. Sunday football, too many vinyl records, strong opinions about filter coffee.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "football at 7, filter coffee at a darshini, records all afternoon"
+        },
+        {
+          "q": "My most controversial opinion",
+          "a": "instant coffee should be illegal"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "football",
+          "music",
+          "coffee",
+          "design"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "non-veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "not really"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 2,
+        "a2": 3,
+        "a3": 4,
+        "a4": 2,
+        "a5": 4,
+        "a6": 4,
+        "a7": 3,
+        "a8": 2,
+        "a9": 3,
+        "a10": 2,
+        "a11": 2,
+        "a12": 3,
+        "a13": 4,
+        "a14": 2,
+        "a15": 4,
+        "a16": 4,
+        "a17": 3,
+        "a18": 2,
+        "a19": 3,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "not_really",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "open_to_long_term",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "need_space_first",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "lots",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "football with the same group since college at 7, then filter coffee and idli at a darshini, then an afternoon with records",
+        "hill": "instant coffee is not coffee. it is brown sadness",
+        "weirdly_good": "spotting the font on any shop sign from across the road",
+        "laugh": "our keeper tried a bicycle kick in a corporate match and landed in the opposite team's water bottles",
+        "place": "a tiny record store in Pondicherry where the owner made me listen to a whole album before he'd sell it",
+        "friends_rely": "fixing their slides the night before a pitch"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "football",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "music",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "coffee",
+            "intensity": "into_it"
+          },
+          {
+            "name": "design",
+            "intensity": "into_it"
+          }
+        ]
+      },
+      "E": {
+        "e1": "ha thanks. yours too",
+        "e2": "football. records. coffee",
+        "e3": "no",
+        "e4": "did nandi once. pretty good",
+        "e5": "all good",
+        "e6": "coffee and a record store",
+        "e7": "sometimes",
+        "e8": "texting",
+        "e9": "congrats!! well deserved 🎉",
+        "e10": "strongly disagree",
+        "e11": "sunday after football works",
+        "e12": "hey, have to cancel tomorrow. work thing. sorry, next week?",
+        "e13": "fair. working on it",
+        "e14": "night 👋",
+        "e15": "that's a lot. flatmate move is rough. pottery sounds fun though, how was it"
+      },
+      "I": {
+        "job": "product designer",
+        "languages": [
+          "english",
+          "tamil"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed33@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Features journalist in Delhi, poetry open-mics, chai and old Delhi food walks. Mixes English with Hindi written in Devanagari. Added in plan 11A.",
+    "profile": {
+      "name": "Ritika",
+      "age": 29,
+      "city": "Delhi",
+      "gender": "woman",
+      "interestedIn": [
+        "man"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Ritika"
+      ],
+      "bio": "Features writer. Poetry open-mics on Thursdays, chai at any hour, food walks in old Delhi whenever someone says yes.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "सुबह की चाय, a long read in the newspaper, then parathas in Chandni Chowk with friends"
+        },
+        {
+          "q": "I'll fall for you if",
+          "a": "you read me one line of poetry without being embarrassed about it"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "poetry",
+          "writing",
+          "food walks",
+          "films"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "sometimes",
+          "diet": "non-veg"
+        },
+        "wantsKids": "yes",
+        "relationshipGoal": "long-term",
+        "religionImportance": "somewhat"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 4,
+        "a2": 4,
+        "a3": 3,
+        "a4": 3,
+        "a5": 5,
+        "a6": 2,
+        "a7": 4,
+        "a8": 3,
+        "a9": 4,
+        "a10": 2,
+        "a11": 4,
+        "a12": 4,
+        "a13": 3,
+        "a14": 3,
+        "a15": 5,
+        "a16": 2,
+        "a17": 4,
+        "a18": 3,
+        "a19": 4,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "yes",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "closely",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "सुबह की चाय balcony पर, the Sunday paper end to end, फिर दोस्तों के साथ Chandni Chowk में parathas and a slow walk back",
+        "hill": "Ghalib is better read out loud than in your head, और ये मैं हर open-mic पे prove करती हूँ",
+        "argue": "whether old Hindi film songs had better lyrics than today's. मेरा जवाब हमेशा हाँ है",
+        "weirdly_good": "finding the one quiet corner in any crowded café to write in",
+        "laugh": "मैंने एक interview में गलती से अपने editor को 'mummy' बोल दिया था। whole office still remembers",
+        "place": "Varanasi के ghats at sunrise, जहाँ हर कोई अपनी कहानी लेकर बैठा होता है",
+        "friends_rely": "editing their wedding speeches and making them cry (the good kind)"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "poetry",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "writing",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "food walks",
+            "intensity": "into_it"
+          },
+          {
+            "name": "films",
+            "intensity": "casual"
+          }
+        ]
+      },
+      "E": {
+        "e1": "अरे thank you! तुम्हारी profile भी बहुत प्यारी है 😊",
+        "e2": "poetry open-mics, लंबी walks, और बहुत सारी चाय ☕",
+        "e3": "बिल्कुल नहीं 😅 pizza पे fruit? no thank you",
+        "e4": "हाँ, Triund किया था last year. थका दिया पर view कमाल था",
+        "e5": "कोई बात नहीं, सब ठीक? 🙂",
+        "e6": "एक अच्छी चाय की जगह, फिर बिना किसी plan के घूमना",
+        "e7": "haha थोड़ी बहुत 😄",
+        "e8": "texting, पर voice notes भी चलते हैं",
+        "e9": "अरे वाह!! बहुत बहुत congratulations 🎉 party कब है?",
+        "e10": "ये तो गलत बात है 😤 dogs are the best",
+        "e11": "हाँ ज़रूर, weekend पे free हूँ",
+        "e12": "Sorry यार, कल नहीं हो पाएगा. office में अचानक deadline आ गई है. Next week पक्का?",
+        "e13": "haha बिल्कुल नहीं, मैं हमेशा पाँच minute पहले पहुँचती हूँ 😏",
+        "e14": "good night, अच्छे से सोना 🌙",
+        "e15": "उफ़्फ़ क्या week था तुम्हारा! flatmate बिना बताए चला गया? that's so rude. पर pottery class!! कैसी रही? मेरी वाली week बस deadlines में निकल गई"
+      },
+      "I": {
+        "job": "features journalist",
+        "languages": [
+          "hindi",
+          "english"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed34@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: School maths teacher in Delhi who coaches badminton, cooks rajma, reads Hindi novels. Sentence-case, mixes English with Hindi in Devanagari. Added in plan 11A.",
+    "profile": {
+      "name": "Aman",
+      "age": 31,
+      "city": "Delhi",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Aman"
+      ],
+      "bio": "I teach maths to teenagers and coach the school badminton team. Weekends are for rajma, Hindi novels and long phone calls with my mother.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "Badminton at 7, rajma chawal for lunch, a Hindi novel and a nap."
+        },
+        {
+          "q": "My friends call me",
+          "a": "the one who explains the restaurant bill split with a formula."
+        }
+      ],
+      "tags": {
+        "interests": [
+          "badminton",
+          "cooking",
+          "reading",
+          "teaching"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "non-veg"
+        },
+        "wantsKids": "yes",
+        "relationshipGoal": "long-term",
+        "religionImportance": "somewhat"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 5,
+        "a4": 2,
+        "a5": 3,
+        "a6": 3,
+        "a7": 4,
+        "a8": 1,
+        "a9": 3,
+        "a10": 2,
+        "a11": 3,
+        "a12": 4,
+        "a13": 5,
+        "a14": 2,
+        "a15": 3,
+        "a16": 3,
+        "a17": 4,
+        "a18": 1,
+        "a19": 3,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "yes",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "closely",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "Badminton at 7 with two old students who now beat me. फिर घर पर rajma chawal, a Hindi novel on the terrace, and a long nap.",
+        "hill": "Maths is not hard, it is just badly taught. मैं ये हर parent-teacher meeting में कहता हूँ.",
+        "weirdly_good": "Mental maths. Bill split, tip and who owes whom, before the waiter is back.",
+        "laugh": "My students made a fake exam paper for me on April Fool's day. मैंने पूरा solve कर दिया before I noticed.",
+        "place": "Rishikesh in winter, गंगा के किनारे बैठकर किताब पढ़ना.",
+        "friends_rely": "Teaching their kids fractions over video call."
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "badminton",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "cooking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "reading",
+            "intensity": "into_it"
+          },
+          {
+            "name": "teaching",
+            "intensity": "obsessed"
+          }
+        ]
+      },
+      "E": {
+        "e1": "Thank you! आपकी profile पढ़कर मुझे भी अच्छा लगा 🙂",
+        "e2": "Badminton coaching, cooking, और Hindi novels. Simple life.",
+        "e3": "नहीं. Pineapple belongs in a fruit chaat.",
+        "e4": "हाँ, Kedarkantha किया था. Cold but worth it.",
+        "e5": "कोई बात नहीं. I hope the day got better.",
+        "e6": "A walk in Lodhi Garden and then good chai. बातें अच्छी हों बस.",
+        "e7": "Haha, my students would disagree.",
+        "e8": "Calls, honestly. आवाज़ से बात जल्दी समझ आती है.",
+        "e9": "बहुत बहुत बधाई! That is wonderful news 🎉",
+        "e10": "मैं agree नहीं करता. Dogs are better company than most people.",
+        "e11": "Sure. Saturday शाम free हूँ.",
+        "e12": "I am really sorry, कल का plan cancel करना पड़ेगा. School में parents meeting रख दी है. Can we do Sunday instead?",
+        "e13": "Absolutely not. Teachers are never late.",
+        "e14": "Good night. आराम से सोइए.",
+        "e15": "That is a lot for one week. Flatmate का ऐसे जाना ठीक नहीं था. But pottery sounds lovely, पहली class कैसी रही? My week was all exam papers."
+      },
+      "I": {
+        "job": "school maths teacher",
+        "languages": [
+          "hindi",
+          "english"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed35@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Marine biology researcher in Mumbai (coastal surveys), monsoon treks, Marathi theatre. Mixes English with Marathi in Latin letters. Added in plan 11A.",
+    "profile": {
+      "name": "Sneha",
+      "age": 27,
+      "city": "Mumbai",
+      "gender": "woman",
+      "interestedIn": [
+        "man"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Sneha"
+      ],
+      "bio": "Marine biology researcher. I count crabs on rocky shores for a living. Monsoon treks and Marathi plays on weekends.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "low-tide walk at the shore at 6, poha at home, a Marathi play in the evening 🌊"
+        },
+        {
+          "q": "I geek out on",
+          "a": "tide pools. ask me about sea anemones at your own risk"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "marine life",
+          "trekking",
+          "theatre",
+          "photography"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "non-veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "not really"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 4,
+        "a2": 4,
+        "a3": 4,
+        "a4": 2,
+        "a5": 5,
+        "a6": 2,
+        "a7": 4,
+        "a8": 2,
+        "a9": 4,
+        "a10": 1,
+        "a11": 4,
+        "a12": 4,
+        "a13": 4,
+        "a14": 2,
+        "a15": 5,
+        "a16": 2,
+        "a17": 4,
+        "a18": 2,
+        "a19": 4,
+        "a20": 1
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "not_really",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "low tide la 6 vajta shore walk, crabs count karte, then aai cha poha ghari and a Marathi natak in the evening",
+        "hill": "monsoon is the best season, ani ho, I will defend wet socks",
+        "argue": "whether octopuses are smarter than cats. mala vatta octopus jinkto every time",
+        "weirdly_good": "spotting a tiny nudibranch in a rock pool before anyone else even looks down",
+        "laugh": "a crab climbed into my field notebook and I carried it to the lab without noticing. khup hasla sagla lab",
+        "place": "the reefs off Malvan, paani itka clear ki you can see everything",
+        "friends_rely": "planning monsoon treks with the right snacks and the right raincoats"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "marine life",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "trekking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "theatre",
+            "intensity": "into_it"
+          },
+          {
+            "name": "photography",
+            "intensity": "casual"
+          }
+        ]
+      },
+      "E": {
+        "e1": "aww thank you! tujha profile pan khup chaan aahe 😄",
+        "e2": "rock pools madhe crabs count karte, treks, ani Marathi plays",
+        "e3": "nako re 😅 pizza la pineapple? no",
+        "e4": "ho! Rajmachi kela last monsoon, full majja aali. tu kuthe jatoy?",
+        "e5": "arre it's okay! sagla theek aahe na?",
+        "e6": "a walk by the sea and then vada pav. simple ani chaan",
+        "e7": "haha thodi fun aahe mi 😌",
+        "e8": "texting, pan calls pan chaltat",
+        "e9": "OMG congratulations!! 🎉 khup khup abhinandan, party kadhi?",
+        "e10": "kay?? dogs are the best 🐶 mala he patat nahi",
+        "e11": "ho chalel, weekend la free aahe",
+        "e12": "sorry re, udya nahi jamnar. field trip aali achanak. next week karuya?",
+        "e13": "haha nahi re, mi always on time 😏",
+        "e14": "good night! bara jhopa 🌙",
+        "e15": "baap re, kay week hota! flatmate ase sangta na jaata? not okay. pan pottery class!! kasa vatla? maza week fakt field reports madhe gela"
+      },
+      "I": {
+        "job": "marine biology researcher",
+        "languages": [
+          "marathi",
+          "english",
+          "hindi"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed36@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Chartered accountant at his family's firm in Mumbai, lives with his parents, early riser, vegetarian, never drinks, wants kids soon, family-first, long-term. Mixes English with a little Marathi. Pair with seed30 (Zoya): designed incompatible on lifestyle and values (nightlife, drinks, no kids, not serious vs family-first, kids, long-term). Added in plan 11A.",
+    "profile": {
+      "name": "Omkar",
+      "age": 30,
+      "city": "Mumbai",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Omkar"
+      ],
+      "bio": "CA at our family firm. Up at 5:30, cricket in the lane, dinner with my parents every night. Looking for something long-term.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "Early morning cricket, a big family lunch, an evening walk at Shivaji Park."
+        },
+        {
+          "q": "I'll fall for you if",
+          "a": "you get along with my mother in the first five minutes."
+        }
+      ],
+      "tags": {
+        "interests": [
+          "cricket",
+          "cooking",
+          "walking",
+          "finance"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "never",
+          "workout": "often",
+          "diet": "veg"
+        },
+        "wantsKids": "yes",
+        "relationshipGoal": "long-term",
+        "religionImportance": "somewhat"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 3,
+        "a2": 4,
+        "a3": 5,
+        "a4": 2,
+        "a5": 3,
+        "a6": 3,
+        "a7": 4,
+        "a8": 1,
+        "a9": 3,
+        "a10": 2,
+        "a11": 3,
+        "a12": 4,
+        "a13": 5,
+        "a14": 1,
+        "a15": 2,
+        "a16": 3,
+        "a17": 4,
+        "a18": 1,
+        "a19": 3,
+        "a20": 3
+      },
+      "B": {
+        "kids": {
+          "answer": "yes",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "closely",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "high",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "veg",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "little",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "Cricket in the lane at 6:30 with the building kids, a big lunch with my parents and cousins, and an evening walk at Shivaji Park.",
+        "hill": "Late nights are overrated. The best part of the day is before 7 am.",
+        "weirdly_good": "Making perfect sabudana khichdi. Aai says mine is better than hers, which is a lie but I accept it.",
+        "laugh": "My father once filed my cousin's tax return under my name and we only found out when I got a refund. Ghari sagle khup hasle.",
+        "place": "My grandparents' village near Ratnagiri. Mango season tithe is the best thing in the world.",
+        "friends_rely": "Sorting out their taxes and their wedding budgets."
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "cricket",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "cooking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "walking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "finance",
+            "intensity": "into_it"
+          }
+        ]
+      },
+      "E": {
+        "e1": "Thank you! Your profile pan chaan aahe 🙂",
+        "e2": "Cricket in the mornings, cooking with Aai, and long walks.",
+        "e3": "No. Pineapple is for dessert.",
+        "e4": "Yes, Harishchandragad last monsoon. Khup chaan hota.",
+        "e5": "No problem at all. Hope everything is okay.",
+        "e6": "Breakfast somewhere quiet and a walk by the sea. Early is best.",
+        "e7": "Thank you, I try.",
+        "e8": "Calls. Typing takes too long.",
+        "e9": "Congratulations! Khup chaan news 🎉",
+        "e10": "Dogs are wonderful. I don't agree.",
+        "e11": "Sure. Sunday morning works for me.",
+        "e12": "I am so sorry, I have to cancel tomorrow. There is a family function I can't miss. Can we do next weekend?",
+        "e13": "Never. I am usually the first one there.",
+        "e14": "Good night. Sleep well.",
+        "e15": "That is a hectic week. The flatmate thing is not okay. Pottery sounds nice though, how was the first class? My week was all audit deadlines."
+      },
+      "I": {
+        "job": "chartered accountant",
+        "languages": [
+          "marathi",
+          "english",
+          "hindi"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed37@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Pastry chef at a Mumbai café, dawn cycling along the sea face, film quiz nights. Hinglish, emoji-heavy. Added in plan 11A for Mumbai gate coverage.",
+    "profile": {
+      "name": "Faizan",
+      "age": 28,
+      "city": "Mumbai",
+      "gender": "man",
+      "interestedIn": [
+        "woman"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Faizan"
+      ],
+      "bio": "Pastry chef at a small café. Cycling along the sea face at sunrise, film quiz nights every Wednesday.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "sunrise cycling, then baking something new and making my friends taste-test it 🥐"
+        },
+        {
+          "q": "Two truths and a lie",
+          "a": "I've won a film quiz, I can't swim, I once baked 400 croissants in a day"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "baking",
+          "cycling",
+          "films",
+          "quizzing"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "often",
+          "diet": "non-veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "somewhat"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 5,
+        "a2": 4,
+        "a3": 3,
+        "a4": 2,
+        "a5": 4,
+        "a6": 1,
+        "a7": 4,
+        "a8": 2,
+        "a9": 4,
+        "a10": 2,
+        "a11": 5,
+        "a12": 4,
+        "a13": 3,
+        "a14": 2,
+        "a15": 4,
+        "a16": 1,
+        "a17": 4,
+        "a18": 2,
+        "a19": 4,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "open_to_long_term",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "talk_it_out_immediately",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "little",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "sunrise cycling on the sea face, phir ghar aake kuch naya bake karna and forcing my friends to rate it out of 10 🥐",
+        "hill": "a good croissant is worth waking up at 4 am for, no debate 😤",
+        "argue": "whether Andaz Apna Apna is the greatest comedy ever. spoiler: haan hai 😂",
+        "weirdly_good": "guessing a film from just one frame. Wednesday quiz nights are my Olympics 🎬",
+        "laugh": "I dropped a whole tray of eclairs in front of a customer and she just said 'I'll take the floor ones' 😭",
+        "place": "a tiny bakery in Pondicherry where the owner taught me laminating dough. life changing 🥖",
+        "friends_rely": "birthday cakes. har birthday pe mera phone bajta hai 🎂"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "baking",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "cycling",
+            "intensity": "into_it"
+          },
+          {
+            "name": "films",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "quizzing",
+            "intensity": "into_it"
+          }
+        ]
+      },
+      "E": {
+        "e1": "arre thank you yaar 😄 tumhari profile bhi mast hai",
+        "e2": "baking, cycling, aur film quizzes 🥐🚲🎬",
+        "e3": "haan bilkul! sweet + savoury is life 🍍🍕",
+        "e4": "haan! Lohagad kiya tha, bahut mazaa aaya 😄 tum kahan ja rahe ho?",
+        "e5": "arre koi baat nahi 😊 sab theek?",
+        "e6": "a good bakery, kuch sweet share karo, and a long walk 🍰",
+        "e7": "haha thoda thoda 😜",
+        "e8": "texting! calls pe main awkward ho jaata hoon 😅",
+        "e9": "YAAAR CONGRATS 🎉🎉 party toh banti hai!",
+        "e10": "kya bol rahe ho 😱 dogs are the best",
+        "e11": "haan pakka! weekend pe free hoon ☕",
+        "e12": "sorry yaar 😔 kal nahi ho payega, café mein ek bada order aa gaya. next week pakka?",
+        "e13": "guilty 😂 par cake leke aata hoon, toh maaf",
+        "e14": "good night! acche se sona 😴",
+        "e15": "bhai kya week tha 😭 flatmate ka bina bataye jaana not cool. but pottery!! pehli class kaisi rahi? meri week bas croissants aur orders mein gayi 🥐"
+      },
+      "I": {
+        "job": "pastry chef",
+        "languages": [
+          "hindi",
+          "english",
+          "urdu"
+        ]
+      }
+    }
+  },
+  {
+    "email": "seed38@demo.local",
+    "agentMode": "auto",
+    "isSeed": true,
+    "designNotes": "normal: Software tester in Pune who sings in a choir, Sinhagad trails, misal hunter. Lowercase, mixes English with Marathi in Latin letters. Added in plan 11A for Pune gate coverage.",
+    "profile": {
+      "name": "Prachi",
+      "age": 26,
+      "city": "Pune",
+      "gender": "woman",
+      "interestedIn": [
+        "man"
+      ],
+      "photos": [
+        "https://api.dicebear.com/9.x/notionists/svg?seed=Prachi"
+      ],
+      "bio": "software tester who finds bugs for a living. choir on saturdays, sinhagad on sundays, always hunting the best misal in town.",
+      "prompts": [
+        {
+          "q": "A perfect Sunday",
+          "a": "sinhagad at sunrise, misal after, choir practice songs on loop all the way home 🎶"
+        },
+        {
+          "q": "My friends call me",
+          "a": "the misal map. i have a ranked list"
+        }
+      ],
+      "tags": {
+        "interests": [
+          "singing",
+          "trekking",
+          "food",
+          "board games"
+        ],
+        "lifestyle": {
+          "smoking": "never",
+          "drinking": "socially",
+          "workout": "sometimes",
+          "diet": "non-veg"
+        },
+        "wantsKids": "open",
+        "relationshipGoal": "long-term",
+        "religionImportance": "somewhat"
+      },
+      "dealbreakers": []
+    },
+    "answers": {
+      "A": {
+        "a1": 4,
+        "a2": 4,
+        "a3": 3,
+        "a4": 2,
+        "a5": 4,
+        "a6": 2,
+        "a7": 4,
+        "a8": 2,
+        "a9": 4,
+        "a10": 2,
+        "a11": 4,
+        "a12": 4,
+        "a13": 3,
+        "a14": 2,
+        "a15": 4,
+        "a16": 2,
+        "a17": 4,
+        "a18": 2,
+        "a19": 4,
+        "a20": 2
+      },
+      "B": {
+        "kids": {
+          "answer": "open",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "yes",
+            "no",
+            "open",
+            "have_already"
+          ]
+        },
+        "religion": {
+          "answer": "somewhat",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "central",
+            "somewhat",
+            "not_really"
+          ]
+        },
+        "location": {
+          "answer": "this_city",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "this_city",
+            "another_indian_city",
+            "abroad",
+            "flexible"
+          ]
+        },
+        "smoking": {
+          "answer": "never",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "drinking": {
+          "answer": "socially",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "never",
+            "socially",
+            "regularly"
+          ]
+        },
+        "family": {
+          "answer": "somewhat",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "closely",
+            "somewhat",
+            "not_much"
+          ]
+        },
+        "career": {
+          "answer": "balanced",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "career_first",
+            "balanced",
+            "life_first"
+          ]
+        },
+        "looking_for": {
+          "answer": "long_term",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "long_term",
+            "open_to_long_term",
+            "short_term",
+            "figuring_it_out"
+          ]
+        },
+        "diet": {
+          "answer": "non_veg",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "veg",
+            "non_veg",
+            "vegan",
+            "jain",
+            "eggetarian",
+            "no_preference"
+          ]
+        },
+        "conflict": {
+          "answer": "need_space_first",
+          "importance": "medium",
+          "dealbreaker": false,
+          "accepts": [
+            "talk_it_out_immediately",
+            "need_space_first",
+            "avoid_it"
+          ]
+        },
+        "alone_time": {
+          "answer": "some",
+          "importance": "low",
+          "dealbreaker": false,
+          "accepts": [
+            "lots",
+            "some",
+            "little"
+          ]
+        }
+      },
+      "C": {
+        "sunday": "sinhagad la sunrise trek, then misal at the bottom, ani ghari yeun choir songs practice karte till aai tells me to stop 🎶",
+        "hill": "misal should be spicy enough to make you cry. mild misal is just usal with a sad face 🌶️",
+        "argue": "which misal place in pune is number one. mala mahit aahe, but i'm keeping my list secret",
+        "weirdly_good": "finding the one bug nobody else could reproduce. it's a gift and a curse",
+        "laugh": "i sang the wrong verse at a choir concert, full confidence, ani the whole alto section followed me 😭",
+        "place": "the Kaas plateau in september, sagla flowers, like someone spilled paint everywhere",
+        "friends_rely": "remembering everyone's birthdays and the right cake flavours"
+      },
+      "D": {
+        "interests": [
+          {
+            "name": "singing",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "trekking",
+            "intensity": "into_it"
+          },
+          {
+            "name": "food",
+            "intensity": "obsessed"
+          },
+          {
+            "name": "board games",
+            "intensity": "casual"
+          }
+        ]
+      },
+      "E": {
+        "e1": "aww thank you! tujha pan profile chaan aahe 😊",
+        "e2": "choir, treks, ani misal hunting. very serious hobbies",
+        "e3": "nako 😂 pizza la pineapple is a bug, not a feature",
+        "e4": "ho! sinhagad tar almost every month. tu kuthla trek plan karto aahes?",
+        "e5": "arre it's fine, sagla theek?",
+        "e6": "misal and a walk. simple ani tasty",
+        "e7": "haha thodi fun aahe mi 😄",
+        "e8": "texting mostly, calls la mi awkward hote",
+        "e9": "omg congratulations!! 🎉 khup chaan, party kadhi?",
+        "e10": "kay?? dogs are perfect, he chukicha aahe 🐶",
+        "e11": "ho chalel, saturday la choir nantar free aahe",
+        "e12": "sorry yaar, udya nahi jamnar 😔 release aahe office la. next week karuya?",
+        "e13": "haha nahi re, i'm early everywhere 😏",
+        "e14": "good night! bara jhop 🌙",
+        "e15": "baap re kay week! flatmate na sangta gela? not cool. pan pottery class!! kashi hoti? maza week fakt bugs ani release madhe gela"
+      },
+      "I": {
+        "job": "software tester",
+        "languages": [
+          "marathi",
+          "english",
+          "hindi"
         ]
       }
     }
