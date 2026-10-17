@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (plan 11A personas pass every quota on `feat/plan-11-personas`; full re-seed running)
-- **Main-line branch:** `feat/plan-11-personas` (from `main`) · **main:** `cbd8faa` (plans 02–09 + 17 done)
-- **Last commit (main line):** `d5fdbea` feat(plan-11a) on `feat/plan-11-personas`
+- **Last updated:** 2026-10-17, by Claude Code (owner's 3-step plan done; plan 11A merged; waiting for the owner)
+- **Main-line branch:** `main` · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
+- **Last commit (main line):** `3966f5a` merge of `feat/plan-11-personas`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -25,7 +25,7 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
-| 11 | Seed personas + evaluation (v2) | ⏸ Paused | `wip/plan-11b` | `a8fc99c` | **Stopped at:** the v1 eval harness (partial), superseded by v2. **Resume:** after 10, write v2 on a new branch reusing `scripts/lib/runPair.js` + the `eval.js` report from `wip/plan-11b`; add ≥ 3 eligible seeds per demo city. |
+| 11 | Seed personas + evaluation (v2) | 🔄 In progress | main | `3966f5a` | **11A done** (quotas pass, 38 personas, incremental seed). 11B: `eval.js` v2 works (6-pair subset); metrics scripts, ablations, scale test, full runs and tuning remain. |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
 | 14 | Switch back to Nebius Token Factory | ⬜ Not started | — | — | **Due Oct 26.** Needs the Nebius account. The dry-run checklist is queued as side work. |
@@ -76,7 +76,16 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - 38 personas (8 new). Before → after: Hinglish 1 → 7, Devanagari 0 → 3, Gujarati 0 → 2, Tamil/Marathi 0 → 2, code-switching 3 → 17, terse 1 → 5. Cities: 7 → 5 demo cities, each with ≥ 3 visible seeds for both new users (was 1–4). Pairs failing the gate: 10 → 0.
   - Full re-seed: **38 graphs in 1,666 s** (~28 min, concurrency 2, no failures). An immediate re-run: **0 s, 38 unchanged**.
   - `eval.js` restored from `wip/plan-11b` and adapted to v2 (`60130a7`): MatchDecision verdicts, `gated`, judge receipts.
-  - **Now:** e) agent-check + judge-check on the new data, then an eval subset of 6 varied pairs (c1, c7, i1 gated, i2, i6, f1; the first 6 by `--limit` are all compatible), then merge.
+  - e) ✓ agent-check passes and judge-check passes on the re-seeded data. Eval subset (6 varied pairs; the first 6 by `--limit` are all compatible): i1 gated ✓, f1 fake ✓, i6 incompatible ✓; c1, c7 and i2 → maybe. ~89k tokens per pair, 9–18 min per conversation.
+  - Why the misses: (1) the engine's neutral fallback replies ("haha fair 😄", "oh nice, i like that") read as low effort to the judges; (2) i2 ended "naturally" at 14 messages without smoking coming up.
+- **Step 3 ✅ merged** (`3966f5a`). **Waiting for the owner.**
+- **Plan 11 remaining (11B + tuning):**
+  1. Tuning: fewer neutral fallbacks (send the best draft minus failing clauses instead), and no natural end until high-importance agenda topics are answered. Then re-run the subset.
+  2. `scripts/eval/` metric scripts: style/language fidelity, conversation stats, observer accuracy, judge agreement (human-labelled CSV), consistency, leak probe, unsupported-claims (offline LLM judge).
+  3. Ablations (`RULES=on|off`, etc.).
+  4. Scale test (2,000 synthetic users, no LLM).
+  5. Full 20-pair runs (rules on/off: ~40 chats ≈ 6–10 h on NVIDIA at concurrency 2).
+  6. Calibrate `JUDGE_YES_MIN` on the labelled pairs; README numbers.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
