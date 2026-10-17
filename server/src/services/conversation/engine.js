@@ -15,7 +15,7 @@ import { embed } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
-import { inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
+import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
@@ -129,7 +129,10 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Context: sampled facts + stories, notes about them, my own exemplars, guidance.
   const latest = theirMsgs.map((m) => m.text).join('\n');
   const [incomingVec] = latest ? await embed([latest], { purpose: 'agent-incoming', userId: me, inputType: 'query' }) : [null];
-  const picked = selectFacts(persona, { incomingVec, incomingText: latest, rng });
+  // Asked about something my graph covers: its sayable facts are always in the prompt (B4 run: "haven't thought much
+  // about kids yet" while her answer is "open" made his judge say no).
+  const topicFacts = asked && known ? factsOnTopic(asked, persona.facts).filter((f) => f.disclosure !== 'private') : [];
+  const picked = [...topicFacts, ...selectFacts(persona, { incomingVec, incomingText: latest, rng }).filter((f) => !topicFacts.includes(f))];
   const facts = new Map(picked.map((f, i) => [`F${i + 1}`, f]));
   stories.forEach((s, i) => facts.set(`S${i + 1}`, s));
   if (plan.topic?.kind === 'story') plan.topic.storyId = [...facts].find(([, f]) => String(f._id) === plan.topic.id)?.[0];
@@ -159,6 +162,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
     const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
+    if (topicFacts.length && hedgeSentences(c.text).length) c.problems.push(`you DO know your answer about ${asked.label}: say it from the listed facts instead of sounding unsure.`);
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
     if (draft.end && !plan.end && !mayEnd) c.problems.push("you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");

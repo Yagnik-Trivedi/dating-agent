@@ -16,6 +16,7 @@ import { fileQuestion } from './askMyHuman.js';
 const LOCK_STALE_MS = 2 * 60_000;
 const MAX_AGENT_REPLIES_PER_MINUTE = 2; // per match, both agents together: the agent↔agent loop guard
 const RETRY_MS = 30_000;
+const MAX_REPLY_RETRIES = 5;
 const failures = new Map();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const turnKey = (matchId, userId) => `turn:${matchId}:${userId}`;
@@ -133,7 +134,8 @@ export async function runReply(matchId, userId) {
     const n = (failures.get(key) ?? 0) + 1;
     failures.set(key, n);
     console.error(`agent reply ${key} failed (attempt ${n}): ${err.message}`);
-    if (n <= 2) scheduleReply(matchId, userId, RETRY_MS);
+    // Back off 30 s, 1, 2, 4, 8 min before leaving it to the 30-min sweep (B4 run: 3 quick NVIDIA timeouts stalled c7).
+    if (n <= MAX_REPLY_RETRIES) scheduleReply(matchId, userId, RETRY_MS * 2 ** (n - 1));
   } finally {
     await releaseLock(matchId, userId);
   }

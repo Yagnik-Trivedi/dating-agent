@@ -1,0 +1,92 @@
+{
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.65
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 145227,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1162,
+    "file": "transcripts/c1-rules-off-run1.md",
+    "agentMsgs": 24,
+    "templateFallbacks": 1,
+    "constrained": 0
+  },
+  "i1#1": {
+    "id": "i1",
+    "run": 1,
+    "expected": "gated",
+    "predicted": "gated",
+    "reason": "Nisha's dealbreaker is kids (yes only); Varun doesn't want any and it's not in his public tags. The gate must keep them apart: never a match.",
+    "names": [
+      "Nisha",
+      "Varun"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "closed",
+    "turns": 0,
+    "tokens": 0,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 4,
+    "file": "transcripts/i1-rules-off-run1.md",
+    "agentMsgs": 0,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "c7#1": {
+    "id": "c7",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
+    "names": [
+      "Hetal",
+      "Parth"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.6
+    ],
+    "stopReason": "max_turns",
+    "status": "maybe",
+    "turns": 24,
+    "tokens": 179569,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1440,
+    "file": "transcripts/c7-rules-off-run1.md",
+    "agentMsgs": 24,
+    "templateFallbacks": 2,
+    "constrained": 0
+  }
+}
