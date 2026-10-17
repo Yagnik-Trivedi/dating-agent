@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (plan 11 tuning on `feat/plan-11-tuning`; eval subset re-running)
+- **Last updated:** 2026-10-17, by Claude Code (owner's reduced eval scope recorded; tuning iteration 1 running)
 - **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
-- **Last commit (main line):** `46edda7` tune(plan-11) on `feat/plan-11-tuning`
+- **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
 
@@ -79,19 +79,21 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - e) ✓ agent-check passes and judge-check passes on the re-seeded data. Eval subset (6 varied pairs; the first 6 by `--limit` are all compatible): i1 gated ✓, f1 fake ✓, i6 incompatible ✓; c1, c7 and i2 → maybe. ~89k tokens per pair, 9–18 min per conversation.
   - Why the misses: (1) the engine's neutral fallback replies ("haha fair 😄", "oh nice, i like that") read as low effort to the judges; (2) i2 ended "naturally" at 14 messages without smoking coming up.
 - **Step 3 ✅ merged** (`3966f5a`). **Waiting for the owner.**
-- **Plan 11 remaining (11B + tuning):**
-  1. 🔄 Tuning (`46edda7`, owner said go):
-     - important agenda topics are retried until answered;
-     - the model's own "end" counts only when my agenda is settled (otherwise it triggers a regeneration);
-     - the best draft is the clean one, or the one keeping the most words; the fallback is a question on my topic, not filler;
-     - a META check catches "reacting to your …";
-     - agenda likes are ≤ 3 words.
-     `npm test` 77/77. **Now:** eval re-run on c1, c7, i2, i6 (~35 min).
-  2. `scripts/eval/` metric scripts: style/language fidelity, conversation stats, observer accuracy, judge agreement (human-labelled CSV), consistency, leak probe, unsupported-claims (offline LLM judge).
-  3. Ablations (`RULES=on|off`, etc.).
-  4. Scale test (2,000 synthetic users, no LLM).
-  5. Full 20-pair runs (rules on/off: ~40 chats ≈ 6–10 h on NVIDIA at concurrency 2).
-  6. Calibrate `JUDGE_YES_MIN` on the labelled pairs; README numbers.
+- **Plan 11 remaining: the owner's reduced scope** (2026-10-17, also recorded at the top of `plan/11-seed-data-and-eval.md`). Order: tuning → scale test → metric scripts → ablation subset → ONE full run (tell the owner first) → calibration → README numbers.
+  1. 🔄 **Tuning** (6-pair loop, ≤ 3 iterations, target ≥ 5/6 and no filler).
+     - Iteration 1 code is on `feat/plan-11-tuning`:
+       - important topics are retried;
+       - the model's end is gated on the agenda;
+       - a constrained regeneration replaces filler, and fallbacks are logged per message;
+       - no natural end with importance ≥ 0.7 open, and near `MAX_TURNS` the agent steers to it;
+       - a META wording check; agenda likes ≤ 3 words.
+     - `npm test` 78/78. **Now:** iteration 1 eval run.
+  2. ⬜ Scale test (no LLM, local in-memory replica set only).
+  3. ⬜ Metric scripts from saved transcripts; leak probe 2 personas × 10 probes.
+  4. ⬜ Ablation `RULES` on/off on the 6-pair subset.
+  5. ⬜ ONE full 20-pair run, overnight, resumable (**ask the owner first**).
+  6. ⬜ Judge-agreement export (10 transcripts → `eval/labels/`).
+  7. ⬜ Calibrate `JUDGE_YES_MIN`; headline numbers → `eval/results/latest.md` + README.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 

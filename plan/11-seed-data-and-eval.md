@@ -2,6 +2,25 @@
 
 > **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §8 and `plan/kg-upgrade-reference.md` Phase 9. Start by restoring the reusable v1 harness from the WIP branch: `git checkout wip/plan-11b -- server/scripts/lib/runPair.js server/scripts/eval.js`, then adapt them. Implement this file, run the acceptance checks.
 
+## Reduced scope (owner, 2026-10-17): replaces Part B's run plan
+
+Done in this order; PROGRESS.md is updated and pushed after each step, and the owner is told before the full run.
+
+1. **Tuning** on the 6-pair subset (c1, c7, i1, i2, i6, f1):
+   - No fixed filler ever: drop only failing sentences; if nothing survives, one constrained regeneration. Fallback rate is logged per conversation (target < 5% of agent messages).
+   - No natural end while an agenda item with importance ≥ 0.7 is unanswered; the interest end and `MAX_TURNS` still apply. Near `MAX_TURNS` the agent steers to it.
+   - Re-run the 6 pairs after each change. Target ≥ 5/6 with no filler; at most 3 iterations, then report what's left.
+2. **Scale test, no LLM calls:** `scripts/eval/scale-test.js`.
+   - Inserts 2,000 synthetic users (random gates, ~60 concept-linked facts, voice profiles) into a local `MongoMemoryReplSet` with all production indexes. Never Atlas.
+   - Measures discover/gate p50/p95, context build per message (cache hit/miss) and storage per user. Minutes, not hours.
+3. **Metric scripts from saved transcripts (no new chats):** style/language fidelity, conversation stats, unsupported self-claims, observer accuracy. The leak probe is limited to 2 personas × 10 probes.
+4. **Ablation** (`RULES` on vs off): the 6-pair subset only.
+5. **Full 20-pair run:** exactly once, after tuning, overnight. Checkpointed per pair in `eval/raw.json` (resumable). Print the token and time estimate first; stop on NVIDIA credit/quota errors.
+6. **Judge agreement:** export 10 transcripts (balanced yes/no/maybe) to `eval/labels/` for the team to label; compute agreement once labels exist. Don't block on it.
+7. **Calibration:** `JUDGE_YES_MIN` from the subset + the full run. Headline numbers go in `eval/results/latest.md` and the README.
+
+Not done (cut for time and credits): the 20-pair ablation, `KNOWLEDGE` / `VOICE` / `LEARN` / `JUDGE` ablations, extraction labelling, `dup-rate`, `consistency.js`, the full leak probe.
+
 ## Why this matters
 
 - **The demo needs a populated app:** people to match with, whose agents answer in their own voice and language.
