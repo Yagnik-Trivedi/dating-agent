@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (STOPPED: plan 09 step 1 failed at agent-check's inbox step; waiting for the owner)
+- **Last updated:** 2026-10-17, by Claude Code (step 2 "ask my human" built on `fix/ask-my-human`; agent-check ×3 running)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -81,7 +81,15 @@ Then (`ce4c0cb`, pushed): `scripts/judge-check.js` replaces v1 `compat-check.js`
 2. Make "ask my human" structural on `fix/ask-my-human`: question detection (English + Hinglish) → concept dictionary → "do I have any fact on it?" → inbox if not; hedge regex as fallback; dedupe per concept; max 3 per conversation; tests; agent-check 3× in a row.
 3. Plan 11 personas on `feat/plan-11-personas`: quotas file, restyle script, check-personas script, incremental seeding, re-run checks + eval `--limit 6`.
 
-⏸ **`fix/ask-my-human`** (`eadde47`, pushed): unfinished WIP of an "answering mode" in `groundingCheck`, where clauses without "I" count as claims when answering a question about me. Its new test fails ("haha cheering for rcb" is skipped as a reaction clause). Step 2 replaces it with the concept-based rule; the hedge regex from `c821773` stays as the fallback. Then `seed-check` / `api-check` / `check-indexes`.
+🔄 **Step 2 on `fix/ask-my-human`** (owner said "do it": step 2 first, then finish step 1):
+- `21742b6`: structural detection.
+  - Question to me (en + Hinglish) → topic (B attribute words, then the longest concept-dictionary n-gram; dictionary only, never creates) → any fact on it.
+  - No fact → inbox even if the reply sounds confident; a fact → no inbox; unresolved → the hedge fallback (now with Hinglish).
+  - Grounding "answering" mode catches uncited answers like "cheering for rcb!" → regeneration.
+  - Prompt line for an unknown topic.
+  - Inbox: `topicKey` dedupe (repeats merge into `askedAgain`), max 3 new per match.
+- `522b2fb`: agent-check counts a merge as filed.
+- `npm test` 74/74 (8 new). **Now:** agent-check must pass 3× in a row, then merge into `feat/plan-09-judges` → finish step 1 (seed/API/index checks) → merge 09 to `main`.
 
 **Plan 11A coverage today** (`seed/personas.json`, measured from the E samples + the gate code):
 - **Languages: all 30 personas are English.** Plan 11 needs Hinglish ≥ 6, Devanagari ≥ 2, Gujarati ≥ 2, Tamil/Marathi ≥ 2. Pooja/Rohit/Arjun code-switch a little (~5% Hinglish).
