@@ -13,7 +13,7 @@ import { KG } from '../kg/config.js';
 import { embed } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
-import { groundingCheck, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
+import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, oneQuestion, sentencesOf } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
@@ -145,8 +145,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Unsupported "I like X" that survived: ask my human instead of inventing it.
   // They asked about me and perception found a topic with no fact of mine: ask my human even if the draft skipped it
   // (agent-check: "favourite IPL team?" got "i don't follow IPL much", cited to a trekking fact, and no inbox item).
-  const unknownTopic = plan.answerFirst && (plan.reactions ?? []).some((r) => r.kind === 'unknown');
-  const theirQuestion = history.filter((m) => String(m.senderId) !== me).at(-1)?.text;
+  // Also code-only, so it doesn't depend on perceive classifying the topic (agent-check run 3: it didn't): they asked
+  // me something and my reply hedges → their question goes to my human.
+  const theirQuestion = history.filter((m) => String(m.senderId) !== me).at(-1)?.text ?? '';
+  const askedMe = plan.answerFirst || (/\?/.test(theirQuestion) && /\byou(r|rs)?\b/i.test(theirQuestion));
+  const unknownTopic = askedMe && ((plan.reactions ?? []).some((r) => r.kind === 'unknown') || messages.some((m) => hedgeSentences(m).length));
   const unknownAboutMe = best.draft.unknownAboutMe
     ?? (best.grounding.unsupported[0] ? `Is this true for you: "${best.grounding.unsupported[0]}"?` : null)
     ?? (unknownTopic && theirQuestion ? theirQuestion : null);

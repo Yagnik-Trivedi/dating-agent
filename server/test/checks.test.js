@@ -1,7 +1,7 @@
 // Plan 08: styleCheck, groundingCheck (incl. claims about the other person), leakCheck.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { groundingCheck, leakCheck, styleCheck } from '../src/services/persona/checks.js';
+import { groundingCheck, hedgeSentences, leakCheck, styleCheck } from '../src/services/persona/checks.js';
 
 const plan = { targetWords: 10, burst: 1, askBack: true, language: { primary: 'en', codeSwitch: false } };
 
@@ -90,4 +90,10 @@ test('style: a draft opening like a recent message is rejected', () => {
   const p = styleCheck('Arre yaar, startup life sounds fun', plan, voice, ['Arre yaar, CrossFit and comedy nights?']);
   assert.ok(p.some((x) => x.startsWith('starts like a recent message')), p.join('; '));
   assert.ok(!styleCheck('haha startup life sounds fun', plan, voice, ['Arre yaar, CrossFit?']).some((x) => x.startsWith('starts like')));
+});
+
+test('hedges are detected so the question goes to my human', () => {
+  assert.equal(hedgeSentences("i don't follow IPL much but i love a good match haha").length, 1);
+  assert.equal(hedgeSentences('haven’t tried that yet!').length, 1);
+  assert.equal(hedgeSentences('i love trekking on weekends').length, 0);
 });
