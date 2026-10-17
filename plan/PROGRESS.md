@@ -87,9 +87,10 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
        - a constrained regeneration replaces filler, and fallbacks are logged per message;
        - no natural end with importance ≥ 0.7 open, and near `MAX_TURNS` the agent steers to it;
        - a META wording check; agenda likes ≤ 3 words.
-     - `npm test` 78/78. **Now:** iteration 1 eval run.
+     - `npm test` 78/78. Iteration 1 eval is running.
+     - Seen mid-run: over-strict grounding drops honest drafts, which forces fallbacks (Meera × Ishaan: 2 template + 1 constrained in 6 messages). Fixed for iteration 2 (`278a59e`): an unsure hedge never contradicts a like; "I saw you…" is about them; the same opening is blocked only from the 3rd time. `npm test` 79/79.
+  3. 🔄 Metric scripts: `scripts/eval/metrics.js` done (style/language fidelity, conversation stats, observer accuracy, from saved chats, no LLM). Unsupported self-claims (offline LLM judge) and the leak probe are next.
   2. ✅ Scale test (`scripts/eval/scale-test.js`, no LLM, local in-memory replica set, 28 s): 2,000 users. Discover p50 2.1 / p95 4.2 ms on index `gate.city_1_gate.gender_1_gate.age_1`; context build per message miss 9.5 / 10.4 ms, hit 1.6 / 3.0 ms; 88 KB/user → ~5,900 users in M0. → `eval/results/scale.md`.
-  3. ⬜ Metric scripts from saved transcripts; leak probe 2 personas × 10 probes.
   4. ⬜ Ablation `RULES` on/off on the 6-pair subset.
   5. ⬜ ONE full 20-pair run, overnight, resumable (**ask the owner first**).
   6. ⬜ Judge-agreement export (10 transcripts → `eval/labels/`).
