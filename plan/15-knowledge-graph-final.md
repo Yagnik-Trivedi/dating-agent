@@ -1,7 +1,7 @@
 # 15 — Knowledge graph: final design (source of truth)
 
-> **For Claude Code:** this file is the agreed design for everything the app knows about a user. It combines the original plan 05, the review-driven spec in `plan/kg-upgrade-reference.md` (F-IDs refer to the review doc) and the team decisions below.
-> - When this file and `kg-upgrade-reference.md` disagree, **this file wins**.
+> **For Claude Code:** this file is the agreed design for everything the app knows about a user. It combines the original plan 05, the review-driven spec in `plan/archive/kg-upgrade-reference.md` (F-IDs refer to the review doc) and the team decisions below.
+> - When this file and `archive/kg-upgrade-reference.md` disagree, **this file wins**.
 > - When older plan files (05–11) disagree with this file, update them to match it.
 > - No time constraint: implement the full design. The only shortcut kept is wiping test data and re-seeding instead of writing a migration.
 
@@ -42,7 +42,7 @@
 
 ## 3. Data model
 
-Fields not mentioned here keep the definitions from `kg-upgrade-reference.md` Phase 2.
+Fields not mentioned here keep the definitions from `archive/kg-upgrade-reference.md` Phase 2.
 
 ### KgFact (self facts and notes)
 ```js
@@ -320,14 +320,14 @@ After each chat we process **only that chat**: two judge jobs plus compaction. E
 ---
 
 ## 7. Conversation engine and judge
-Implement exactly as `kg-upgrade-reference.md` Phase 7, with these additions:
+Implement exactly as `archive/kg-upgrade-reference.md` Phase 7, with these additions:
 - `perceive` and `observe` are **one** LLM call.
 - The reply language comes from `planAct`, using `VoiceProfile.language` (mix, `mirrorsLanguage`, and switch triggers such as joking) plus the language of the incoming message.
 - If the other side is a human (shadow mode), the engine is the same. The human's messages are just transcript lines.
 - **Information-boundary test:** a spy on DB access must prove the speaking agent and the judge never read the other user's `KgFact`, `VoiceProfile` or `VoiceSample`. Public `Profile` reads are allowed only in the trust check and the brief.
 
 ## 8. Evaluation
-Implement `kg-upgrade-reference.md` Phase 9 in full, plus:
+Implement `archive/kg-upgrade-reference.md` Phase 9 in full, plus:
 - **Language-fidelity metric:** the agent's language mix and code-switch rate vs. the user's real ones.
 - **Scale test:** seed 2,000 synthetic users and report:
   - gate query latency (p50/p95)

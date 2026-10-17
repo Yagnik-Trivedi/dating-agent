@@ -1,5 +1,7 @@
 # 20 — UI design brief (prompt for Claude Design)
 
+> **Status (2026-10-17): background only.** The design has moved on through rounds 1–5 in Claude Design. The final export (Round 4 "Prelude" + the Round 5 additions) is what plan 10 builds. Its visual decisions override this brief: no 3D props, no mascot, the "first letter" motif.
+
 Paste everything below the line into Claude Design. When the design is final, hand it to Claude Code (see the end of this file).
 
 ---
