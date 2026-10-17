@@ -1,7 +1,6 @@
 // Concurrency + pacing for agent replies: debounce per (match, agent user), a Mongo lock with a stale timeout,
 // human-like typing delay, and a re-check before sending so a take-over or a newer message discards the draft.
 import { env } from '../../config/env.js';
-import { InboxItem } from '../../models/InboxItem.js';
 import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
@@ -12,6 +11,7 @@ import { cancel, enqueue } from '../jobs/queue.js';
 import { side } from '../matches.js';
 import { emitStatus, queueEvaluation } from '../pipeline/index.js';
 import { composeTurn } from '../conversation/engine.js';
+import { fileQuestion } from './askMyHuman.js';
 
 const LOCK_STALE_MS = 2 * 60_000;
 const MAX_AGENT_REPLIES_PER_MINUTE = 2; // per match, both agents together: the agent↔agent loop guard
@@ -71,12 +71,6 @@ async function typeFor(matchId, userId, ms) {
 }
 
 /** The agent hit something only its human can answer: queue it in their inbox (answer → facts, plan 05 §4). */
-async function askMyHuman(userId, matchId, question) {
-  if (await InboxItem.exists({ userId, matchId, status: 'open', question })) return;
-  const item = await InboxItem.create({ userId, matchId, question });
-  emitToUser(userId, 'inbox:new', { item });
-}
-
 /** Move to `evaluating` once (atomic), stop all agent replies, hand over to plan 09. */
 export async function stopConversation(matchId, reason, detail = null) {
   const match = await Match.findOneAndUpdate(
@@ -126,7 +120,7 @@ export async function runReply(matchId, userId) {
       last = sent._id;
     }
     failures.delete(key);
-    if (turn.unknownAboutMe) await askMyHuman(userId, matchId, turn.unknownAboutMe);
+    if (turn.inbox) await fileQuestion(userId, matchId, turn.inbox, { askedBy: turn.inbox.askedBy });
     if (turn.end) {
       // dealbreaker_hint keeps the v1 judge's 'dealbreaker' stop semantics until plan 09's judge replaces it.
       if (turn.end === 'dealbreaker_hint') await stopConversation(matchId, 'dealbreaker', { viewerId: String(userId), why: 'Something they said clashes with one of your dealbreakers.', endedBy: 'dealbreaker_hint' });

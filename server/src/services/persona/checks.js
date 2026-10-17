@@ -16,7 +16,7 @@ const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|
 const REACTION = /^\W*(haha\w*|lol|oh|ah+|aw+|wow|omg|ooh|yes|yeah|nice|true|fair|okay|ok)?[\s,!.]*(i (really |totally |kinda )?(love|like|adore|agree|get|see|feel|know|hear|bet|mean|hope|think|guess|believe) (that|this|it|you|how|what|so|the way)\b|i('m| am) (so |really )?(glad|happy|sorry|curious|jealous|intrigued|impressed)\b|i (can't|cannot) wait\b|i (totally |completely )?(agree|understand)\b)/i;
 const INTERROGATIVE = /^\W*(what|how|do|did|does|have|has|are|is|would|will|where|when|which|who|why|could|can|should)\b/i;
 // Honest uncertainty ("never tried it", "not sure") is what the plan asks for when there's no fact: always allowed.
-const HONEST = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played|really)|have not|not sure|don'?t know|no idea|not really (into|a)|not much of a|can'?t say|don'?t (really )?follow|not (really |much )?(a fan|into)|still figuring)\b/i;
+const HONEST = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played|really)|have not|not sure|don'?t know|no idea|not really (into|a)|not much of a|can'?t say|don'?t (really )?follow|not (really |much )?(a fan|into)|still figuring|not really sure|pata nahi|idea nahi|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
 // "you're into X", "your trekking pic", "you love …": statements about the other person.
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
@@ -26,6 +26,7 @@ const STOP = new Set(['about', 'their', 'there', 'these', 'those', 'which', 'wou
 const clausesOf = (s) => s.split(/\s*[—–;]\s*|,\s+(?=(?:and |but |so |though )?(?:i|i'm|i've|my|me)\b)/i).map((c) => c?.trim()).filter((c) => c && /[\p{L}]/u.test(c));
 const jaccard = (a, b) => { const A = new Set(norm(a)), B = new Set(norm(b)); const inter = [...A].filter((x) => B.has(x)).length; return inter / (new Set([...A, ...B]).size || 1); };
 const covers = (claimText, sentence) => { const c = norm(claimText).join(' '), s = norm(sentence).join(' '); return (c && (s.includes(c) || c.includes(s))) || jaccard(claimText, sentence) >= 0.5; };
+const FILLER = new Set(['haha', 'hahaha', 'lol', 'yeah', 'yes', 'okay', 'the', 'and', 'for', 'but', 'too', 'also', 'with', 'just', 'that', 'this', 'so', 'omg', 'wow']);
 const contentWords = (s) => tokensOf(s).filter((w) => w.length >= 5 && !STOP.has(w));
 
 /**
@@ -113,7 +114,7 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
     // the second half matches a valid claim (first v2 run).
     // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
     // rcb!" passed as no claim in agent-check run 4).
-    const aboutMe = (c) => FIRST_PERSON.test(c) || (answering && !YOU_CLAIM.test(c) && contentWords(c).length >= 2);
+    const aboutMe = (c) => FIRST_PERSON.test(c) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
     const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);

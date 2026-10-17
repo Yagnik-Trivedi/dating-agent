@@ -13,6 +13,8 @@ import { KG } from '../kg/config.js';
 import { embed } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
+import { lookupConcept } from '../kg/canonicalize.js';
+import { inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, oneQuestion, sentencesOf } from '../persona/text.js';
@@ -30,12 +32,10 @@ const turnSeed = (seed, userId, turn) => (seed + parseInt(createHash('md5').upda
 /** Is my agenda settled enough for a natural end? Dealbreaker topics and everything with priority ≥ 0.5 answered. */
 const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => a.dealbreaker || a.priority >= 0.5).every((a) => a.status === 'answered');
 
-function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent }) {
+function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering }) {
   const text = draft.messages.join(' ');
   const style = styleCheck(text, plan, persona.voice, recent);
   const myLikes = persona.facts.filter((f) => f.predicate === 'likes' && f.polarity !== -1).flatMap((f) => [f.object, f.conceptLabel].filter(Boolean));
-  const last = recent.at(-1) ?? '';
-  const answering = plan.answerFirst || (/\?/.test(last) && /\byou(r|rs)?\b/i.test(last));
   const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering });
   return { text, style, grounding, problems: [...style, ...grounding.problems] };
 }
@@ -82,6 +82,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const plan = planAct({ state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: agendaSettled(freshAgenda) });
   plan.closingStyle = persona.voice.closingStyle ?? null;
   plan.opening = opening;
+  // "Ask my human", structurally: their question to me → its topic (dictionary only) → does my graph have ANY fact on it?
+  const question = opening ? null : questionToMe(theirMsgs.map((m) => m.text).join('\n'));
+  const asked = question ? await topicOf(question, lookupConcept) : null;
+  const known = asked ? knowsTopic(asked, persona.facts) : null;
+  if (asked && !known) plan.unknownTopic = asked.label;
 
   // Opening with a brief opener (already grounded + validated): no LLM call.
   if (opening && brief.openers?.length && !plan.end) {
@@ -123,7 +128,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
-    const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent });
+    const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
     attempts.push({ draft, ...c });
@@ -144,17 +149,12 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
     messages = [plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? (lower ? opener : opener[0].toUpperCase() + opener.slice(1)) : NEUTRAL[Math.floor(rng() * NEUTRAL.length)]];
   }
-  // Unsupported "I like X" that survived: ask my human instead of inventing it.
-  // They asked about me and perception found a topic with no fact of mine: ask my human even if the draft skipped it
-  // (agent-check: "favourite IPL team?" got "i don't follow IPL much", cited to a trekking fact, and no inbox item).
-  // Also code-only, so it doesn't depend on perceive classifying the topic (agent-check run 3: it didn't): they asked
-  // me something and my reply hedges → their question goes to my human.
-  const theirQuestion = history.filter((m) => String(m.senderId) !== me).at(-1)?.text ?? '';
-  const askedMe = plan.answerFirst || (/\?/.test(theirQuestion) && /\byou(r|rs)?\b/i.test(theirQuestion));
-  const unknownTopic = askedMe && ((plan.reactions ?? []).some((r) => r.kind === 'unknown') || messages.some((m) => hedgeSentences(m).length));
-  const unknownAboutMe = best.draft.unknownAboutMe
-    ?? (best.grounding.unsupported[0] ? `Is this true for you: "${best.grounding.unsupported[0]}"?` : null)
-    ?? (unknownTopic && theirQuestion ? theirQuestion : null);
+  // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
+  // a topic I have a fact on → none. Unresolved → the draft's own unknown, an unsupported claim, or a hedge (fallback).
+  const hedged = messages.some((m) => hedgeSentences(m).length);
+  const decision = inboxDecision({ question, topic: asked, known, draftUnknown: best.draft.unknownAboutMe, unsupported: best.grounding.unsupported, hedged });
+  const inbox = decision && { ...decision, askedBy: matchName };
+  const unknownAboutMe = inbox?.question ?? null;
 
   const used = [...new Set(best.draft.claims.flatMap((c) => c.factIds))].map((id) => facts.get(id)?._id).filter(Boolean);
   const told = plan.topic?.kind === 'story' ? [plan.topic.id] : [];
@@ -166,7 +166,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   });
   const end = plan.end ?? (best.draft.end && history.length >= 12 ? 'natural' : null);
   return {
-    messages, end, unknownAboutMe, usedFactIds: used,
+    messages, end, unknownAboutMe, inbox, usedFactIds: used,
     actPlan: { ...plan, interest: state.interest },
     checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop] },
   };

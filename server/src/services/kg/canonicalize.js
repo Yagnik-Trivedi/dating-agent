@@ -75,6 +75,14 @@ export async function createConcept({ name, label, type, aliases = [], vector, c
  * → { conceptId, decision: 'exact' | 'embedding' | 'llm' | 'created', score? }
  * deps lets tests stub the embedder and the tie-break LLM.
  */
+/** Dictionary-only lookup: exact name or alias; no embedding, no LLM, never creates. → { id, label } | null */
+export async function lookupConcept(text) {
+  const name = normalise(text);
+  if (!name) return null;
+  const hit = (await loadCache()).find((c) => c.name === name || c.aliases.includes(name));
+  return hit ? { id: hit.id, label: hit.label } : null;
+}
+
 export async function resolveConcept({ text, type, userId }, deps = {}) {
   const embedOne = deps.embed ?? (async (t) => (await embed([t], { purpose: 'concept', userId, inputType: 'query' }))[0]);
   const tieBreak = deps.tieBreak ?? ((args) => chatJSON({

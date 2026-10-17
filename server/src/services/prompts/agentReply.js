@@ -15,6 +15,7 @@ function planLines(plan, firstName) {
     `- Language: ${langName(plan.language.primary)}${plan.language.codeSwitch && plan.language.secondary ? `, mixing in some ${langName(plan.language.secondary)} the way ${firstName} does` : ' only'}.`,
     ...plan.reactions.filter((r) => r.kind !== 'unknown').map((r) => `- About "${r.text}": ${firstName} is ${{ excited: 'genuinely excited about it', positive: 'into it', lukewarm: 'only mildly into it', dislike: 'NOT into it; say so kindly' }[r.kind]}.`),
     ...plan.reactions.filter((r) => r.kind === 'unknown').map((r) => `- About "${r.text}": ${firstName} has no listed experience; be honestly curious or say it's not something you've done. Never pretend.`),
+    plan.unknownTopic ? `- They asked about ${plan.unknownTopic}: nothing about ${firstName} and ${plan.unknownTopic} is listed. Say honestly you're not sure or haven't really thought about it. Never invent a preference, team, habit or opinion.` : null,
     plan.mustDisagree ? `- DISAGREE with "${plan.disagreeOn}". ${firstName} firmly holds the opposite view: keep it friendly, but do not give in or say they're right.` : null,
     plan.topic?.kind === 'agenda' ? `- After reacting, steer toward ${topicText(plan.topic.text)}: connect it to what you're talking about or ask about it naturally (share ${firstName}'s side only if a listed fact covers it and it fits). Never announce it out of nowhere ("just so you know…").` : null,
     plan.topic?.kind === 'story' ? `- If it connects to what you're talking about, tell the story [${plan.topic.storyId}] briefly in your own words with a natural lead-in ("that reminds me…"); if it doesn't connect, skip it.` : null,
@@ -35,7 +36,8 @@ const topicText = (t) => TOPIC_HINTS[t] ?? t;
 function finalInstruction(plan, firstName) {
   if (plan.end) return 'end the conversation kindly in one short line (no question).';
   return [
-    plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
+    plan.unknownTopic ? `answer their question honestly: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you're not sure (no made-up preference); don't just ask it back.`
+      : plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
     plan.topic?.kind === 'agenda' && `react briefly, then steer to ${topicText(plan.topic.text)} by asking about it naturally (or sharing ${firstName}'s side if a listed fact covers it).`,
     plan.askBack && !plan.topic && 'end with one question back.',
