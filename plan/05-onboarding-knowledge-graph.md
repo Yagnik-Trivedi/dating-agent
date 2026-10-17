@@ -1,6 +1,6 @@
 # 05 — Onboarding + personal knowledge graph (v2, per plan 15)
 
-> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §2–§5 and `plan/17-jobs-and-scaling.md` (done before this plan). Use `plan/kg-upgrade-reference.md` Phases 1–4 for detail; where it disagrees with plan 15, plan 15 wins. Implement this file, wipe and re-seed test data (no migration), run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §2–§5 and `plan/17-jobs-and-scaling.md` (done before this plan). Use `plan/archive/kg-upgrade-reference.md` Phases 1–4 for detail; where it disagrees with plan 15, plan 15 wins. Implement this file, wipe and re-seed test data (no migration), run the acceptance checks.
 
 ## Goal
 

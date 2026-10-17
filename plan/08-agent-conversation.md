@@ -1,6 +1,6 @@
 # 08 — Step 3: The agent conversation (persona engine + per-turn pipeline)
 
-> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §4 stage 5 and §7, and `plan/kg-upgrade-reference.md` Phases 6–7.1 for detail (plan 15 and this file win on conflicts). The engine replaces the v1 engine (`agent/beliefUpdate.js`, `prompts/claimCheck.js`, `agent/shouldStop.js`, the Hinglish guard). Implement it, run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §4 stage 5 and §7, and `plan/archive/kg-upgrade-reference.md` Phases 6–7.1 for detail (plan 15 and this file win on conflicts). The engine replaces the v1 engine (`agent/beliefUpdate.js`, `prompts/claimCheck.js`, `agent/shouldStop.js`, the Hinglish guard). Implement it, run the acceptance checks.
 
 ## Goal
 

@@ -2,14 +2,19 @@
 
 > **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §5, and the API added by plans 05–09 (v2). The v1 screens exist and run on the real API (mocks were removed in plan 09). Update them as below, run the acceptance checks.
 
-## Design direction (unchanged)
-
-- Mobile-first, and good at 1280px too.
-- Warm and trustworthy: one accent color, generous spacing, rounded cards, a characterful display font + a clean sans.
-- The agent is a calm assistant at your side: a consistent agent icon and a soft secondary color for anything agent-related.
-- Light and dark mode via CSS variables.
-- Every async action has loading and error states. No blank screens.
-- Accessibility: labelled inputs, focus states, contrast, `aria-live` on new messages.
+## Design direction: follow the owner's final design
+- **The visual design comes from the owner's final Claude Design export** (Round 4 "Prelude" base plus the Round 5 additions), handed over at the start of Phase 2. Build to it exactly: its tokens, type, components, light + "Lamplight" dark mode and motion spec. `plan/20-ui-design-brief.md` is background only; where the export differs, the export wins.
+- **Fixed principles** (also in the design):
+  - no mascot or decorative props
+  - agent-written lines use a second ink plus the "drafted by your agent" mark
+  - no percentage or score anywhere
+  - calm motion, `prefers-reduced-motion` respected
+  - a 12 px minimum text size, AA contrast
+  - 375 px with no horizontal scroll
+- **The "first letter" frame:** the agents' conversation sits on the letter surface; on Take over or handoff it gives way to the normal chat ("From here, it's you two.").
+- **The verdict letter:** the one signature animation (≈450 ms). Compatible unfolds, Maybe half-opens, Not compatible closes gently. There's a static version for reduced motion.
+- **Client caching:** only UI state in memory (fetch + revalidate). Nothing sensitive in `localStorage` except the auth token and onboarding drafts; clear everything on logout.
+- **Every async action** has loading and error states. No blank screens. Labelled inputs, focus states, `aria-live` on new messages.
 
 **Keep the app runnable:** each backend plan (05–09) already made the minimum client change so the flow keeps working. This plan finishes those screens. Nothing here may break signup → onboarding → discover → match → agent chat.
 
@@ -52,7 +57,10 @@
 - Big label (Compatible / Maybe / Not compatible) + `summaryForUser`.
 - **Positives ✓, frictions ⚠ and dealbreaker risks**, each with its quote. Clicking one opens the transcript drawer and **highlights the cited message** (the receipts).
 - The dimension bars from v1 are removed (there are no code dimension scores any more).
+- **Maybe** gets its own design and copy (what's promising, what's still unclear, why the agents stopped): hopeful, not a soft rejection.
+- **Chat-moment chips** ("A real laugh", "Both love trekking", "Disagreed, then settled") come from my ChatEvents and link to their lines.
 - **Actions:**
+  - Maybe: **Let them talk a bit longer** (primary; see "Backend additions" below), **I'll take it from here**, **Pass, kindly**.
   - Compatible / Maybe: **Continue as myself** / **Pass**. After Continue: date ideas (Tavily, or the 503 message) and icebreakers.
   - Not compatible: "Talk anyway".
 - Never show anything from the other side's decision.
@@ -61,16 +69,28 @@
 - The whole agent conversation with **my** side's ChatEvents as inline badges and my decision's evidence highlighted.
 - "I wouldn't say that" is available on my own agent's messages here too.
 
+### Wake-up screen (from plan 12)
+- If `/health` takes more than 3 s, show "Waking up the server…" with retry. Render's free tier sleeps.
+
+### Verification screen
+- Build it **only if plan 19 (verification) gets built**. Until then, nothing in the UI, landing page or copy may claim profiles are liveness-checked or "verified".
+
 ### Settings
 - Default agent mode (off / shadow / auto) with a plain explanation.
 - **"Learn from my chats"** toggle (default on): "After you take over, your own messages help your agent sound like you."
 - Delete account (confirm dialog).
+
+## Backend additions the design needs (small; do them first in Phase 2)
+- **"Let them talk a bit longer"** for a Maybe: `POST /api/matches/:id/extend`, allowed once per match and only if my verdict is Maybe. It resumes both agents for up to `EXTEND_TURNS` (default 8) more messages, steering to the unclear agenda items, then re-runs both judges. The new verdicts replace the old ones; history is kept.
+- A **conversation-length state** for the layout (early / mid / long), derived from the message count. No API change is needed if the client counts.
 
 ## Acceptance checks
 
 - [ ] Real backend, headless Chrome (puppeteer-core with system Chrome, scratchpad only, not committed): signup (with basics + consent) → onboarding v2 (B importance required, dealbreaker validation) → hub review (edit, delete, contradiction resolve, "I never use emojis") → discover → match → match room (agent chatting, My notes growing live) → "I wouldn't say that" → report with receipts → continue → reveal.
 - [ ] Take over unlocks the input in under 100 ms and no agent message follows.
 - [ ] Clicking a positive or friction highlights its cited message.
+- [ ] Maybe → "Let them talk a bit longer" resumes the agents once and produces new verdicts; a second extend is refused.
+- [ ] The screens match the final design export at 375 and 1440, light and Lamplight.
 - [ ] 375px width: no horizontal scroll. Light and dark both readable. No console errors.
 - [ ] Update the Status section of `CLAUDE.md`.
 

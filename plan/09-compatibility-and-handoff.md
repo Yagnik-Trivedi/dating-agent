@@ -1,6 +1,6 @@
 # 09 — Step 4: Independent judges, handoff, compaction, date ideas
 
-> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §4 stage 6 and `plan/kg-upgrade-reference.md` Phase 7.2. This replaces v1's code-computed dimension scores (`services/compat/config.js` weights, `alignmentDims`, `interestsDim`). Implement it, run the acceptance checks.
+> **Prompt for Claude Code:** Read `CLAUDE.md` (section "Knowledge graph — final design"), `plan/15-knowledge-graph-final.md` §4 stage 6 and `plan/archive/kg-upgrade-reference.md` Phase 7.2. This replaces v1's code-computed dimension scores (`services/compat/config.js` weights, `alignmentDims`, `interestsDim`). Implement it, run the acceptance checks.
 
 ## Goal
 

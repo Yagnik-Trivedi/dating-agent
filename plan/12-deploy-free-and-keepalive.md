@@ -83,7 +83,7 @@ on:
   workflow_dispatch: {}
 jobs:
   ping:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned, like ci.yml (ubuntu-latest moves to a new image)
     timeout-minutes: 5
     steps:
       - name: Ping Render health endpoint (retries cover cold starts)
@@ -122,16 +122,38 @@ The human adds the repo secret `RENDER_HEALTH_URL` (Settings → Secrets and var
 
 ## 6. `DEPLOY.md` (write this for humans)
 A numbered checklist:
-1. Atlas network access.
+1. Atlas: fix the database user's login (it currently fails), and allow `0.0.0.0/0` under Network Access.
 2. Render: New → Blueprint → select the repo, then fill the secret env vars.
 3. First deploy, and check that `/health` works.
 4. Vercel import plus the env var.
 5. Update `CLIENT_URL` on Render.
 6. cron-job.org job.
 7. GitHub secret plus a manual run of the `keep-alive` workflow.
-8. Run `node scripts/seed.js` and `--judges` against production Mongo (from a laptop with the prod URI).
+8. Run `node scripts/seed.js` and `--judges` against production Mongo (from a laptop with the prod URI). On the final provider this takes ~30 min and spends credits: do it once, after plan 14.
 9. Smoke test the full flow on the live URL from a phone.
 10. A weekly checklist until Dec 15: credits remaining, Render hours used this month, keep-alive logs, Atlas storage under 512 MB.
+
+## 7. Demo speed and judge sessions (the biggest demo risk)
+A live agent conversation took **9–18 min** on NVIDIA. Judges won't wait that long, and every live conversation spends ~80k tokens of credits.
+- **Pre-baked judge accounts** (`seed.js --judges`, §5) are the main demo path. Each has:
+  - one finished **Compatible** match (verdict, receipts, reveal)
+  - one **Maybe**
+  - one **Not compatible** with the wind-down
+  - one flagged fake
+  - one match **mid-conversation**, frozen at ~6 messages and resumed when the judge opens it, so they can watch a few live turns and press Take over
+
+  All of it is produced once, by real runs of the engine (no hand-written transcripts).
+- **Demo pacing:** `DEMO_PACING=fast` (env) cuts the typing delays to 1–3 s for judge and seed accounts only. Real users keep normal pacing.
+- **Credit guard:**
+  - New signups get at most `JUDGE_LIVE_CHATS_PER_DAY` (default 2) live agent conversations per day. Beyond that, the match shows "your agent will start this chat tomorrow".
+  - The all-time `LLM_HARD_CAP_USD` still applies.
+  - Before deploy, compute the cost per conversation from `GET /api/admin/usage` on the final provider and confirm the cap covers judging (Dec 1–15) plus the seed re-run.
+- **If the cap is hit** during judging: the agent-paused banner shows, and pre-baked matches keep working (they need no LLM calls).
+
+Acceptance additions:
+- [ ] A judge account shows all five states with 0 LLM calls on page load.
+- [ ] The mid-conversation match resumes and reaches a few new turns within ~2 min with `DEMO_PACING=fast`.
+- [ ] Hitting the daily live-chat cap shows the friendly message, not an error.
 
 ## Acceptance checks (local)
 - [ ] `render.yaml` is valid YAML. `node src/index.js` works with `NODE_ENV=production`.

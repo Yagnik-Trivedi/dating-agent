@@ -1,5 +1,11 @@
 # 18 — Architecture decisions: verification, learning, caching, privacy, compatibility, handoff
 
+> **Status (owner review, 2026-10-17): reference doc, partly adopted.** Don't implement this file as a whole.
+> - **Already built** in v2 (plans 05–09): §7 purpose-based access and the DB-spy boundary, §8 transcript-only AI↔AI, §9 independent judges with no percentage, the parts of §10 about cited claims and calibrated reactions, and the §11 reveal.
+> - **Adopted, scheduled:** the Maybe "let them talk a bit longer" flow (plan 10 backend additions); demo pacing and the credit guard (plan 12 §7); conversation stats and the unsupported-claim metric (plan 11).
+> - **Deferred to after the hackathon:** §1 verification (plan 19 is not for Claude Code); §2 supersede/dispute rules and the pending-confirmation queue; §3 per-session learning from human chats; §5 cross-instance cache invalidation; §11 3-day feedback.
+> - **If plan 19 isn't built,** nothing in the UI, README or video may claim liveness or photo verification.
+
 > **For Claude Code:** this file answers a set of architecture questions and records the decisions. It **extends** `plan/15-knowledge-graph-final.md`; where they overlap, this file is newer and wins. Each section ends with **MVP** (build now) and **At scale** (only when needed; the MVP is designed so this is an upgrade, not a rewrite).
 
 ---

@@ -2,15 +2,23 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (owner's 3-step plan done; plan 11A merged; waiting for the owner)
-- **Main-line branch:** `main` · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
-- **Last commit (main line):** `3966f5a` merge of `feat/plan-11-personas`
+- **Last updated:** 2026-10-17, by Claude Code (owner's plan review committed `df05021`; references updated; plan 11 continues B1 → B6)
+- **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
+- **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
-Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code
+Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
 
 ## Plans
 
-Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 → 07 → **08** → 09 → 10 → 11 → 14 → 12 → 13. Plans 05–11 were rewritten for the v2 knowledge graph; the v1 builds of 05–10 are in the history, but v2 replaces them.
+Build order (`00-START-HERE` phase table, owner 2026-10-17):
+
+| Phase | Plans |
+|---|---|
+| Done | 02 → 03 → 04 → 17 → 05 → 06 → 07 → 08 → 09 |
+| 1. Backend + tests (now) | 11 Part B (B1 tuning → B2 scale test → B3 metrics → B4 ablation → B5 one full run → B6 results) |
+| 2. Frontend | 10, from the owner's design (with its backend additions) |
+| 3. Go live | 14 (Nebius, by Oct 26) → 12 (deploy, keep-alive, judge accounts, demo pacing §7) |
+| 4. Submit | 13 (feature freeze Oct 28, submit Oct 29) |
 
 | Plan | Title | Status | Branch | Last commit | Notes / next step |
 |---|---|---|---|---|---|
@@ -25,17 +33,17 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
-| 11 | Seed personas + evaluation (v2) | 🔄 In progress | main | `3966f5a` | **11A done** (quotas pass, 38 personas, incremental seed). 11B: `eval.js` v2 works (6-pair subset); metrics scripts, ablations, scale test, full runs and tuning remain. |
+| 11 | Seed personas + evaluation (v2) | 🔄 In progress | `feat/plan-11-tuning` | `278a59e` | Part A ✅ (`3966f5a`). Part B: B1 tuning 🔄 (iteration 1: 3/6, fallback 13%; iteration 2 next) · B2 scale test ✅ (needs judge throughput + `storage-report`) · B3 metrics 🔄 · B4 ablation ⬜ · B5 one full run ⬜ (ask the owner first) · B6 results ⬜ |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
 | 14 | Switch back to Nebius Token Factory | ⬜ Not started | — | — | **Due Oct 26.** Needs the Nebius account. The dry-run checklist is queued as side work. |
 | 15 | Knowledge graph: final design | ✅ Done (design doc) | main | `f91d072` | Source of truth for the KG. |
-| 16 | KG upgrade execution | 🔄 In progress | — | — | Steps 1–3 done; step 4: 17, 05–09 done; 11 next (owner's order: backend first, 10 later). |
+| 16 | KG upgrade execution | 📦 Archived | main | `df05021` | Done; moved to `plan/archive/16-kg-upgrade-execution.md`. |
 | 17 | Jobs, storage and indexes | ✅ Done | main | `3522f63` | Job queue, compact vectors, gate query, indexes. |
-| 18 | Architecture decisions | ⬜ Not started | main | (this commit) | Decision doc, now committed. Not folded into the plans yet; §13 maps it to 05/08/09/10/11/17 and a new 19. Needs a decision (see Blocked). |
+| 18 | Architecture decisions | 📖 Reference, partly adopted | main | `df05021` | See its status banner: built parts in 05–09; Maybe-extend (10), demo pacing (12 §7), metrics (11) scheduled; the rest deferred. |
 | 19 | Verification (liveness + face match) | 🚫 Not for Claude Code | — | — | Owner's decision 2026-10-17. No file. |
 | 20 | UI design brief | 🚫 Not for Claude Code (design team) | main | `11bdcf6` | The owner hands over the design for Phase 2. |
-| ref | kg-upgrade-reference | ✅ Done (reference) | main | `f91d072` | Implementation detail where plan 15 is silent. |
+| ref | kg-upgrade-reference | 📦 Archived | main | `df05021` | Moved to `plan/archive/kg-upgrade-reference.md`. |
 
 ## Owner's order (updated 2026-10-17, replaces the earlier order)
 
@@ -79,13 +87,22 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - e) ✓ agent-check passes and judge-check passes on the re-seeded data. Eval subset (6 varied pairs; the first 6 by `--limit` are all compatible): i1 gated ✓, f1 fake ✓, i6 incompatible ✓; c1, c7 and i2 → maybe. ~89k tokens per pair, 9–18 min per conversation.
   - Why the misses: (1) the engine's neutral fallback replies ("haha fair 😄", "oh nice, i like that") read as low effort to the judges; (2) i2 ended "naturally" at 14 messages without smoking coming up.
 - **Step 3 ✅ merged** (`3966f5a`). **Waiting for the owner.**
-- **Plan 11 remaining (11B + tuning):**
-  1. Tuning: fewer neutral fallbacks (send the best draft minus failing clauses instead), and no natural end until high-importance agenda topics are answered. Then re-run the subset.
-  2. `scripts/eval/` metric scripts: style/language fidelity, conversation stats, observer accuracy, judge agreement (human-labelled CSV), consistency, leak probe, unsupported-claims (offline LLM judge).
-  3. Ablations (`RULES=on|off`, etc.).
-  4. Scale test (2,000 synthetic users, no LLM).
-  5. Full 20-pair runs (rules on/off: ~40 chats ≈ 6–10 h on NVIDIA at concurrency 2).
-  6. Calibrate `JUDGE_YES_MIN` on the labelled pairs; README numbers.
+- **Plan 11 remaining: the owner's reduced scope** (2026-10-17, also recorded at the top of `plan/11-seed-data-and-eval.md`). Order: tuning → scale test → metric scripts → ablation subset → ONE full run (tell the owner first) → calibration → README numbers.
+  1. 🔄 **Tuning** (6-pair loop, ≤ 3 iterations, target ≥ 5/6 and no filler).
+     - Iteration 1 code is on `feat/plan-11-tuning`:
+       - important topics are retried;
+       - the model's end is gated on the agenda;
+       - a constrained regeneration replaces filler, and fallbacks are logged per message;
+       - no natural end with importance ≥ 0.7 open, and near `MAX_TURNS` the agent steers to it;
+       - a META wording check; agenda likes ≤ 3 words.
+     - `npm test` 78/78. Iteration 1 eval is running.
+     - Seen mid-run: over-strict grounding drops honest drafts, which forces fallbacks (Meera × Ishaan: 2 template + 1 constrained in 6 messages). Fixed for iteration 2 (`278a59e`): an unsure hedge never contradicts a like; "I saw you…" is about them; the same opening is blocked only from the 3rd time. `npm test` 79/79.
+  3. 🔄 Metric scripts: `scripts/eval/metrics.js` done (style/language fidelity, conversation stats, observer accuracy, from saved chats, no LLM). Unsupported self-claims (offline LLM judge) and the leak probe are next.
+  2. ✅ Scale test (`scripts/eval/scale-test.js`, no LLM, local in-memory replica set, 28 s): 2,000 users. Discover p50 2.1 / p95 4.2 ms on index `gate.city_1_gate.gender_1_gate.age_1`; context build per message miss 9.5 / 10.4 ms, hit 1.6 / 3.0 ms; 88 KB/user → ~5,900 users in M0. → `eval/results/scale.md`.
+  4. ⬜ Ablation `RULES` on/off on the 6-pair subset.
+  5. ⬜ ONE full 20-pair run, overnight, resumable (**ask the owner first**).
+  6. ⬜ Judge-agreement export (10 transcripts → `eval/labels/`).
+  7. ⬜ Calibrate `JUDGE_YES_MIN`; headline numbers → `eval/results/latest.md` + README.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
@@ -125,7 +142,7 @@ This section is kept current, so another session can take over at any moment (fo
 
 **Prompt for the next session:**
 
-> Read CLAUDE.md, then plan/PROGRESS.md (this file), then plan/16-kg-upgrade-execution.md and the plan marked 🔄. Check out the branch named under "Currently working on" and continue from its **Next** list. Follow the standing rules below. Update PROGRESS.md after every step, then commit and push.
+> Read CLAUDE.md, then plan/PROGRESS.md (this file), then plan/00-START-HERE.md (phase table) and the plan marked 🔄. Check out the branch named under "Currently working on" and continue from its **Next** list. Follow the standing rules below. Update PROGRESS.md after every step, then commit and push.
 
 **Standing rules (from the project owner):**
 - Never print, echo, log or commit any secret value from `.env`. Check that no `.env` is tracked before every push.

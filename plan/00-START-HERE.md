@@ -13,29 +13,21 @@ This folder holds the build plan as a series of prompts for Claude Code. Each fi
 
 ## Order and dependencies
 
-**The knowledge-graph design changed (plan 15, executed by plan 16).** Plans 02–04 stay as built. Plans 05–11 were rewritten to match `15-knowledge-graph-final.md`, and the new plan 17 lays the foundation. `kg-upgrade-reference.md` is the detailed reference spec; plan 15 wins where they disagree.
+The knowledge graph and agent engine were rebuilt as v2 (design: `15-knowledge-graph-final.md`). Plans 05–11 describe the v2 build.
 
-**Build order:**
+**Live status:** `plan/PROGRESS.md` is the team's status board (what's done, in progress or blocked, and how to continue). Read it first.
 
-**02 → 03 → 04 → 17 (jobs & indexes) → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 14 (switch to Nebius) → 12 → 13**
+**Build order** (owner's phases, 2026-10-17):
 
-```
-02 scaffold ─► 03 LLM layer ─► 04 backend core ─► 17 jobs, vectors, gate, indexes
-                                                      ▼
-                                05 KG v2: concepts, edges, voice, build job, review API
-                                                      ▼
-                                06 trust check (public profile only, in the match-created job)
-                                                      ▼
-                                07 gate re-check, profile-only brief, own-graph agenda, conversation doc
-                                                      ▼
-                                08 persona engine + per-turn pipeline (perceive/observe, act plan, checks)
-                                                      ▼
-                                09 independent judges, handoff, compaction, date ideas
-                                                      ▼
-                                10 frontend v2 ─► 11 seed personas + evaluation + scale test
-                                                      ▼
-                                14 switch to Nebius ─► 12 deploy + keep-alive ─► 13 submission
-```
+| Phase | Plans | Notes |
+|---|---|---|
+| Done | 02 → 03 → 04 → 17 → 05 → 06 → 07 → 08 → 09 | v2 knowledge graph and engine |
+| 1. Backend + tests (now) | 11 (Part B: tuning, scale test, metrics, ablation, one full run) | Reduced scope, see plan 11 |
+| 2. Frontend | 10 (from the owner's final design; includes the small backend additions it lists) | No `client/` work before the design hand-over |
+| 3. Go live | 14 (switch to Nebius, by Oct 26) → 12 (deploy, keep-alive, judge accounts, demo pacing) | |
+| 4. Submit | 13 (README, Devpost; the video is by humans) | Feature freeze Oct 28, submit Oct 29 |
+
+**Reference docs:** 15 (knowledge-graph source of truth), 18 (architecture decisions; see its status banner), 20 (design background), 01 (human checklist). Finished execution docs are in `plan/archive/`.
 
 **Rules for every plan from 17 onward:**
 - The app stays runnable after each plan: signup → onboarding → discover → match → agent chat works end to end (degraded is fine, broken isn't), with seed data re-loaded by the updated seed script.
