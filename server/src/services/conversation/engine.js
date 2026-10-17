@@ -18,7 +18,7 @@ import { lookupConcept } from '../kg/canonicalize.js';
 import { inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
-import { echoOf, oneQuestion, sentencesOf, words } from '../persona/text.js';
+import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
 import { generate } from './generate.js';
 import { updateInterest } from './interest.js';
@@ -174,12 +174,17 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     ?? attempts.reduce((a, b) => (kept(b) > kept(a) || (kept(b) === kept(a) && b.problems.length < a.problems.length) ? b : a));
   // Only failing sentences are dropped: grounding failures, leaks (keywords + embeddings vs my private facts, on every
   // outgoing message) and echoes that survived the regeneration (first v2 run: his kids question bounced back verbatim).
+  const mySent = new Set(history.filter((m) => String(m.senderId) === me).flatMap((m) => sentencesOf(m.text)).map((s) => norm(s).join(' ')));
   async function survivors(attempt) {
     const sentences = attempt.draft.messages.flatMap((m) => sentencesOf(m));
     const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
     const leaks = leakCheck(sentences, persona.privateFacts, sentVecs);
     const drop = new Set([...attempt.grounding.drop, ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
-    return { leaks, drop, messages: attempt.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean) };
+    // A sentence I already sent is dropped too (tuning it2: "undhiyu chhe?" ×3), and a scrap of under 3 words counts as
+    // nothing surviving, so the constrained regeneration writes a real message instead.
+    for (const s of sentences) if (mySent.has(norm(s).join(' '))) drop.add(s);
+    const messages = attempt.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean);
+    return { leaks, drop, messages: words(messages.join(' ')).length >= 3 ? messages : [] };
   }
   let { leaks, drop, messages } = await survivors(best);
   // Nothing survived: ONE constrained regeneration (owner's tuning spec): short, in-voice, on their last message, a

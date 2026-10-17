@@ -2,7 +2,7 @@
 // conversation's seeded rng, so the same seed + perceptions replay identically. Stored on the message.
 import { KG } from '../kg/config.js';
 
-export const MIN_MESSAGES_FOR_NATURAL_END = 12;
+export const MIN_MESSAGES_FOR_NATURAL_END = 16; // 12 gave judges too little to go on (tuning it2: c1 and c7 ended at 13 → "unsure")
 const pick = (xs, rng) => xs[Math.floor(rng() * xs.length)];
 function pickWeighted(dist, rng) {
   const entries = Object.entries(dist ?? {}).filter(([, w]) => w > 0);

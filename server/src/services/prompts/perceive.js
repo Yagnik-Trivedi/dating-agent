@@ -24,7 +24,7 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         '- "mood": one of greeting, curious, opinion, excited, disagree, plan, apologetic, tease, closing, long_reply, casual.',
         `- "notes": facts about ${theirName} learned from these messages. "quote" must be copied EXACTLY from their message.`,
         `  predicate one of ${NOTE_PREDICATES.join(', ')}; "object" a short neutral label; "strength" 0–1 how much they like/mean it.`,
-        `- "agendaHits": topics from ${myName}'s list below that their message answers, each with an exact quote.`,
+        `- "agendaHits": topics from ${myName}'s list below that their message answers, each with an exact quote. Only a clear position counts ("long-term", "I don't smoke", "want kids someday"); a vague or polite non-answer ("someone kind and real") is not a hit.`,
         'Never infer religion, caste, ethnicity, health or sexuality. Empty lists are fine.',
         '',
         'Output JSON: {"concepts": [{"text": "...", "type": "activity", "polarity": 1}], "claims": [{"text": "...", "conceptText": "...",',
