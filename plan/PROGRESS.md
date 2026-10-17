@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (B1 iteration 2: 4/6, fallback 5%; iteration 3 running; owner: continue B1→B6 without waiting for go)
+- **Last updated:** 2026-10-17, by Claude Code (B1 done after the 3-iteration cap; B3/B4 runs next, then B5 overnight)
 - **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
 - **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
@@ -68,6 +68,14 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
 ## Currently working on
+
+**B1 report (tuning stopped at the 3-iteration cap, 2026-10-17):**
+- Best 4/6 (iteration 2). Gated and fake pairs are always right; i6 (values clash) right in all 3; i2 (hidden smoking) right in iterations 1 and 2.
+- Fallback rate 13% → 5% → 8%.
+- Left:
+  1. Compatible pairs land on "maybe": one judge says yes (0.85) while the other says unsure (0.5–0.55). Calibrating `JUDGE_YES_MIN` in B5 may move some.
+  2. Run-to-run variance on 6 pairs is large (i2 flipped in iteration 3).
+  3. Fixed after the cap, measured by B4/B5 (`fix(plan-11)`): one vague dealbreaker hint ended c1 at 7 messages; now the first hint reopens the topic and only a second ends the chat.
 
 **Owner's approved plan, step 3: plan 11 personas on `feat/plan-11-personas`.**
 
