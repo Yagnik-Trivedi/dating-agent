@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-16 23:55 IST, by Claude Code (stopped for the night; plan 09 needs ~45 min of checks to finish)
+- **Last updated:** 2026-10-17, by Claude Code (estimates added to the owner's order; resuming plan 09 checks)
 - **Main-line branch:** `feat/plan-09-judges` (from `main`) · **main:** `3072867` (plans 02–08 + 17 done)
 - **Last commit (main line):** `3072867` feat(plan-08)
 
@@ -46,6 +46,28 @@ Finish **all development first**, then go live, then submit. No side work in bet
 3. **Phase 3, submit (Oct 29):** plan 13 (README, video, Devpost).
 
 Humans, before Phase 2: Nebius account + credits, Atlas login, Tavily key (optional).
+
+### Estimates (Claude Code, 2026-10-17)
+
+Hours of work include waiting for live LLM runs on NVIDIA's free tier (simulation ~12–15 min, full re-seed ~30 min).
+
+| # | Step | Est. hours | Target dates |
+|---|---|---|---|
+| 1 | 09: finish live checks (judge-check, agent-check, seed-check), Status, merge | ~1 | Oct 17 |
+| 2 | 10: frontend v2 (signup basics, onboarding v2, hub review, My notes, report receipts, replay, settings) + headless check | 5–7 | Oct 17–19 |
+| 3 | 11A: 30 personas (languages, styles, ≥ 3 seeds per city, pairs.json) + re-seed | 4–6 | Oct 19–20 |
+| 4 | 11B: eval scripts + scale test + 20 pairs × rules on/off (~40 chats ≈ 5 h of runs at concurrency 2) | 10–14 | Oct 20–23 |
+| 5 | Tuning: conversation quality (Meera × Ishaan came out Maybe; filler/looping), then re-measure | 4–8 | Oct 23–24 |
+| 6 | 14: Nebius switch (+2–3 h if the embedding model changes: re-embed, recalibrate thresholds, re-seed) | 1–5 | Oct 25 (due Oct 26) |
+| 7 | 12: render.yaml, keep-alive, self-ping, wake-up screen, judge accounts, DEPLOY.md (+ ~2 h of human dashboard work) | 3–4 | Oct 25–26 |
+| 8 | 13: README + SUBMISSION.md (video is human work, ~half a day) | 2–3 | Oct 27–28 |
+| | **Total** | **~30–48 h** | about 5–6 h/day from Oct 17 to Oct 28 |
+
+**Adjustments to consider:**
+- **Smoke-test the Nebius key as soon as it exists (15 min, no switch yet).** If Nebius has a different embedding model, switch *before* 11's full eval run. Otherwise the thresholds and the README's eval numbers get measured on NVIDIA and must be redone after the switch.
+- **Plans 19 and 20 have no slot.**
+  - 19 (liveness + face match) isn't written. It needs new dependencies and a Render 512 MB test (~2 days). Suggest: post-submission or cut.
+  - 20 (visual rebuild) depends on the design team. If the design lands by ~Oct 22, a match room + verdict card pass fits in Oct 26–27 (~6–8 h); the full rebuild doesn't.
 
 ## Currently working on
 
