@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-17, by Claude Code (B1 done after the 3-iteration cap; B3/B4 runs next, then B5 overnight)
+- **Last updated:** 2026-10-17, by Claude Code (B3 + B4 runs in progress: rules on → rules off → leak probe)
 - **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
 - **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
 
@@ -33,7 +33,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
 | 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
-| 11 | Seed personas + evaluation (v2) | 🔄 In progress | `feat/plan-11-tuning` | `56a0ebc` | Part A ✅ (`3966f5a`). Part B: B1 tuning 🔄 (iteration 1: 3/6, fallback 13%; iteration 2 next) · B2 scale test ✅ (`107c852`: discover p50 2.1 / p95 4.6 ms, context miss 9.9 / hit 1.7 ms, 88 KB/user ≈ 5,900 users in M0, stubbed judge queue ~5,900 jobs/min, 0 LLM calls) · B3 metrics 🔄 (scripts done `24f6075`: metrics.js, llm-metrics.js, leak-probe.js, judge-eval.js; run after B1) · B4 ablation 🔄 (`RULES=off` plain agents + `eval.js --rules off`, `56a0ebc`; run after B1) · B5 one full run ⬜ (ask the owner first) · B6 results ⬜ |
+| 11 | Seed personas + evaluation (v2) | 🔄 In progress | `feat/plan-11-tuning` | `56a0ebc` | Part A ✅ (`3966f5a`). Part B: B1 tuning 🔄 (iteration 1: 3/6, fallback 13%; iteration 2 next) · B2 scale test ✅ (`107c852`: discover p50 2.1 / p95 4.6 ms, context miss 9.9 / hit 1.7 ms, 88 KB/user ≈ 5,900 users in M0, stubbed judge queue ~5,900 jobs/min, 0 LLM calls) · B3 metrics 🔄 (scripts done `24f6075`: metrics.js, llm-metrics.js, leak-probe.js, judge-eval.js; run after B1) · B4 ablation 🔄 (running: 6-pair subset `--tag rules-on`, then `--rules off`, each followed by metrics + llm-metrics; then the leak probe) · B5 one full run ⬜ (ask the owner first) · B6 results ⬜ |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
 | 14 | Switch back to Nebius Token Factory | ⬜ Not started | — | — | **Due Oct 26.** Needs the Nebius account. The dry-run checklist is queued as side work. |
