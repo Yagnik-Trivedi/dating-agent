@@ -67,7 +67,7 @@ test('reply language: never outside my mix; mirrors at the configured rate', () 
 });
 
 test('steering: after the warm-up, every other turn names my next open agenda topic', () => {
-  const agenda = [{ id: 'a1', topic: 'kids', priority: 1, status: 'open' }, { id: 'a2', topic: 'smoking', priority: 0.6, status: 'open' }];
+  const agenda = [{ id: 'a1', topic: 'kids', priority: 1, status: 'open' }, { id: 'a2', topic: 'smoking', priority: 0.7, status: 'open' }];
   const quiet = { ...voice };
   const r = rng(5);
   let state = { interest: 0.5, turn: 0, topicsTouched: [] };
@@ -90,4 +90,10 @@ test('steering retries an important unanswered topic, but not a minor one', () =
   const twice = planAct({ state: { ...base, topicTries: { a1: 2, a2: 1 }, topicsTouched: ['a1', 'a2'] }, voice, perception: {}, rng: rng(3), agenda });
   assert.notEqual(twice.topic?.id, 'a1', 'after STEER_TRIES, give up');
   assert.notEqual(twice.topic?.id, 'a2', 'a minor topic is tried once');
+});
+
+test('near MAX_TURNS an open important topic is the topic, even after its tries', () => {
+  const agenda = [{ id: 'a1', topic: 'smoking', priority: 0.9, status: 'open' }];
+  const p = planAct({ state: { interest: 0.5, turn: 9, lastTopicTurn: 8, topicTries: { a1: 2 } }, voice, perception: {}, rng: rng(1), agenda, msgCount: 19 });
+  assert.equal(p.topic?.id, 'a1');
 });

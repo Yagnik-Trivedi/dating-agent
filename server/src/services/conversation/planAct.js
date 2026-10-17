@@ -73,7 +73,10 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
     // After the warm-up, every other turn steers to my next open agenda topic (v1 measured: a soft chance was ignored
     // and chats looped on one topic); in between, a random shift (more likely when bored) or a story.
     const steerTurn = (state.turn ?? 0) >= KG.STEER_AFTER_TURNS && (state.lastTopicTurn ?? -2) < (state.turn ?? 0) - 1;
-    if (nextAgenda && (steerTurn || rng() < shift)) topic = { kind: 'agenda', id: nextAgenda.id, text: nextAgenda.topic };
+    // Near MAX_TURNS an open important item is the topic every turn, tries or not (owner's tuning spec).
+    const nearEnd = msgCount >= KG.MAX_TURNS - KG.NEAR_END_MESSAGES && agenda.filter((a) => a.status !== 'answered' && important(a)).sort((a, b) => b.priority - a.priority)[0];
+    if (nearEnd) topic = { kind: 'agenda', id: nearEnd.id, text: nearEnd.topic };
+    else if (nextAgenda && (steerTurn || rng() < shift)) topic = { kind: 'agenda', id: nextAgenda.id, text: nextAgenda.topic };
     else if (stories.length && rng() < KG.STORY_RATE) { const s = pick(stories, rng); topic = { kind: 'story', id: String(s._id), text: s.object }; }
   }
 

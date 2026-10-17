@@ -34,14 +34,17 @@ const TOPIC_QUESTIONS = {
   'family involvement in relationship decisions': 'how involved is your family in this stuff?', 'career ambition': 'how do you balance work and everything else?',
   'conflict style': 'how do you usually handle disagreements?', 'alone time needed': 'how much alone time do you need?', diet: 'what do you usually eat, any rules?',
 };
+const constrainedWarning = (problems) => `every sentence of your drafts broke a rule (${problems.join(' ') || 'nothing could be sent'}). `
+  + 'Write ONE short message (under 12 words) that reacts to what they just said: either one thing about yourself backed by a listed fact (cite it) '
+  + "or honestly say you're not sure, then one short question about their message. No other claims about yourself or them, no goodbye.";
 const OPEN_QUESTIONS = ['haha tell me more?', 'oh nice, how did that start?', 'ha fair, what got you into that?'];
 const fallbackQuestion = (topic, rng) => (topic?.kind === 'agenda'
   ? `haha ok, ${TOPIC_QUESTIONS[topic.text] ?? `are you into ${topic.text} at all?`}`
   : OPEN_QUESTIONS[Math.floor(rng() * OPEN_QUESTIONS.length)]);
 const turnSeed = (seed, userId, turn) => (seed + parseInt(createHash('md5').update(`${userId}:${turn}`).digest('hex').slice(0, 8), 16)) >>> 0;
 
-/** Is my agenda settled enough for a natural end? Dealbreaker topics and everything with priority ≥ 0.5 answered. */
-const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => a.dealbreaker || a.priority >= 0.5).every((a) => a.status === 'answered');
+/** Is my agenda settled enough for a natural end? Dealbreaker topics and everything with priority ≥ END_BLOCK_PRIORITY answered. */
+const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => a.dealbreaker || a.priority >= KG.END_BLOCK_PRIORITY).every((a) => a.status === 'answered');
 
 function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering }) {
   const text = draft.messages.join(' ');
@@ -153,20 +156,38 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // A clean draft wins; otherwise the one that keeps the most words once failing sentences are dropped (eval: picking
   // by fewest problems often left nothing, and the fixed fallback read as low effort to the judges).
   const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !echoOf(s, recent)).join(' ')).length;
-  const best = attempts.find((a) => !a.problems.length)
+  let best = attempts.find((a) => !a.problems.length)
     ?? attempts.reduce((a, b) => (kept(b) > kept(a) || (kept(b) === kept(a) && b.problems.length < a.problems.length) ? b : a));
-  // Leak check on every outgoing message: keywords + embeddings against my private facts.
-  let sentences = best.draft.messages.flatMap((m) => sentencesOf(m));
-  const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
-  const leaks = leakCheck(sentences, persona.privateFacts, sentVecs);
-  // An echo that survived the one regeneration is dropped rather than sent (first v2 run: his kids question bounced back verbatim).
-  const echoes = sentences.filter((s) => echoOf(s, recent));
-  const drop = new Set([...best.grounding.drop, ...leaks.map((l) => l.sentence), ...echoes]);
-  let messages = best.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean);
+  // Only failing sentences are dropped: grounding failures, leaks (keywords + embeddings vs my private facts, on every
+  // outgoing message) and echoes that survived the regeneration (first v2 run: his kids question bounced back verbatim).
+  async function survivors(attempt) {
+    const sentences = attempt.draft.messages.flatMap((m) => sentencesOf(m));
+    const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
+    const leaks = leakCheck(sentences, persona.privateFacts, sentVecs);
+    const drop = new Set([...attempt.grounding.drop, ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
+    return { leaks, drop, messages: attempt.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean) };
+  }
+  let { leaks, drop, messages } = await survivors(best);
+  // Nothing survived: ONE constrained regeneration (owner's tuning spec): short, in-voice, on their last message, a
+  // cited fact or honest uncertainty. Never a fixed filler line: "haha fair 😄" read as low effort to the judges.
+  let fallback = 'none';
+  if (!messages.length && !plan.end && !opening) {
+    fallback = 'constrained';
+    const cPlan = { ...plan, targetWords: Math.min(plan.targetWords, 12), burst: 1, topic: null, askBack: true };
+    const draft = await generate({ prompt: { ...prompt, plan: cPlan }, tier, temperature: 0.4, userId: me, matchId: match._id, warning: constrainedWarning(best.problems) });
+    if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
+    draft.messages = draft.messages.map(oneQuestion);
+    const c = draftProblems({ draft, plan: cPlan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
+    const constrained = { draft, ...c };
+    ({ leaks, drop, messages } = await survivors(constrained));
+    if (messages.length) { attempts.push(constrained); best = constrained; }
+  }
   if (!messages.length) {
+    // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
+    if (!plan.end && !opening) fallback = 'template';
     const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    const fallback = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(plan.topic, rng);
-    messages = [lower || plan.end ? fallback : fallback[0].toUpperCase() + fallback.slice(1)];
+    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(plan.topic, rng);
+    messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
   // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
   // a topic I have a fact on → none. Unresolved → the draft's own unknown, an unsupported claim, or a hedge (fallback).
@@ -188,6 +209,6 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   return {
     messages, end, unknownAboutMe, inbox, usedFactIds: used,
     actPlan: { ...plan, interest: state.interest },
-    checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop] },
+    checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop], fallback },
   };
 });

@@ -73,6 +73,17 @@ function transcriptMd(job, a, b, res, predicted, decisions) {
   ].join('\n');
 }
 
+// Owner's tuning target: < 5% of agent messages are a template fallback, and no fixed filler line ever.
+const FILLER = /^(haha fair 😄|oh nice, i like that|ha that makes sense)$/i;
+const fallbacksOf = (messages) => {
+  const agent = messages.filter((m) => m.authoredBy === 'agent');
+  return {
+    agentMsgs: agent.length,
+    templateFallbacks: agent.filter((m) => m.checks?.fallback === 'template' || FILLER.test(m.text.trim())).length,
+    constrained: agent.filter((m) => m.checks?.fallback === 'constrained').length,
+  };
+};
+
 let stopped = null;
 await mapLimit(jobs, concurrency, async (job) => {
   if (stopped) return;
@@ -98,6 +109,7 @@ await mapLimit(jobs, concurrency, async (job) => {
     scores: [a, b].map((u) => decisions.find((x) => String(x.userId) === String(u._id))?.confidence ?? null),
     stopReason: res.match.agentState?.stopReason ?? null, status: res.match.status,
     turns: res.messages.length, tokens: res.tokens, smartCalls: res.smartCalls, costUsd, seconds: res.seconds, file,
+    ...fallbacksOf(res.messages),
   };
   writeFileSync(RAW, `${JSON.stringify(raw, null, 2)}\n`);
   console.log(`  ${predicted === job.pair.expected ? '✓' : '✖'} ${job.key}: predicted ${predicted} (${res.match.agentState?.stopReason ?? '—'}, ${res.messages.length} msgs, ${res.tokens} tokens, ${res.seconds} s)`);
@@ -131,13 +143,14 @@ const md = [
   `- **Gate**: ${gated.filter((r) => r.predicted === 'gated').length}/${gated.length} gated pairs never became a chat`,
   `- **Fake detection**: ${fakes.filter((r) => r.predicted === 'flagged_fake').length}/${fakes.length} fake pairs flagged; ${normal.filter((r) => r.predicted === 'flagged_fake').length} genuine pairs wrongly flagged`,
   multi.length ? `- **Stability**: ${stable}/${multi.length} pairs got the same verdict on every run` : null,
+  `- **Fallback rate** (template or filler, target < 5%): ${pct(rows.reduce((s, r) => s + (r.templateFallbacks ?? 0), 0), rows.reduce((s, r) => s + (r.agentMsgs ?? 0), 0))} of agent messages; constrained regenerations: ${rows.reduce((s, r) => s + (r.constrained ?? 0), 0)}`,
   `- **Mean turns to verdict**: ${mean(normal.map((r) => r.turns)).toFixed(1)} messages`,
   `- **Mean tokens per pair**: ${Math.round(mean(normal.map((r) => r.tokens))).toLocaleString('en')} (fake pairs: ${Math.round(mean(fakes.map((r) => r.tokens))).toLocaleString('en')}); total ${rows.reduce((s, r) => s + r.tokens, 0).toLocaleString('en')} tokens across ${rows.length} runs`,
   `- **Cost per pair** at the configured \`LLM_PRICE_*\`: $${mean(normal.map((r) => r.costUsd)).toFixed(4)}${env.LLM_PROVIDER === 'nvidia' ? ' (NVIDIA free tier: prices are 0)' : ''}`,
   `- **Smart-tier calls**: ${rows.reduce((s, r) => s + r.smartCalls, 0)} (max 2 per pair: one judge per side; a fallback to mid is recorded per decision)`, '',
   '## Every pair', '',
-  '| pair | people | expected | predicted | judges (confidence) | stop | turns | tokens | why it was labelled | transcript |', '|---|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.id}${r.run > 1 ? ` #${r.run}` : ''} | ${r.names.join(' × ')} | ${r.expected} | ${r.predicted === r.expected ? '✓ ' : '✖ '}${r.predicted} | ${r.verdicts.map((v, i) => `${v ?? '—'}${r.scores[i] != null ? ` (${r.scores[i]})` : ''}`).join(' / ')} | ${r.stopReason ?? '—'} | ${r.turns} | ${r.tokens.toLocaleString('en')} | ${r.reason} | [link](${r.file}) |`),
+  '| pair | people | expected | predicted | judges (confidence) | stop | turns | fallbacks | tokens | why it was labelled | transcript |', '|---|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.id}${r.run > 1 ? ` #${r.run}` : ''} | ${r.names.join(' × ')} | ${r.expected} | ${r.predicted === r.expected ? '✓ ' : '✖ '}${r.predicted} | ${r.verdicts.map((v, i) => `${v ?? '—'}${r.scores[i] != null ? ` (${r.scores[i]})` : ''}`).join(' / ')} | ${r.stopReason ?? '—'} | ${r.turns} | ${r.templateFallbacks ?? '—'}/${r.agentMsgs ?? '—'} | ${r.tokens.toLocaleString('en')} | ${r.reason} | [link](${r.file}) |`),
   '',
 ].filter((l) => l !== null).join('\n');
 writeFileSync(new URL('results.md', DIR), `${md}\n`);
