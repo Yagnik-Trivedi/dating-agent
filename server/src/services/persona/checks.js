@@ -14,9 +14,15 @@ const ascii = (t) => String(t).replace(/[’‘`´]/g, "'"); // models write "ha
 const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|mujhe)\b/i;
 // Reactions to what THEY said are not claims about me ("i love that!", "i'm so glad").
 const REACTION = /^\W*(haha\w*|lol|oh|ah+|aw+|wow|omg|ooh|yes|yeah|nice|true|fair|okay|ok)?[\s,!.]*(i (really |totally |kinda )?(love|like|adore|agree|get|see|feel|know|hear|bet|mean|hope|think|guess|believe) (that|this|it|you|how|what|so|the way)\b|i('m| am) (so |really )?(glad|happy|sorry|curious|jealous|intrigued|impressed)\b|i (can't|cannot) wait\b|i (totally |completely )?(agree|understand)\b)/i;
+// "I saw you enjoy trekking" is a statement about THEM (checked as one), not a claim about me (tuning it1).
+const ABOUT_THEM_LEAD = /\bi (saw|noticed|read|see) (that )?(you|your)\b/i;
 const INTERROGATIVE = /^\W*(what|how|do|did|does|have|has|are|is|would|will|where|when|which|who|why|could|can|should)\b/i;
-// Honest uncertainty ("never tried it", "not sure") is what the plan asks for when there's no fact: always allowed.
-const HONEST = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played|really)|have not|not sure|don'?t know|no idea|not really (into|a)|not much of a|can'?t say|don'?t (really )?follow|not (really |much )?(a fan|into)|still figuring|not really sure|pata nahi|idea nahi|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
+// Honest uncertainty is what the plan asks for when there's no fact: always allowed. Two kinds: NO_EXPERIENCE denies
+// something ("never tried it", "not into it") and must not contradict a like; UNSURE ("not sure", "never really thought
+// about it") never does (tuning it1: "not sure about trekking and sketching together" was dropped though she likes both).
+const NO_EXPERIENCE = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played)|have not (tried|done|been)|not really (into|a)|not much of a|don'?t (really )?follow|not (really |much )?(a fan|into)|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
+const UNSURE = /\b(not (really )?sure|don'?t know|no idea|can'?t say|still figuring|(never|not|haven'?t) really thought|haven'?t thought|pata nahi|idea nahi)\b/i;
+const HONEST = { test: (s) => NO_EXPERIENCE.test(s) || UNSURE.test(s) };
 // "you're into X", "your trekking pic", "you love …": statements about the other person.
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
@@ -53,7 +59,8 @@ export function styleCheck(text, plan, voice = {}, recentTexts = []) {
   if (usesHindi && plan.language?.primary === 'en' && !plan.language.codeSwitch) problems.push('the plan says English only this time');
   // Same first two words as a recent message ("Arre yaar, …" ×13 in sim h): vary how messages start.
   const start = (t) => words(ascii(t)).slice(0, 2).join(' ').toLowerCase();
-  if (words(text).length >= 3 && recentTexts.some((t) => start(t) === start(text))) problems.push(`starts like a recent message ("${start(text)}"); open differently`);
+  // From the third time only (tuning it1 blocked a second "not sure…"; the target was "Arre yaar" ×13).
+  if (words(text).length >= 3 && recentTexts.filter((t) => start(t) === start(text)).length >= 2) problems.push(`starts like a recent message ("${start(text)}"); open differently`);
   const echo = echoOf(text, recentTexts);
   if (echo) problems.push(`repeats earlier phrasing ("${echo}")`);
   // Reordered mirroring ("sunrise trek to sinhagad then misal" → "sinhagad sunrise trek then misal") slips past the
@@ -102,9 +109,9 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
   const valid = [];
   // "Never tried X" is honest only if X isn't something I'm on record as liking (myLikes: labels of ALL my likes).
   const likedIn = (s) => myLikes.find((l) => l.length >= 4 && norm(s).join(' ').includes(norm(l).join(' ')));
-  for (const s of sentencesOf(text).filter((x) => HONEST.test(x) && likedIn(x))) { problems.push(`says "${s}" but you like ${likedIn(s)}`); drop.add(s); }
+  for (const s of sentencesOf(text).filter((x) => NO_EXPERIENCE.test(x) && likedIn(x))) { problems.push(`says "${s}" but you like ${likedIn(s)}`); drop.add(s); }
   for (const c of claims) {
-    if (!c.factIds?.length && HONEST.test(c.text)) { if (!likedIn(c.text)) valid.push(c); continue; }
+    if (!c.factIds?.length && HONEST.test(c.text)) { if (!(NO_EXPERIENCE.test(c.text) && likedIn(c.text))) valid.push(c); continue; }
     const bad = (c.factIds ?? []).filter((id) => !facts.has(id));
     if (!c.factIds?.length || bad.length) { problems.push(`"${c.text}" cites ${bad.length ? `unknown facts (${bad.join(', ')})` : 'no fact'}`); continue; }
     const contra = c.factIds.map((id) => facts.get(id)).find((f) => ['likes', 'dislikes', 'opinion'].includes(f.predicate)
@@ -118,7 +125,7 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
     // the second half matches a valid claim (first v2 run).
     // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
     // rcb!" passed as no claim in agent-check run 4).
-    const aboutMe = (c) => FIRST_PERSON.test(c) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
+    const aboutMe = (c) => (FIRST_PERSON.test(c) && !ABOUT_THEM_LEAD.test(c)) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
     const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);
