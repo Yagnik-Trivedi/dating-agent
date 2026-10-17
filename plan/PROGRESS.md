@@ -74,7 +74,9 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
 - **Step 3 progress (`d5fdbea`):**
   - a) quotas ✓, b) restyle script ✓ (NVIDIA Super returned inputs unchanged even with measured retries, so most voices were hand-written), c) `check-personas` exits 0 ✓, d) incremental seed ✓ (`User.seedHash`, `--force`).
   - 38 personas (8 new). Before → after: Hinglish 1 → 7, Devanagari 0 → 3, Gujarati 0 → 2, Tamil/Marathi 0 → 2, code-switching 3 → 17, terse 1 → 5. Cities: 7 → 5 demo cities, each with ≥ 3 visible seeds for both new users (was 1–4). Pairs failing the gate: 10 → 0.
-  - **Now:** the one full re-seed (~20 min), then e) re-run the 08/09 checks + eval `--limit 6`, merge.
+  - Full re-seed: **38 graphs in 1,666 s** (~28 min, concurrency 2, no failures). An immediate re-run: **0 s, 38 unchanged**.
+  - `eval.js` restored from `wip/plan-11b` and adapted to v2 (`60130a7`): MatchDecision verdicts, `gated`, judge receipts.
+  - **Now:** e) agent-check + judge-check on the new data, then an eval subset of 6 varied pairs (c1, c7, i1 gated, i2, i6, f1; the first 6 by `--limit` are all compatible), then merge.
 
 **Side work: paused by the owner's order above** (item 1 is done; the rest happens in Phase 2/3):
 
