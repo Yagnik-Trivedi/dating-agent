@@ -89,8 +89,11 @@ const fallbacksOf = (messages) => {
 };
 
 let stopped = null;
+// --stop-at HH:MM (local time): start no new pair after then; running pairs finish. Resume later with --resume.
+const stopAt = opt('stop-at') ? (() => { const [h, m] = opt('stop-at').split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); if (d < Date.now() - 12 * 3600_000) d.setDate(d.getDate() + 1); return d; })() : null;
 await mapLimit(jobs, concurrency, async (job) => {
   if (stopped) return;
+  if (stopAt && Date.now() >= stopAt) { stopped = `stop time ${opt('stop-at')} reached`; return; }
   const today = await usageToday();
   const need = EST[job.pair.expected === 'flagged_fake' ? 'fake' : 'normal'];
   if (today.totals.tokens + need > env.LLM_DAILY_TOKENS_GLOBAL || today.paused) {
