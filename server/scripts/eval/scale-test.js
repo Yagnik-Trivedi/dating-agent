@@ -2,6 +2,7 @@
 // Inserts N synthetic users (random gates, ~60 concept-linked facts, a voice profile, 20 voice samples) with every
 // production index, then measures discover/gate query p50/p95, per-message context build (persona cache miss/hit) and
 // storage per user.   node scripts/eval/scale-test.js [--users 2000]   → eval/results/scale.md
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 
 process.env.LLM_ENABLED = 'false'; // any LLM or embedding call would throw: this test must make none
@@ -30,7 +31,7 @@ const pctl = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s[Math
 const ms = (x) => `${x.toFixed(1)} ms`;
 
 const t0 = Date.now();
-await start();
+const uri = await start();
 await Promise.all(Object.values(M).map((Model) => Model.createIndexes()));
 console.log(`In-memory replica set up; ${Object.keys(M).length} models indexed. Seeding ${N} synthetic users…`);
 
@@ -53,7 +54,7 @@ for (let i = 0; i < N; i++) {
 const BATCH = 250;
 for (let i = 0; i < N; i += BATCH) {
   const chunk = users.slice(i, i + BATCH);
-  await M.User.collection.insertMany(chunk.map((u) => ({ _id: u._id, email: `synth${i}-${u._id}@synthetic.local`, passwordHash: 'x', name: u.profile.name, consentAgent: true, consentAt: new Date(), agentMode: 'auto', graphVersion: 1, onboarding: { status: 'done' } })));
+  await M.User.collection.insertMany(chunk.map((u) => ({ _id: u._id, email: `synth${i}-${u._id}@synthetic.local`, synthetic: true, passwordHash: 'x', name: u.profile.name, consentAgent: true, consentAt: new Date(), agentMode: 'auto', graphVersion: 1, onboarding: { status: 'done' } })));
   await M.Profile.insertMany(chunk.map((u) => ({ userId: u._id, ...u.profile, gate: u.gate })));
   await M.KgFact.insertMany(chunk.flatMap((u) => Array.from({ length: 60 }, (_, k) => {
     const loose = k % 10 === 0; // ~10% concept-less facts carry their own vector
@@ -108,6 +109,24 @@ for (const name of ['users', 'profiles', 'kgfacts', 'voiceprofiles', 'voicesampl
 const conceptStat = await stat('concepts');
 const perUser = Object.values(per).reduce((s, x) => s + x.data + x.index, 0) / N;
 const kb = (b) => `${(b / 1024).toFixed(1)} KB`;
+// The production storage report (plan 17 §7), run against this in-memory database.
+const storageReport = execFileSync(process.execPath, ['scripts/storage-report.js'], { cwd: new URL('../../', import.meta.url), env: { ...process.env, MONGODB_URI: uri }, encoding: 'utf8' })
+  .split(/\r?\n/).filter((l) => l && !l.startsWith('⚠')).join('\n');
+
+// 4. Judge queue throughput: the real job queue at the configured concurrency, the judge stubbed (it reads the user's
+// graph and events like the real one, no LLM).
+const { registerJob, enqueue, startWorker, stopWorker } = await import('../../src/services/jobs/queue.js');
+registerJob('judge', async ({ userId }) => {
+  await Promise.all([M.KgFact.find({ subjectId: userId, observerId: null }).lean(), M.ChatEvent.find({ observerId: userId }).lean()]);
+  return { decision: 'unsure' };
+});
+const JUDGE_JOBS = 300;
+for (let i = 0; i < JUDGE_JOBS; i++) await enqueue('judge', { userId: String(pick(users)._id) }, { dedupeKey: `judge:stub:${i}` });
+const tj = t();
+startWorker();
+while (await M.Job.countDocuments({ type: 'judge', status: { $in: ['queued', 'running'] } })) await new Promise((r) => setTimeout(r, 200));
+const judgeSecs = (t() - tj) / 1000;
+await stopWorker();
 const M0 = 512 * 1024 * 1024;
 
 const md = [
@@ -120,7 +139,9 @@ const md = [
   `| Context build per message, persona cache **hit** | ${ms(pctl(ctx.hit, 50))} | ${ms(pctl(ctx.hit, 95))} |`, '',
   `- Discover uses index \`${indexName}\`; ${examined ?? '?'} profiles examined for one query.`,
   `- **Storage per user** (data + indexes): ${kb(perUser)} → about **${Math.floor(M0 / perUser).toLocaleString('en')} users fit in Atlas M0 (512 MB)**. Breakdown per user: ${Object.entries(per).map(([k, v]) => `${k} ${kb((v.data + v.index) / N)}`).join(', ')}.`,
-  `- Shared concepts: ${kb(conceptStat.data + conceptStat.index)} in total for 400 concepts (embedded once for everyone).`, '',
+  `- Shared concepts: ${kb(conceptStat.data + conceptStat.index)} in total for 400 concepts (embedded once for everyone).`,
+  `- **Judge queue throughput** (real queue, judge concurrency ${KG.JOB_CONCURRENCY.judge}, stubbed judge reading the user's graph + events): ${JUDGE_JOBS} jobs in ${judgeSecs.toFixed(1)} s = **${Math.round((JUDGE_JOBS / judgeSecs) * 60).toLocaleString('en')} jobs/min**. With the real LLM judge the bound is the provider (one smart/mid call per job).`, '',
+  '### `storage-report.js` on this database (BSON sizes, before indexes)', '', '```', storageReport, '```', '',
 ].join('\n');
 mkdirSync(new URL('../../eval/results/', import.meta.url), { recursive: true });
 writeFileSync(new URL('../../eval/results/scale.md', import.meta.url), `${md}\n`);
