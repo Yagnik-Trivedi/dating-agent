@@ -84,9 +84,10 @@ try {
   assert.ok(r[0].actPlan && r[0].checks, 'act plan + checks stored on the message');
   console.log(`✓ reply: "${r.map((x) => x.text).join(' / ')}" [plan ~${r[0].actPlan.targetWords}w ${r[0].actPlan.language.primary}${r[0].actPlan.topic ? ` →${r[0].actPlan.topic.text}` : ''}]`);
 
-  const before = await InboxItem.countDocuments({ userId: meera._id, matchId: m1._id });
+  // A new item for this match, or (dedupe per topic) this match's question merged into Meera's open item.
+  const before = await InboxItem.countDocuments({ userId: meera._id, $or: [{ matchId: m1._id }, { 'askedAgain.matchId': m1._id }] });
   r = await say(m1._id, rohan, "random question but what's your favourite IPL team?");
-  const asked = await InboxItem.find({ userId: meera._id, matchId: m1._id }).lean();
+  const asked = await InboxItem.find({ userId: meera._id, $or: [{ matchId: m1._id }, { 'askedAgain.matchId': m1._id }] }).lean();
   console.log(`  unknown question → "${r.map((x) => x.text).join(' / ')}"; inbox: ${asked.slice(before).map((x) => `"${x.question}"`).join(', ') || '(none)'}`);
   assert.ok(asked.length > before, 'an "ask my human" inbox item for Meera');
   console.log('✓ unknown question → deflection + inbox item for her human');
