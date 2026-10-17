@@ -24,7 +24,7 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | 🔄 In progress | `feat/plan-09-judges` | `10844d9` | Code + fixes done, `npm test` 64/64. Live: judge-check passed all but date ideas (fixed since); needs one more judge-check + agent-check + seed-check. |
-| 10 | Frontend v2 patch | ⬜ Not started | — | — | Functional changes only. Visual restyling waits for plan 20's design. |
+| 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
 | 11 | Seed personas + evaluation (v2) | ⏸ Paused | `wip/plan-11b` | `a8fc99c` | **Stopped at:** the v1 eval harness (partial), superseded by v2. **Resume:** after 10, write v2 on a new branch reusing `scripts/lib/runPair.js` + the `eval.js` report from `wip/plan-11b`; add ≥ 3 eligible seeds per demo city. |
 | 12 | Deploy on free tiers + keep-alive | ⬜ Not started | — | — | Prep (render.yaml, keep-alive, self-ping, DEPLOY.md) is queued as side work. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
@@ -33,41 +33,31 @@ Build order (plan 16 / `00-START-HERE`): 02 → 03 → 04 → 17 → 05 → 06 �
 | 16 | KG upgrade execution | 🔄 In progress | — | — | Steps 1–3 done; step 4: 17, 05, 06, 07, 08 done, 09 in progress. |
 | 17 | Jobs, storage and indexes | ✅ Done | main | `3522f63` | Job queue, compact vectors, gate query, indexes. |
 | 18 | Architecture decisions | ⬜ Not started | main | (this commit) | Decision doc, now committed. Not folded into the plans yet; §13 maps it to 05/08/09/10/11/17 and a new 19. Needs a decision (see Blocked). |
-| 19 | Verification (liveness + face match) | ⬜ Not started | — | — | **No file yet.** Plan 18 §13 says to create `19-verification.md`. |
-| 20 | UI design brief | 🚫 Not for Claude Code (design team) | main | (this commit) | Prompt for Claude Design. Claude Code does not touch it. |
+| 19 | Verification (liveness + face match) | 🚫 Not for Claude Code | — | — | Owner's decision 2026-10-17. No file. |
+| 20 | UI design brief | 🚫 Not for Claude Code (design team) | main | `11bdcf6` | The owner hands over the design for Phase 2. |
 | ref | kg-upgrade-reference | ✅ Done (reference) | main | `f91d072` | Implementation detail where plan 15 is silent. |
 
-## Owner's order (decided 2026-10-17)
+## Owner's order (updated 2026-10-17, replaces the earlier order)
 
-Finish **all development first**, then go live, then submit. No side work in between.
+**Backend and testing first, frontend last, then deploy and submit.** No UI or `client/` work until the owner hands over the frontend design.
 
-1. **Phase 1, development (now → ~Oct 24):** plan 09 (judges) → plan 10 (screens for report + replay) → plan 11 (seed personas + evaluation + tuning) → fix what the tests find. Plans 18/19: ask the owner at the end of plan 11.
-2. **Phase 2, go live (~Oct 25 → 28):** plan 14 (switch to the Nebius key) → plan 12 (deploy + keep-alive).
-3. **Phase 3, submit (Oct 29):** plan 13 (README, video, Devpost).
+1. **Phase 1, backend + tests (now):**
+   - finish 09 (live checks, merge)
+   - 11A: seed personas + re-seed
+   - 11B: evaluation harness, ablations, scale test, 20-pair runs
+   - tuning: conversation quality and judge calibration
+   - fix whatever the tests find
 
-Humans, before Phase 2: Nebius account + credits, Atlas login, Tavily key (optional).
+   Backend-only parts of later plans also go here when they need no UI: plan 12's `trust proxy`, Socket.IO CORS, the log level, the credit guard and `seed.js --judges`.
+2. **Phase 2, frontend:** plan 10 (v2 screens) built from the owner's design (which replaces plan 20's brief), including plan 12's wake-up screen.
+3. **Phase 3, go live:**
+   - 14: switch to the Nebius key. Smoke-test the key as soon as it exists; if the embedding model differs, switch before 11's final eval numbers.
+   - 12: render.yaml, keep-alive, DEPLOY.md
+4. **Phase 4, submit:** 13 (README, Devpost; the video is by humans).
 
-### Estimates (Claude Code, 2026-10-17)
+**Not for Claude Code:** 19 (verification) and 20 (design brief).
 
-Hours of work include waiting for live LLM runs on NVIDIA's free tier (simulation ~12–15 min, full re-seed ~30 min).
-
-| # | Step | Est. hours | Target dates |
-|---|---|---|---|
-| 1 | 09: finish live checks (judge-check, agent-check, seed-check), Status, merge | ~1 | Oct 17 |
-| 2 | 10: frontend v2 (signup basics, onboarding v2, hub review, My notes, report receipts, replay, settings) + headless check | 5–7 | Oct 17–19 |
-| 3 | 11A: 30 personas (languages, styles, ≥ 3 seeds per city, pairs.json) + re-seed | 4–6 | Oct 19–20 |
-| 4 | 11B: eval scripts + scale test + 20 pairs × rules on/off (~40 chats ≈ 5 h of runs at concurrency 2) | 10–14 | Oct 20–23 |
-| 5 | Tuning: conversation quality (Meera × Ishaan came out Maybe; filler/looping), then re-measure | 4–8 | Oct 23–24 |
-| 6 | 14: Nebius switch (+2–3 h if the embedding model changes: re-embed, recalibrate thresholds, re-seed) | 1–5 | Oct 25 (due Oct 26) |
-| 7 | 12: render.yaml, keep-alive, self-ping, wake-up screen, judge accounts, DEPLOY.md (+ ~2 h of human dashboard work) | 3–4 | Oct 25–26 |
-| 8 | 13: README + SUBMISSION.md (video is human work, ~half a day) | 2–3 | Oct 27–28 |
-| | **Total** | **~30–48 h** | about 5–6 h/day from Oct 17 to Oct 28 |
-
-**Adjustments to consider:**
-- **Smoke-test the Nebius key as soon as it exists (15 min, no switch yet).** If Nebius has a different embedding model, switch *before* 11's full eval run. Otherwise the thresholds and the README's eval numbers get measured on NVIDIA and must be redone after the switch.
-- **Plans 19 and 20 have no slot.**
-  - 19 (liveness + face match) isn't written. It needs new dependencies and a Render 512 MB test (~2 days). Suggest: post-submission or cut.
-  - 20 (visual rebuild) depends on the design team. If the design lands by ~Oct 22, a match room + verdict card pass fits in Oct 26–27 (~6–8 h); the full rebuild doesn't.
+Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
 ## Currently working on
 
