@@ -31,6 +31,11 @@ const schema = z.object({
   MODEL_MID: optional,
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
+  // Plan 19 live check: a Nemotron VL model (on Token Factory, copy its ID from GET /v1/models; plan 14 checklist).
+  MODEL_VISION: field(z.string().trim().default('nvidia/nemotron-3.5-super-vl-120b-a12b')), // NVIDIA lists this Nemotron VL; nano-12b-v2-vl isn't on our account
+  LIVE_CHECK_ENABLED: bool(true),
+  LIVE_CHECK_MAX_PER_DAY: field(z.coerce.number().int().positive().default(5)),
+  LIVE_CHECK_TTL_S: field(z.coerce.number().int().positive().default(90)),
   TAVILY_API_KEY: optional,
   // Tavily has 1,000 credits in total (dev + seeding + demo + judging). A basic search = 1 credit; counted per database.
   TAVILY_MAX_SEARCHES: field(z.coerce.number().int().nonnegative().default(30)), // all-time cap; production sets it in render.yaml
@@ -39,6 +44,7 @@ const schema = z.object({
   LLM_REASONING_FAST: bool(false),
   LLM_REASONING_MID: bool(true),
   LLM_REASONING_SMART: bool(true),
+  LLM_REASONING_VISION: bool(false),
 
   // Rate limiting + budgets
   LLM_MAX_RPM: field(z.coerce.number().int().positive().default(35)),
@@ -53,6 +59,7 @@ const schema = z.object({
   LLM_PRICE_MID: price,
   LLM_PRICE_SMART: price,
   LLM_PRICE_EMBED: price,
+  LLM_PRICE_VISION: price,
 
   // Agent conversation (plan 08)
   AGENT_DEBOUNCE_MS: field(z.coerce.number().int().nonnegative().default(4000)),

@@ -41,6 +41,8 @@ services:
         sync: false
       - key: MODEL_EMBED
         sync: false
+      - key: MODEL_VISION # plan 19 live check: the Nemotron VL ID from GET /v1/models
+        sync: false
       - key: TAVILY_API_KEY
         sync: false
       - key: TAVILY_MAX_SEARCHES # of the 1,000 Tavily credits: ~700 for production (pre-warm + judges + demo + judging)
@@ -54,6 +56,8 @@ services:
         sync: false
       - key: LLM_PRICE_EMBED
         sync: false
+      - key: LLM_PRICE_VISION
+        sync: false
       - key: LLM_HARD_CAP_USD
         value: "35"
       - key: LLM_DAILY_CALLS_PER_USER # credit guard for judging (seed accounts are exempt)
@@ -62,3 +66,5 @@ services:
         value: "2"
       - key: DEMO_PACING # fast typing delays for seed + judge accounts only
         value: fast
+      - key: LIVE_CHECK_ENABLED # plan 19; set false if it misses its Oct 25 cut-off
+        value: "true"

@@ -19,6 +19,7 @@ const Replay = lazy(() => import('./pages/Replay'))
 const Report = lazy(() => import('./pages/Report'))
 const Settings = lazy(() => import('./pages/Settings'))
 const You = lazy(() => import('./pages/You'))
+const LiveCheck = lazy(() => import('./pages/LiveCheck'))
 
 /** Not logged in → /login. Onboarding not done → /onboarding (unless this page is part of onboarding). */
 function Protected({ children, onboarding = false }) {
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/matches/:id/replay" element={<Replay />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/you" element={<You />} />
+              <Route path="/live-check" element={<LiveCheck />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

@@ -12,6 +12,7 @@ import { authRouter } from './routes/auth.js';
 import { discoverRouter } from './routes/discover.js';
 import { inboxRouter } from './routes/inbox.js';
 import { kgRouter } from './routes/kg.js';
+import { liveCheckRouter } from './routes/liveCheck.js';
 import { matchesRouter } from './routes/matches.js';
 import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
@@ -45,7 +46,7 @@ app.get('/health/deep', (req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
-app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter);
+app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, liveCheckRouter);
 
 app.use(notFound);
 app.use(errorHandler);

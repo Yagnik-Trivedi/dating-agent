@@ -3,7 +3,7 @@
 @import "./styles/prelude-app.css";
 
 /* Prelude tokens (owner's design, Frontend-Design/04-direction): light, then lamplight (dark). Each colour has one job:
-   accent = your actions · shared = things you share · trust = verified / private / in control · flag = fake warnings. */
+   accent = your actions · shared = things you share · trust = checked / private / in control · flag = fake warnings. */
 :root {
   --bg: #F8F3EC; --surface: #FFFCF7; --sunken: #F1E9DF; --ink: #33241C; --ink-2: #69594E; --muted: #776558;
   --line: #E6DACC; --line-strong: #D3C2AF; --accent: #A04E2E; --accent-press: #8D4427; --on-accent: #FFF8F1;

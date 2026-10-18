@@ -11,6 +11,9 @@ const profileSchema = new mongoose.Schema({
   gender: String,
   interestedIn: [String],
   photos: [String],
+  // Plan 19: the ONLY live-check data another user (or their agent / trust check) may see. Never set true in seed data.
+  liveChecked: { type: Boolean, default: false },
+  liveCheckedAt: Date,
   bio: String,
   prompts: [{ q: String, a: String, _id: false }],
   tags: {

@@ -26,7 +26,7 @@ export async function getMatchFor(matchId, userId) {
 }
 
 const summary = (profile, userId) => (profile
-  ? { userId: profile.userId, name: profile.name, age: profile.age, city: profile.city, photo: profile.photos?.[0] ?? null }
+  ? { userId: profile.userId, name: profile.name, age: profile.age, city: profile.city, photo: profile.photos?.[0] ?? null, liveChecked: Boolean(profile.liveChecked) }
   : { userId, name: 'Deleted user', age: null, city: null, photo: null });
 
 /** Row for GET /matches and the match:new event. */

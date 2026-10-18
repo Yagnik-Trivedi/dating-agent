@@ -23,7 +23,7 @@ The knowledge graph and agent engine were rebuilt as v2 (design: `15-knowledge-g
 |---|---|---|
 | Done | 02 → 03 → 04 → 17 → 05 → 06 → 07 → 08 → 09 | v2 knowledge graph and engine |
 | 1. Backend + tests (now) | 11 (Part B: tuning, scale test, metrics, ablation, one full run) | Reduced scope, see plan 11 |
-| 2. Frontend | 10 (from the owner's final design; includes the small backend additions it lists) | No `client/` work before the design hand-over |
+| 2. Frontend | 19 (live check: backend + vision script now, plain screen; cut-off Oct 25) → 10 (from the owner's final design; includes the small backend additions it lists) | No restyling of `client/` before the design hand-over; plan 19's new plain screen is the exception |
 | 3. Go live | 14 (switch to Nebius, by Oct 26) → 12 (deploy, keep-alive, judge accounts, demo pacing) | |
 | 4. Submit | 13 (README, Devpost; the video is by humans) | Feature freeze Oct 28, submit Oct 29 |
 
