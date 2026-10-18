@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 08:50 IST, by Claude Code (B5 8/20 done; remaining backend built on `feat/backend-finish`, 90/90 tests)
+- **Last updated:** 2026-10-18 10:15 IST, by Claude Code (B5 done: 4/17, gate 1/1, fakes 2/2; follow-ups running)
 - **Main-line branch:** `feat/plan-11-tuning` (B5 running) → `feat/backend-finish` (branched from it) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -71,7 +71,14 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
 
 **Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
 
-**B5 (final full run, `feat/plan-11-tuning`):** 8/20 done at 08:45, ETA ~10:05 IST. So far: gated ✓; 6 of 7 compatible pairs → Maybe (one judge unsure) and c2 → Not compatible. Recorded as findings, no mid-run fixes.
+**B5 ✅ (final full run, `feat/plan-11-tuning` `72a9a9e`, 07:51 → 10:05 IST, RULES=on, 2 pairs at a time):**
+- **Results:** 4/17 correct (24%); 1 harmful swap (c2: compatible → Not compatible); gate 1/1; fakes 2/2, 0 genuine pairs flagged.
+- **Fallback rate:** 7% (22 template + 17 constrained of 294 agent messages); target < 5%.
+- **Cost:** ~101k tokens per pair (1.73M total); 17.3 messages to a verdict.
+- **Confusion:** compatible → maybe 6, incompatible 1. Maybe → maybe 2, incompatible 2. Incompatible → maybe 4, incompatible 2. **The judges cluster on Maybe:** one side says "unsure" in most chats, so the threshold can't help. Calibration over raw-full + raw-rules-on is flat (5/20 at every value from 0.50 to 0.95), so `JUDGE_YES_MIN` stays 0.6.
+- **Offline metrics** (`eval/results/metrics-full.md`): style distance 0.16, language-mix distance 0.06, Devanagari script kept 1/1, ask-back 0.58, distinct-2 0.89. Observer notes: precision 0.27, recall 0.61.
+- **Judge-agreement set exported:** `eval/labels/`, 10 transcripts (yes 2 / unsure 3 / no 5). **Needs the team to fill `human_label` in `labels.csv`.**
+- **In progress:** `llm-metrics --tag full` (unsupported self-claims, agreement rate), then B6 (`latest.md` + the README Evaluation section).
 
 **Backend finish on `feat/backend-finish`** (worktree, branched from `feat/plan-11-tuning`; `npm test` 90/90, no LLM needed):
 - ✅ KG learning from my own side (plan 08 §3, plan 15 stage 7):
