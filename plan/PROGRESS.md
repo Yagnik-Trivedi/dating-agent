@@ -1,14 +1,77 @@
 # Progress tracker
 
-The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
+The team's single status board. Claude Code updates it after every plan-30 step and **commits locally**. Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-18 late night, by Claude Code (plan 19 built on feat/plan-19-live-check; README + SUBMISSION drafted; new NVIDIA key fast; judge accounts seeding)
-- **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
-- **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
+- **Last updated:** 2026-10-18, by Claude Code (plan files reorganised; plan 30 started)
+- **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
+- **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
-Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
+Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · ⬜ Not started · ✂️ Cut · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
+
+## Plan 30: final sprint (the only plan with open work)
+
+Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
+
+| Step | What | Status | Commit | Notes / next step |
+|---|---|---|---|---|
+| S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ⬜ | — | First. |
+| S1 | Speed (two-phase onboarding, agent pacing) | ⬜ | — | **STOP after step 0** (speed-before numbers). |
+| S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | ⬜ | — | Right after S1. |
+| S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ⬜ | — | |
+| S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ⬜ | — | Cloudinary stub if `CLOUDINARY_*` missing. |
+| S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
+| S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
+| S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
+
+Local commits since the last push (`780d210`):
+- `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
+- `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
 
 ## Plans
+
+| Plan | Title | Status | Where |
+|---|---|---|---|
+| 00 | Start here | 📖 | `plan/00-START-HERE.md` |
+| 01 | Accounts and local setup | 🚫 Humans | `plan/01-accounts-and-setup.md` |
+| 02–11, 17, 19 | Build plans (scaffold → live check) | ✅ 📦 | `plan/archive/` (results in CLAUDE.md Status) |
+| 12 | Deploy on free tiers + keep-alive | ✅ Deployed 2026-10-18 | `plan/12-deploy-free-and-keepalive.md` |
+| 13 | Submission | ⬜ (S7) | `plan/13-submission.md` |
+| 14 | Switch to Nebius Token Factory | ⬜ (S7, Oct 26) | `plan/14-switch-to-nebius.md` |
+| 15 | Knowledge graph: final design | 📖 Source of truth | `plan/15-knowledge-graph-final.md` |
+| 16 | KG upgrade execution | 📦 | `plan/archive/16-kg-upgrade-execution.md` |
+| 18 | Architecture decisions | 📖 Partly adopted | `plan/18-architecture-decisions.md` |
+| 20 | UI design brief | 📦 Replaced by Round 7 | `plan/archive/20-ui-design-brief.md` |
+| 21, 22 | Speed, dating-app core | 📦 Merged into 30 | `plan/archive/21-…`, `plan/archive/22-…` |
+| 30 | Final sprint | 🔄 | `plan/30-final-sprint.md` |
+
+## Blocked / needs a human
+
+- **Cloudinary** (`CLOUDINARY_*`) and **Resend** (`RESEND_API_KEY`, `EMAIL_FROM`): not in `.env` yet → S3/S4 build against local stubs and hide in production.
+- **Nebius account + credits** by Oct 26 (S7 / plan 14). Until then: NVIDIA free API.
+- **Production seed:** a teammate runs `seed.js` + `seed.js --judges` against Atlas (see `DEPLOY-HANDOFF.md`).
+- **Env values for Render/Vercel** are collected here and set by the owner at S7.
+
+## How to continue
+
+```bash
+git checkout main
+cd server && npm install && cd ../client && npm install
+cd ../server && npm run dev-db          # local replica set on :27999, keep running
+```
+
+`server/.env` comes from the team (never commit it). Tests: `npm test`; `npm run api-check`; client: `npm run build`.
+
+## Handoff to another Claude Code session
+
+> Read CLAUDE.md, this file, then `plan/30-final-sprint.md`. Continue at the first step that isn't ✅, in the order above. After every step: tests + api-check + client build green, check 375 px and 1440 px, `npm run smoke:browsers` on the local production build, update this file, **commit locally, never push**. Stop at every **STOP**.
+
+Standing rules: never print, echo, log or commit secrets; confirm no `.env` is tracked before the push; ask before a dependency the plan doesn't approve; ask before deleting real data or changing how agent messages are sent or shown beyond plan 30.
+
+---
+
+## History (before plan 30, kept as written)
+
+### Plans
 
 Build order (`00-START-HERE` phase table, owner 2026-10-17):
 
@@ -45,7 +108,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 | 20 | UI design brief | 🚫 Not for Claude Code (design team) | main | `11bdcf6` | The owner hands over the design for Phase 2. |
 | ref | kg-upgrade-reference | 📦 Archived | main | `df05021` | Moved to `plan/archive/kg-upgrade-reference.md`. |
 
-## Owner's order (updated 2026-10-17, replaces the earlier order)
+### Owner's order (updated 2026-10-17, replaces the earlier order)
 
 **Backend and testing first, frontend last, then deploy and submit.** No UI or `client/` work until the owner hands over the frontend design.
 
@@ -67,7 +130,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 
 Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
-## Currently working on
+### Currently working on
 
 **Owner, 2026-10-18 night:** commit the plan edits and finish everything except plan 14 (it can come after deploy); show everything on localhost before deploying; run CodeRabbit before shipping. A new NVIDIA key from a teammate's account is in `server/.env`: all 5 model IDs are listed and Super answers in ~0.7 s (the old key took 16–163 s per call).
 
@@ -205,7 +268,7 @@ Cached ideas never cost a credit.
   - e) ✓ agent-check passes and judge-check passes on the re-seeded data. Eval subset (6 varied pairs; the first 6 by `--limit` are all compatible): i1 gated ✓, f1 fake ✓, i6 incompatible ✓; c1, c7 and i2 → maybe. ~89k tokens per pair, 9–18 min per conversation.
   - Why the misses: (1) the engine's neutral fallback replies ("haha fair 😄", "oh nice, i like that") read as low effort to the judges; (2) i2 ended "naturally" at 14 messages without smoking coming up.
 - **Step 3 ✅ merged** (`3966f5a`). **Waiting for the owner.**
-- **Plan 11 remaining: the owner's reduced scope** (2026-10-17, also recorded at the top of `plan/11-seed-data-and-eval.md`). Order: tuning → scale test → metric scripts → ablation subset → ONE full run (tell the owner first) → calibration → README numbers.
+- **Plan 11 remaining: the owner's reduced scope** (2026-10-17, also recorded at the top of `plan/archive/11-seed-data-and-eval.md`). Order: tuning → scale test → metric scripts → ablation subset → ONE full run (tell the owner first) → calibration → README numbers.
   1. 🔄 **Tuning** (6-pair loop, ≤ 3 iterations, target ≥ 5/6 and no filler).
      - Iteration 1 code is on `feat/plan-11-tuning`:
        - important topics are retried;
@@ -229,45 +292,3 @@ Cached ideas never cost a credit.
 3. **README skeleton + "How we use Nemotron + Token Factory"** (plan 13 prep) on `side/readme`.
 4. **Plan 14 dry-run checklist** on `side/nebius-dryrun`: docs only, no key needed.
 5. **Plan 18 §1 benchmark** (face-embedding memory/latency at 512 MB, MediaPipe prototype) in an isolated folder, on `side/verify-bench`. **Starts only after you approve the dependencies.**
-
-## Blocked / needs a human
-
-- ✅ **Atlas (resolved 2026-10-18):** login and writes work; the network allows 0.0.0.0/0. On this laptop Node needs `DNS_SERVERS=8.8.8.8,1.1.1.1` for the SRV lookup (local only). The production DB is empty until seeding after plan 14.
-- ✅ **Tavily key (resolved 2026-10-18):** works; only 1,000 credits for everything, so the guard caps searches (dev 30, production 700) and caches ideas for 30 days.
-- **Nebius account + promo credits** for plan 14 (switch by Oct 26). Until then dev runs on NVIDIA's free API (~40 requests/min; it sometimes times out).
-- **Plan 18:** 19 and 20 are not for Claude Code (owner, 2026-10-17). Plan 18 §2–§11 ideas get folded in only where plans 09–11 already call for them; no retro-fit of 05/17 unless the owner asks.
-- **Waiting for the owner:** step 1 failed on the "ask my human" check. Options: run step 2 first (it fixes exactly this), then finish step 1.
-
-## How to continue
-
-```bash
-git pull
-git checkout main                       # plans 02–08 + 17 done; WIP branches are listed in the table
-cd server && npm install && cd ../client && npm install
-```
-
-1. Create `server/.env` from `server/.env.example`. Get the keys from the team; never commit `.env`.
-2. Local DB (transactions need a replica set): run `cd server && npm run dev-db` and keep it running. Then use `MONGODB_URI=mongodb://127.0.0.1:27999/dating_agent?replicaSet=testset` in `.env` or inline.
-3. `npm run seed`: about 25–30 min on NVIDIA (30 personas).
-4. Run it: `npm run dev` (server) and `cd client && npm run dev` (http://localhost:5173).
-5. Tests: `npm test` (spins up its own in-memory replica set).
-6. Simulate: `node scripts/simulate.js seed01@demo.local seed04@demo.local`.
-7. **Current plan:** 09 on `feat/plan-09-judges`.
-
-## Handoff to another Claude Code session
-
-This section is kept current, so another session can take over at any moment (for example when a usage limit ends a session). Everything is committed and pushed after every step; at most the step in flight is lost.
-
-**Prompt for the next session:**
-
-> Read CLAUDE.md, then plan/PROGRESS.md (this file), then plan/00-START-HERE.md (phase table) and the plan marked 🔄. Check out the branch named under "Currently working on" and continue from its **Next** list. Follow the standing rules below. Update PROGRESS.md after every step, then commit and push.
-
-**Standing rules (from the project owner):**
-- Never print, echo, log or commit any secret value from `.env`. Check that no `.env` is tracked before every push.
-- After each plan: run its acceptance checks, commit, push, update PROGRESS.md and CLAUDE.md Status, then STOP and wait for "go".
-- Ask before you add a dependency (`mongodb-memory-server` is already approved), change how agent messages are sent or shown, or delete real user data. Wiping and re-seeding seed data is fine.
-- LLM: NVIDIA free API for now, at low concurrency (~40 requests/min across everyone sharing the key). The switch to Nebius must need only `.env` changes.
-- Plan 20 is for the design team: don't touch it, and don't restyle `client/`.
-- Side work only while the main line waits at a checkpoint, each task on its own `side/*` branch (queue under "Currently working on").
-
-**Last handoff state:** 2026-10-16 22:20 IST. Plan 09 on `feat/plan-09-judges` (`ce4c0cb`, pushed): code done, live checks need `server/.env`. Next: see "Currently working on" → Next.

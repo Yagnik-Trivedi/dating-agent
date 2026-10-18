@@ -51,7 +51,7 @@ git branch -M main
 git remote add origin https://github.com/<you>/dating-agent.git
 ```
 
-Then run `plan/02-scaffold.md` in Claude Code, commit, and push.
+Then run `plan/archive/02-scaffold.md` in Claude Code, commit, and push.
 
 ## D. Secrets you should have before plan 03
 
