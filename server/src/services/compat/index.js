@@ -11,9 +11,10 @@ import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { VoiceSample } from '../../models/VoiceSample.js';
 import { emitToUser } from '../../sockets/io.js';
 import { httpError } from '../../utils/http.js';
-import { cancelReplies } from '../agent/scheduler.js';
+import { cancelReplies, scheduleReply } from '../agent/scheduler.js';
 import { sendMessage } from '../chat.js';
 import { enqueue } from '../jobs/queue.js';
+import { KG } from '../kg/config.js';
 import { chatJSON } from '../llm/client.js';
 import { nameOf, otherUserId, side } from '../matches.js';
 import { cleanText } from '../persona/text.js';
@@ -133,6 +134,35 @@ export async function decide(matchId, userId, decision) {
   } else if (match.status !== 'handed_off' && match.perUser.every((p) => p.decision === 'continue')) {
     await setStatus(match, 'handed_off');
   }
+  return match;
+}
+
+/**
+ * "Let them talk a bit longer" (plan 10 backend addition): once per match, only while the match is Maybe, MY latest
+ * decision is unsure and I haven't decided yet. A round-2 conversation of up to EXTEND_TURNS more messages (no natural end
+ * before that; near its end every turn steers to my open important agenda items), then both judges re-run on the whole
+ * transcript. Earlier decisions are kept; the report shows the newest.
+ */
+export async function extend(matchId, userId) {
+  const me = String(userId);
+  const match = await Match.findById(matchId);
+  const mine = await myDecision(match._id, me);
+  if (match.status !== 'maybe' || mine?.decision !== 'unsure' || side(match, me)?.decision) {
+    throw httpError(409, 'CANNOT_EXTEND', "Only a Maybe you haven't decided on yet can be extended");
+  }
+  if (!match.perUser.some((p) => p.agentActive)) throw httpError(409, 'NO_AGENT', 'Both of you took over; just keep chatting');
+  const last = await Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean();
+  if (!last || last.round > 1) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once');
+  const endAfter = await Message.countDocuments({ matchId: match._id }) + KG.EXTEND_TURNS;
+  try {
+    await Conversation.create({ matchId: match._id, round: last.round + 1, seed: (last.seed + 1) >>> 0, agentState: last.agentState, endAfter, naturalEndFrom: endAfter });
+  } catch (err) {
+    if (err.code === 11000) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once'); // a parallel request won
+    throw err;
+  }
+  await setStatus(match, 'agent_chatting');
+  const lastMsg = await Message.findOne({ matchId: match._id }).sort({ createdAt: -1 }).lean();
+  for (const p of match.perUser) if (p.agentActive && String(p.userId) !== String(lastMsg?.senderId)) scheduleReply(match._id, p.userId);
   return match;
 }
 

@@ -45,7 +45,8 @@ export async function onIncomingMessage(message) {
     await flagMatch(match, others, scan.flags.map((f) => `In chat: ${f}`));
     return;
   }
-  if (await Message.countDocuments({ matchId: match._id }) >= KG.MAX_TURNS) {
+  const conv = await Conversation.findOne({ matchId: match._id, status: 'active' }, { endAfter: 1 }).lean();
+  if (await Message.countDocuments({ matchId: match._id }) >= (conv?.endAfter ?? KG.MAX_TURNS)) {
     await stopConversation(match._id, 'max_turns');
     return;
   }

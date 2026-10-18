@@ -6,7 +6,7 @@ import { Message } from '../models/Message.js';
 import { cancelReplies } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
-import { decide, reportFor, revealFor } from '../services/compat/index.js';
+import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
 import { ChatEvent } from '../models/ChatEvent.js';
 import { Conversation } from '../models/Conversation.js';
 import mongoose from 'mongoose';
@@ -67,6 +67,13 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { decision } = parse(z.object({ decision: z.enum(['continue', 'pass']) }), req.body);
   const { _id } = await getMatchFor(req.params.id, req.user._id);
   const match = await decide(_id, req.user._id, decision);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// "Let them talk a bit longer" on a Maybe: once per match, up to EXTEND_TURNS more messages, then both judges again.
+matchesRouter.post('/matches/:id/extend', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await extend(_id, req.user._id);
   res.json({ match: await matchDetail(match, req.user._id) });
 });
 
