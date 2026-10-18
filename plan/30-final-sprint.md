@@ -33,6 +33,8 @@
   - Playwright browsers (local dev only)
   - for the design: `three`, plus React-19-compatible `@react-three/fiber` (v9) and `@react-three/drei` (v10); the design source used v8/v9 on React 18, so don't downgrade React
   - `@fontsource-variable/figtree` and `@fontsource-variable/newsreader`
+  - for the UI references (S6.6): `animejs` (v4), and the shadcn setup `clsx` + `tailwind-merge` + `class-variance-authority`, plus the Radix/Motion packages the chosen Kokonut UI pieces pull in
+  - bklit ui's visx packages only within the S6.6 size budget
   Ask before any other.
 - **Stop and ask** before deleting real (non-seed) data, or before changing how agent messages are sent or shown beyond this plan.
 - **After every step:**
@@ -264,7 +266,37 @@
    - "This is you": the 3D graph, lazy-loaded, ≤ 300 nodes, 60 fps on a mid-range Android, a 2D radial fallback under reduced motion or on weak devices, search, hub chips, a bottom sheet with edit, delete and the privacy toggle
    - the Compatible letter (then Maybe and Not compatible in the same style)
 4. **Every other existing screen** is restyled with the same tokens and components: landing, auth, onboarding, live check, matches, chat replay, inbox, settings, wake-up, flagged.
-5. **Rules:**
+6. **UI references (owner, 2026-10-18).** These are for patterns and motion, not a look to copy. The Round 7 tokens stay the visual source of truth, and no library's default colours or fonts are used.
+   - **motion.dev (Motion, already installed):**
+     - shared-element transitions (`layoutId`): Discover card → profile, match → match room
+     - `AnimatePresence` for sheets, toasts and the verdict letter
+     - drag gestures with springs for Discover Like/Pass
+     - `useScroll` for the landing story
+     - `useReducedMotion` everywhere
+   - **anime.js v4:** only for SVG line drawing and text effects Motion doesn't do well:
+     - the landing's "two dots connect" line
+     - the 2D graph fallback's edges drawing in
+     - the verdict letter's underline/seal
+     Import only the modules used (`animate`, `svg.createDrawable`, `stagger`), lazily.
+   - **Kokonut UI** (shadcn registry; React 19 + Tailwind v4 + Motion; MIT):
+     - Pick at most ~8 pieces and restyle them to the tokens: a toast/notification stack, the chat composer, smooth tabs, an agent "thinking" loader, a photo upload dropzone, an animated like button.
+     - Add them with `npx shadcn@latest add @kokonutui/<name>`. That needs a minimal shadcn setup (`components.json`, an `@/` alias, `cn()`).
+   - **bklit ui** (shadcn registry charts on visx; MIT): only where real data needs a chart:
+     - the interest meter across the conversation (a live line) in "What my agent is noticing"
+     - the "How I text" bars on "This is you"
+     - the admin usage page
+     Lazy-loaded. If it adds more than ~60 KB gzipped to those routes, draw a small SVG by hand instead.
+   - **Manus (manus.im):** the pattern for showing an agent at work. It's also a reference for restraint: lots of white space, one serif headline, few colours.
+     - A calm step list that ticks live ("Reading their profile → Checking for fakes → Opening with your comment → Talking").
+     - A replay timeline with a scrubber.
+     - Use them in the match room (an agent status strip) and in Chat replay (scrub through the chat, with evidence moments as markers on the timeline).
+   - **Budget:**
+     - route-level code splitting
+     - initial JS ≤ 300 KB gzipped
+     - each library only on the routes that use it
+     - reduced-motion fallbacks
+     - 60 fps on a mid-range Android
+7. **Rules:**
    - Keep every API call, route and behaviour.
    - Illustrated demo people only.
    - Check 375 px and 1440 px against the previews.
