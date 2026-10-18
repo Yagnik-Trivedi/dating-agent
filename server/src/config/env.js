@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import dns from 'node:dns';
 import { z } from 'zod';
 
 // `KEY=` in .env arrives as "", which should mean "not set".
@@ -15,6 +16,8 @@ const schema = z.object({
   NODE_ENV: field(z.enum(['development', 'production', 'test']).default('development')),
   CLIENT_URL: field(z.string().default('http://localhost:5173')),
   MONGODB_URI: field(z.string({ error: 'MONGODB_URI is required' }).trim()),
+  // Local only: some home routers refuse Node's SRV lookups for mongodb+srv:// (Atlas). e.g. DNS_SERVERS=8.8.8.8,1.1.1.1
+  DNS_SERVERS: optional,
   JWT_SECRET: field(z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters')),
   ADMIN_TOKEN: optional,
   SEED_PASSWORD: optional, // shared login for seed personas (scripts/seed.js); never committed
@@ -73,6 +76,7 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+if (env.DNS_SERVERS) dns.setServers(env.DNS_SERVERS.split(',').map((x) => x.trim()).filter(Boolean));
 export const clientOrigins = env.CLIENT_URL.split(',').map((s) => s.trim()).filter(Boolean);
 
 // Optional so the app (and frontend dev) boots without keys; llm/client.js throws a clear error on first use.
