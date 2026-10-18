@@ -32,9 +32,9 @@ anyone spends time. The first run showed the judges hedging (one side said "unsu
 only lists evidence (quotes, each tied to something that matters to you) and **code decides**: a stated dealbreaker or
 a serious clash on something that matters a lot is a no; two or more verified positives on what matters to you, with no
 serious friction, is a yes; anything else is a Maybe. Re-judging the same 17 saved chats doubled accuracy
-([](server/eval/results/rejudge.md)). The remaining misses were hidden conflicts nobody asked about, so the agent
+([rejudge.md](server/eval/results/rejudge.md)). The remaining misses were hidden conflicts nobody asked about, so the agent
 now has to ask directly about anything that matters a lot to you before a chat can end; on fresh chats for those
-pairs, the drinking conflict surfaced and was caught ([](server/eval/results-step4.md)).
+pairs, the drinking conflict surfaced and was caught ([results-step4.md](server/eval/results-step4.md)).
 
 ## Setup
 
