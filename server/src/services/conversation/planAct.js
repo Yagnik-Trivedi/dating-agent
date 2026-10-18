@@ -1,6 +1,17 @@
 // The act plan for one reply (plan 08 §2.3): deterministic sampling from MY voice distributions with the
 // conversation's seeded rng, so the same seed + perceptions replay identically. Stored on the message.
 import { KG } from '../kg/config.js';
+import { agendaAttribute } from '../kg/questionnaireFacts.js';
+
+/**
+ * Owner's judge fix step 4: dealbreakers and answers that matter a lot (priority ≥ ASK_EXPLICIT_PRIORITY) must be asked
+ * about directly, on their exact attribute, before a natural end. Settled once my agent asked a question naming the
+ * attribute (state.askedAttrs) or they stated it themselves (state.heardAttrs). → the open agenda items
+ */
+export function openMustAsk(agenda = [], state = {}) {
+  const done = new Set([...(state.askedAttrs ?? []), ...(state.heardAttrs ?? [])]);
+  return agenda.filter((a) => (a.dealbreaker || a.priority >= KG.ASK_EXPLICIT_PRIORITY) && agendaAttribute(a) && !done.has(agendaAttribute(a)));
+}
 
 export const MIN_MESSAGES_FOR_NATURAL_END = 16; // 12 gave judges too little to go on (tuning it2: c1 and c7 ended at 13 → "unsure")
 const pick = (xs, rng) => xs[Math.floor(rng() * xs.length)];
@@ -66,18 +77,20 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   if (!opening && (state.turn ?? 0) >= 1) {
     const shift = KG.TOPIC_SHIFT + (interest < KG.LOW_INTEREST ? 0.25 : 0);
     const tries = (a) => state.topicTries?.[a.id] ?? ((state.topicsTouched ?? []).includes(a.id) ? 1 : 0);
-    const steerable = (a) => a.status !== 'answered' && (tries(a) === 0 || ((a.dealbreaker || a.priority >= KG.STEER_RETRY_PRIORITY) && tries(a) < KG.STEER_TRIES));
+    const mustAsk = new Set(openMustAsk(agenda, state).map((a) => a.id));
+    const steerable = (a) => mustAsk.has(a.id) || (a.status !== 'answered' && (tries(a) === 0 || ((a.dealbreaker || a.priority >= KG.STEER_RETRY_PRIORITY) && tries(a) < KG.STEER_TRIES)));
     // Untried important topics first, then retries of important ones, then minor topics; by priority within each.
     const important = (a) => a.dealbreaker || a.priority >= KG.STEER_RETRY_PRIORITY;
-    const rank = (a) => (important(a) ? (tries(a) ? 1 : 0) : 2);
+    const rank = (a) => (mustAsk.has(a.id) ? -1 : important(a) ? (tries(a) ? 1 : 0) : 2);
     const nextAgenda = agenda.filter(steerable).sort((a, b) => rank(a) - rank(b) || b.priority - a.priority)[0];
     // After the warm-up, every other turn steers to my next open agenda topic (v1 measured: a soft chance was ignored
     // and chats looped on one topic); in between, a random shift (more likely when bored) or a story.
     const steerTurn = (state.turn ?? 0) >= KG.STEER_AFTER_TURNS && (state.lastTopicTurn ?? -2) < (state.turn ?? 0) - 1;
     // Near MAX_TURNS an open important item is the topic every turn, tries or not (owner's tuning spec).
-    const nearEnd = msgCount >= maxMessages - KG.NEAR_END_MESSAGES && agenda.filter((a) => a.status !== 'answered' && important(a)).sort((a, b) => b.priority - a.priority)[0];
-    if (nearEnd) topic = { kind: 'agenda', id: nearEnd.id, text: nearEnd.topic };
-    else if (nextAgenda && (steerTurn || rng() < shift)) topic = { kind: 'agenda', id: nextAgenda.id, text: nextAgenda.topic };
+    const nearEnd = msgCount >= maxMessages - KG.NEAR_END_MESSAGES && agenda.filter((a) => mustAsk.has(a.id) || (a.status !== 'answered' && important(a))).sort((a, b) => rank(a) - rank(b) || b.priority - a.priority)[0];
+    const pickTopic = (a) => ({ kind: 'agenda', id: a.id, text: a.topic, ...(mustAsk.has(a.id) && { ask: true }) });
+    if (nearEnd) topic = pickTopic(nearEnd);
+    else if (nextAgenda && (steerTurn || rng() < shift)) topic = pickTopic(nextAgenda);
     else if (stories.length && rng() < KG.STORY_RATE) { const s = pick(stories, rng); topic = { kind: 'story', id: String(s._id), text: s.object }; }
   }
 
@@ -86,6 +99,6 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   if (perception.dealbreakerHit) end = 'dealbreaker_hint';
   else if ((state.lowInterestTurns ?? 0) >= KG.END_AFTER_LOW_TURNS) end = 'interest';
   else if (msgCount + 1 >= maxMessages) end = 'max_turns';
-  else if (agendaSettled && msgCount >= naturalEndFrom) end = 'natural';
+  else if (agendaSettled && msgCount >= naturalEndFrom && !openMustAsk(agenda, state).length) end = 'natural';
   return { targetWords, burst, answerFirst: Boolean(perception.aboutMeQuestion), askBack: end ? false : askBack, emoji, laugh, reactions, mustDisagree, disagreeOn: hold?.text ?? null, topic: end ? null : topic, language, end };
 }

@@ -14,7 +14,7 @@ import { asActor } from '../actor.js';
 import { settle } from '../compat/index.js';
 import { KG } from '../kg/config.js';
 import { QUESTIONS } from '../kg/questions.js';
-import { TOPICS } from '../kg/questionnaireFacts.js';
+import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { judgeDecision } from './judgeDecision.js';
 import { isVerbatim } from '../kg/extractFacts.js';
 import { chatJSON, modelId } from '../llm/client.js';
@@ -118,7 +118,6 @@ async function writeIcebreakers({ userId, matchId, matchName, events, notes }) {
 }
 
 const OPTIONS = Object.fromEntries(QUESTIONS.sections.find((x) => x.id === 'B').items.map((i) => [i.id, i.options.map((o) => o.value)]));
-const ATTRIBUTE_OF_TOPIC = Object.fromEntries(Object.entries(TOPICS).map(([attr, topic]) => [String(topic).toLowerCase(), attr]));
 const label = (f) => `${f.predicate}: ${f.object}${f.isDealbreaker ? ' [dealbreaker]' : ''}${f.importance >= 0.9 ? ' (matters a lot)' : ''}${f.disclosure === 'private' ? ' [private]' : ''}`;
 const traitWords = (t) => [
   t.extraversion != null && (t.extraversion < 0.4 ? 'calm, low-key' : t.extraversion > 0.7 ? 'outgoing, playful' : null),
@@ -157,7 +156,7 @@ export async function judgeSide({ conversationId, userId }) {
     const shown = facts.filter((f) => !['trait', 'style'].includes(f.predicate)).sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, 60);
     const factById = new Map(shown.map((f, i) => [`F${i + 1}`, f]));
     // My dealbreakers the chat never settled (agenda item not answered): a severity-2 friction, not a pass.
-    const settledAttrs = new Set((match.brief?.[me]?.agenda ?? []).filter((a) => a.status === 'answered').map((a) => a.attribute ?? ATTRIBUTE_OF_TOPIC[String(a.topic).toLowerCase()]));
+    const settledAttrs = new Set((match.brief?.[me]?.agenda ?? []).filter((a) => a.status === 'answered').map(agendaAttribute));
     const undiscussed = Object.keys(dealbreakers).filter((a) => !settledAttrs.has(a));
 
     let value;

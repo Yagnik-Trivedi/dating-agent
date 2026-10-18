@@ -22,6 +22,9 @@ export const TOPICS = {
   conflict: 'conflict style',
   alone_time: 'alone time needed',
 };
+const ATTRIBUTE_OF_TOPIC = Object.fromEntries(Object.entries(TOPICS).map(([attr, topic]) => [topic, attr]));
+/** An agenda item's section-B attribute (agendas built before it was stored only carry the topic label). */
+export const agendaAttribute = (a) => a.attribute ?? ATTRIBUTE_OF_TOPIC[String(a.topic ?? '').toLowerCase()] ?? null;
 
 /**
  * Mini-IPIP: reverse items score 6 − answer; trait = mean of its answered items, normalized 1..5 → 0..1.

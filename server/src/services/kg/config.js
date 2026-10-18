@@ -29,6 +29,7 @@ export const KG = Object.freeze({
   STEER_RETRY_PRIORITY: 0.7, // agenda items at least this important are steered to again until answered…
   STEER_TRIES: 2, // …up to this many tries (eval i2: smoking was tried once, ignored by the model, never retried)
   END_BLOCK_PRIORITY: 0.7, // no natural end while an agenda item this important is unanswered (owner's tuning spec)
+  ASK_EXPLICIT_PRIORITY: 0.9, // agenda items this important (and dealbreakers) need a direct question on their exact attribute before a natural end
   NEAR_END_MESSAGES: 6, // this close to MAX_TURNS, an open important item is the topic every turn
   ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,

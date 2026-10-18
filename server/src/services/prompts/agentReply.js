@@ -40,7 +40,9 @@ function finalInstruction(plan, firstName) {
     plan.unknownTopic ? `answer their question honestly: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you're not sure (no made-up preference); don't just ask it back.`
       : plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
-    plan.topic?.kind === 'agenda' && `react briefly, then steer to ${topicText(plan.topic.text)} by asking about it naturally (or sharing ${firstName}'s side if a listed fact covers it).`,
+    plan.topic?.kind === 'agenda' && (plan.topic.ask
+      ? `react briefly, then ask them directly ${topicText(plan.topic.text)}: one clear question in ${firstName}'s own words.`
+      : `react briefly, then steer to ${topicText(plan.topic.text)} by asking about it naturally (or sharing ${firstName}'s side if a listed fact covers it).`),
     plan.askBack && !plan.topic && 'end with one question back.',
   ].filter(Boolean).join(' ');
 }

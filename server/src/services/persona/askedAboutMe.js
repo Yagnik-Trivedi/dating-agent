@@ -15,9 +15,19 @@ const ATTRIBUTE_WORDS = {
   kids: /\b(kids|children|child|bacche|bachche|babies)\b/i,
   religion: /\b(religion|religious|pray|praying|spiritual)\b/i,
   diet: /\b(vegetarian|veg|non-veg|nonveg|vegan|meat|eggetarian)\b/i,
-  location: /\b(settle|settling|relocate|relocating)\b/i,
+  location: /\b(settle|settling|relocate|relocating|see yourself living|move abroad|stay in (this|the) city)\b/i,
   looking_for: /\b(looking for|long[- ]term|something serious|casual dating|hoping to find|brings you here|here for)\b/i,
+  family: /\b(family|parents|fam)\b/i,
+  career: /\b(career|ambition|ambitious|work[- ]life)\b/i,
+  conflict: /\b(disagree|disagreements?|conflicts?|fights?|argue|arguments?)\b/i,
+  alone_time: /\b(alone time|me[- ]time|time alone|own space|time to myself)\b/i,
 };
+const sentences = (text) => String(text).split(/(?<=[?.!])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+/** Section-B attributes a text names. questions: only its question sentences; statements: only the others. */
+export function attributesIn(text, { questions } = {}) {
+  const parts = sentences(text).filter((x) => questions === undefined || questions === (x.includes('?') || QUESTION_WORD.test(x)));
+  return Object.keys(ATTRIBUTE_WORDS).filter((k) => parts.some((x) => ATTRIBUTE_WORDS[k].test(x)));
+}
 // Words that never name the topic of a question about me.
 const NOT_TOPIC = new Set(['what', 'whats', "what's", 'how', 'do', 'does', 'did', 'you', 'your', 'yours', 'u', 'ur', 'the', 'a', 'an', 'is', 'are',
   'favourite', 'favorite', 'fav', 'like', 'love', 'into', 'think', 'about', 'any', 'have', 'has', 'kind', 'of', 'type', 'one', 'most', 'best', 'random',
