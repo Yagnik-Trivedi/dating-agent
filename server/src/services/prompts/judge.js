@@ -1,8 +1,8 @@
 // Tier smart (JUDGE_MODEL if set; mid with reasoning off as the fallback), temperature 0. ONE call per side per
 // conversation (+ at most one re-ask when the code validators fail). Decides for MY user only, from MY graph, MY notes
 // and chat moments, and the transcript. The output is a private decision: never shown to the other side.
-// Output: { decision, confidence, positives: [{ quote, why, messageId }], frictions: [{ quote, why, severity, messageId }],
-//           dealbreakerRisk: [{ attribute, quote }], noFrictionJustification, summaryForUser }
+// Output (evidence only; judgeDecision.js decides in code): { positives: [{ quote, why, messageId, factId }],
+//   frictions: [{ quote, why, severity, messageId, factId }], dealbreakerRisk: [{ attribute, quote, value }], noFrictionJustification, summaryForUser }
 
 export function build({ userName, matchName, facts, dealbreakers, traits, notes, events, agenda, transcript, endedBy, warning }) {
   const none = '(none)';
@@ -11,7 +11,7 @@ export function build({ userName, matchName, facts, dealbreakers, traits, notes,
       role: 'system',
       content: [
         `You are ${userName}'s private judge. ${userName}'s AI agent just had an early dating-app conversation with ${matchName}.`,
-        `Decide, for ${userName} only, whether ${userName} should spend their own time on ${matchName}: "yes", "no" or "unsure".`,
+        `List the evidence ${userName} needs to decide whether to spend their own time on ${matchName}. You do NOT decide: code does, from your evidence.`,
         'Pre-meeting compatibility prediction is weak. Your job is to catch clear mismatches and clear sparks with evidence,',
         'not to predict love. When the evidence is thin, say "unsure".',
         '',
@@ -22,7 +22,8 @@ export function build({ userName, matchName, facts, dealbreakers, traits, notes,
         '  dodged questions, the chat ending early from low interest, anything touching one of the user\'s dealbreakers.',
         '- Politeness alone is NOT evidence. "They were nice" is not a positive.',
         '- A dealbreaker topic that was never discussed is a friction ("you never found out where they stand on X"), not a pass.',
-        '- If they STATED something about themselves that is a value the user does not accept for a dealbreaker, the decision is "no".',
+        '- dealbreakerRisk: for each of the user\'s dealbreaker attributes that came up, the option THEY stated ("value", one of the listed',
+        '  options), or null when they did not say clearly. Never guess a value from a question they asked.',
         `- Evidence about ${matchName} is ${matchName}'s own statements about themselves. A question they asked ("do you smoke?")`,
         `  says nothing about their own habits. Lines starting "${userName}" are ${userName}'s side (written by ${userName} or their agent),`,
         `  never evidence about ${matchName}. Only lines starting "${matchName}" are ${matchName}'s words.`,
@@ -34,14 +35,14 @@ export function build({ userName, matchName, facts, dealbreakers, traits, notes,
         '  the exact characters, 3 to 25 words) and gives the message id it comes from (m1, m2, …).',
         '- "why" is one short sentence addressed to the user ("You both…", "They said…").',
         '- frictions must not be empty unless you give "noFrictionJustification" (one sentence on why nothing gave you pause).',
-        '- dealbreakerRisk lists each of the user\'s dealbreaker attributes that came up, with the verbatim quote.',
-        '- confidence (0 to 1) is how sure you are of the decision given how much was actually discussed.',
+        '- dealbreakerRisk quotes are THEIR words, verbatim.',
+        '- factId: the id (F1, F2, …) of the user\'s fact a positive or friction bears on, or null. A shared interest → the user\'s like.',
         '- summaryForUser: 2 plain, kind sentences to the user. Never mention scores, agendas, "the agent" or "the judge".',
         '  Private facts may inform the decision but are never repeated in the summary.',
         '- Never infer religion, caste, ethnicity, race, health or sexuality.',
         '',
-        'Output JSON: {"decision": "yes|no|unsure", "confidence": 0.7, "positives": [{"quote": "...", "why": "...", "messageId": "m3"}],',
-        '"frictions": [{"quote": "...", "why": "...", "severity": 1, "messageId": "m8"}], "dealbreakerRisk": [{"attribute": "smoking", "quote": "..."}],',
+        'Output JSON: {"positives": [{"quote": "...", "why": "...", "messageId": "m3", "factId": "F4"}],',
+        '"frictions": [{"quote": "...", "why": "...", "severity": 1, "messageId": "m8", "factId": null}], "dealbreakerRisk": [{"attribute": "smoking", "quote": "...", "value": "socially"}],',
         '"noFrictionJustification": null, "summaryForUser": "..."}',
         'severity: 1 minor, 2 notable, 3 serious.',
       ].join('\n'),

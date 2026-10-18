@@ -13,6 +13,9 @@ import { items } from '../../utils/zodItems.js';
 import { asActor } from '../actor.js';
 import { settle } from '../compat/index.js';
 import { KG } from '../kg/config.js';
+import { QUESTIONS } from '../kg/questions.js';
+import { TOPICS } from '../kg/questionnaireFacts.js';
+import { judgeDecision } from './judgeDecision.js';
 import { isVerbatim } from '../kg/extractFacts.js';
 import { chatJSON, modelId } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
@@ -20,13 +23,13 @@ import * as icebreakersPrompt from '../prompts/icebreakers.js';
 import * as judgePrompt from '../prompts/judge.js';
 import { debug } from '../../utils/log.js';
 
-const quoted = { quote: z.string().trim().max(400).catch(''), why: z.string().trim().min(1).max(300), messageId: z.string().nullable().catch(null) };
+// The LLM lists evidence only; judgeDecision.js decides (owner's judge fix). factId: which of MY facts (F1…) it bears on.
+const quoted = { quote: z.string().trim().max(400).catch(''), why: z.string().trim().min(1).max(300), messageId: z.string().nullable().catch(null), factId: z.string().trim().nullable().catch(null) };
 export const judgeSchema = z.object({
-  decision: z.enum(['yes', 'no', 'unsure']).catch('unsure'),
-  confidence: z.coerce.number().min(0).max(1).catch(0),
   positives: items(z.object(quoted)).catch([]),
   frictions: items(z.object({ ...quoted, severity: z.coerce.number().int().min(1).max(3).catch(1) })).catch([]),
-  dealbreakerRisk: items(z.object({ attribute: z.string().trim().min(1).max(60), quote: z.string().trim().max(400).catch('') })).catch([]),
+  // value: the option THEY stated for my dealbreaker attribute (null when they didn't say clearly)
+  dealbreakerRisk: items(z.object({ attribute: z.string().trim().min(1).max(60), quote: z.string().trim().max(400).catch(''), value: z.string().trim().nullable().catch(null) })).catch([]),
   noFrictionJustification: z.string().trim().max(400).nullable().catch(null),
   summaryForUser: z.string().trim().max(800).catch(''),
 });
@@ -34,18 +37,19 @@ export const judgeSchema = z.object({
 const short = (s) => `"${String(s).slice(0, 60)}"`;
 
 /**
- * Code validators (plan 09 §1). transcript: [{ id: 'm1', _id, text }]; hints: my dealbreaker_hint events.
- * → { value, problems, dropped }: `problems` trigger the one re-ask; `value` already has the offending items dropped,
- * every quote mapped to a real message _id, and a low-confidence yes turned into unsure.
+ * Code validators (plan 09 §1). transcript: [{ id: 'm1', _id, text, mine, filler }]; hints: my dealbreaker_hint events;
+ * factIds: the F-ids shown to the judge; options: { attribute: [option values] }.
+ * → { value, problems, dropped }: `problems` trigger the one re-ask; `value` has the offending items dropped, every quote
+ * mapped to a real message _id (+ `theirs`), unknown fact ids nulled and dealbreaker values outside the options nulled.
  */
-export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDGE_YES_MIN }) {
+export function validateDecision(out, { transcript, hints = [], factIds = null, options = {} }) {
   const problems = [];
   const dropped = [];
   const byId = new Map(transcript.map((m) => [m.id, m]));
   const locate = (quote, id) => {
     const named = byId.get(String(id ?? '').replace(/[[\]\s]/g, ''));
-    if (named && isVerbatim(quote, named.text)) return named;
-    return transcript.find((m) => isVerbatim(quote, m.text)) ?? null;
+    if (named && !named.filler && isVerbatim(quote, named.text)) return named;
+    return transcript.find((m) => !m.filler && isVerbatim(quote, m.text)) ?? null; // app filler lines are nobody's words
   };
   const evidence = (list, kind) => list.flatMap((x) => {
     if ((x.quote ?? '').length < 3) {
@@ -59,7 +63,8 @@ export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDG
       dropped.push(`${kind} not verbatim: ${x.quote}`);
       return [];
     }
-    return [{ ...x, messageId: String(msg._id) }];
+    const factId = x.factId && (!factIds || factIds.has(x.factId)) ? x.factId : null;
+    return [{ ...x, factId, messageId: String(msg._id), theirs: !msg.mine }];
   });
 
   const positives = evidence(out.positives, 'positive');
@@ -67,19 +72,17 @@ export function validateDecision(out, { transcript, hints = [], yesMin = KG.JUDG
   // A dealbreaker risk is about THEM: its quote must be their own words (not mine, not my agent's).
   const dealbreakerRisk = out.dealbreakerRisk.filter((d) => {
     if (!d.quote) return true;
-    const msg = transcript.find((m) => !m.mine && isVerbatim(d.quote, m.text));
+    const msg = transcript.find((m) => !m.mine && !m.filler && isVerbatim(d.quote, m.text));
     if (msg) return true;
     dropped.push(`dealbreakerRisk not their words: ${d.quote}`);
     return false;
-  });
+  }).map((d) => ({ ...d, value: options[d.attribute]?.includes(d.value) ? d.value : null }));
   const justification = out.noFrictionJustification?.trim() || null;
   if (!frictions.length && !justification) problems.push('frictions is empty and there is no noFrictionJustification.');
   if (hints.length && !dealbreakerRisk.length) problems.push(`a dealbreaker came up (${hints.map((h) => h.label).join(', ')}) but dealbreakerRisk is empty.`);
 
-  let { decision } = out;
-  if (decision === 'yes' && out.confidence < yesMin) decision = 'unsure';
   return {
-    value: { ...out, decision, positives, frictions, dealbreakerRisk, noFrictionJustification: frictions.length ? null : justification },
+    value: { ...out, positives, frictions, dealbreakerRisk, noFrictionJustification: frictions.length ? null : justification },
     problems, dropped,
   };
 }
@@ -114,6 +117,8 @@ async function writeIcebreakers({ userId, matchId, matchName, events, notes }) {
   }
 }
 
+const OPTIONS = Object.fromEntries(QUESTIONS.sections.find((x) => x.id === 'B').items.map((i) => [i.id, i.options.map((o) => o.value)]));
+const ATTRIBUTE_OF_TOPIC = Object.fromEntries(Object.entries(TOPICS).map(([attr, topic]) => [String(topic).toLowerCase(), attr]));
 const label = (f) => `${f.predicate}: ${f.object}${f.isDealbreaker ? ' [dealbreaker]' : ''}${f.importance >= 0.9 ? ' (matters a lot)' : ''}${f.disclosure === 'private' ? ' [private]' : ''}`;
 const traitWords = (t) => [
   t.extraversion != null && (t.extraversion < 0.4 ? 'calm, low-key' : t.extraversion > 0.7 ? 'outgoing, playful' : null),
@@ -142,9 +147,17 @@ export async function judgeSide({ conversationId, userId }) {
     ]);
     const userName = nameOf(match, me);
     const matchName = nameOf(match, otherId);
-    const transcript = messages.map((m, i) => ({ id: `m${i + 1}`, _id: m._id, text: m.text, mine: String(m.senderId) === me, agent: m.authoredBy === 'agent' }));
+    const transcript = messages.map((m, i) => ({ id: `m${i + 1}`, _id: m._id, text: m.text, mine: String(m.senderId) === me, agent: m.authoredBy === 'agent', filler: m.checks?.fallback === 'template' }));
     const hints = events.filter((e) => e.type === 'dealbreaker_hint');
     const base = { conversationId, matchId: match._id, userId: me, otherUserId: otherId };
+
+    const gate = profile?.gate ?? {};
+    const dealbreakers = Object.fromEntries((gate.dealbreakers ?? []).map((a) => [a, gate.accepts?.[a] ?? []]));
+    const shown = facts.filter((f) => !['trait', 'style'].includes(f.predicate)).sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, 60);
+    const factById = new Map(shown.map((f, i) => [`F${i + 1}`, f]));
+    // My dealbreakers the chat never settled (agenda item not answered): a severity-2 friction, not a pass.
+    const settledAttrs = new Set((match.brief?.[me]?.agenda ?? []).filter((a) => a.status === 'answered').map((a) => a.attribute ?? ATTRIBUTE_OF_TOPIC[String(a.topic).toLowerCase()]));
+    const undiscussed = Object.keys(dealbreakers).filter((a) => !settledAttrs.has(a));
 
     let value;
     let judgeModel = null;
@@ -152,12 +165,11 @@ export async function judgeSide({ conversationId, userId }) {
     if (!messages.length) {
       value = { decision: 'unsure', confidence: 0, positives: [], frictions: [], dealbreakerRisk: [], noFrictionJustification: 'There was no conversation to judge.', summaryForUser: "This chat never really got going, so it's your call." };
     } else {
-      const gate = profile?.gate ?? {};
       const traits = Object.fromEntries(facts.filter((f) => f.predicate === 'trait').map((f) => [f.object, f.value]));
       const prompt = {
         userName, matchName,
-        facts: facts.filter((f) => !['trait', 'style'].includes(f.predicate)).sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, 60).map(label),
-        dealbreakers: (gate.dealbreakers ?? []).map((a) => `${a}: ${(gate.accepts?.[a] ?? []).join(', ') || '?'}`),
+        facts: [...factById].map(([id, f]) => `${id} ${label(f)}`),
+        dealbreakers: Object.entries(dealbreakers).map(([a, acc]) => `${a}: accepts ${acc.join(', ') || '?'} (options: ${(OPTIONS[a] ?? []).join(', ')})`),
         traits: traitWords(traits),
         notes: notes.map((n) => `${n.predicate}: ${n.object}${n.evidence?.[0]?.quote ? ` ("${n.evidence[0].quote}")` : ''}`),
         events: events.map((e) => `${e.type}${e.label ? ` (${e.label})` : ''}, ${Math.round((e.weight ?? 0.5) * 100) / 100}${e.quote ? `: "${e.quote}"` : ''}`),
@@ -167,13 +179,14 @@ export async function judgeSide({ conversationId, userId }) {
       };
       const first = await callJudge({ messages: judgePrompt.build(prompt), userId: me, matchId: match._id, purpose: 'judge' });
       judgeModel = first.model;
-      let checked = validateDecision(first.out, { transcript, hints });
+      const vopts = { transcript, hints, factIds: new Set(factById.keys()), options: OPTIONS };
+      let checked = validateDecision(first.out, vopts);
       if (checked.problems.length) {
         validation.reasked = true;
         debug(`judge ${match._id}/${me}: re-asking (${checked.problems.join(' ')})`);
         try {
           const again = await callJudge({ messages: judgePrompt.build({ ...prompt, warning: checked.problems.join(' ') }), userId: me, matchId: match._id, purpose: 'judge-reask', prefer: first.opt });
-          const second = validateDecision(again.out, { transcript, hints });
+          const second = validateDecision(again.out, vopts);
           if (second.problems.length <= checked.problems.length) checked = second;
         } catch (err) {
           if (err.name === 'BudgetExceededError') throw err;
@@ -183,7 +196,12 @@ export async function judgeSide({ conversationId, userId }) {
       value = checked.value;
       validation.dropped = checked.dropped;
       // Still no dealbreakerRisk after the re-ask: the recorded hint events are the evidence.
-      if (hints.length && !value.dealbreakerRisk.length) value.dealbreakerRisk = hints.map((h) => ({ attribute: h.label?.split(':')[0] ?? 'dealbreaker', quote: h.quote ?? '' }));
+      if (hints.length && !value.dealbreakerRisk.length) value.dealbreakerRisk = hints.map((h) => ({ attribute: h.label?.split(':')[0] ?? 'dealbreaker', quote: h.quote ?? '', value: null }));
+      const decided = judgeDecision({ positives: value.positives, frictions: value.frictions, dealbreakerRisk: value.dealbreakerRisk, facts: factById, dealbreakers, undiscussed });
+      const ask = decided.frictions.filter((x) => x.attribute && !x.quote).map((x) => x.attribute.replace(/_/g, ' '));
+      value = { ...value, decision: decided.decision, confidence: decided.confidence, frictions: decided.frictions,
+        summaryForUser: [value.summaryForUser, ask.length && `You never found out where they stand on ${ask.join(' and ')}, so it's worth asking.`].filter(Boolean).join(' ') };
+      validation.reason = decided.reason;
     }
     const icebreakers = value.decision === 'no' ? [] : await writeIcebreakers({ userId: me, matchId: match._id, matchName, events, notes });
     const doc = { ...base, ...value, icebreakers, judgeModel, validation };
