@@ -57,7 +57,7 @@ on the final provider.
 
 ## Weekly until Dec 15 (end of judging)
 
-- **Credits left:** `GET /api/admin/usage` with the admin token shows today's calls and the all-time USD against the cap.
+- **Credits left:** `GET /api/admin/usage` with the header `x-admin-token: <ADMIN_TOKEN>` shows today's calls and the all-time USD against the cap.
 - **Render:** instance hours used this month. One service should be about 720–744 h; never more than one service.
 - **Keep-alive:** cron-job.org failure emails, plus the keep-alive workflow runs on GitHub. GitHub disables scheduled workflows after 60 days with no repo activity; a commit by late October covers Dec 15.
 - **Atlas:** storage stays under 512 MB (about 88 KB per user).
