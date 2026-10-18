@@ -76,7 +76,12 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - **Undiscussed dealbreaker:** a severity-2 friction plus "worth asking" in the summary.
   - **Otherwise:** unsure.
   - `npm test` 97/97.
-- Next: step 2 (prompt cleanup, filler lines labelled in the transcript) → step 3 (`scripts/eval/rejudge.js` on the B5 conversations).
+- ✅ **Step 2** (`60f7df2`):
+  - Removed "prediction is weak… say unsure" from the prompt; the LLM lists evidence in both directions and its summary states no verdict.
+  - Undiscussed topics are no longer LLM frictions; the code adds them.
+  - Template filler lines are labelled `[system filler, not their words]` and never count as evidence.
+  - 97/97.
+- Next: step 3 (`scripts/eval/rejudge.js` on the B5 conversations).
 - Also: the live `seed.js --judges` run hit NVIDIA 429 (rate limit) while building the first judge's graph; it will be retried after the judge fix.
 
 **Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
