@@ -18,7 +18,8 @@
     "generate-personas": "node scripts/generate-personas.js",
     "dev-db": "node scripts/dev-db.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
-    "live-check:vision": "node scripts/live-check-vision.js"
+    "live-check:vision": "node scripts/live-check-vision.js",
+    "smoke:browsers": "node scripts/smoke-browsers.js"
   },
   "dependencies": {
     "@tavily/core": "^0.7.14",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.14",
+    "playwright": "^1.64.1",
     "socket.io-client": "^4.8.4"
   }
 }

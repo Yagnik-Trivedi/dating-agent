@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
+import { cityGeo } from '../services/cities.js';
 import { buildGate } from '../services/match/gate.js';
 import { parse } from '../utils/http.js';
 
@@ -36,9 +37,10 @@ profileRouter.get('/profile', async (req, res) => {
 
 profileRouter.put('/profile', async (req, res) => {
   const fields = parse(profileBody, req.body);
+  const geo = 'city' in fields ? cityGeo(fields.city) : undefined; // a listed city gets coordinates; "Other" matches by name
   const profile = await Profile.findOneAndUpdate(
     { userId: req.user._id },
-    { $set: fields },
+    { $set: { ...fields, ...(geo && { geo }) }, ...('city' in fields && !geo && { $unset: { geo: 1 } }) },
     { new: true, upsert: true, runValidators: true },
   ).lean();
   await buildGate(req.user._id);

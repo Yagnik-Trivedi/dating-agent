@@ -23,7 +23,7 @@ env.LLM_DAILY_CALLS_PER_USER = Math.max(env.LLM_DAILY_CALLS_PER_USER, 5000);
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
 const persona = JSON.parse(readFileSync(new URL('../seed/personas.json', import.meta.url))).find((p) => p.email === 'seed01@demo.local');
 const email = `kg-review-${Date.now().toString(36)}@check.test`;
-const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Mira', email, password: 'password123', consentAgent: true } });
+const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Mira', email, password: 'password123', consentAgent: true, dob: '1998-03-02', gender: 'woman', interestedIn: ['man'], city: 'Pune' } });
 const token = signup.token;
 assert.ok(token, 'signup');
 await call('PUT', '/profile', { token, body: { name: 'Mira', age: 27, city: 'Pune', gender: 'woman', interestedIn: ['man'] } });

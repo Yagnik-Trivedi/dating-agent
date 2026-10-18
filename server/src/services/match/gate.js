@@ -2,6 +2,7 @@
 // Profile.gate is denormalised from Profile basics and section B answers; it is never shown to an LLM or another user.
 import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
+import { distanceKm } from '../cities.js';
 import { QUESTIONS } from '../kg/questions.js';
 
 export const GATE_ATTRIBUTES = QUESTIONS.sections.find((s) => s.id === 'B').items.map((i) => i.id);
@@ -41,7 +42,12 @@ export async function buildGate(userId) {
 export function discoverQuery(me, excludeUserIds = []) {
   const g = me ?? {};
   const and = [{ userId: { $nin: excludeUserIds } }];
-  and.push({ 'gate.city': g.city ?? null }); // no city → only others without one (mirrors passesGate)
+  // Location, my side: within my radius when I set one (and we both have coordinates), else the same city.
+  // No city → only others without one (mirrors passesGate). Their side: same city, unless they set a radius;
+  // those are checked exactly by passesGate after the query (the discover route filters with it).
+  const R = 6371;
+  and.push(g.radiusKm && g.geo ? { 'gate.geo': { $geoWithin: { $centerSphere: [g.geo.coordinates, g.radiusKm / R] } } } : { 'gate.city': g.city ?? null });
+  and.push({ $or: [{ 'gate.city': g.city ?? null }, { 'gate.radiusKm': { $gt: 0 }, 'gate.geo': { $exists: true } }] });
   if (g.interestedIn?.length) and.push({ 'gate.gender': { $in: g.interestedIn } });
   // An empty "interested in" means open to everyone (v1 behaviour).
   and.push({ $or: [{ 'gate.interestedIn': g.gender ?? NONE }, { 'gate.interestedIn': { $size: 0 } }] });
@@ -55,7 +61,8 @@ export function discoverQuery(me, excludeUserIds = []) {
 }
 
 const passesOneWay = (a, b) => {
-  if ((a.city ?? null) !== (b.city ?? null)) return false;
+  const near = a.radiusKm && a.geo && b.geo ? distanceKm(a.geo, b.geo) <= a.radiusKm : (a.city ?? null) === (b.city ?? null);
+  if (!near) return false;
   if (a.interestedIn?.length && !a.interestedIn.includes(b.gender)) return false;
   if (b.age == null || b.age < (a.ageMin ?? 18) || b.age > (a.ageMax ?? 99)) return false;
   return (a.dealbreakers ?? []).every((k) => (a.accepts?.[k] ?? []).includes(b.values?.[k]));

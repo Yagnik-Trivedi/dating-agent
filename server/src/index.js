@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
-import { env, clientOrigins } from './config/env.js';
+import { env, allowOrigin } from './config/env.js';
 import { keepaliveStatus, startKeepalive, stopKeepalive } from './keepalive.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/error.js';
@@ -21,13 +21,15 @@ import './services/jobs/handlers.js';
 import { startPeriodic, stopPeriodic } from './services/jobs/periodic.js';
 import { startWorker, stopWorker } from './services/jobs/queue.js';
 import { refresh as loadBudget } from './services/llm/budget.js';
+import { CITY_NAMES } from './services/cities.js';
 import { registerSockets } from './sockets/index.js';
 import { io } from './sockets/io.js';
 
 const app = express();
 app.set('trust proxy', 1); // Render's proxy; needed for per-IP rate limits
-app.use(helmet());
-app.use(cors({ origin: clientOrigins }));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } })); // the API is meant to be read by the Vercel site
+app.use('/health', cors()); // any origin: the wake-up check must never be mistaken for a sleeping server (plan 30 S0)
+app.use(cors({ origin: allowOrigin }));
 app.use(express.json({ limit: '1mb' }));
 
 // No DB call: keep-alive pingers hit this.
@@ -44,6 +46,7 @@ app.get('/health/deep', (req, res) => {
   res.status(state === 1 ? 200 : 503).json({ ok: state === 1, mongo: states[state] ?? 'unknown' });
 });
 
+app.get('/api/cities', (req, res) => res.set('Cache-Control', 'public, max-age=86400').json({ cities: CITY_NAMES }));
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, liveCheckRouter);

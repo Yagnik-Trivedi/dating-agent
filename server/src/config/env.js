@@ -15,6 +15,8 @@ const schema = z.object({
   PORT: field(z.coerce.number().int().positive().default(5000)),
   NODE_ENV: field(z.enum(['development', 'production', 'test']).default('development')),
   CLIENT_URL: field(z.string().default('http://localhost:5173')),
+  // Vercel preview deployments of this project (team-scoped hostnames, which only the team can create).
+  CLIENT_URL_PATTERN: field(z.string().default('^https://dating-agent-[a-z0-9-]+-chandal-chowkdi\\.vercel\\.app$')),
   MONGODB_URI: field(z.string({ error: 'MONGODB_URI is required' }).trim()),
   // Local only: some home routers refuse Node's SRV lookups for mongodb+srv:// (Atlas). e.g. DNS_SERVERS=8.8.8.8,1.1.1.1
   DNS_SERVERS: optional,
@@ -85,6 +87,14 @@ if (!parsed.success) {
 export const env = parsed.data;
 if (env.DNS_SERVERS) dns.setServers(env.DNS_SERVERS.split(',').map((x) => x.trim()).filter(Boolean));
 export const clientOrigins = env.CLIENT_URL.split(',').map((s) => s.trim()).filter(Boolean);
+const previewOrigin = new RegExp(env.CLIENT_URL_PATTERN);
+const rejected = new Set();
+/** CORS origin check for /api and Socket.IO: CLIENT_URL (comma-separated) or this project's Vercel previews. */
+export function allowOrigin(origin, cb) {
+  const ok = !origin || clientOrigins.includes(origin) || previewOrigin.test(origin); // no Origin = curl, keep-alive bots
+  if (!ok && !rejected.has(origin)) { rejected.add(origin); console.warn(`CORS: rejected origin ${origin} (not in CLIENT_URL)`); }
+  cb(null, ok);
+}
 
 // Optional so the app (and frontend dev) boots without keys; llm/client.js throws a clear error on first use.
 const missing = ['NEBIUS_API_KEY', 'MODEL_FAST', 'MODEL_MID', 'MODEL_SMART', 'MODEL_EMBED', 'TAVILY_API_KEY'].filter((k) => !env[k]);

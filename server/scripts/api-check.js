@@ -40,11 +40,14 @@ const ok = (msg) => console.log(`✓ ${msg}`);
 
 // --- signup + consent
 const signup = (name, consentAgent = true) => call('POST', '/auth/signup', {
-  body: { email: `${name}-${run}@check.test`, password: 'password123', name, consentAgent },
+  body: { email: `${name}-${run}@check.test`, password: 'password123', name, consentAgent, dob: '1997-05-04', gender: 'woman', interestedIn: ['man'], city: 'Pune', },
 });
 let r = await signup('noconsent', false);
 assert.equal(r.status, 400); assert.equal(r.body.error.code, 'CONSENT_REQUIRED');
 ok('signup without consent → 400 CONSENT_REQUIRED');
+r = await call('POST', '/auth/signup', { body: { email: `kid-${run}@check.test`, password: 'password123', name: 'kid', consentAgent: true, dob: new Date(Date.now() - 17 * 365.25 * 864e5).toISOString().slice(0, 10), gender: 'man', interestedIn: ['woman'], city: 'Pune' } });
+assert.equal(r.status, 400); assert.equal(r.body.error.code, 'UNDERAGE');
+ok('signup under 18 (from the date of birth) → 400 UNDERAGE');
 
 const [A, B, C] = await Promise.all([signup('alice'), signup('bob'), signup('carol')]).then((rs) => rs.map((x) => {
   assert.equal(x.status, 201); assert.ok(x.body.token); assert.equal(x.body.user.passwordHash, undefined);

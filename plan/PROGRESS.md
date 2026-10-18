@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step and **commits locally**. Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-18, by Claude Code (plan files reorganised; plan 30 started)
+- **Last updated:** 2026-10-18, by Claude Code (S0 done, committed locally; next S1 step 0 → STOP)
 - **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -14,7 +14,7 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
-| S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ⬜ | — | First. |
+| S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ✅ | (this commit) | Results below. Render `CLIENT_URL` value for S7 noted. |
 | S1 | Speed (two-phase onboarding, agent pacing) | ⬜ | — | **STOP after step 0** (speed-before numbers). |
 | S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | ⬜ | — | Right after S1. |
 | S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ⬜ | — | |
@@ -26,6 +26,47 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 Local commits since the last push (`780d210`):
 - `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
 - `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
+
+## S0 results (2026-10-18)
+
+**Diagnosis (deployed site, Playwright chromium / firefox / webkit, read-only):**
+- **Main cause: CORS.** Right after the first deploy, the API sent no `Access-Control-Allow-Origin` for either Vercel URL, because `CLIENT_URL` was still a placeholder. Every browser was blocked, and the old `WakeUp.jsx` showed any failed `/health` fetch as "waking", then "Try again".
+- **Old Safari:** the old `WakeUp.jsx` also used `AbortSignal.timeout`, which Safari < 16 lacks. It threw on every try, which looked the same as a sleeping server.
+- **Since `CLIENT_URL` was set:** all 3 engines load, log in and open Discover on the deployed site.
+- **Cold start not reproduced:** the server was awake on every run, and a sleep can't be forced without 15 idle minutes. The new screen waits up to 120 s.
+- **Test-browser limitation, not ours:** Playwright's WebKit build for Windows crashes its network process on any WebSocket (a minimal `ws` server too). Socket.IO falls back to polling. `smoke:browsers` ignores only that one message, only for WebKit on Windows. Real Safari still needs a manual check (S7 QA).
+
+**Fixes:**
+- **`WakeUp.jsx`:** `AbortController` + timer; retries for up to 120 s; "waking" only on timeouts and 502/503/504. A blocked request shows "Your browser blocked the connection (<error name>)".
+- **Server CORS:**
+  - `/health*` answers any origin.
+  - `/api` and Socket.IO accept `CLIENT_URL` plus `CLIENT_URL_PATTERN` (default: this team's Vercel preview hostnames).
+  - Each rejected origin is logged once.
+  - Helmet's CORP is set to cross-origin.
+- **Build:** fails unless `VITE_API_URL` is `https://host` with no trailing slash (or `http://localhost:port`). Target: es2020 / Safari 15 / Firefox 115.
+- **One-call sign-up (one transaction):**
+  - Creates User + Profile (name, date of birth → age, gender, interestedIn, city + coordinates), then the gate.
+  - Under 18 → 400 `UNDERAGE`.
+  - `User.dob` is private.
+- **Cities:**
+  - 104 Indian cities with lat/lng (`server/src/data/cities.json`, `GET /api/cities`).
+  - Sign-up uses a searchable field (native datalist); any other city can be typed and matches by name.
+  - The gate checks a radius in both directions when a side sets `radiusKm` (query + `passesGate` filter in Discover).
+- **Copy:**
+  - Placeholder photo caption removed.
+  - Login reads "Log in / Welcome back."
+  - Validation errors are plain sentences ("Please enter a valid email address.").
+- **`npm run smoke:browsers [-- --url <site> --api <api>]`:** Playwright, as a devDependency; browsers installed locally only.
+
+**Checks:**
+- `npm test` **114/114** (+6 in `test/s0.test.js`); `api-check` all passed (+ an under-18 case); client build green.
+- **`smoke:browsers`, local production build** (vite preview :4173 + API :5000 with `NODE_ENV=production`): ✓ chromium, ✓ firefox, ✓ webkit.
+- **`smoke:browsers`, deployed site (read-only):** ✓ chromium, ✓ firefox; webkit logs in but hits the Windows-WebKit WebSocket crash above.
+- **Layout:**
+  - 375 px and 1440 px for landing / login / sign-up: no horizontal overflow, no console errors.
+  - A real sign-up at 375 px → /onboarding, profile age 30, city Pune with coordinates.
+
+**For S7 (owner sets on Render):** `CLIENT_URL=https://dating-agent-flame.vercel.app,https://dating-agent-chandal-chowkdi.vercel.app`. Previews are covered by the pattern; set `CLIENT_URL_PATTERN` only if the Vercel team slug changes.
 
 ## Plans
 

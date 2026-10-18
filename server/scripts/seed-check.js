@@ -33,7 +33,7 @@ const answers = {
   E: Object.fromEntries(replies.map((r, i) => [`e${i + 1}`, r])),
 };
 
-const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Kiran', email: `kiran-${Date.now().toString(36)}@check.test`, password: 'password123', consentAgent: true } });
+const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Kiran', email: `kiran-${Date.now().toString(36)}@check.test`, password: 'password123', consentAgent: true, dob: '1997-08-09', gender: 'man', interestedIn: ['woman'], city: CITY } });
 const token = signup.token;
 assert.ok(token, 'signup');
 try {

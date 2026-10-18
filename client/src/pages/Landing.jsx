@@ -91,7 +91,6 @@ export default function Landing() {
       {mobile && menu && <div className="l-menu card"><a href="#how" onClick={() => setMenu(false)}>How it works</a><a href="#principles" onClick={() => setMenu(false)}>Safety and principles</a><Link to="/login">Log in</Link></div>}
       <figure className="l-photo">
         <img src={duskPhoto()} alt="" />
-        <figcaption className="ph-tag">Placeholder photo · an evening walk, city at dusk, no faces</figcaption>
         <LiveCard mobile={mobile} />
       </figure>
       <section className="l-copy">

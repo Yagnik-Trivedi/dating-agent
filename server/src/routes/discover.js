@@ -4,7 +4,7 @@ import { Like } from '../models/Like.js';
 import { Profile } from '../models/Profile.js';
 import { User } from '../models/User.js';
 import { enqueue } from '../services/jobs/queue.js';
-import { buildGate, discoverQuery } from '../services/match/gate.js';
+import { buildGate, discoverQuery, passesGate } from '../services/match/gate.js';
 import { createMatch, PUBLIC_PROJECTION } from '../services/matches.js';
 import { httpError, objectId, parse } from '../utils/http.js';
 
@@ -19,11 +19,14 @@ discoverRouter.get('/discover', async (req, res) => {
   ]);
   const gate = mine?.gate ?? await buildGate(me);
   // One indexed query (gate both ways), random order: nothing is ranked by overlap (plan 15 §1).
-  const profiles = await Profile.aggregate([
+  const found = await Profile.aggregate([
     { $match: discoverQuery(gate, [me, ...seen]) },
     { $sample: { size: limit } },
+    { $addFields: { _gate: '$gate' } },
     { $project: PUBLIC_PROJECTION },
   ]);
+  // The query is exact except for the other side's optional radius, which only code can check.
+  const profiles = found.filter((p) => passesGate(gate, p._gate)).map(({ _gate, ...p }) => p);
   res.json({ profiles });
 });
 
