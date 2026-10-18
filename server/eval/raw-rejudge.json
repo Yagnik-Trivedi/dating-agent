@@ -1,0 +1,733 @@
+{
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.95,
+      0.85
+    ],
+    "stopReason": "dealbreaker",
+    "status": "maybe",
+    "turns": 16,
+    "tokens": 92534,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 788,
+    "file": "transcripts/c1-full-run1.md",
+    "agentMsgs": 16,
+    "templateFallbacks": 1,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "8 positives on what matters to you",
+      "7 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "compatible",
+      "maybe"
+    ],
+    "oldScores": [
+      0.75,
+      0.6
+    ]
+  },
+  "c2#1": {
+    "id": "c2",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term",
+    "names": [
+      "Riya",
+      "Aditya"
+    ],
+    "verdicts": [
+      "compatible",
+      "maybe"
+    ],
+    "scores": [
+      0.6,
+      0.5
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 19,
+    "tokens": 97415,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 847,
+    "file": "transcripts/c2-full-run1.md",
+    "agentMsgs": 19,
+    "templateFallbacks": 2,
+    "constrained": 0,
+    "oldPredicted": "incompatible",
+    "reasons": [
+      "3 positives on what matters to you",
+      "a serious friction"
+    ],
+    "oldVerdicts": [
+      "incompatible",
+      "maybe"
+    ],
+    "oldScores": [
+      0.85,
+      0.6
+    ]
+  },
+  "c4#1": {
+    "id": "c4",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "maybe",
+    "reason": "Films and running in Mumbai; both career-first, need space in conflicts, long-term",
+    "names": [
+      "Dev",
+      "Nikhil"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.5,
+      0.7
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 68959,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1151,
+    "file": "transcripts/c4-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 0,
+    "constrained": 0,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "1 positive(s) on what matters to you, 3 notable friction(s)",
+      "2 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "c3#1": {
+    "id": "c3",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Books, pottery, old-city food walks; both life-first, never drink, need lots of alone time",
+    "names": [
+      "Sana",
+      "Leela"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.7,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 109295,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 988,
+    "file": "transcripts/c3-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 1,
+    "constrained": 0,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "3 positives on what matters to you",
+      "4 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "c5#1": {
+    "id": "c5",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Carnatic music, filter coffee, family-first, veg, want kids (Ananya has a mild drinking inconsistency)",
+    "names": [
+      "Ananya",
+      "Karthik"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.65,
+      0.8
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 114223,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 831,
+    "file": "transcripts/c5-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 0,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "3 positives on what matters to you",
+      "5 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "c6#1": {
+    "id": "c6",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Stand-up comedy and fitness in Delhi; both career-first, high energy, want kids (Rohit has a mild workout inconsistency)",
+    "names": [
+      "Pooja",
+      "Rohit"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.85,
+      0.8
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 115543,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 853,
+    "file": "transcripts/c6-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 3,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "6 positives on what matters to you",
+      "4 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.65,
+      0.65
+    ]
+  },
+  "i2#1": {
+    "id": "i2",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "incompatible",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
+    "names": [
+      "Tara",
+      "Sameer"
+    ],
+    "verdicts": [
+      "incompatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 18,
+    "tokens": 86272,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 877,
+    "file": "transcripts/i2-full-run1.md",
+    "agentMsgs": 18,
+    "templateFallbacks": 2,
+    "constrained": 1,
+    "oldPredicted": "incompatible",
+    "reasons": [
+      "serious friction on smoking: never",
+      "3 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "incompatible",
+      "maybe"
+    ],
+    "oldScores": [
+      0.85,
+      0.6
+    ]
+  },
+  "c7#1": {
+    "id": "c7",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency)",
+    "names": [
+      "Hetal",
+      "Parth"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.85,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 117280,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 690,
+    "file": "transcripts/c7-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 2,
+    "constrained": 2,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "5 positives on what matters to you",
+      "4 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "i3#1": {
+    "id": "i3",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "compatible",
+    "reason": "Meghna needs long-term (dealbreaker); Kunal wants short-term (hidden from his tags)",
+    "names": [
+      "Meghna",
+      "Kunal"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.65,
+      0.6
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 125809,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1012,
+    "file": "transcripts/i3-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 1,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "2 positives on what matters to you",
+      "2 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "i4#1": {
+    "id": "i4",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Aisha will never leave Hyderabad (dealbreaker); Vikram is moving abroad (not a profile tag)",
+    "names": [
+      "Aisha",
+      "Vikram"
+    ],
+    "verdicts": [
+      "compatible",
+      "maybe"
+    ],
+    "scores": [
+      0.65,
+      0.5
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 18,
+    "tokens": 79378,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 787,
+    "file": "transcripts/i4-full-run1.md",
+    "agentMsgs": 18,
+    "templateFallbacks": 0,
+    "constrained": 1,
+    "oldPredicted": "incompatible",
+    "reasons": [
+      "3 positives on what matters to you",
+      "a serious friction"
+    ],
+    "oldVerdicts": [
+      "incompatible",
+      "incompatible"
+    ],
+    "oldScores": [
+      0.75,
+      0.85
+    ]
+  },
+  "i6#1": {
+    "id": "i6",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Lifestyle and values: nightlife, drinks regularly, no kids, figuring it out vs family-first, never drinks, wants kids soon, long-term (important to him)",
+    "names": [
+      "Zoya",
+      "Omkar"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.5,
+      0.45
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 97376,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 871,
+    "file": "transcripts/i6-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 1,
+    "constrained": 4,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "1 positive(s) on what matters to you, 1 notable friction(s)",
+      "1 positive(s) on what matters to you, 2 notable friction(s)"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.55,
+      0.55
+    ]
+  },
+  "i7#1": {
+    "id": "i7",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "maybe",
+    "reason": "Lifestyle and values: smoker, non-veg, drinks vs veg (important), never drinks, family-first; no shared interests",
+    "names": [
+      "Kabir",
+      "Hetal"
+    ],
+    "verdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "scores": [
+      0.4,
+      0.5
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 77962,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 674,
+    "file": "transcripts/i7-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 1,
+    "constrained": 2,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "1 positive(s) on what matters to you",
+      "a serious friction"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.5,
+      0.6
+    ]
+  },
+  "i5#1": {
+    "id": "i5",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "compatible",
+    "reason": "Gauri needs a non-drinker (dealbreaker); Arnav brews beer and drinks regularly (hidden from his tags)",
+    "names": [
+      "Gauri",
+      "Arnav"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.7
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 146670,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 992,
+    "file": "transcripts/i5-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 4,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "4 positives on what matters to you",
+      "2 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.6
+    ]
+  },
+  "m2#1": {
+    "id": "m2",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "maybe",
+    "reason": "Ira's profile and replies are too thin to judge",
+    "names": [
+      "Ira",
+      "Parth"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.5,
+      0.65
+    ],
+    "stopReason": "interest",
+    "status": "closed",
+    "turns": 18,
+    "tokens": 88159,
+    "smartCalls": 8,
+    "costUsd": 0,
+    "seconds": 1175,
+    "file": "transcripts/m2-full-run1.md",
+    "agentMsgs": 18,
+    "templateFallbacks": 1,
+    "constrained": 1,
+    "oldPredicted": "incompatible",
+    "reasons": [
+      "a serious friction",
+      "2 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "incompatible"
+    ],
+    "oldScores": [
+      0.6,
+      0.85
+    ]
+  },
+  "m1#1": {
+    "id": "m1",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "compatible",
+    "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style",
+    "names": [
+      "Meera",
+      "Arjun"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.85,
+      0.85
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 89959,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 831,
+    "file": "transcripts/m1-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 0,
+    "constrained": 1,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "5 positives on what matters to you",
+      "5 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "compatible",
+      "maybe"
+    ],
+    "oldScores": [
+      0.85,
+      0.6
+    ]
+  },
+  "m3#1": {
+    "id": "m3",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "maybe",
+    "reason": "Warm and family-minded vs travel-first; kids (important to her, not a dealbreaker) and different cities",
+    "names": [
+      "Ananya",
+      "Varun"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.45,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 18,
+    "tokens": 106861,
+    "smartCalls": 3,
+    "costUsd": 0,
+    "seconds": 1358,
+    "file": "transcripts/m3-full-run1.md",
+    "agentMsgs": 18,
+    "templateFallbacks": 0,
+    "constrained": 0,
+    "oldPredicted": "incompatible",
+    "reasons": [
+      "a serious friction",
+      "3 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "incompatible",
+      "maybe"
+    ],
+    "oldScores": [
+      0.85,
+      0.6
+    ]
+  },
+  "m4#1": {
+    "id": "m4",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "compatible",
+    "reason": "Fun, social energy and both career-driven in Delhi, but he brews beer and drinks regularly and their weekend interests barely overlap",
+    "names": [
+      "Pooja",
+      "Arnav"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.65,
+      0.7
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 17,
+    "tokens": 109769,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 1161,
+    "file": "transcripts/m4-full-run1.md",
+    "agentMsgs": 17,
+    "templateFallbacks": 3,
+    "constrained": 0,
+    "oldPredicted": "maybe",
+    "reasons": [
+      "2 positives on what matters to you",
+      "3 positives on what matters to you"
+    ],
+    "oldVerdicts": [
+      "maybe",
+      "maybe"
+    ],
+    "oldScores": [
+      0.6,
+      0.7
+    ]
+  }
+}

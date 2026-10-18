@@ -34,7 +34,7 @@ export const KG = Object.freeze({
   ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
-  JUDGE_YES_MIN: 0.6, // a yes whose code confidence falls below this is unsure
+  JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)
   // The decision is made in code from the judge's verified evidence (owner's judge fix, 2026-10-18; judgeDecision.js).
   JUDGE_YES_POSITIVES: 2, // verified positives, in THEIR words, on my key facts needed for a yes
   JUDGE_KEY_IMPORTANCE: 0.6, // a key fact: a B answer that matters at least this much (medium/high) or a dealbreaker…
