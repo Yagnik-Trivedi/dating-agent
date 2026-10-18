@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Lock } from 'lucide-react'
+import { Typing } from '../components/prelude'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Layout'
 import { AgentIcon, Button, Chip, ErrorBox, Loading, ProgressBar, Segmented, Spinner } from '../components/ui'
@@ -194,28 +196,46 @@ function Interests({ section, value, onChange }) {
   )
 }
 
+/** What the agent is picking up from the replies so far (the design's learning panel). Code only, no LLM. */
+function learned(replies) {
+  const texts = Object.values(replies ?? {}).map((t) => String(t ?? '').trim()).filter(Boolean)
+  if (texts.length < 2) return []
+  const words = texts.map((t) => t.split(/\s+/).length).sort((a, b) => a - b)
+  const median = words[Math.floor(words.length / 2)]
+  const emojis = texts.join(' ').match(/\p{Extended_Pictographic}/gu) ?? []
+  const laugh = texts.join(' ').toLowerCase().match(/\b(ha(ha)+|he(he)+|lol|lmao)\b/)
+  const lower = texts.filter((t) => /^[a-z]/.test(t)).length / texts.length
+  const hindi = texts.join(' ').toLowerCase().match(/\b(yaar|haan|nahi|kya|accha|acha|bas|thoda|bhi|hai|mujhe|kal)\b/g) ?? []
+  const top = Object.entries(emojis.reduce((m, e) => ({ ...m, [e]: (m[e] ?? 0) + 1 }), {})).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([e]) => e).join(' ')
+  return [
+    ['Reply length', median < 10 ? `short, about ${median} words` : median < 20 ? `medium, about ${median} words` : `long, about ${median} words`],
+    ['Emojis', emojis.length ? top : 'rarely'],
+    laugh && ['Laughs', `“${laugh[0]}”`],
+    hindi.length >= 2 && ['Mixes Hindi and English', 'now and then'],
+    lower >= 0.7 && ['Starts in lowercase', 'most of the time'],
+  ].filter(Boolean)
+}
+
 function StyleSamples({ section, value, onChange }) {
+  const notes = learned(value)
   return (
-    <div className="space-y-5 rounded-3xl border border-line bg-surface p-4 sm:p-6">
-      {section.items.map((item) => (
-        <div key={item.id} className="space-y-2">
-          {item.prompt
-            ? <p className="text-sm italic text-muted">{item.text}</p>
-            : <p className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-surface-2 px-4 py-2.5">{item.text}</p>}
-          <div className="ml-auto max-w-[85%]">
+    <div className="onb-style">
+      <div className="onb-chat">
+        {section.items.map((item, i) => (
+          <div key={item.id} className="onb-pair">
+            {item.prompt ? <span className="onb-from small">{item.text}</span> : <><span className="onb-from small">A match might send you · {i + 1} of {section.items.length}</span><div className="b them">{item.text}</div></>}
             <label htmlFor={`e-${item.id}`} className="sr-only">Your reply to: {item.text}</label>
-            <textarea
-              id={`e-${item.id}`}
-              rows={1}
-              value={value[item.id] ?? ''}
-              maxLength={400}
-              onChange={(e) => onChange({ ...value, [item.id]: e.target.value })}
-              placeholder="reply like you would…"
-              className="block w-full resize-none rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-accent-ink placeholder:text-accent-ink/70 focus:outline-none focus:ring-2 focus:ring-accent/40 field-sizing-content"
-            />
+            <textarea id={`e-${item.id}`} rows={1} value={value[item.id] ?? ''} maxLength={400} className="b you onb-reply"
+              onChange={(e) => onChange({ ...value, [item.id]: e.target.value })} placeholder="Type it like you would…" />
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      <aside className="onb-side"><div className="card">
+        <h3 className="t-h3">What your agent is learning</h3>
+        <p className="small">From your replies so far. You can correct anything later in This is you.</p>
+        <ul className="learn">{(notes.length ? notes : [['How you text', 'Still learning']]).map(([k, v]) => <li key={k} className={notes.length ? 'on' : ''}><span><b>{k}</b><em>{v}</em></span></li>)}</ul>
+        <p className="privacy-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />Your replies are used only to learn how you write. You’ll review everything before your agent uses it.</p>
+      </div></aside>
     </div>
   )
 }
@@ -235,13 +255,10 @@ function Processing({ onDone, onFailed }) {
   }, [onDone, onFailed])
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center" role="status">
-      <div className="relative">
-        <AgentIcon className="size-16" />
-        <Spinner className="absolute -right-2 -bottom-2 size-6 text-agent" />
-      </div>
-      <h1 className="font-display text-2xl font-semibold">Your agent is getting to know you</h1>
-      <p className="max-w-sm text-muted">Turning your answers into a private knowledge graph and learning how you text. This takes under a minute.</p>
+    <div className="st-center onb-processing" role="status">
+      <Typing label="Your agent is getting to know you" />
+      <h1 className="t-h2">Your agent is getting to know you</h1>
+      <p className="t-body muted">Turning your answers into a private map of who you are, and learning how you text. This usually takes under a minute.</p>
     </div>
   )
 }
@@ -300,36 +317,38 @@ export default function Onboarding() {
   const SectionUI = section && SECTION_UI[section.type]
 
   return (
-    <div className="min-h-dvh">
-      <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3">
-          <Logo />
-          {!processing && sections.length > 0 && <span className="text-sm font-semibold text-muted">Step {step + 1} of {sections.length}</span>}
-        </div>
-        {!processing && sections.length > 0 && <div className="mx-auto max-w-2xl px-4 pb-3"><ProgressBar value={(step + (hint ? 0 : 1)) / sections.length} label="Onboarding progress" /></div>}
+    <div className="scr onb-page">
+      <header className="onb-top">
+        <span className="wordmark sm">Prelude</span>
+        {!processing && sections.length > 0 && (
+          <div className="onb-prog" aria-label={`Step ${step + 1} of ${sections.length}: ${section?.title ?? ''}`}>
+            <span className="small">Step {step + 1} of {sections.length} · {section?.title}</span>
+            <div className="segs" style={{ gridTemplateColumns: `repeat(${sections.length}, 1fr)` }}>{sections.map((x, i) => <i key={x.id} className={i < step ? 'done' : i === step ? 'now' : ''} />)}</div>
+          </div>
+        )}
+        <span className="small onb-saved">{processing ? '' : 'Draft saved on this device'}</span>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 pb-32 pt-6">
+      <main className="onb-body">
         {processing ? (
           <Processing onDone={onDone} onFailed={onFailed} />
         ) : !questions ? (
           error ? <ErrorBox message={error} onRetry={load} /> : <Loading label="Loading questions…" />
         ) : (
           <div key={section.id} className="animate-rise">
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent">Section {section.id}</p>
-            <h1 className="mt-1 font-display text-3xl font-semibold">{section.title}</h1>
-            <p className="mb-6 mt-2 text-muted">{section.intro}</p>
+            <h1 className="t-h1">{section.title}</h1>
+            <p className="t-lead onb-intro">{section.intro}</p>
             <SectionUI section={section} value={answers[section.id]} onChange={(v) => setAnswers((a) => ({ ...a, [section.id]: v }))} />
-            {error && <div className="mt-4"><ErrorBox message={error} /></div>}
+            {error && <div style={{ marginTop: 16 }}><ErrorBox message={error} /></div>}
           </div>
         )}
       </main>
 
       {!processing && section && (
-        <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur">
-          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-            <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>Back</Button>
-            <span className="truncate text-xs text-muted" aria-live="polite">{hint ?? 'Draft saved on this device'}</span>
+        <footer className="onb-foot">
+          <div className="onb-foot-in">
+            <Button variant="secondary" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>Back</Button>
+            <span className="small onb-hint" aria-live="polite">{hint ?? ''}</span>
             {last
               ? <Button onClick={submit} loading={submitting} disabled={Boolean(hint)}>Finish</Button>
               : <Button onClick={() => setStep((s) => s + 1)} disabled={Boolean(hint)}>Next</Button>}
