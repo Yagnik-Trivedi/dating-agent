@@ -50,7 +50,7 @@ Sections, in order:
 | 2:30–2:50 | Continue as myself → the reveal ("the first N messages were handled by your agents") → date ideas (only if the Tavily key is set) |
 | 2:50–3:00 | Architecture plus Nemotron routing plus eval numbers on one slide |
 
-**Demo footage:** record from the pre-baked judge accounts and speed up the agent conversation in the edit (it takes minutes live). Only show features that exist: no liveness or "verified" claims unless plan 19 is built.
+**Demo footage:** record from the pre-baked judge accounts and speed up the agent conversation in the edit (it takes minutes live). Only show features that exist. If plan 19 shipped, show the live check and call it "Live-checked" (a real person on camera, not photo or ID verification); never say "verified".
 
 Use royalty-free music or none, and no third-party trademarks or copyrighted music. Record at 1080p. Do the voice-over after the edit.
 

@@ -72,8 +72,9 @@
 ### Wake-up screen (from plan 12)
 - If `/health` takes more than 3 s, show "Waking up the server…" with retry. Render's free tier sleeps.
 
-### Verification screen
-- Build it **only if plan 19 (verification) gets built**. Until then, nothing in the UI, landing page or copy may claim profiles are liveness-checked or "verified".
+### Live check screen (plan 19)
+- `/live-check` and the "Live-checked" badge, as specified in `plan/19-live-check.md` (the functional screen is built there; style it from the design export here).
+- Copy: only "Live-checked" with its tooltip. Never "verified", "photo verified", "ID verified" or "every profile is checked". If plan 19 is switched off at its Oct 25 cut-off, remove the screen, the badge and every mention.
 
 ### Settings
 - Default agent mode (off / shadow / auto) with a plain explanation.
