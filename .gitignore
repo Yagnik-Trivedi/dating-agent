@@ -10,3 +10,6 @@ coverage/
 server/eval/tmp/
 server/.dev-db/
 server/eval/logs/
+
+# Owner's design reference (kept local; plan 10 ports what it needs into client/)
+Frontend-Design/
