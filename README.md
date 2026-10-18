@@ -1,45 +1,142 @@
-# dating-agent
+# Prelude
 
-Dating apps match on preferences, not character, so people often find out two or three conversations in that a match isn't compatible. dating-agent is a MERN dating app with a built-in AI agent. After a match, your agent checks the other profile for fakes and inconsistencies, reads it to understand the person, and holds the early conversation in your own voice, grounded in your personal knowledge graph. It then classifies the match as **Compatible / Maybe / Not compatible**, with evidence. When it's compatible, you take over the chat. When it isn't, the agent politely winds it down and you never had to spend time on it.
+**Your AI agent has the first conversation for you, in your own words, and tells you, with quotes, whether it's worth your time.**
 
-Built for the Nebius x NVIDIA Global AI Hackathon.
+[![License: MIT](https://img.shields.io/badge/License-MIT-A04E2E.svg)](LICENSE) · **Live demo:** TODO(deploy): Vercel URL · Judge logins are in the Devpost testing instructions.
 
-## What the verdict is (and isn't)
+Built for the Nebius x NVIDIA Global AI Hackathon (Best Apps & Agents). The repo is called `dating-agent`; the app is Prelude.
 
-Research on pre-meeting compatibility prediction is sobering: what people say they want, and how well two people
-"match" on paper, predicts very little about whether they actually click (e.g. Joel, Eastwick & Finkel, 2017). So the
-agent doesn't try to predict love. Its job is narrower: **filter clear mismatches and fakes, and save you the first few
-conversations**. Every reason in a report cites the real messages it's based on, dealbreakers are a hard gate, a low-
-confidence read is always a "Maybe", and you can override any verdict ("Talk anyway").
+## The problem
+
+Dating apps match people on preferences, not character. Most people find out two or three conversations in that a
+match was never going to work. That's hours of small talk spent on people who were never a fit.
+
+## How it works
+
+```
+1. Your agent learns you    2. Gate + trust check       3. Agents write the     4. Two independent      5. You take over
+   questionnaire, stories,     dealbreakers filter the     first conversation      judges, with quotes     one tap; the reveal
+   "how would you reply?"      deck; fakes are flagged     in each person's voice  Compatible · Maybe ·    shows which lines
+   → your knowledge graph      before anyone says hello    you read every line     Not compatible          were your agent's
+```
+
+- **You stay in control:** watch live, pause your agent, or take over in one tap. Everyone agrees at sign-up that agents may handle early chats.
+- **Your agent never invents facts about you.** Every claim about you cites a fact from your graph, checked in code. When it doesn't know, it asks you ("Ask my human").
+- **Only you see your read**, and every point quotes the other person's own words.
+
+<!-- TODO(deploy): screenshot or GIF of the match room -->
+
+## How we use NVIDIA Nemotron + Nebius Token Factory
+
+Every LLM call goes through one client (`server/src/services/llm/client.js`) pointed at Token Factory's
+OpenAI-compatible API. Model IDs come from `.env`, never from code, so switching providers is an `.env` change.
+
+| Task | Tier → model | Why this tier |
+|---|---|---|
+| Agent replies, reading their message (perceive + notes), match brief, fact extraction from stories, trust check, reflections, voice corrections, notes compaction | **mid** → Nemotron 3 Super | Needs real language understanding in your voice, including Hinglish; reasoning is off for chat turns (2–5 s instead of 10–40 s). |
+| Judges (one per side, private) | **smart** → Nemotron 3 Ultra, falling back to Super | The one decision that matters most. It runs once per side per conversation, at temperature 0. |
+| Stance check, wind-down message, icebreakers, date-idea write-up | **fast** → Nemotron 3.5 Lightning | Short, frequent, cheap. |
+| Concept matching, "asked about me?", leak check, exemplar choice | **embed** → Nemotron embedding model | One shared vector per *concept* (not per fact), so storage stays at ~88 KB per user. |
+| Live check (optional) | **vision** → Nemotron VL | Describes pose, smile, face count and screen/print signs; **code** decides pass/fail. |
+
+TODO(deploy): replace with the exact Token Factory model IDs after the switch (plan 14). Development ran on NVIDIA's API with the same Nemotron families.
+
+- **Reasoning models:** `max_tokens` is generous (≥ 2048) so reasoning can't eat the answer. Reasoning text lives in a separate field and never reaches a user. Per tier, reasoning can be switched off with `chat_template_kwargs.enable_thinking=false` where speed matters.
+- **Every output is validated:** JSON outputs go through zod, with one retry, then a graceful fallback. Quotes must be verbatim or they're dropped in code.
+- **Budget guard:** a global requests-per-minute limiter, per-user and global daily caps, an all-time USD cap (`LLM_HARD_CAP_USD`) that fails closed, and a kill switch (`LLM_ENABLED=false`). Every call is logged (purpose, tier, tokens, latency, cost), and nothing about prompt contents is stored.
+- **Why Token Factory:** one OpenAI-compatible API for chat, embeddings and vision, tiered models with clear prices, and fast iteration from free credits.
+
+## Architecture
+
+MongoDB · Express 5 · React 19 + Vite · Node 22, with Socket.IO for the live match room. A Mongo-backed job queue
+(no Redis) runs onboarding builds, agent turns, judges and nightly maintenance; a restart resumes them.
+
+- `server/src/services/`: `llm/` (client, budget), `kg/` (knowledge graph), `trust/`, `brief/`, `conversation/` (per-turn engine, judges), `agent/` (scheduling, pause, take over), `compat/` (settle, hand-off), `liveCheck/`, `tavily/` (date ideas).
+- `client/src/`: the Prelude design (light + "lamplight"), one screen per route, code-split.
+- Every message stores `authoredBy: human | agent`, for the audit trail and the reveal at hand-off.
+
+## Knowledge graph
+
+Six layers per user:
+
+1. **Public profile.**
+2. **Gate:** basics, answers, accepted values and dealbreakers, read only by code as one indexed query.
+3. **Self graph:** facts linked to shared concepts, with edges.
+4. **Voice:** how you text, as distributions plus your real sample replies.
+5. **Notes about others:** only from the transcript, each with a verbatim quote.
+6. **Decisions:** your judge's verdict, yours only.
+
+- **Every fact carries evidence:** a confidence, verbatim quotes and a disclosure tier (`public | if_asked | private`). Private facts are never sent to a model as something it may say.
+- **Every self-claim cites a fact, checked in code.** A missing or contradicted citation triggers one regeneration. Stated answers ("I'm not looking for anything serious") are checked against yours, in code.
+- **Information boundary:** no agent or judge ever reads the other user's graph or voice. The only cross-user paths are the transcript, the public profile, and the gate (a boolean). A DB-spy test enforces this.
+- **Scale (no LLM, 2,000 users):** discover p95 **4.6 ms** (one indexed query + `$sample`), context build per message 1.7 ms when cached, ~88 KB per user → **~5,900 users fit in a free Atlas M0**.
 
 ## Evaluation
 
-We ran the full pipeline on 20 hand-labelled seed pairs (trust check → brief → agent ↔ agent chat → two independent
-judges), once, on NVIDIA's free API. Full numbers: [`server/eval/results/latest.md`](server/eval/results/latest.md).
+We ran the full pipeline on 20 hand-labelled seed pairs: trust check → brief → agent ↔ agent chat → two
+independent judges. Full numbers are in [`server/eval/results/latest.md`](server/eval/results/latest.md), with every transcript
+in [`server/eval/transcripts/`](server/eval/transcripts/).
 
 | What | Result |
 |---|---|
 | Fakes caught | **2/2**, no genuine profile flagged |
 | Dealbreaker gate | **1/1**: the clashing pair never became a chat |
-| Verdict accuracy (17 non-fake pairs) | **8/17 (47%)** with the judge deciding in code (was 4/17); **5/7** compatible pairs found (was 0/7); **1** compatible ↔ incompatible swap |
+| Verdict accuracy (17 non-fake pairs) | **8/17 (47%)** with the judge deciding in code (was 4/17); **5/7** compatible pairs found (was 0/7); **1** compatible ↔ incompatible swap at the calibrated threshold |
 | Unsupported claims about the user | **21%** of 137 self-claims (offline judge); 28% vs 35% with the conversation rules on vs off |
+| Private-fact leaks (probe) | 0/20 by keyword, 4/20 by an LLM judge |
 | Voice fidelity | style distance **0.16**, language-mix distance **0.06** (0 = the persona's real texting) |
 | Cost | ~101k tokens and ~17 messages per pair; fakes ~3k tokens |
-| Scale (no LLM) | discover p95 **4.6 ms**; ~88 KB per user → ~5,900 users fit in a free Atlas M0 |
 
-**What this tells us.** The agent is good at the part we trust it with: catching fakes and hard dealbreakers before
-anyone spends time. The first run showed the judges hedging (one side said "unsure" in most chats), so the model now
-only lists evidence (quotes, each tied to something that matters to you) and **code decides**: a stated dealbreaker or
-a serious clash on something that matters a lot is a no; two or more quote-checked positives on what matters to you, with no
-serious friction, is a yes; anything else is a Maybe. Re-judging the same 17 saved chats doubled accuracy
-([rejudge.md](server/eval/results/rejudge.md)). The remaining misses were hidden conflicts nobody asked about, so the agent
-now has to ask directly about anything that matters a lot to you before a chat can end; on fresh chats for those
-pairs, the drinking conflict surfaced and was caught ([results-step4.md](server/eval/results-step4.md)).
+**What this tells us.** The agent is good at what we trust it with: catching fakes and hard dealbreakers before
+anyone spends time. The first run showed the judges hedging (one side said "unsure" in most chats). So now the model
+only lists evidence, each quote tied to something that matters to you, and **code decides**:
+
+- **No:** a stated dealbreaker, or a serious clash on something that matters a lot.
+- **Yes:** two or more quote-checked positives on what matters to you, with no serious friction.
+- **Maybe:** anything else.
+
+Re-judging the same 17 saved chats doubled accuracy ([rejudge.md](server/eval/results/rejudge.md)). The remaining
+misses were hidden conflicts nobody asked about. So the agent must now ask directly about anything that matters a lot
+to you before a chat can end. On fresh chats for those pairs, the drinking conflict surfaced and was caught
+([results-step4.md](server/eval/results-step4.md)).
+
+## Safety and consent
+
+- **Consent** is required at sign-up: "Early conversations with your matches may be handled by AI agents, including yours."
+- **You're in control:** you can read every line, pause your agent, take over in one tap, or turn agents off entirely. "Talk anyway" overrides any verdict.
+- **Honest if asked:** a sincere "are you a bot?" always gets an honest answer. At hand-off, the reveal says how many messages were the agents'.
+- **Scam and fake detection:** rules plus an LLM consistency check on the public profile; scam scripts in chat stop the agents at once.
+- **No inference of religion, caste, ethnicity or race** from names or photos. Profile photos stay blurred until both people say yes.
+- **Live check (optional):** two random moves on camera show a real person made the account. It's labelled "Live-checked"; it never claims to check photos or ID. Frames are never stored.
+- **Delete my data** removes your profile, graph, voice and messages, and anonymises your side of any match.
+
+## Honest limits
+
+- **Predicting compatibility before two people meet is weak in the research** (e.g. Joel, Eastwick & Finkel, 2017). So Prelude filters clear mismatches and fakes and saves you the first conversations; it doesn't claim to predict love.
+- **Synthetic evaluation:** the evaluation uses 38 hand-written synthetic personas, not real users.
+- **Languages:** English and the Indian code-switched mixes we tested (Hinglish, Devanagari Hindi, Gujarati-, Tamil- and Marathi-English).
+- **Photos:** the landing photo is a labelled placeholder.
 
 ## Setup
 
-TODO
+```bash
+git clone https://github.com/Yagnik-Trivedi/dating-agent && cd dating-agent
+cd server && npm install && cp .env.example .env   # fill in the keys (see comments in .env.example)
+npm run dev-db                                     # local MongoDB replica set on :27999 (keep it running)
+npm run seed                                       # 38 demo personas with full knowledge graphs (~30 min)
+npm run dev                                        # API on :5000
+cd ../client && npm install && npm run dev         # web app on http://localhost:5173
+```
 
-## How we use NVIDIA Nemotron + Nebius Token Factory
+- Tests: `cd server && npm test` (spins up its own in-memory replica set).
+- Simulate a pair: `node scripts/simulate.js seed01@demo.local seed04@demo.local`.
+- Evaluation: `node scripts/eval.js --yes`, then the scripts in `server/scripts/eval/`.
 
-TODO
+## Deploy
+
+Runs entirely on free tiers: Render (API), Vercel (web), MongoDB Atlas M0, and a keep-alive bot.
+Step-by-step instructions are in [DEPLOY.md](DEPLOY.md).
+
+## Team and license
+
+TODO(deploy): team names. MIT, see [LICENSE](LICENSE).
