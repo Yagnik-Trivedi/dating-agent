@@ -1,59 +1,65 @@
-import { useCallback, useEffect, useState } from 'react'
+// Matches (the design's match cards: photo, name, one calm line about where things stand).
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Avatar, Button, EmptyState, ErrorBox, Loading, StatusBadge } from '../components/ui'
+import { ChevronRight } from 'lucide-react'
+import { Btn, EmptyNote, Thumb } from '../components/prelude'
 import { useSocketEvent } from '../hooks/useSocket'
 import { api, errMsg } from '../lib/api'
 
-const when = (iso) => {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+/** One plain line per state, from my side (never the other side's decision). */
+export function stateLine(m) {
+  switch (m.status) {
+    case 'matched': case 'trust_check': return 'Your agent is checking their profile'
+    case 'briefing': return 'Your agent is reading their profile'
+    case 'scheduled': return 'Your agent starts this chat tomorrow'
+    case 'agent_chatting': return m.paused ? 'Your agent is paused' : m.agentActive ? 'Agents chatting' : 'You’re chatting'
+    case 'evaluating': return 'Your agent is writing its read'
+    case 'compatible': return 'Your agent’s read is ready · you seem to get along'
+    case 'maybe': return 'Your agent’s read is ready · a maybe'
+    case 'incompatible': return 'Your agent’s read is ready'
+    case 'handed_off': return 'You’re chatting'
+    case 'flagged_fake': return 'Your agent thinks this profile is fake'
+    case 'closed': return 'Closed'
+    default: return ''
+  }
+}
+const READ = ['compatible', 'maybe', 'incompatible']
+const when = (d) => {
+  const t = new Date(d)
+  return Date.now() - t < 86_400_000 ? t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : t.toLocaleDateString([], { day: 'numeric', month: 'short' })
 }
 
 export default function Matches() {
   const [matches, setMatches] = useState(null)
   const [error, setError] = useState(null)
-
-  const load = useCallback(() => {
-    api.get('/api/matches').then((r) => { setMatches(r.data.matches); setError(null) }).catch((e) => setError(errMsg(e)))
-  }, [])
-  useEffect(load, [load])
-
+  const load = () => api.get('/api/matches').then((r) => { setMatches(r.data.matches); setError(null) }).catch((e) => setError(errMsg(e)))
+  useEffect(() => { load() }, [])
   useSocketEvent('match:new', ({ match }) => setMatches((m) => (m && !m.some((x) => x._id === match._id) ? [match, ...m] : m)))
   useSocketEvent('match:status', ({ matchId, status, agentActive }) => setMatches((m) => m?.map((x) => (String(x._id) === String(matchId) ? { ...x, status, agentActive } : x))))
-  useSocketEvent('message:new', ({ message }) => setMatches((m) => m?.map((x) => (String(x._id) === String(message.matchId)
-    ? { ...x, lastMessage: message, lastMessageAt: message.createdAt, unread: x.unread + (String(message.senderId) === String(x.other.userId) ? 1 : 0) }
-    : x)).sort((a, b) => new Date(b.lastMessageAt ?? b.createdAt) - new Date(a.lastMessageAt ?? a.createdAt))))
-
-  if (error) return <ErrorBox message={error} onRetry={load} />
-  if (!matches) return <Loading label="Loading matches…" />
+  useSocketEvent('message:new', ({ message }) => setMatches((m) => m?.map((x) => (String(x._id) === String(message.matchId) ? { ...x, lastMessage: message, lastMessageAt: message.createdAt, unread: (x.unread ?? 0) + 1 } : x))))
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 font-display text-3xl font-semibold">Matches</h1>
-      {matches.length === 0 ? (
-        <EmptyState title="No matches yet" action={<Link to="/discover"><Button>Discover people</Button></Link>}>
-          When you and someone like each other, your agent starts with a trust check and takes it from there.
-        </EmptyState>
+    <div className="page">
+      <header className="page-head"><div><h1 className="t-h1">Matches</h1><p>People you both said yes to. Your agent has the first conversation; you can read along and step in whenever you like.</p></div></header>
+      {error ? (
+        <div className="st-center"><h2 className="t-h2">We couldn’t load your matches</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div>
+      ) : !matches ? (
+        <ul className="m-list" aria-busy="true">{[0, 1, 2].map((i) => <li key={i} className="m-card"><div className="sk" style={{ width: 52, height: 64 }} /><div style={{ flex: 1, display: 'grid', gap: 8 }}><div className="sk sk-l" /><div className="sk sk-s" /></div></li>)}</ul>
+      ) : !matches.length ? (
+        <EmptyNote title="No matches yet" action={<Link className="text-link" to="/discover">See today’s introductions</Link>}>When you and someone both say yes, they’ll appear here and your agent will say hello for you.</EmptyNote>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+        <ul className="m-list">
           {matches.map((m) => (
             <li key={m._id}>
-              <Link to={`/matches/${m._id}`} className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-surface-2">
-                <Avatar src={m.other.photo} name={m.other.name} className="size-12" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate font-semibold">{m.other.name}</span>
-                    <span className="shrink-0 text-xs text-muted">{when(m.lastMessageAt ?? m.createdAt)}</span>
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <p className={`min-w-0 flex-1 truncate text-sm ${m.unread ? 'font-semibold text-ink' : 'text-muted'}`}>
-                      {m.lastMessage ? m.lastMessage.text : 'No messages yet'}
-                    </p>
-                    {m.unread > 0 && <span className="size-2.5 shrink-0 rounded-full bg-accent" aria-label={`${m.unread} unread`} />}
-                  </div>
-                  <div className="mt-1.5"><StatusBadge status={m.status} agentActive={m.agentActive} /></div>
-                </div>
+              <Link className={`m-card ${m.unread ? 'unread' : ''}`} to={READ.includes(m.status) ? `/matches/${m._id}/report` : `/matches/${m._id}`}>
+                <Thumb src={m.other.photo} name={m.other.name} size={52} clear={m.status === 'handed_off'} />
+                <span className="m-body">
+                  <span className="m-top"><b>{m.other.name}</b><span className="t-data">{when(m.lastMessageAt ?? m.createdAt)}</span></span>
+                  <span className={`m-state s-${m.status}`}>{stateLine(m)}</span>
+                  {m.lastMessage && <span className="m-last">{m.lastMessage.text}</span>}
+                </span>
+                {m.unread > 0 && <i className="m-dot" aria-label={`${m.unread} unread`} />}
+                <ChevronRight size={18} strokeWidth={1.6} aria-hidden="true" className="m-chev" />
               </Link>
             </li>
           ))}

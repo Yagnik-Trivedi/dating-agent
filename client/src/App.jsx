@@ -14,6 +14,7 @@ import OnboardingReview from './pages/OnboardingReview'
 import Profile from './pages/Profile'
 import Report from './pages/Report'
 import Settings from './pages/Settings'
+import You from './pages/You'
 
 /** Not logged in → /login. Onboarding not done → /onboarding (unless this page is part of onboarding). */
 function Protected({ children, onboarding = false }) {
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/matches/:id" element={<MatchRoom />} />
               <Route path="/matches/:id/report" element={<Report />} />
               <Route path="/inbox" element={<Inbox />} />
+              <Route path="/you" element={<You />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

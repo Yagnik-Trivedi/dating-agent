@@ -119,3 +119,44 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 .consent { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: var(--trust-tint); color: var(--ink); font-size: 14.5px; line-height: 21px; cursor: pointer; }
 .consent input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--trust); flex: none; }
 .consent b { font-weight: 600; }
+
+/* ============ Matches + Introductions ============ */
+.m-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 760px; }
+.m-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--e1); text-decoration: none; color: var(--ink); transition: border-color var(--d1) var(--ease); }
+.m-card:hover { border-color: var(--line-strong); }
+.m-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.m-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.m-top b { font-size: 17px; font-weight: 600; }
+.m-state { font-size: 14px; color: var(--trust); font-weight: 600; }
+.m-state.s-flagged_fake { color: var(--flag); } .m-state.s-closed, .m-state.s-incompatible { color: var(--muted); }
+.m-state.s-handed_off, .m-state.s-compatible { color: var(--shared); }
+.m-last { font-size: 14.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-card.unread .m-last { color: var(--ink); font-weight: 600; }
+.m-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+.m-chev { color: var(--muted); flex: none; }
+.intro-page { max-width: 760px; }
+.intro { padding: 24px clamp(18px, 4vw, 32px); display: grid; gap: 16px; box-shadow: var(--e2); }
+.intro-who { display: flex; align-items: center; gap: 14px; }
+.intro-bio { color: var(--ink); }
+.intro-q { padding: 14px 16px; border-radius: 12px; background: var(--sunken); }
+.intro-q .t-label { margin-bottom: 4px; }
+.intro-a { margin: 0; font: italic 400 18px/27px var(--serif); color: var(--ink); }
+.chip { background: var(--sunken); color: var(--ink-2); }
+.intro-actions { position: sticky; bottom: 84px; display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+@media (min-width: 821px) { .intro-actions { bottom: 20px; } }
+.intro.matched .v-actions { flex-wrap: wrap; border-top: 0; padding-top: 6px; }
+.intro.matched .btn { text-decoration: none; }
+
+/* ============ This is you (fluid) ============ */
+.page-you { min-height: auto; padding-bottom: 48px; }
+.page-you .you-head { padding: 26px clamp(16px, 4vw, 64px) 18px; }
+.page-you.d .you-grid { grid-template-columns: minmax(0, 620px) minmax(0, 1fr); padding: 0 clamp(16px, 4vw, 64px); }
+.page-you.m .you-grid { display: block; padding: 0 16px 20px; overflow: visible; }
+.page-you .map-card { padding: 10px 12px 14px; }
+.page-you .k-hub { outline: none; }
+.fact-edit { display: flex; gap: 6px; align-items: center; grid-column: 1 / -1; }
+.how-fix { margin-top: 14px; display: grid; gap: 8px; }
+.how-row { display: flex; gap: 8px; align-items: center; }
+.style-chip { text-align: left; }
+@media (max-width: 1100px) { .page-you.d .you-grid { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .intro-actions { gap: 8px; } .intro-actions .btn { flex: 1; min-width: 0; padding: 0 10px; white-space: normal; line-height: 1.15; font-size: 15px; } }
