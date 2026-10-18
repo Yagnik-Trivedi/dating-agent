@@ -143,7 +143,8 @@ export async function judgeSide({ conversationId, userId }) {
       Profile.findOne({ userId: me }, { name: 1, gate: 1 }).lean(),
       KgFact.find({ observerId: me, matchId: match._id }, { predicate: 1, object: 1, evidence: 1, confidence: 1 }).sort({ confidence: -1 }).limit(30).lean(),
       ChatEvent.find({ observerId: me, matchId: match._id }).sort({ createdAt: 1 }).lean(),
-      Message.find({ matchId: match._id }).sort({ createdAt: 1 }).lean(),
+      // Up to the end of this conversation: never a wind-down or a later human message (re-judging, rejudge.js).
+      Message.find({ matchId: match._id, ...(conv.endedAt && { createdAt: { $lte: conv.endedAt } }) }).sort({ createdAt: 1 }).lean(),
     ]);
     const userName = nameOf(match, me);
     const matchName = nameOf(match, otherId);

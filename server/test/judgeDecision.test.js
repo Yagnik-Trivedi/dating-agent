@@ -46,8 +46,10 @@ test('an undiscussed dealbreaker is a severity-2 friction that does not block ye
   assert.equal(d.confidence, Math.round((KG.JUDGE_CONF.YES_BASE - KG.JUDGE_CONF.YES_PER_NOTABLE_FRICTION) * 100) / 100);
 });
 
-test('a dealbreaker that came up without a clear answer blocks yes but is not a no', () => {
-  assert.equal(decide({ positives: [pos('F3', 'a'), pos('F2', 'b')], dealbreakerRisk: [{ attribute: 'smoking', value: null }] }).decision, 'unsure');
+test('a dealbreaker that came up without a clear answer counts as undiscussed: severity 2, not a block', () => {
+  const d = decide({ positives: [pos('F3', 'a'), pos('F2', 'b')], dealbreakerRisk: [{ attribute: 'smoking', value: null }], undiscussed: ['smoking'] });
+  assert.equal(d.decision, 'yes');
+  assert.deepEqual(d.frictions.map((f) => [f.attribute, f.severity]), [['smoking', 2]], 'one friction, not two');
 });
 
 test('confidence grows with evidence; yes drops to unsure when notable frictions pull it under JUDGE_YES_MIN', () => {
