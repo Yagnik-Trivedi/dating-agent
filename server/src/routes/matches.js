@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
-import { cancelReplies, thaw } from '../services/agent/index.js';
+import { cancelReplies, pauseAgent, resumeAgent, thaw } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
@@ -72,6 +72,22 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   res.json({ match: await matchDetail(match, req.user._id) });
 });
 
+// Pause / Resume my agent in this match (Take over stays one-way). 409 when it isn't running / can't come back.
+matchesRouter.post('/matches/:id/pause', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await pauseAgent(_id, req.user._id);
+  if (!match) throw httpError(409, 'NOT_RUNNING', 'Your agent is not running in this chat');
+  emitStatus(match);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+matchesRouter.post('/matches/:id/resume', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await resumeAgent(_id, req.user._id);
+  if (!match) throw httpError(409, 'CANNOT_RESUME', 'Only a paused agent can resume (not after you took over or decided)');
+  emitStatus(match);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+
 // "Let them talk a bit longer" on a Maybe: once per match, up to EXTEND_TURNS more messages, then both judges again.
 matchesRouter.post('/matches/:id/extend', async (req, res) => {
   const { _id } = await getMatchFor(req.params.id, req.user._id);
@@ -118,8 +134,13 @@ matchesRouter.get('/conversations/:id/replay', async (req, res) => {
 matchesRouter.get('/matches/:id/kg', async (req, res) => {
   const me = req.user._id;
   const match = await getMatchFor(req.params.id, me);
-  const facts = await KgFact.find({ matchId: match._id, observerId: me, subjectId: otherUserId(match, me) }).lean();
-  res.json({ facts });
+  // My notes about them, MY chat moments and how interested my agent reads them (never the other side's view).
+  const [facts, events, conv] = await Promise.all([
+    KgFact.find({ matchId: match._id, observerId: me, subjectId: otherUserId(match, me) }).lean(),
+    ChatEvent.find({ matchId: match._id, observerId: me }).sort({ createdAt: 1 }).lean(),
+    Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean(),
+  ]);
+  res.json({ facts, events, interest: conv?.agentState?.[String(me)]?.interest ?? null });
 });
 
 // Only once the agents think it's worth meeting (or both people took over).

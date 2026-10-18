@@ -57,6 +57,33 @@ export async function onIncomingMessage(message) {
 }
 
 /**
+ * Pause / Resume (owner's design, plan 10): pause stops my agent in this match without me writing anything; resume
+ * turns it back on and, if it's my turn, my agent replies. Taking over (or deciding) is final, so neither undoes that.
+ * → the updated match, or null when not allowed.
+ */
+export async function pauseAgent(matchId, userId) {
+  const match = await Match.findOneAndUpdate(
+    { _id: matchId, perUser: { $elemMatch: { userId, agentActive: true } } },
+    { $set: { 'perUser.$.agentActive': false, 'perUser.$.pausedAt': new Date() } },
+    { new: true },
+  );
+  if (match) cancelReplies(match._id, userId); // a reply being written is dropped by the pre-send re-check
+  return match;
+}
+export async function resumeAgent(matchId, userId) {
+  const match = await Match.findOneAndUpdate(
+    { _id: matchId, perUser: { $elemMatch: { userId, agentActive: false, pausedAt: { $ne: null }, tookOverAt: null, decision: null } } },
+    { $set: { 'perUser.$.agentActive': true }, $unset: { 'perUser.$.pausedAt': 1 } },
+    { new: true },
+  );
+  if (match?.status === 'agent_chatting') {
+    const last = await Message.findOne({ matchId: match._id }).sort({ createdAt: -1 }).lean();
+    if (last && String(last.senderId) !== String(userId)) await scheduleReply(match._id, userId);
+  }
+  return match;
+}
+
+/**
  * A judge demo match frozen mid-conversation (seed.js --judges) resumes when its user opens it: the agent that didn't
  * send the last message replies, so a few live turns follow within seconds (DEMO_PACING=fast).
  */

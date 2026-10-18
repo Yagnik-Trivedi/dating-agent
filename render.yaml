@@ -43,6 +43,8 @@ services:
         sync: false
       - key: TAVILY_API_KEY
         sync: false
+      - key: TAVILY_MAX_SEARCHES # of the 1,000 Tavily credits: ~700 for production (pre-warm + judges + demo + judging)
+        value: "700"
       # Spending protection: per-model prices (USD per 1M tokens, "input,output") make the all-time cap work.
       - key: LLM_PRICE_FAST
         sync: false

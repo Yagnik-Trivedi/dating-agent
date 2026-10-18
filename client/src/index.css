@@ -1,122 +1,65 @@
 @import "tailwindcss";
+@import "./styles/prelude-design.css";
+@import "./styles/prelude-app.css";
 
+/* Prelude tokens (owner's design, Frontend-Design/04-direction): light, then lamplight (dark). Each colour has one job:
+   accent = your actions · shared = things you share · trust = verified / private / in control · flag = fake warnings. */
 :root {
-  --bg: #fbf7f2;
-  --surface: #ffffff;
-  --surface-2: #f4eee6;
-  --ink: #2a211c;
-  --muted: #6b5f57;
-  --line: #e7ddd2;
-  --accent: #b54a32;
-  --accent-ink: #ffffff;
-  --accent-soft: #f7e3dc;
-  --agent: #3c7466;
-  --agent-ink: #ffffff;
-  --agent-soft: #e2efeb;
-  --good: #2f7a4d;
-  --warn: #a3660f;
-  --bad: #b23a3a;
+  --bg: #F8F3EC; --surface: #FFFCF7; --sunken: #F1E9DF; --ink: #33241C; --ink-2: #69594E; --muted: #776558;
+  --line: #E6DACC; --line-strong: #D3C2AF; --accent: #A04E2E; --accent-press: #8D4427; --on-accent: #FFF8F1;
+  --shared: #8C5212; --shared-tint: #F6E7CF; --shared-mark: #D79843; --trust: #3D6A51; --trust-tint: #E2EDE4; --flag: #7E4757; --flag-tint: #F3E4E8;
+  --e1: 0 1px 2px rgb(51 36 28 / .05); --e2: 0 1px 2px rgb(51 36 28 / .05), 0 10px 28px -14px rgb(51 36 28 / .22); --e3: 0 2px 4px rgb(51 36 28 / .04), 0 28px 64px -30px rgb(51 36 28 / .34);
+  --serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+  --sans: "Source Sans 3 Variable", "Source Sans 3", "Noto Sans Devanagari Variable", system-ui, sans-serif;
+  --mono: "Source Code Pro Variable", "Source Code Pro", ui-monospace, monospace;
+  --ease: cubic-bezier(.45, 0, .55, 1); --d1: 200ms; --d2: 300ms; --d3: 450ms;
+  --light: radial-gradient(ellipse 1100px 640px at 78% -12%, rgb(244 206 165 / .38), transparent 70%);
   color-scheme: light;
 }
-
+:root[data-theme="dark"] {
+  --bg: #211913; --surface: #2A211A; --sunken: #1A130F; --ink: #F2E6D9; --ink-2: #C8B6A5; --muted: #AF9C8B;
+  --line: #3A2E25; --line-strong: #54443A; --accent: #E29370; --accent-press: #EBA587; --on-accent: #211913;
+  --shared: #E9B970; --shared-tint: #3B2C1C; --shared-mark: #E6AE5E; --trust: #9DC7AA; --trust-tint: #22312A; --flag: #D6A0AE; --flag-tint: #3A2329;
+  --e1: 0 1px 2px rgb(0 0 0 / .3); --e2: 0 1px 2px rgb(0 0 0 / .3), 0 12px 30px -14px rgb(0 0 0 / .6); --e3: 0 30px 70px -30px rgb(0 0 0 / .7);
+  --light: radial-gradient(ellipse 900px 600px at 78% -12%, rgb(226 147 112 / .14), transparent 70%);
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16120f;
-    --surface: #211b16;
-    --surface-2: #2b241e;
-    --ink: #f3ece4;
-    --muted: #b3a79c;
-    --line: #3a3129;
-    --accent: #e8836a;
-    --accent-ink: #1c100b;
-    --accent-soft: #3b261f;
-    --agent: #86c7b6;
-    --agent-ink: #0f1f1b;
-    --agent-soft: #1d302a;
-    --good: #6cc792;
-    --warn: #e3a64a;
-    --bad: #ee7b7b;
+    --bg: #211913; --surface: #2A211A; --sunken: #1A130F; --ink: #F2E6D9; --ink-2: #C8B6A5; --muted: #AF9C8B;
+    --line: #3A2E25; --line-strong: #54443A; --accent: #E29370; --accent-press: #EBA587; --on-accent: #211913;
+    --shared: #E9B970; --shared-tint: #3B2C1C; --shared-mark: #E6AE5E; --trust: #9DC7AA; --trust-tint: #22312A; --flag: #D6A0AE; --flag-tint: #3A2329;
+    --e1: 0 1px 2px rgb(0 0 0 / .3); --e2: 0 1px 2px rgb(0 0 0 / .3), 0 12px 30px -14px rgb(0 0 0 / .6); --e3: 0 30px 70px -30px rgb(0 0 0 / .7);
+    --light: radial-gradient(ellipse 900px 600px at 78% -12%, rgb(226 147 112 / .14), transparent 70%);
     color-scheme: dark;
   }
 }
 
-:root[data-theme="dark"] {
-  --bg: #16120f;
-  --surface: #211b16;
-  --surface-2: #2b241e;
-  --ink: #f3ece4;
-  --muted: #b3a79c;
-  --line: #3a3129;
-  --accent: #e8836a;
-  --accent-ink: #1c100b;
-  --accent-soft: #3b261f;
-  --agent: #86c7b6;
-  --agent-ink: #0f1f1b;
-  --agent-soft: #1d302a;
-  --good: #6cc792;
-  --warn: #e3a64a;
-  --bad: #ee7b7b;
-  color-scheme: dark;
-}
-
+/* v1 token names, kept as aliases while the remaining v1 screens are ported (remove with the last one). */
+:root { --surface-2: var(--sunken); --accent-ink: var(--on-accent); --accent-soft: var(--shared-tint); --agent: var(--trust); --agent-ink: var(--on-accent); --agent-soft: var(--trust-tint); --good: var(--trust); --warn: var(--shared); --bad: var(--flag); }
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-accent: var(--accent);
-  --color-accent-ink: var(--accent-ink);
-  --color-accent-soft: var(--accent-soft);
-  --color-agent: var(--agent);
-  --color-agent-ink: var(--agent-ink);
-  --color-agent-soft: var(--agent-soft);
-  --color-good: var(--good);
-  --color-warn: var(--warn);
-  --color-bad: var(--bad);
-  --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-bg: var(--bg); --color-surface: var(--surface); --color-surface-2: var(--sunken); --color-sunken: var(--sunken);
+  --color-ink: var(--ink); --color-ink-2: var(--ink-2); --color-muted: var(--muted); --color-line: var(--line);
+  --color-accent: var(--accent); --color-accent-ink: var(--on-accent); --color-accent-soft: var(--shared-tint);
+  --color-agent: var(--trust); --color-agent-ink: var(--on-accent); --color-agent-soft: var(--trust-tint);
+  --color-good: var(--trust); --color-warn: var(--shared); --color-bad: var(--flag);
+  --color-shared: var(--shared); --color-trust: var(--trust); --color-flag: var(--flag);
+  --font-display: var(--serif); --font-sans: var(--sans); --font-mono: var(--mono);
 }
 
-html,
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+body { overflow-x: hidden; margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-body {
-  overflow-x: hidden;
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
-}
-.animate-rise { animation: rise 0.28s ease-out both; }
-
-@keyframes flash {
-  0%, 100% { box-shadow: 0 0 0 0 transparent; }
-  30% { box-shadow: 0 0 0 4px var(--accent); }
-}
-.animate-flash { animation: flash 1.6s ease-in-out 2; }
-
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.25; }
-  40% { opacity: 1; }
-}
-.typing-dot { animation: blink 1.2s infinite both; }
-.typing-dot:nth-child(2) { animation-delay: 0.15s; }
-.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+/* v1 animations still used by unported screens */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.animate-rise { animation: rise var(--d2) var(--ease) both; }
+@keyframes flash { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 30% { box-shadow: 0 0 0 4px var(--shared-mark); } }
+.animate-flash { animation: flash 1.6s var(--ease) 2; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }

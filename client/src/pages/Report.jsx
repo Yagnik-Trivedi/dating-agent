@@ -1,216 +1,150 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { AgentIcon, Avatar, Badge, Button, Card, EmptyState, ErrorBox, Loading, ProgressBar } from '../components/ui'
-import { useAuth } from '../hooks/useAuth'
+// Verdict (owner's design: screens/Verdict.jsx), from MY judge's decision only — never the other side's.
+// Compatible and Not compatible follow the design; Maybe gets its own hopeful copy (plan 10) with "Let them talk a bit
+// longer". Every point quotes their words and links to the line. Date ideas (Tavily, scarce) only after Continue.
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Eye, Lock, MessageSquareText, X } from 'lucide-react'
+import { Btn, ICON, Reveal, Thumb, useMobile } from '../components/prelude'
 import { useMatch } from '../hooks/useMatch'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
-import { VERDICT } from '../lib/status'
 
-const DIMENSIONS = {
-  valuesGoals: 'Values & goals',
-  lifestyle: 'Lifestyle',
-  interests: 'Interests',
-  communication: 'Communication',
-  personality: 'Personality',
-  chemistry: 'Chemistry',
-}
-const confidenceWord = (c) => (c == null ? '' : c >= 0.7 ? 'high confidence' : c >= 0.45 ? 'medium confidence' : 'low confidence')
-const asDim = (d) => (typeof d === 'number' ? { score: d } : d ?? {})
-
-function Receipts({ open, onClose, messages, highlight, me }) {
-  const list = useRef(null)
-  useEffect(() => {
-    if (!open || !highlight.length) return
-    const el = list.current?.querySelector(`[data-message-id="${CSS.escape(highlight[0])}"]`)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [open, highlight])
-  if (!open) return null
-  return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/30" onClick={onClose}>
-      <aside className="animate-rise flex h-full w-full max-w-md flex-col border-l border-line bg-surface" onClick={(e) => e.stopPropagation()} aria-label="Conversation receipts">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 className="font-semibold">Receipts</h2>
-          <Button variant="ghost" size="sm" onClick={onClose} autoFocus>Close</Button>
-        </div>
-        <ol ref={list} className="flex-1 space-y-2 overflow-y-auto p-4">
-          {messages.map((m) => {
-            const mine = String(m.senderId) === String(me)
-            const hit = highlight.includes(m._id)
-            return (
-              <li key={m._id} data-message-id={m._id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <p className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${mine ? 'bg-accent-soft' : 'bg-surface-2'} ${hit ? 'animate-flash ring-2 ring-accent' : hit === false && highlight.length ? 'opacity-50' : ''}`}>
-                  {m.text}
-                </p>
-              </li>
-            )
-          })}
-        </ol>
-      </aside>
-    </div>
-  )
-}
-
-function DateIdeas({ matchId, fallbackIcebreakers }) {
+function DateIdeas({ matchId, icebreakers }) {
   const [state, setState] = useState({ loading: true })
   useEffect(() => {
     api.get(`/api/matches/${matchId}/date-ideas`)
-      .then((r) => setState(r.data))
-      .catch((err) => setState({ error: err.response?.status === 503 ? 'Date ideas are switched off on this server right now.' : errMsg(err) }))
+      .then(({ data }) => setState(data))
+      .catch((err) => setState({ error: err.response?.data?.error?.code === 'DATE_IDEAS_UNAVAILABLE' ? err.response.data.error.message : errMsg(err) }))
   }, [matchId])
-  const icebreakers = state.icebreakers ?? fallbackIcebreakers ?? []
+  const breakers = state.icebreakers?.length ? state.icebreakers : icebreakers
   return (
-    <Card className="space-y-4">
-      <h2 className="font-display text-xl font-semibold">Date ideas</h2>
-      {state.loading && <p className="text-sm text-muted">Finding spots you’d both like…</p>}
-      {state.error && <p className="text-sm text-muted">{state.error}</p>}
-      {state.ideas && (
-        <ul className="space-y-3">
-          {state.ideas.map((i) => (
-            <li key={i.title} className="rounded-2xl bg-surface-2 p-4">
-              <a href={i.link} target="_blank" rel="noreferrer" className="font-semibold text-accent underline-offset-2 hover:underline">{i.title}</a>
-              <p className="mt-1 text-sm text-muted">{i.why}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-      {icebreakers.length > 0 && (
-        <>
-          <h3 className="font-semibold">Icebreakers</h3>
-          <ul className="list-disc space-y-1 pl-5 text-sm">{icebreakers.map((t) => <li key={t}>{t}</li>)}</ul>
-        </>
-      )}
-    </Card>
+    <>
+      {breakers?.length > 0 && <div className="v-sec"><h3 className="t-h3">Something to open with</h3><ul className="v-list">{breakers.map((t) => <li key={t}>{t}</li>)}</ul></div>}
+      <div className="v-sec"><h3 className="t-h3">Ideas for a first date</h3>
+        {state.loading ? <div className="sk sk-l" /> : state.error ? <p className="small">{state.error}</p>
+          : <ul className="v-list">{state.ideas.map((i) => <li key={i.link}><a className="text-link" href={i.link} target="_blank" rel="noreferrer">{i.title}</a>{i.why && <span className="small"> · {i.why}</span>}</li>)}</ul>}
+      </div>
+    </>
   )
 }
 
 export default function Report() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const navigate = useNavigate()
+  const mobile = useMobile(1100)
   const toast = useToast()
-  const { match, messages, error, reload, decide } = useMatch(id)
-  const [highlight, setHighlight] = useState([])
-  const [drawer, setDrawer] = useState(false)
+  const { match, messages, decide, extend } = useMatch(id)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
   const [busy, setBusy] = useState(null)
 
-  if (error) return <ErrorBox message={error} onRetry={reload} />
-  if (!match) return <Loading label="Loading report…" />
+  const load = () => { setError(null); return api.get(`/api/matches/${id}/report`).then(({ data: d }) => setData(d)).catch((err) => setError(errMsg(err))) }
+  useEffect(() => { load() }, [id, match?.status]) // eslint-disable-line react-hooks/exhaustive-deps -- a waiting read reloads when the judges finish
+  const lineOf = useMemo(() => new Map(messages.map((m, i) => [String(m._id), i + 1])), [messages])
 
-  const report = match.report
-  if (!report) {
-    return (
-      <EmptyState title="No verdict yet" action={<Link to={`/matches/${id}`}><Button variant="secondary">Back to the chat</Button></Link>}>
-        Your agent writes its report once it has learned enough. You’ll get a notification.
-      </EmptyState>
-    )
-  }
+  const report = data?.report
+  if (error) return <div className="scr state err"><div className="st-center"><h2 className="t-h2">We couldn’t load your agent’s read</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div></div>
+  if (!data || !match) return <Loading mobile={mobile} />
+  if (['flagged_fake', 'closed'].includes(data.status) && !report) return (
+    <div className={`scr verdict ${mobile ? 'm' : 'd'}`}><Reveal className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : 620 }}>
+      <p className="v-eyebrow flag"><Eye size={15} strokeWidth={1.7} aria-hidden="true" />Your agent’s read · only you can see this</p>
+      <h1 className="t-h1">{data.status === 'flagged_fake' ? 'Your agent thinks this profile is fake.' : 'This conversation is closed.'}</h1>
+      <p className="v-sub">{data.status === 'flagged_fake' ? (match.trust?.flags ?? []).join(' · ') || 'It stopped talking and nothing more will be sent.' : 'Nothing more will be sent.'}</p>
+      <div className="v-actions"><Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Back to matches</Btn></div>
+    </div></Reveal></div>
+  )
+  if (!report) return <Loading mobile={mobile} waiting />
 
-  const v = VERDICT[report.verdict] ?? { label: report.verdict, tone: 'muted', headline: '' }
-  const dims = Object.entries(DIMENSIONS)
-    .map(([key, label]) => [label, key === 'chemistry' && report.chemistry != null ? { score: report.chemistry } : asDim(report.dimensions?.[key])])
-    .filter(([, d]) => d.score != null)
-  const showReceipts = (ids) => { setHighlight(ids ?? []); setDrawer(true) }
+  const them = match.other.name
   const decided = match.decision
   const handedOff = match.status === 'handed_off'
-
-  async function choose(decision) {
-    setBusy(decision)
-    try {
-      const m = await decide(decision)
-      toast(m.status === 'handed_off' ? 'It’s just you two now 🎉' : decision === 'pass' ? 'Got it. Your agent will wind things down kindly.' : `Waiting for ${match.other.name} to decide too`)
-    } catch (err) {
-      toast(errMsg(err), { tone: 'bad' })
-    } finally {
-      setBusy(null)
-    }
+  const verdict = report.verdict
+  const item = (x, k) => {
+    const line = x.messageIds?.map((mid) => lineOf.get(String(mid))).find(Boolean)
+    return <div className="v-item" key={k}><p>{x.text}</p>{x.quote && <blockquote>“{x.quote}”{line && <Link className="lref" to={`/matches/${id}#line-${line}`}>line {line}</Link>}</blockquote>}</div>
   }
+  const quoted = report.concerns.filter((c) => c.quote)
+  const unknown = report.concerns.filter((c) => !c.quote)
+  const run = (name, fn, after) => async () => {
+    setBusy(name)
+    try { const m = await fn(); after?.(m) } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
+  }
+  const cont = run('continue', () => decide('continue'), (m) => toast(m.status === 'handed_off' ? `You and ${them} are chatting directly now` : `Saved. We’ll tell you when ${them} decides too.`))
+  const pass = run('pass', () => decide('pass'), () => { toast('Passed, kindly. Your agent said goodbye for you.'); navigate('/matches') })
+  const more = run('extend', extend, () => { toast('Your agents will talk a bit longer'); navigate(`/matches/${id}`) })
 
-  const Item = ({ item, icon, tone }) => (
-    <li>
-      <button onClick={() => showReceipts(item.messageIds)} className="flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-surface-2">
-        <span className={`mt-0.5 font-bold ${tone}`} aria-hidden="true">{icon}</span>
-        <span className="flex-1">{item.text}{item.quote && <span className="mt-0.5 block text-sm text-muted">“{item.quote}”</span>}</span>
-        {item.messageIds?.length > 0 && <span className="shrink-0 text-xs font-semibold text-accent">{item.messageIds.length} receipt{item.messageIds.length > 1 ? 's' : ''}</span>}
-      </button>
-    </li>
+  const head = {
+    compatible: [`You and ${them} seem to get along.`, 'Here’s why, in their own words.'],
+    maybe: [`You and ${them} might get along.`, 'Some things clicked, and a few are still unclear. That’s normal this early.'],
+    incompatible: [`You and ${them} want different things, and that’s okay.`, 'Nothing went wrong here. You were both honest, which is exactly the point.'],
+  }[verdict]
+
+  const actions = verdict === 'incompatible' ? (
+    <>
+      <Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Okay, thank you</Btn>
+      {!decided && <Btn kind="secondary" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Talk anyway</Btn>}
+      <Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the chat</Link>
+    </>
+  ) : decided || handedOff ? (
+    <><Btn size="lg" block={mobile} onClick={() => navigate(`/matches/${id}`)}>{handedOff ? `Chat with ${them}` : 'Back to the chat'}</Btn><Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the whole chat</Link></>
+  ) : verdict === 'maybe' ? (
+    <>
+      <Btn size="lg" block={mobile} onClick={more} loading={busy === 'extend'}>Let them talk a bit longer</Btn>
+      <Btn kind="secondary" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>I’ll take it from here</Btn>
+      <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn>
+    </>
+  ) : (
+    <>
+      <Btn size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Continue as myself</Btn>
+      <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn>
+      {!mobile && <Link className="text-link push" to={`/matches/${id}/replay`}>Read the whole chat</Link>}
+    </>
   )
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      <Link to={`/matches/${id}`} className="text-sm font-semibold text-muted hover:text-ink">← Back to chat</Link>
+    <div className={`scr verdict ${mobile ? 'm' : 'd'}`}>
+      {mobile && <header className="v-top"><button className="icon-btn" aria-label="Close" onClick={() => navigate(`/matches/${id}`)}><X {...ICON} /></button><span>Your agent’s read</span><span style={{ width: 44 }} /></header>}
+      <Reveal className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : verdict === 'incompatible' ? 620 : 920 }}>
+        <div className="v-scroll">
+          <div className="v-who"><Thumb src={match.other.photo} name={them} size={40} clear={handedOff} /><div><b>{[them, match.other.age].filter(Boolean).join(', ')}</b><span>{match.other.city}</span></div></div>
+          <Reveal i={0}><p className="v-eyebrow"><Eye size={15} strokeWidth={1.7} aria-hidden="true" />Your agent’s read · only you can see this</p>
+            <h1 className="t-h1">{head[0]}</h1><p className="v-sub">{report.summary || head[1]}</p></Reveal>
+          {verdict === 'incompatible' ? (
+            <>
+              <Reveal i={1} className="v-sec"><h3 className="t-h3">Where you differ</h3>
+                {[...quoted, ...report.dealbreakerRisk.filter((d) => d.quote && !quoted.some((c) => c.quote === d.quote)).map((d) => ({ text: `Something that matters a lot to you: ${d.attribute.replace(/_/g, ' ')}.`, quote: d.quote }))].map(item)}</Reveal>
+              <Reveal i={2}><p className="v-signoff">We won’t show you {them} again unless you ask. Your agent learned a little more about what matters to you. Thank you for being open.</p></Reveal>
+            </>
+          ) : (
+            <div className="v-cols">
+              <Reveal i={1} className="v-sec clicked"><h3 className="t-h3">{verdict === 'maybe' ? 'What’s promising' : 'What clicked'}</h3>{report.reasons.length ? report.reasons.map(item) : <p className="small">Nothing stood out yet.</p>}</Reveal>
+              <div>
+                {quoted.length > 0 && <Reveal i={2} className="v-sec explore"><h3 className="t-h3">{verdict === 'maybe' ? 'Still unclear' : 'Worth talking about'}</h3>{quoted.map(item)}</Reveal>}
+                {unknown.length > 0 && <Reveal i={3} className="v-sec"><h3 className="t-h3">Not known yet</h3><ul className="v-list">{unknown.map((u) => <li key={u.text}>{u.text}</li>)}</ul></Reveal>}
+                {(decided === 'continue' || handedOff)
+                  ? <Reveal i={4}><DateIdeas matchId={id} icebreakers={report.icebreakers} /></Reveal>
+                  : report.icebreakers?.length > 0 && <Reveal i={4} className="v-sec"><h3 className="t-h3">If you both say yes</h3><ul className="v-list">{report.icebreakers.map((t) => <li key={t}>{t}</li>)}</ul></Reveal>}
+              </div>
+            </div>
+          )}
+        </div>
+        {mobile && verdict !== 'incompatible' && !handedOff && <p className="v-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />{them}’s agent decides for {them} separately. Nothing is shared until you both say yes.</p>}
+        <Reveal i={5} className="v-actions">{actions}</Reveal>
+        {!mobile && verdict !== 'incompatible' && !handedOff && <p className="v-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />{them}’s agent decides for {them} separately. Nothing is shared until you both say yes.</p>}
+      </div></Reveal>
+    </div>
+  )
+}
 
-      <Card className="text-center">
-        <Avatar src={match.other.photo} name={match.other.name} className="mx-auto size-16" />
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-agent"><AgentIcon /> Your agent’s verdict on {match.other.name}</p>
-        <Badge tone={v.tone} size="lg" className="mt-3">{v.label}</Badge>
-        <h1 className="mt-3 font-display text-2xl font-semibold">{v.headline}</h1>
-        <p className="mx-auto mt-2 max-w-xl text-muted">{report.summary}</p>
-      </Card>
-
-      {dims.length > 0 && (
-        <Card>
-          <h2 className="mb-4 font-display text-xl font-semibold">How you line up</h2>
-          <ul className="space-y-3.5">
-            {dims.map(([label, d]) => (
-              <li key={label}>
-                <div className="mb-1 flex justify-between text-sm"><span className="font-medium">{label}</span><span className="text-muted">{confidenceWord(d.confidence)}</span></div>
-                <ProgressBar value={d.score} tone={d.score >= 0.7 ? 'good' : 'accent'} label={label} />
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {report.dealbreakerRisk?.length > 0 && (
-        <p className="rounded-xl bg-bad/10 p-3 text-sm font-medium text-bad">One of your dealbreakers came up{report.dealbreakerRisk[0].quote ? `: “${report.dealbreakerRisk[0].quote}”` : '.'}</p>
-      )}
-
-      <div className="grid gap-5 md:grid-cols-2">
-        <Card>
-          <h2 className="mb-2 font-display text-xl font-semibold">Why</h2>
-          {report.reasons?.length ? <ul className="-mx-3">{report.reasons.map((r) => <Item key={r.text} item={r} icon="✓" tone="text-good" />)}</ul> : <p className="text-sm text-muted">Nothing to point to yet: the conversation ended before it really started.</p>}
-        </Card>
-        <Card>
-          <h2 className="mb-2 font-display text-xl font-semibold">Worth noting</h2>
-          {report.concerns?.length ? <ul className="-mx-3">{report.concerns.map((c) => <Item key={c.text} item={c} icon="⚠" tone="text-warn" />)}</ul> : <p className="text-sm text-muted">{report.noFrictionJustification ?? 'Nothing stood out.'}</p>}
-        </Card>
-      </div>
-
-      {report.askYourself?.length > 0 && (
-        <Card>
-          <h2 className="mb-3 font-display text-xl font-semibold">Ask yourself</h2>
-          <ul className="space-y-2">{report.askYourself.map((q) => <li key={q} className="rounded-2xl bg-surface-2 px-4 py-3">{q}</li>)}</ul>
-        </Card>
-      )}
-
-      <Card className="space-y-3">
-        {handedOff ? (
-          <>
-            <p className="font-semibold">You’re both in. The chat is all yours now.</p>
-            <Link to={`/matches/${id}`}><Button>Open chat</Button></Link>
-          </>
-        ) : report.verdict === 'incompatible' ? (
-          <>
-            <p className="text-sm text-muted">Your agent will close this kindly. Disagree? You can still talk yourself.</p>
-            <Button variant="secondary" onClick={() => choose('continue')} loading={busy === 'continue'} disabled={decided === 'continue'}>
-              {decided === 'continue' ? 'Reopened, waiting for them' : 'Talk anyway'}
-            </Button>
-          </>
-        ) : decided === 'continue' ? (
-          <p className="font-semibold">You chose to continue. Waiting for {match.other.name}…</p>
-        ) : decided === 'pass' ? (
-          <p className="text-muted">You passed on this match.</p>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            <Button size="lg" onClick={() => choose('continue')} loading={busy === 'continue'} disabled={Boolean(busy)}>Continue as myself</Button>
-            <Button size="lg" variant="secondary" onClick={() => choose('pass')} loading={busy === 'pass'} disabled={Boolean(busy)}>Pass</Button>
-          </div>
-        )}
-      </Card>
-
-      {(decided === 'continue' || handedOff) && report.verdict !== 'incompatible' && <DateIdeas matchId={id} fallbackIcebreakers={report.icebreakers} />}
-
-      <Receipts open={drawer} onClose={() => setDrawer(false)} messages={messages} highlight={highlight} me={user._id} />
+/** The design's loading state: a soft skeleton while the read is written. */
+function Loading({ mobile, waiting }) {
+  return (
+    <div className={`scr verdict ${mobile ? 'm' : 'd'} state`}>
+      <div className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : 620 }}><div className="st-body" aria-busy="true">
+        <p className="small muted"><MessageSquareText size={14} strokeWidth={1.7} aria-hidden="true" /> {waiting ? 'Your agent is writing its read. This usually takes under a minute.' : 'Loading…'}</p>
+        <div className="sk sk-t" /><div className="sk sk-t2" />
+        {[0, 1, 2].map((i) => <div key={i} className="sk-item"><div className="sk sk-l" /><div className="sk sk-s" /></div>)}
+      </div></div></div>
     </div>
   )
 }

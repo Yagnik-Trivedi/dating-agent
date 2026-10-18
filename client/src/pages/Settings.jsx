@@ -1,37 +1,45 @@
+// Settings (Prelude design language): agent mode, Learn from my chats, appearance (light / lamplight), profile, delete.
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, Card, ErrorBox, Modal, Segmented } from '../components/ui'
+import { Link } from 'react-router-dom'
+import { Lock } from 'lucide-react'
+import { Btn } from '../components/prelude'
+import { ErrorBox, Modal, Segmented } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
-import { AGENT_MODES } from '../lib/status'
+import { disconnectSocket } from '../lib/socket'
+
+const MODES = {
+  off: ['Off', 'You handle every conversation yourself. Your agent never sends a message.'],
+  shadow: ['Watch along', 'Your agent has the first conversation while you can read every line, pause it, or take over in one tap.'],
+  auto: ['Quietly', 'Your agent has the first conversations on its own and only brings you the matches worth your time.'],
+}
 
 function applyTheme(theme) {
   if (theme === 'system') {
     delete document.documentElement.dataset.theme
-    localStorage.removeItem('theme')
+    try { localStorage.removeItem('theme') } catch { /* private mode */ }
   } else {
     document.documentElement.dataset.theme = theme
-    localStorage.setItem('theme', theme)
+    try { localStorage.setItem('theme', theme) } catch { /* private mode */ }
   }
 }
 
 export default function Settings() {
   const { user, setUser, logout } = useAuth()
   const toast = useToast()
-  const navigate = useNavigate()
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('theme') ?? 'system' } catch { return 'system' } })
   const [saving, setSaving] = useState(null)
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') ?? 'system')
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirm, setConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
 
-  async function setMode(agentMode) {
-    setSaving(agentMode)
+  async function save(patch, done) {
+    setSaving(Object.keys(patch)[0])
     try {
-      const { data } = await api.put('/api/me/settings', { agentMode })
+      const { data } = await api.put('/api/me/settings', patch)
       setUser(data.user)
-      toast(`Agent mode: ${AGENT_MODES[agentMode].label}`)
+      toast(done)
     } catch (err) {
       toast(errMsg(err), { tone: 'bad' })
     } finally {
@@ -44,61 +52,67 @@ export default function Settings() {
     setDeleteError(null)
     try {
       await api.delete('/api/me')
+      disconnectSocket()
       logout()
-      navigate('/', { replace: true })
     } catch (err) {
       setDeleteError(errMsg(err))
       setDeleting(false)
     }
   }
 
+  const learn = user.settings?.learnFromChats !== false
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="font-display text-3xl font-semibold">Settings</h1>
+    <div className="page settings">
+      <header className="page-head"><div><h1 className="t-h1">Settings</h1><p>How your agent works for you. You can change any of this at any time.</p></div></header>
 
-      <Card>
-        <h2 className="font-display text-xl font-semibold">Your agent</h2>
-        <p className="mt-1 text-sm text-muted">The default for new matches. You can take over any single conversation with one tap.</p>
-        <div role="radiogroup" aria-label="Agent mode" className="mt-4 space-y-2">
-          {Object.entries(AGENT_MODES).map(([mode, m]) => (
-            <button key={mode} role="radio" aria-checked={user.agentMode === mode} onClick={() => setMode(mode)} disabled={Boolean(saving)}
-              className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition ${user.agentMode === mode ? 'border-agent bg-agent-soft' : 'border-line hover:bg-surface-2'}`}>
-              <span className={`mt-1 size-4 shrink-0 rounded-full border-2 ${user.agentMode === mode ? 'border-agent bg-agent' : 'border-muted'}`} aria-hidden="true" />
-              <span>
-                <span className="font-semibold">{m.label}</span>
-                <span className="mt-0.5 block text-sm text-muted">{m.help}</span>
-              </span>
+      <section className="card set-sec">
+        <h2 className="t-h3">Your agent</h2>
+        <div className="set-modes" role="radiogroup" aria-label="Agent mode">
+          {Object.entries(MODES).map(([mode, [label, help]]) => (
+            <button key={mode} role="radio" aria-checked={user.agentMode === mode} className={`opt ${user.agentMode === mode ? 'on' : ''}`} onClick={() => save({ agentMode: mode }, `Your agent: ${label.toLowerCase()}`)} disabled={Boolean(saving)}>
+              <span><b>{label}</b><em>{help}</em></span>
             </button>
           ))}
         </div>
-      </Card>
+      </section>
 
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold">Appearance</h2>
-        <Segmented label="Theme" value={theme} onChange={(t) => { setTheme(t); applyTheme(t) }} options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
-      </Card>
-
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Signed in as {user.name}</h2>
-          <p className="text-sm text-muted">{user.email}</p>
+      <section className="card set-sec">
+        <div className="set-row">
+          <div><h2 className="t-h3">Learn from my chats</h2><p className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</p></div>
+          <button role="switch" aria-checked={learn} className={`switch ${learn ? 'on' : ''}`} onClick={() => save({ learnFromChats: !learn }, learn ? 'Your agent won’t learn from your chats' : 'Your agent will learn from your chats')} disabled={Boolean(saving)}>
+            <span className="sr-only">Learn from my chats</span><i aria-hidden="true" />
+          </button>
         </div>
-        <Button variant="secondary" onClick={() => { logout(); navigate('/login') }}>Log out</Button>
-      </Card>
+      </section>
 
-      <Card className="border-bad/30">
-        <h2 className="font-semibold text-bad">Delete account</h2>
-        <p className="mt-1 text-sm text-muted">Removes your profile, knowledge graph, likes, messages and inbox. This can’t be undone.</p>
-        <Button variant="danger" className="mt-4" onClick={() => setConfirmOpen(true)}>Delete my account</Button>
-      </Card>
+      <section className="card set-sec">
+        <h2 className="t-h3">Appearance</h2>
+        <Segmented label="Theme" value={theme} onChange={(t) => { setTheme(t); applyTheme(t) }} options={[{ value: 'system', label: 'Match my device' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Lamplight' }]} />
+      </section>
 
-      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete your account?">
-        <p className="text-muted">Everything about you is removed and your matches are closed. This can’t be undone.</p>
-        {deleteError && <div className="mt-3"><ErrorBox message={deleteError} /></div>}
-        <div className="mt-5 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-          <Button variant="danger" onClick={deleteAccount} loading={deleting}>Delete forever</Button>
+      <section className="card set-sec">
+        <div className="set-row">
+          <div><h2 className="t-h3">Your profile</h2><p className="small">Photos, bio, prompts and who you’d like to meet. What your agent knows about you lives in <Link className="text-link" to="/you">This is you</Link>.</p></div>
+          <Link className="btn secondary" to="/profile">Edit profile</Link>
         </div>
+      </section>
+
+      <section className="card set-sec">
+        <div className="set-row">
+          <div><h2 className="t-h3">Account</h2><p className="small">Signed in as {user.email}.</p></div>
+          <Btn kind="secondary" onClick={() => { disconnectSocket(); logout() }}>Log out</Btn>
+        </div>
+        <div className="set-row danger-row">
+          <div><h3 className="t-h3">Delete my account</h3><p className="small">Removes your profile, everything your agent knows about you, and your messages. It can’t be undone.</p></div>
+          <Btn kind="secondary" onClick={() => setConfirm(true)}>Delete…</Btn>
+        </div>
+      </section>
+      <p className="privacy-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />Early conversations with your matches may be handled by AI agents, including yours. You agreed to this when you signed up.</p>
+
+      <Modal open={confirm} onClose={() => setConfirm(false)} title="Delete your account?">
+        <p className="t-body">Your profile, everything your agent knows about you and your messages will be removed. Chats you already continued yourself stay with the other person. This can’t be undone.</p>
+        {deleteError && <ErrorBox message={deleteError} />}
+        <div className="v-actions" style={{ borderTop: 0, paddingTop: 4 }}><Btn kind="secondary" onClick={() => setConfirm(false)}>Keep my account</Btn><button className="btn primary danger" onClick={deleteAccount} disabled={deleting}>Delete forever</button></div>
       </Modal>
     </div>
   )
