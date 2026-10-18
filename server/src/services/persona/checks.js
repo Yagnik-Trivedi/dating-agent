@@ -107,16 +107,19 @@ export const selfClaimSentences = (text) => sentencesOf(ascii(text)).filter((s) 
 // for something casual" and "not sure yet, just exploring" while his answer, a dealbreaker, is long-term). Negations first.
 const STATED = {
   looking_for: [[/\b(something|nothing) (casual|serious)\b|\bshort[- ]term\b|\bnothing serious\b|\bjust (having fun|casual)\b/i, (m) => (/serious/i.test(m) && !/nothing serious/i.test(m) ? 'long_term' : 'short_term')],
-    [/\b(not sure (yet|what i want|what i'?m (hoping|looking))|just exploring|figuring (it|things) out|see(ing)? where (things|it) go(es)?)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
+    // judge-fix step 4 run (m1): "still figuring out yaar what I'm looking for", "still new to long-term yaar just seeing how things go"
+    [/\b(not sure (yet|what i want|what i'?m (hoping|looking))|just exploring|(still )?figuring (it |things )?out|see(ing)? (where|how) (things|it) go(es)?|(still )?new to long[- ]term)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
   smoking: [[/\b(don'?t|never|do not) smoke\b|\bnon[- ]?smoker\b|\bquit smoking\b/i, () => 'never'], [/\bsmoke (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bi smoke\b|\bi'?m a smoker\b/i, () => 'regularly']],
   drinking: [[/\b(don'?t|never|do not) drink\b|\bteetotal\b|\bsober\b/i, () => 'never'], [/\bdrink (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bdrink (a lot|regularly|every day|daily)\b/i, () => 'regularly']],
   kids: [[/\b(don'?t|do not|never) want (kids|children)\b|\bno kids for me\b/i, () => 'no'], [/\b(open to|not sure about|maybe) (kids|children)\b/i, () => 'open'], [/\b(want|see) (kids|children)\b/i, () => 'yes']],
 };
 // Answers close enough not to count as a contradiction.
 const NEAR = { looking_for: [['long_term', 'open_to_long_term']], kids: [['yes', 'open'], ['open', 'no']], smoking: [], drinking: [['socially', 'regularly']] };
+// A statement is about me when it says "I"/"mera"… or addresses nobody ("still new to long-term yaar, just seeing how things go").
+const SECOND_PERSON = /\b(you|your|yours|u|ur|tu|tum|aap|tera|teri|tere|tumhara|tumhari|aapka|aapki)\b/i;
 export function attributeContradictions(text, myAttributes = {}) {
   const out = [];
-  for (const s of sentencesOf(ascii(text)).filter((x) => !x.trim().endsWith('?') && FIRST_PERSON.test(x))) {
+  for (const s of sentencesOf(ascii(text)).filter((x) => !x.trim().endsWith('?') && (FIRST_PERSON.test(x) || !SECOND_PERSON.test(x)))) {
     for (const [attr, rules] of Object.entries(STATED)) {
       const mine = myAttributes[attr];
       if (!mine) continue;
