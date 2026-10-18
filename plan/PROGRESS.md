@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 11:10 IST, by Claude Code (judge fix steps 1-3 done: 8/17, compatible 5/7, harmful 1 at JUDGE_YES_MIN 0.65; step 4 re-run starting)
+- **Last updated:** 2026-10-18 12:15 IST, by Claude Code (judge fix steps 1-4 done on feat/judge-fix; i5 + m1 re-run pending, NVIDIA 429s)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -91,7 +91,12 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - **Must-ask items:** dealbreakers and answers that matter a lot (priority ≥ `ASK_EXPLICIT_PRIORITY` 0.9; i3/i5's conflicts are high-importance answers, because a dealbreaker would close the match at the gate).
   - **Counted as covered when:** my agent asked a direct question naming the attribute, or they stated it themselves.
   - **Until then:** steered to first with no tries cap, asked as one direct question, and no natural end. 99/99.
-- **Next:** re-run i3, i5, c4 and m1 (`eval.js --only i3,i5,c4,m1 --tag step4`); the owner OK'd it ("ok go").
+- ✅ **Step 4 re-run** (`ec4b804`, `eval/results-step4.md`; NVIDIA returned many 429s today):
+  - **c4:** compatible ✓.
+  - **i3:** maybe. It was a harmful "compatible" in the re-judge, so it's no longer harmful, but not yet the expected incompatible.
+  - **m1:** incompatible (expected maybe). Arjun's *agent* misrepresented him ("still figuring out what I'm looking for", "just seeing how things go") while his answer is long-term, so Meera's judge rightly said no. **Fixed:** the looking_for contradiction check now catches these wordings and checks sentences that address nobody, not only ones with I/mera. 100/100.
+  - **i5:** stalled at 14 messages on 429s (pair timeout). Step 4 did its job before that: Gauri's agent asked "how do you feel about drinking?" directly, and Arnav answered with his brew.
+- **Next (ask the owner):** re-run i5 and m1 once NVIDIA stops returning 429s, then retry `seed.js --judges`.
 - Also: the live `seed.js --judges` run hit NVIDIA 429 (rate limit) while building the first judge's graph; it will be retried after the judge fix.
 
 **Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
