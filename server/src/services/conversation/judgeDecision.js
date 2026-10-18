@@ -2,7 +2,8 @@
 // this turns it into yes / no / unsure + a confidence. Every number lives in kg/config.js (JUDGE_*).
 import { KG } from '../kg/config.js';
 
-const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+// Rounded to 2 decimals before any comparison: 0.7 - 0.05 is 0.6499999… in floating point.
+const clamp = (x, lo, hi) => Math.round(Math.min(hi, Math.max(lo, x)) * 100) / 100;
 
 /**
  * positives / frictions: validated ({ quote, why, messageId, theirs, factId, severity }); factId 'F3' → facts.get('F3').
