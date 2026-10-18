@@ -2,9 +2,9 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 07:52 IST, by Claude Code (B5 restarted 07:51 after one more misrepresentation fix; no further restarts)
-- **Main-line branch:** `feat/plan-11-tuning` (from `main`) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
-- **Last commit (main line):** tuning commits on `feat/plan-11-tuning`
+- **Last updated:** 2026-10-18 08:50 IST, by Claude Code (B5 8/20 done; remaining backend built on `feat/backend-finish`, 90/90 tests)
+- **Main-line branch:** `feat/plan-11-tuning` (B5 running) → `feat/backend-finish` (branched from it) · **main:** `3966f5a` (plans 02–09 + 17 done, 11A done)
+- **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Paused · ⬜ Not started · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
 
@@ -68,6 +68,32 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
 ## Currently working on
+
+**Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
+
+**B5 (final full run, `feat/plan-11-tuning`):** 8/20 done at 08:45, ETA ~10:05 IST. So far: gated ✓; 6 of 7 compatible pairs → Maybe (one judge unsure) and c2 → Not compatible. Recorded as findings, no mid-run fixes.
+
+**Backend finish on `feat/backend-finish`** (worktree, branched from `feat/plan-11-tuning`; `npm test` 90/90, no LLM needed):
+- ✅ KG learning from my own side (plan 08 §3, plan 15 stage 7):
+  - `POST /api/messages/:id/wouldnt-say { fix? }`, only on my own agent's messages. A fix becomes a `VoiceSample(edited_draft)`. The rule goes to corrections / neverSay, or becomes a `userEdited` fact when the agent got a fact wrong.
+  - After handoff, my typed messages become `VoiceSample(own_chat)`, unless `settings.learnFromChats` is off (`PUT /api/me/settings { learnFromChats }`).
+  - **Bug fixed:** never-say corrections stored the rule sentence, which the style check could never match. They now store the literal phrase.
+- ✅ "Let them talk a bit longer" (plan 10 backend addition): `POST /api/matches/:id/extend`.
+  - Allowed once per match, only on my own unsure while the match is Maybe.
+  - Runs a round-2 conversation of up to `EXTEND_TURNS` (8) messages, steering to open important agenda items.
+  - Then both judges run again on the whole transcript. The newest decision is the report; older ones are kept.
+- ✅ Plan 12 backend parts:
+  - Credit guard: `JUDGE_LIVE_CHATS_PER_DAY` (default 2). Over it, a match is `scheduled` with `startsAt` and starts the next UTC day.
+  - Seeds are exempt from the per-user LLM cap.
+  - `DEMO_PACING=fast` applies to seed and judge accounts only (replaces `DEMO_FAST`).
+  - `LOG_LEVEL`: in production, errors plus one line per LLM call, with no message contents.
+- ✅ `seed.js --judges` (`seed/judges.json`, `JUDGE_PASSWORD`):
+  - 2 judge accounts that copy a seed persona's answers.
+  - Real runs against each judge's gate pool fill a flagged fake, a match frozen at 6 messages (it resumes when opened) and whichever verdicts the judges reach.
+  - **Not run yet** (~1 h of LLM): first after B5, then once more on Nebius in plan 12.
+- **Next:**
+  1. Live check of the new routes, plus one `--judges` run after B5.
+  2. Plan 12 deploy prep (render.yaml, keep-alive, self-ping, DEPLOY.md) and the plan 14 dry-run checklist (no UI or accounts needed).
 
 **B1 report (tuning stopped at the 3-iteration cap, 2026-10-17):**
 - Best 4/6 (iteration 2). Gated and fake pairs are always right; i6 (values clash) right in all 3; i2 (hidden smoking) right in iterations 1 and 2.
