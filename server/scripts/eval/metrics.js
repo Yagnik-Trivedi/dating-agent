@@ -101,7 +101,7 @@ const sum = (rows, k) => rows.reduce((s, x) => s + x[k], 0);
 const kept = voiceRows.filter((v) => v.scriptKept !== null);
 const md = [
   '# Metrics from saved conversations (no new chats)', '',
-  `Generated ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC by \`node scripts/eval/metrics.js\` from the last eval run of ${convRows.length} conversations (\`eval/raw.json\`).`, '',
+  `Generated ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC by \`node scripts/eval/metrics.js\` from the last eval run of ${convRows.length} conversations (\`eval/raw${rawTag ? `-${rawTag}` : ''}.json\`).`, '',
   '## Voice and language fidelity (agent messages vs the persona\'s real replies; 0 = identical)', '',
   `- **Style distance** (normalised L1 over length, emoji, end punctuation, questions, lowercase): mean ${f2(mean(voiceRows.map((v) => v.style)))}`,
   `- **Language-mix distance** (L1/2 over the mix): mean ${f2(mean(voiceRows.map((v) => v.lang)))}; **code-switch rate difference**: mean ${f2(mean(voiceRows.map((v) => v.cs)))}`,
