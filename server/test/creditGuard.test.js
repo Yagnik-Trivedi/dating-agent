@@ -1,4 +1,6 @@
-// Plan 12 §7, no LLM. Credit guard: a daily live-chat cap per non-seed user (over it → 'scheduled', started the next// day by a job), seeds exempt from the per-user LLM cap, fast pacing only when asked for. Judge demo: a frozen match// gets no agent turn until its user opens it (thaw).
+// Plan 12 §7, no LLM. Credit guard: a daily live-chat cap per non-seed user (over it → 'scheduled', started the next
+// day by a job), seeds exempt from the per-user LLM cap, fast pacing only when asked for. Judge demo: a frozen match
+// gets no agent turn until its user opens it (thaw).
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { env } from '../src/config/env.js';
