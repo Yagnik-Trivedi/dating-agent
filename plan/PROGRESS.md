@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 10:35 IST, by Claude Code (plan 11 done; backend finish merged to main; 90/90 tests)
+- **Last updated:** 2026-10-18 11:10 IST, by Claude Code (judge fix steps 1-3 done: 8/17, compatible 5/7, harmful 1 at JUDGE_YES_MIN 0.65; step 4 re-run starting)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -81,7 +81,17 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
   - Undiscussed topics are no longer LLM frictions; the code adds them.
   - Template filler lines are labelled `[system filler, not their words]` and never count as evidence.
   - 97/97.
-- Next: step 3 (`scripts/eval/rejudge.js` on the B5 conversations).
+- ✅ **Step 3** (`8afd2b5`, `e08fc44`): `scripts/eval/rejudge.js` re-judged the 17 saved B5 conversations, with no new chats (`eval/results/rejudge.md`).
+  - **Accuracy:** 4/17 → **8/17**.
+  - **Compatible pairs:** 0/7 → **5/7** (target ≥ 4/7 ✓).
+  - **Harmful errors:** 1 → 2 at `JUDGE_YES_MIN` 0.6. Both swaps are the hidden-conflict pairs: i3 (long-term) and i5 (drinking) never actually discussed the conflict in those chats.
+  - **Calibration** (`calibrate.js`, its threshold drift fixed): **0.65** keeps 8/17 and brings harmful errors back to **1** (target ✓). `JUDGE_YES_MIN` is now 0.65. It was tuned on the same data; step 4's fresh chats check it.
+  - Also: the judge only sees messages up to the conversation's end (no wind-down), an unclear dealbreaker answer counts as undiscussed (per the spec), and confidence is rounded before comparing.
+- ✅ **Step 4 code** (`e4aa816`):
+  - **Must-ask items:** dealbreakers and answers that matter a lot (priority ≥ `ASK_EXPLICIT_PRIORITY` 0.9; i3/i5's conflicts are high-importance answers, because a dealbreaker would close the match at the gate).
+  - **Counted as covered when:** my agent asked a direct question naming the attribute, or they stated it themselves.
+  - **Until then:** steered to first with no tries cap, asked as one direct question, and no natural end. 99/99.
+- **Next:** re-run i3, i5, c4 and m1 (`eval.js --only i3,i5,c4,m1 --tag step4`); the owner OK'd it ("ok go").
 - Also: the live `seed.js --judges` run hit NVIDIA 429 (rate limit) while building the first judge's graph; it will be retried after the judge fix.
 
 **Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
