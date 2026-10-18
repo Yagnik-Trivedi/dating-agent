@@ -61,7 +61,7 @@ test('typing delays: fast only when asked for', () => {
   assert.ok(paceMs(long) >= Math.min(env.AGENT_MIN_DELAY_MS + 40 * 350, env.AGENT_MAX_DELAY_MS));
 });
 
-test('a frozen judge demo match: no sweep resumes it; opening it queues a reply from the side that didn't speak last', async () => {
+test('a frozen judge demo match: no sweep resumes it; opening it queues a reply from the side that did not speak last', async () => {
   const [judge, seed] = await Promise.all([user('j2@t.local', { isJudge: true }), user('s8@t.local', { isSeed: true })]);
   const m = await matchOf(judge, seed);
   await Match.updateOne({ _id: m._id }, { $set: { status: 'agent_chatting', 'agentState.frozen': true } });
