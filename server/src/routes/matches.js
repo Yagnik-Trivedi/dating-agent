@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
-import { cancelReplies, thaw } from '../services/agent/index.js';
+import { cancelReplies, pauseAgent, resumeAgent, thaw } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
@@ -69,6 +69,22 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { decision } = parse(z.object({ decision: z.enum(['continue', 'pass']) }), req.body);
   const { _id } = await getMatchFor(req.params.id, req.user._id);
   const match = await decide(_id, req.user._id, decision);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// Pause / Resume my agent in this match (Take over stays one-way). 409 when it isn't running / can't come back.
+matchesRouter.post('/matches/:id/pause', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await pauseAgent(_id, req.user._id);
+  if (!match) throw httpError(409, 'NOT_RUNNING', 'Your agent is not running in this chat');
+  emitStatus(match);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+matchesRouter.post('/matches/:id/resume', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await resumeAgent(_id, req.user._id);
+  if (!match) throw httpError(409, 'CANNOT_RESUME', 'Only a paused agent can resume (not after you took over or decided)');
+  emitStatus(match);
   res.json({ match: await matchDetail(match, req.user._id) });
 });
 

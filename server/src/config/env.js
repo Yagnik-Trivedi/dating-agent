@@ -29,6 +29,9 @@ const schema = z.object({
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
   TAVILY_API_KEY: optional,
+  // Tavily has 1,000 credits in total (dev + seeding + demo + judging). A basic search = 1 credit; counted per database.
+  TAVILY_MAX_SEARCHES: field(z.coerce.number().int().nonnegative().default(30)), // all-time cap; production sets it in render.yaml
+  TAVILY_SEARCHES_PER_USER_DAY: field(z.coerce.number().int().nonnegative().default(3)),
   // Nemotron reasoning per tier. Off for fast (chat turns, quick checks): ~1 s instead of 10–40 s.
   LLM_REASONING_FAST: bool(false),
   LLM_REASONING_MID: bool(true),

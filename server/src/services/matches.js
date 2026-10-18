@@ -68,6 +68,7 @@ export async function matchDetail(match, viewerId) {
     createdAt: match.createdAt,
     agentActive: mine?.agentActive ?? false,
     tookOverAt: mine?.tookOverAt ?? null,
+    paused: Boolean(mine?.pausedAt && !mine?.tookOverAt),
     decision: mine?.decision ?? null,
     other: summary(profile, other),
     otherProfile: profile,

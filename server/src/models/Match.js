@@ -16,6 +16,7 @@ const matchSchema = new mongoose.Schema({
     name: String, // first name from the public profile, stored at creation: agents/judges never read the other Profile for it
     agentActive: Boolean,
     tookOverAt: Date,
+    pausedAt: Date, // Pause (owner, plan 10): agent off for now, Resume turns it back on; Take over is for good
     decision: { type: String, enum: ['continue', 'pass', null], default: null },
     lastReadAt: Date,
     _id: false,
