@@ -140,6 +140,13 @@ test('structured answers stated in a message must match mine (B5: "something cas
   assert.ok(g.problems.some((p) => p.includes('looking for is long term')) && g.drop.length === 1);
 });
 
+test('judge-fix step 4 run (m1): "figuring out what I\'m looking for" / "new to long-term, seeing how things go" contradict long-term; "you" sentences don\'t count', () => {
+  const mine = { looking_for: 'long_term' };
+  assert.equal(attributeContradictions("Haan still figuring out yaar what I'm looking for here", mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions('still new to long-term yaar just seeing how things go', mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions("sounds like you're still figuring things out", mine).length, 0, 'about them');
+});
+
 test('"not sure what i\'m hoping to find" / "see where things go" contradict a long-term answer (B5 day run)', () => {
   const mine = { looking_for: 'long_term' };
   assert.equal(attributeContradictions("not sure what i'm hoping to find honestly", mine)[0]?.stated, 'figuring_it_out');

@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { updateInterest } from '../src/services/conversation/interest.js';
-import { pickLanguage, planAct } from '../src/services/conversation/planAct.js';
+import { openMustAsk, pickLanguage, planAct } from '../src/services/conversation/planAct.js';
+import { attributesIn } from '../src/services/persona/askedAboutMe.js';
 import { KG } from '../src/services/kg/config.js';
 import { traitRules } from '../src/services/persona/traitRules.js';
 import { rng } from '../src/utils/rng.js';
@@ -83,7 +84,8 @@ test('steering: after the warm-up, every other turn names my next open agenda to
 });
 
 test('steering retries an important unanswered topic, but not a minor one', () => {
-  const agenda = [{ id: 'a1', topic: 'smoking', priority: 0.9, status: 'open' }, { id: 'a2', topic: 'board games', priority: 0.3, status: 'open' }];
+  // 0.8: important (retried) but below ASK_EXPLICIT_PRIORITY, so the tries cap applies (must-ask items: next tests)
+  const agenda = [{ id: 'a1', topic: 'smoking', priority: 0.8, status: 'open' }, { id: 'a2', topic: 'board games', priority: 0.3, status: 'open' }];
   const base = { interest: 0.5, turn: 4, lastTopicTurn: 0 };
   const once = planAct({ state: { ...base, topicTries: { a1: 1 }, topicsTouched: ['a1'] }, voice, perception: {}, rng: rng(3), agenda });
   assert.equal(once.topic?.id, 'a1', 'tried once and still open → steer to it again');
@@ -96,4 +98,26 @@ test('near MAX_TURNS an open important topic is the topic, even after its tries'
   const agenda = [{ id: 'a1', topic: 'smoking', priority: 0.9, status: 'open' }];
   const p = planAct({ state: { interest: 0.5, turn: 9, lastTopicTurn: 8, topicTries: { a1: 2 } }, voice, perception: {}, rng: rng(1), agenda, msgCount: 19 });
   assert.equal(p.topic?.id, 'a1');
+});
+
+test('must-ask: dealbreakers and answers that matter a lot need a direct question on their attribute (or their own statement)', () => {
+  assert.deepEqual(attributesIn('haha same! do you smoke, by the way?', { questions: true }), ['smoking']);
+  assert.deepEqual(attributesIn('i love trekking. do you smoke?', { questions: false }), [], 'statements only');
+  assert.deepEqual(attributesIn('i brew my own beer, it is my thing', { questions: false }), ['drinking']);
+  const agenda = [
+    { id: 'a1', topic: 'looking for', priority: 1, dealbreaker: true, status: 'answered' }, // old agenda: no attribute field
+    { id: 'a2', topic: 'drinking', attribute: 'drinking', priority: 0.9, status: 'open' },
+    { id: 'a3', topic: 'career ambition', attribute: 'career', priority: 0.6, status: 'open' },
+  ];
+  assert.deepEqual(openMustAsk(agenda, {}).map((a) => a.id), ['a1', 'a2'], 'answered by perceive is not enough');
+  assert.deepEqual(openMustAsk(agenda, { askedAttrs: ['looking_for'], heardAttrs: ['drinking'] }), []);
+});
+
+test('must-ask: steered to after its tries, asked directly, and no natural end while open', () => {
+  const agenda = [{ id: 'a2', topic: 'drinking', attribute: 'drinking', priority: 0.9, status: 'answered' }];
+  const state = { interest: 0.6, turn: 9, lastTopicTurn: 7, topicTries: { a2: 3 } };
+  const p = planAct({ state, voice, perception: {}, rng: rng(1), agenda, msgCount: 17, agendaSettled: true });
+  assert.deepEqual([p.end, p.topic?.id, p.topic?.ask], [null, 'a2', true]);
+  const done = planAct({ state: { ...state, askedAttrs: ['drinking'] }, voice, perception: {}, rng: rng(1), agenda, msgCount: 17, agendaSettled: true });
+  assert.equal(done.end, 'natural');
 });

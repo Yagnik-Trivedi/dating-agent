@@ -14,9 +14,10 @@ const rows = files.filter((f) => existsSync(new URL(f, R))).flatMap((f) => Objec
 
 const labelAt = (r, t) => r.verdicts.map((v, i) => (v === 'compatible' && (r.scores[i] ?? 0) < t ? 'maybe' : v)).reduce((a, b) => (RANK[a] <= RANK[b] ? a : b));
 const table = [];
-for (let t = 0.5; t <= 0.951; t += 0.05) {
+for (let i = 0; i <= 9; i++) {
+  const t = Math.round((0.5 + 0.05 * i) * 100) / 100; // exact steps: 0.5 + 0.05 + … drifted to 0.6000000000000001
   const preds = rows.map((r) => [r.expected, labelAt(r, t)]);
-  table.push({ t: Math.round(t * 100) / 100, correct: preds.filter(([e, p]) => e === p).length, harmful: preds.filter(([e, p]) => (e === 'compatible' && p === 'incompatible') || (e === 'incompatible' && p === 'compatible')).length });
+  table.push({ t, correct: preds.filter(([e, p]) => e === p).length, harmful: preds.filter(([e, p]) => (e === 'compatible' && p === 'incompatible') || (e === 'incompatible' && p === 'compatible')).length });
 }
 const best = table.reduce((a, b) => (b.correct > a.correct || (b.correct === a.correct && b.harmful < a.harmful) ? b : a), table[0]);
 const md = [

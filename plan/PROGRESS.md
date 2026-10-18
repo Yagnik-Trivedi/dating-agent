@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 12:15 IST, by Claude Code (judge fix steps 1-4 done on feat/judge-fix; i5 + m1 re-run pending, NVIDIA 429s)
+- **Last updated:** 2026-10-18 13:30 IST, by Claude Code (re-plan: design arrived, frontend started; Tavily budget; Atlas login still failing)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -32,7 +32,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
-| 10 | Frontend v2 patch | ⬜ Not started | — | — | **Phase 2: waits for the owner's design.** No `client/` work before that. |
+| 10 | Frontend v2 (from the owner's design) | 🔄 In progress | `feat/plan-10-frontend` | — | Design in local `Frontend-Design/04-direction` (gitignored). Name **Prelude**. See the re-plan under Currently working on. |
 | 11 | Seed personas + evaluation (v2) | ✅ Done | main | `67a8666` | B1–B6 done. B5: 4/17, gate 1/1, fakes 2/2; the judges cluster on Maybe. Human labels for judge agreement pending (`eval/labels/`). |
 | 12 | Deploy on free tiers + keep-alive | 🔄 Code done | main | `67a8666` | render.yaml, keep-alive, self-ping, DEPLOY.md, credit guard, demo pacing, `--judges`. Human steps in DEPLOY.md after plan 14. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
@@ -68,6 +68,37 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
 ## Currently working on
+
+**Re-plan (owner, 2026-10-18 afternoon).** The design arrived (`Frontend-Design/04-direction/`, local only and gitignored), and the Tavily key is in (only **1,000 credits** for everything). Atlas: the IP allow-list is `0.0.0.0/0`, but login still fails (`bad auth`), so the **owner fixes the DB user/password in `MONGODB_URI`**. On this machine Node also needs public DNS for the Atlas SRV lookup; Render won't.
+
+Owner's decisions:
+- add `motion`, `lucide-react` and 4 `@fontsource` fonts;
+- the app is called **Prelude**;
+- no selfie or liveness claims: show our real trust check instead;
+- build **Pause / Resume** per match.
+
+| # | Track | What | Estimate | Status |
+|---|---|---|---|---|
+| 1 | Backend | Judge fix: i5 + m1 re-run → merge `feat/judge-fix` → README numbers | ~45 min | 🔄 re-run running |
+| 2 | Backend | Tavily budget guard: basic depth, all-time cap `TAVILY_MAX_SEARCHES`, per-user daily cap, 30-day cache with a normalised key, pre-warm the 5 demo cities, never called from tests | ~45 min | ⬜ |
+| 3 | Backend | Pause / Resume per match (`POST /matches/:id/pause` and `/resume`) | ~30 min | ⬜ |
+| 4 | Frontend | Plan 10 from the design, on `feat/plan-10-frontend`: tokens, fonts, icons and motion; Landing; Auth; Onboarding ("How would you reply?" + learning panel); This is you (radial knowledge map, facts with privacy, Which is right?, How you text); Introductions; Matches; Match room (notes in the margin, Trust / Shared / How they seem / Agenda, Pause, Take over, I wouldn't say that); Verdict Compatible / Maybe (Let them talk a bit longer) / Not compatible (Talk anyway); Replay; Inbox; Settings; loading / empty / error / wake-up states; light + lamplight; 375 → 1440 | ~1.5 days | ⬜ starting |
+| 5 | Backend | Retry `seed.js --judges` (NVIDIA 429s today) | ~1 h of LLM | ⬜ |
+| 6 | Review | CodeRabbit + ponytail audit once the frontend is done | ~1 h | ⬜ |
+| 7 | Go live | Plan 14 (Nebius, by Oct 26) → plan 12 (DEPLOY.md human steps + live smoke) | ~4–5 h + humans | ⬜ needs Nebius + Atlas login |
+| 8 | Submit | Plan 13: README, SUBMISSION.md (freeze Oct 28, submit Oct 29) | ~2–3 h | ⬜ |
+
+**Tavily budget (1,000 credits, basic search = 1 credit):**
+
+| Use | Credits |
+|---|---|
+| Dev checks | ≤ 20 |
+| Pre-warming 5 demo cities × ~4 interest pairs | ~20 |
+| Judge accounts | ~10 |
+| Live demo and judging (Dec 1–15), behind the all-time cap | ≤ 600 |
+| Reserve | ~350 |
+
+Cached ideas never cost a credit.
 
 **Judge fix (owner, 2026-10-18; plan 11 follow-up) on `feat/judge-fix`:** steps 1–3 need no new chats; step 4 re-runs i3, i5, c4 and m1 only after telling the owner.
 - ✅ **Step 1** (`04047d6`): the decision is made in code (`services/conversation/judgeDecision.js`, numbers in `kg/config.js` `JUDGE_*`, unit-tested). The LLM lists evidence only: positives/frictions carry the F-id of my fact, dealbreakerRisk carries the option they stated.

@@ -34,8 +34,8 @@ export function buildAgenda({ self, clarify = [] }) {
     if (!cur || priority > cur.priority) byTopic.set(key, { topic, why, priority, ...extra });
   };
   for (const f of self.filter((x) => x.attribute && ['values', 'goal', 'lifestyle'].includes(x.predicate) && x.disclosure !== 'private')) {
-    if (f.isDealbreaker) add(TOPICS[f.attribute] ?? f.attribute, WHY.dealbreaker, 1, { dealbreaker: true });
-    else if (f.disclosure === 'public') add(TOPICS[f.attribute] ?? f.attribute, WHY[f.predicate], f.importance ?? 0.5);
+    if (f.isDealbreaker) add(TOPICS[f.attribute] ?? f.attribute, WHY.dealbreaker, 1, { dealbreaker: true, attribute: f.attribute });
+    else if (f.disclosure === 'public') add(TOPICS[f.attribute] ?? f.attribute, WHY[f.predicate], f.importance ?? 0.5, { attribute: f.attribute });
   }
   // Short likes only: story-length ones ("naming haworthia blindfolded") made odd topics and crowded the agenda (eval i2).
   self.filter((f) => f.predicate === 'likes' && f.polarity !== -1 && f.disclosure === 'public' && f.object.split(/\s+/).length <= 3)
@@ -45,7 +45,7 @@ export function buildAgenda({ self, clarify = [] }) {
   return [...byTopic.values()]
     .sort((a, b) => b.priority - a.priority)
     .slice(0, AGENDA_SIZE)
-    .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: 0, status: 'open', ...(a.dealbreaker && { dealbreaker: true }) }));
+    .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: 0, status: 'open', ...(a.dealbreaker && { dealbreaker: true }), ...(a.attribute && { attribute: a.attribute }) }));
 }
 
 // Real sentences only: "yes please." and a trailing "😄" are chat fragments, not sentences (they dropped good openers).

@@ -21,17 +21,20 @@ judges), once, on NVIDIA's free API. Full numbers: [`server/eval/results/latest.
 |---|---|
 | Fakes caught | **2/2**, no genuine profile flagged |
 | Dealbreaker gate | **1/1**: the clashing pair never became a chat |
-| Verdict accuracy (17 non-fake pairs) | **4/17 (24%)**; only **1** compatible pair was called Not compatible |
+| Verdict accuracy (17 non-fake pairs) | **8/17 (47%)** with the judge deciding in code (was 4/17); **5/7** compatible pairs found (was 0/7); **1** compatible ↔ incompatible swap |
 | Unsupported claims about the user | **21%** of 137 self-claims (offline judge); 28% vs 35% with the conversation rules on vs off |
 | Voice fidelity | style distance **0.16**, language-mix distance **0.06** (0 = the persona's real texting) |
 | Cost | ~101k tokens and ~17 messages per pair; fakes ~3k tokens |
 | Scale (no LLM) | discover p95 **4.6 ms**; ~88 KB per user → ~5,900 users fit in a free Atlas M0 |
 
 **What this tells us.** The agent is good at the part we trust it with: catching fakes and hard dealbreakers before
-anyone spends time. On everything else the judges are cautious: in most chats at least one side says "unsure", so
-most pairs land on **Maybe** instead of a confident Compatible or Not compatible. That matches the design rule that a
-low-confidence read is always a Maybe, and it's why a Maybe comes with "Let them talk a bit longer" and the user
-always decides. Making the judges commit when the evidence is clear is the next thing to improve.
+anyone spends time. The first run showed the judges hedging (one side said "unsure" in most chats), so the model now
+only lists evidence (quotes, each tied to something that matters to you) and **code decides**: a stated dealbreaker or
+a serious clash on something that matters a lot is a no; two or more verified positives on what matters to you, with no
+serious friction, is a yes; anything else is a Maybe. Re-judging the same 17 saved chats doubled accuracy
+([rejudge.md](server/eval/results/rejudge.md)). The remaining misses were hidden conflicts nobody asked about, so the agent
+now has to ask directly about anything that matters a lot to you before a chat can end; on fresh chats for those
+pairs, the drinking conflict surfaced and was caught ([results-step4.md](server/eval/results-step4.md)).
 
 ## Setup
 
