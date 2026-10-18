@@ -5,7 +5,7 @@ This folder holds the build plan as a series of prompts for Claude Code. Each fi
 ## How to run a prompt
 
 1. Open a terminal in `D:\projects\dating-agent` and start Claude Code.
-2. Say: **"Read plan/0X-<name>.md and implement it. Run the acceptance checks at the end and report the results."**
+2. Say: **"Read plan/30-final-sprint.md and continue from the next open step in PROGRESS.md."**
 3. Review the diff, run the app, then commit.
 4. Start a fresh Claude Code session for the next file. This keeps the context small and focused.
 
@@ -13,26 +13,23 @@ This folder holds the build plan as a series of prompts for Claude Code. Each fi
 
 ## Order and dependencies
 
-The knowledge graph and agent engine were rebuilt as v2 (design: `15-knowledge-graph-final.md`). Plans 05–11 describe the v2 build.
+**All open work is in `30-final-sprint.md`** (owner, 2026-10-18). It merges the old plans 21 and 22 and the post-deploy findings. Run it in order S0 → S7.
 
-**Live status:** `plan/PROGRESS.md` is the team's status board (what's done, in progress or blocked, and how to continue). Read it first.
-
-**Build order** (owner's phases, 2026-10-17):
+**Live status:** `plan/PROGRESS.md` is the team's status board. Read it first.
 
 | Phase | Plans | Notes |
 |---|---|---|
-| Done | 02 → 03 → 04 → 17 → 05 → 06 → 07 → 08 → 09 | v2 knowledge graph and engine |
-| 1. Backend + tests (now) | 11 (Part B: tuning, scale test, metrics, ablation, one full run) | Reduced scope, see plan 11 |
-| 2. Frontend | 19 (live check: backend + vision script now, plain screen; cut-off Oct 25) → 10 (from the owner's final design; includes the small backend additions it lists) | No restyling of `client/` before the design hand-over; plan 19's new plain screen is the exception |
-| 3. Go live | 14 (switch to Nebius, by Oct 26) → 12 (deploy, keep-alive, judge accounts, demo pacing) | |
-| 4. Submit | 13 (README, Devpost; the video is by humans) | Feature freeze Oct 28, submit Oct 29 |
+| Done (in `plan/archive/`) | 02 → 03 → 04 → 17 → 05 → 06 → 07 → 08 → 09 → 11 → 10 → 19 | v2 knowledge graph, engine, judges, eval, frontend, live check |
+| Now | **30** (S0 bugs → S1 speed → S6 design foundation → S2 onboarding → S3 dating-app core → S4 accounts → S5 P1 → S7 ship) | Feature freeze Oct 28, submit Oct 29 |
+| Ops, used by 30 | 12 (deploy + keep-alive), 14 (Nebius check, Oct 26), 13 (submission) | |
 
-**Reference docs:** 15 (knowledge-graph source of truth), 18 (architecture decisions; see its status banner), 20 (design background), 01 (human checklist). Finished execution docs are in `plan/archive/`.
+**Reference docs:** 15 (knowledge-graph source of truth), 18 (architecture decisions; see its status banner), 01 (human checklist). Finished plans are in `plan/archive/` (still valid as references for how each part was built).
 
-**Rules for every plan from 17 onward:**
-- The app stays runnable after each plan: signup → onboarding → discover → match → agent chat works end to end (degraded is fine, broken isn't), with seed data re-loaded by the updated seed script.
-- Wipe and re-seed test data instead of writing migrations.
-- Each plan: implement → acceptance checks → commit + push → one Status line in `CLAUDE.md` → stop for "go".
+**Rules:**
+- The app stays runnable after every step, and `npm run smoke:browsers` passes on the local production build.
+- **Commit locally, don't push or deploy** until the owner says so (limited free-tier deploys). There's one push + deploy in plan 30 S7.
+- Wipe and re-seed test data rather than migrating, **except** real users' data from now on (the site is live): write migrations for those.
+- Each step: implement → acceptance checks → update `PROGRESS.md` → commit locally.
 
 ## Team split (4 people)
 
