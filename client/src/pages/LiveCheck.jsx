@@ -130,9 +130,9 @@ export default function LiveCheck() {
             } else since = null
           }
           if (now - stepStart > GUIDE.actionTimeoutMs) return reject(new Error('timeout'))
-          requestAnimationFrame(tick)
+          requestAnimationFrame(() => tick().catch(reject))
         }
-        requestAnimationFrame(tick)
+        requestAnimationFrame(() => tick().catch(reject))
       })
       stopAll()
       setPhase('sending')

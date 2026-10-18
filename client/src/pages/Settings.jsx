@@ -26,7 +26,7 @@ function applyTheme(theme) {
 }
 
 export default function Settings() {
-  const { user, setUser, logout } = useAuth()
+  const { user, setUser, logout, system } = useAuth()
   const toast = useToast()
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('theme') ?? 'system' } catch { return 'system' } })
   const [saving, setSaving] = useState(null)
@@ -85,12 +85,12 @@ export default function Settings() {
         </div>
       </section>
 
-      <section className="card set-sec">
+      {system.liveCheckEnabled !== false && (<section className="card set-sec">
         <div className="set-row">
           <div><h2 className="t-h3">Live check</h2><p className="small">{user.liveCheck?.status === 'passed' ? `Passed on ${new Date(user.liveCheck.checkedAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}. Your profile shows “Live-checked”.` : user.liveCheck?.status === 'failed' ? 'Not passed yet. It’s optional.' : 'Not done. Two quick moves on camera show you’re a real person. Optional.'}</p></div>
           <Link className="btn secondary" to="/live-check">{user.liveCheck?.status === 'passed' ? 'Check again' : user.liveCheck?.status === 'failed' ? 'Try again' : 'Do the live check'}</Link>
         </div>
-      </section>
+      </section>)}
 
       <section className="card set-sec">
         <h2 className="t-h3">Appearance</h2>

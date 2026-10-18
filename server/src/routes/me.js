@@ -14,6 +14,7 @@ import { Message } from '../models/Message.js';
 import { Profile } from '../models/Profile.js';
 import { User } from '../models/User.js';
 import { pauseReason } from '../services/llm/budget.js';
+import { env } from '../config/env.js';
 import { emitStatus, setStatus } from '../services/pipeline/index.js';
 import { io } from '../sockets/io.js';
 import { parse } from '../utils/http.js';
@@ -24,7 +25,7 @@ meRouter.get('/me', async (req, res) => {
   res.json({
     user: req.user,
     profile: await Profile.findOne({ userId: req.user._id }).lean(),
-    system: { agentPaused: pauseReason()?.message ?? null }, // UI shows an "Agent paused" banner
+    system: { agentPaused: pauseReason()?.message ?? null, liveCheckEnabled: env.LIVE_CHECK_ENABLED }, // UI shows an "Agent paused" banner
   });
 });
 

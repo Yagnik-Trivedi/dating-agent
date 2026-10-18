@@ -56,11 +56,15 @@ export const finishBody = z.object({
 
 async function record(userId, result, reason, actions) {
   const at = new Date();
-  const user = await User.findById(userId, { liveCheck: 1 });
-  const attempts = [...(user.liveCheck?.attempts ?? []), { at, result, reason }].slice(-5);
   const passed = result === 'passed';
-  const status = passed ? 'passed' : user.liveCheck?.status === 'passed' ? 'passed' : 'failed'; // a later failure never un-checks
-  await User.updateOne({ _id: userId }, { $set: { liveCheck: { status, checkedAt: passed ? at : user.liveCheck?.checkedAt, model: modelId('vision'), actions, attempts } } });
+  // One pipeline update: concurrent finishes append instead of overwriting, and a later failure never un-checks.
+  await User.updateOne({ _id: userId }, [{ $set: {
+    'liveCheck.attempts': { $slice: [{ $concatArrays: [{ $ifNull: ['$liveCheck.attempts', []] }, [{ at, result, reason }]] }, -5] },
+    'liveCheck.status': passed ? 'passed' : { $cond: [{ $eq: ['$liveCheck.status', 'passed'] }, 'passed', 'failed'] },
+    'liveCheck.checkedAt': passed ? at : '$liveCheck.checkedAt',
+    'liveCheck.model': modelId('vision'),
+    'liveCheck.actions': { $literal: actions },
+  } }]);
   if (passed) await Profile.updateOne({ userId }, { $set: { liveChecked: true, liveCheckedAt: at } });
 }
 
