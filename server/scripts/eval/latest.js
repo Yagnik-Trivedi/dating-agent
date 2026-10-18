@@ -35,7 +35,7 @@ const md = [
   `- ${line(metrics, '**Style distance**')}`, `- ${line(metrics, '**Language-mix distance**')}`, `- ${line(metrics, '**Script kept**')}`, '',
   '## Privacy', '', `- ${line(leak, '**Leak rate')}`, '',
   '## Judge vs humans', '', labels ? `- ${labels} human labels in \`eval/labels/labels.csv\`: run \`node scripts/eval/judge-eval.js\` for agreement + kappa.` : '- Pending labels: `node scripts/eval/judge-eval.js --export` wrote `eval/labels/` for the team.', '',
-  '## Scale (no LLM)', '', ...(scale ? scale.split('\n').filter((l) => /^\| (Discover|Context)|Storage per user|Judge queue/.test(l)) : ['pending']), '',
+  '## Scale (no LLM)', '', ...(scale ? scale.split('\n').filter((l) => /^\| (Measure|Discover|Context)|^\|---|Storage per user|Judge queue/.test(l)) : ['pending']), '',
 ].join('\n');
 writeFileSync(new URL('results/latest.md', R), `${md}\n`);
 console.log(md);

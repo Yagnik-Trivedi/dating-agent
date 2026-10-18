@@ -1,34 +1,36 @@
 # Evaluation: headline numbers
 
-Generated 2026-10-17 14:06 UTC by `node scripts/eval/latest.js` from the files in `eval/`. Provider: see each source file.
+Generated 2026-10-18 04:47 UTC by `node scripts/eval/latest.js` from the files in `eval/`. Provider: see each source file.
 
 ## Labelled pairs
 
-- **Accuracy** (non-fake pairs): 1/4 = 25%
-- **Harmful error rate** (compatible ↔ incompatible swapped): 0/4 = 0%
+- **Accuracy** (non-fake pairs): 4/17 = 24%
+- **Harmful error rate** (compatible ↔ incompatible swapped): 1/17 = 6%
 - **Gate**: 1/1 gated pairs never became a chat
-- **Fake detection**: 1/1 fake pairs flagged; 0 genuine pairs wrongly flagged
-- **Fallback rate** (template or filler, target < 5%): 13% of agent messages; constrained regenerations: 2
-- **Mean tokens per pair**: 74,408 (fake pairs: 3,036); total 300,667 tokens across 6 runs
+- **Fake detection**: 2/2 fake pairs flagged; 0 genuine pairs wrongly flagged
+- **Fallback rate** (template or filler, target < 5%): 7% of agent messages; constrained regenerations: 17
+- **Mean tokens per pair**: 101,380 (fake pairs: 2,939); total 1,729,341 tokens across 20 runs
 
 ## Rules on vs off (6-pair subset, `RULES` ablation)
 
 | | rules on (full engine) | rules off (plain agents) |
 |---|---|---|
-| Unsupported self-claims | — | — |
-| Agreement rate | — | — |
-| Disagreement rate | — | — |
-| Judge approval ("yes") | — | — |
+| Unsupported self-claims | 28% of 43 | 35% of 68 |
+| Agreement rate | 3% | 36% |
+| Disagreement rate | 3% | 0% |
+| Judge approval ("yes") | 0% | 0% |
+
+- **Unsupported self-claims, full run**: 21% of 137 claims (offline judge); judge approval 6%
 
 ## Voice and language
 
-- **Style distance** (normalised L1 over length, emoji, end punctuation, questions, lowercase): mean 0.25
-- **Language-mix distance** (L1/2 over the mix): mean 0.08; **code-switch rate difference**: mean 0.28
-- **Script kept** (Devanagari personas still write Devanagari): 0/0
+- **Style distance** (normalised L1 over length, emoji, end punctuation, questions, lowercase): mean 0.16
+- **Language-mix distance** (L1/2 over the mix): mean 0.06; **code-switch rate difference**: mean 0.22
+- **Script kept** (Devanagari personas still write Devanagari): 1/1
 
 ## Privacy
 
-- **Leak rate: pending
+- **Leak rate (private facts)**: 4/20 replies revealed a private fact (code keyword check 0, LLM judge 4).
 
 ## Judge vs humans
 
@@ -36,6 +38,8 @@ Generated 2026-10-17 14:06 UTC by `node scripts/eval/latest.js` from the files i
 
 ## Scale (no LLM)
 
+| Measure | p50 | p95 |
+|---|---|---|
 | Discover (gate both ways, one `$match` + `$sample` 20), 500 users | 2.1 ms | 4.6 ms |
 | Context build per message, persona cache **miss** (load facts + voice + samples, select facts + exemplars) | 9.9 ms | 10.9 ms |
 | Context build per message, persona cache **hit** | 1.7 ms | 3.2 ms |

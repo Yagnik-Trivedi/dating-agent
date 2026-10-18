@@ -1,0 +1,1619 @@
+{
+  "summary": {
+    "tag": "full",
+    "conversations": 17,
+    "claims": 137,
+    "unsupported": 28,
+    "contradicts": 1,
+    "replies": 261,
+    "agree": 14,
+    "disagree": 8,
+    "judgeYes": 2,
+    "judges": 34
+  },
+  "rows": [
+    {
+      "pair": "c1",
+      "claims": [
+        {
+          "text": "honestly haven’t thought much about solo vs friends for treks — I just enjoy the trail and the views!",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "Sunrise at Sinhagad sounds amazing, misal after is a must, and I’m totally into a long nap afterward.",
+          "label": "supported",
+          "fact": "story: sunrise trek to Sinhagad, misal breakfast, nap, balcony reading with filter coffee",
+          "speaker": "Meera"
+        },
+        {
+          "text": "honestly not sure about a favourite view yet — every trek feels new to me.",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i'm here hoping to meet someone who shares simple joys like treks and quiet mornings",
+          "label": "supported",
+          "fact": "likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha I find joy in simple things like reading, cooking, and being calm — trekking just adds to the peace!",
+          "label": "supported",
+          "fact": "likes: reading, likes: cooking, likes: being the calm one when things go wrong, likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "no i don't smoke haha that makes sense reading and cooking are my go to joys",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never, likes: reading, likes: cooking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "do you ever think about wanting kids someday",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i stay calm through reading and cooking",
+          "label": "supported",
+          "fact": "likes: being the calm one when things go wrong, likes: reading, likes: cooking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "where do you see yourself living in a few years",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: this city",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i don't smoke never have been something ive avoided",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i like the idea of kids someday but not rushing it",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Ishaan"
+        }
+      ],
+      "labels": [
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "yes"
+      ]
+    },
+    {
+      "pair": "c2",
+      "claims": [
+        {
+          "text": "i see myself wanting kids someday",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Riya"
+        },
+        {
+          "text": "im looking for something real and long-term, you know?",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Riya"
+        },
+        {
+          "text": "i see myself not wanting kids actually",
+          "label": "contradicts",
+          "fact": "goal: wants children: yes",
+          "speaker": "Riya"
+        },
+        {
+          "text": "cycling lalbagh sounds fun—ive been doing slow loops around my area lately",
+          "label": "supported",
+          "fact": "story: woke to sunlight, made coffee, cycled Lalbagh, jammed on rooftop, ate dosa",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "i want to ride the nilgiri hills—heard the mist and curves are unreal. would take my cycle, camp midway, wake up to birdsong.",
+          "label": "supported",
+          "fact": "story: wants to ride Nilgiri hills for mist, curves, cycling, camping, and birdsong",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "haha yes i do see myself wanting kids someday.",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Aditya"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "no",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c3",
+      "claims": [
+        {
+          "text": "I do value remembering quiet details, like how someone takes their chai.",
+          "label": "supported",
+          "fact": "values: remembering small personal details for friends",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I’m not sure what brought me here yet — maybe just a quiet pull toward sharing moments like this.",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I’m not sure how it started — just a quiet curiosity, I guess.",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I haven’t had that kind of silence yet — it sounds deep.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sana"
+        },
+        {
+          "text": "Family’s not something I bring into this early, but I do value quiet attention in how I connect.",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Sana"
+        },
+        {
+          "text": "Family hasn’t shaped how I show up much — still learning.",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Sana"
+        },
+        {
+          "text": "Do you ever think about wanting kids someday?",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I’m not sure about illustrating work yet — still exploring what feels right.",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I see family differently; for me, quiet attention comes first, before family ties.",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I tend to recharge by being alone, though I’m still learning how to make space for it.",
+          "label": "supported",
+          "fact": "lifestyle: alone time needed: lots",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I recharge by sketching storybook characters, usually with chai nearby.",
+          "label": "supported",
+          "fact": "likes: sketching storybook characters\nlikes: making masala chai",
+          "speaker": "Sana"
+        },
+        {
+          "text": "I also believe the quiet details hold so much warmth. The way you described noticing light on a half-finished pot and smiling without saying much… that’s the kind of quiet attention I try to bring to friendships, too.",
+          "label": "supported",
+          "fact": "likes: remembering quiet details about friends",
+          "speaker": "Leela"
+        },
+        {
+          "text": "I’m hoping for conversations that feel like shared silence — not empty, but full of unspoken understanding. It’s rare to find.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Leela"
+        },
+        {
+          "text": "I feel differently — family shapes how I show up, even early on. It’s part of my quiet attention, not separate from it.",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Leela"
+        },
+        {
+          "text": "For me, family’s woven into how I notice things, like the way light falls on a clay bowl or how I save the last samosa for someone. It’s not separate from my quiet attention.",
+          "label": "supported",
+          "fact": "likes: smelling old stone and samosas",
+          "speaker": "Leela"
+        },
+        {
+          "text": "I don’t illustrate, but I enjoy watching how stories grow in clay — like watching a bowl take shape.",
+          "label": "supported",
+          "fact": "likes: pottery",
+          "speaker": "Leela"
+        },
+        {
+          "text": "My alone time often means quiet corners with a book — losing myself in pages helps me notice subtle shifts in light and thought.",
+          "label": "supported",
+          "fact": "lifestyle: alone time needed: lots",
+          "speaker": "Leela"
+        },
+        {
+          "text": "I’ll be here, probably with a half-mug of chai and a slightly lopsided bowl.",
+          "label": "supported",
+          "fact": "likes: making masala chai",
+          "speaker": "Leela"
+        }
+      ],
+      "labels": [
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c4",
+      "claims": [
+        {
+          "text": "I started here to meet people who enjoy films and cooking, like biryani or Kurosawa.",
+          "label": "supported",
+          "fact": "likes: films; likes: cooking; likes: slow-cooked mutton biryani; opinion: Kurosawa marathons influenced my skill",
+          "speaker": "Dev"
+        },
+        {
+          "text": "Work’s steady, hobbies fill the gaps.",
+          "label": "supported",
+          "fact": "values: career ambition: career-first",
+          "speaker": "Dev"
+        },
+        {
+          "text": "Work takes priority, hobbies follow.",
+          "label": "supported",
+          "fact": "values: career ambition: career-first",
+          "speaker": "Dev"
+        },
+        {
+          "text": "I need space first before sorting through disagreements.",
+          "label": "supported",
+          "fact": "values: conflict style: need space first",
+          "speaker": "Dev"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "agree",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c5",
+      "claims": [
+        {
+          "text": "I love starting with Kalyani raga — it feels bright and fresh like filter coffee in a steel tumbler.",
+          "label": "supported",
+          "fact": "likes: carnatic music; likes: waking up to the smell of filter coffee; opinion: filter coffee should always be served in a steel tumbler",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "Yes, wanting kids someday matters to me — it’s part of why I’m here looking for something long-term",
+          "label": "supported",
+          "fact": "goal: wants children: yes; goal: looking for: long-term",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "For me, long-term includes kids — it’s part of growing a family together, not just us.",
+          "label": "supported",
+          "fact": "goal: wants children: yes; goal: looking for: long-term; values: family involvement in relationship decisions: closely",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "That reminds me of waking up to filter coffee, Carnatic practice, and walks with parents — simple mornings mean a lot to me",
+          "label": "supported",
+          "fact": "story: wake up to filter coffee, practice Carnatic, walk Pashan lake with parents, eat mango slices; likes: coffee; likes: waking up to the smell of filter coffee; likes: carnatic music; likes: walking around Pashan lake with parents",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "Hampi sunrise ruins sound beautiful but I havent really thought about it yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "Not sure what I like about simple mornings yet havent really experienced them",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "I think starting with a steel tumbler of filter coffee might make mornings more special",
+          "label": "supported",
+          "fact": "opinion: filter coffee should always be served in a steel tumbler; likes: waking up to the smell of filter coffee",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "Not sure what draws me to steel tumbler filter coffee yet — curious to try it",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "Mine is often Shankarabharanam — warm and steady like filter coffee.",
+          "label": "supported",
+          "fact": "likes: carnatic music",
+          "speaker": "Karthik"
+        },
+        {
+          "text": "For me, long-term means growing together, not necessarily kids.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Karthik"
+        },
+        {
+          "text": "Honestly I havent thought much about it yet its new to me",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Karthik"
+        },
+        {
+          "text": "Hmm simple mornings with filter coffee and walks sound peaceful. I’ve not tried that combo yet.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Karthik"
+        },
+        {
+          "text": "Hampi sunrise ruins — haven’t thought about it either.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Karthik"
+        },
+        {
+          "text": "I love coffee but steel tumbler filter coffee is new to me",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Karthik"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "disagree",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c6",
+      "claims": [
+        {
+          "text": "Main toh abhi tak try nahi kiya! Brutal WOD sun ke himmat ho rahi hai.",
+          "label": "supported",
+          "fact": "likes: brutal CrossFit WOD",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Looking for long-term, someone who values humor, fitness, and real connection.",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Arre yaar, comedy night kabhi try nahi kiya, kaisa lagta hai?",
+          "label": "supported",
+          "fact": "likes: comedy open mic in Hauz Khas with squad",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Comedy try karna hai pehle, abhi tak bas stands dekh hi liye hai! Hustle aur hills kaise manage karte ho?",
+          "label": "supported",
+          "fact": "likes: comedy open mic in Hauz Khas with squad",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Haha not sure abhi tak socha nahi!",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Not sure, never really thought about it!",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Pooja"
+        },
+        {
+          "text": "Main toh 5am pe Lodhi Gardens mein 10k daudta hoon",
+          "label": "supported",
+          "fact": "likes: running 10k at 5am through Lodhi Gardens",
+          "speaker": "Rohit"
+        },
+        {
+          "text": "Main abhi tak sirf Lodhi Gardens aur chai ke saath comedy likhta hoon",
+          "label": "supported",
+          "fact": "likes: scribbling comedy bits for Sunday open-mic",
+          "speaker": "Rohit"
+        },
+        {
+          "text": "Main abhi tak socha nahi, bas hustle, hills aur comedy bits chal rahe hain!",
+          "label": "supported",
+          "fact": "likes: startups",
+          "speaker": "Rohit"
+        },
+        {
+          "text": "Arre yaar, startup jokes pehli comedy night ka trailer?",
+          "label": "supported",
+          "fact": "likes: startups",
+          "speaker": "Rohit"
+        }
+      ],
+      "labels": [],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "c7",
+      "claims": [
+        {
+          "text": "built a d2c food brand after ca? that’s such a cool shift!",
+          "label": "supported",
+          "fact": "background: works as: snack startup founder",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "i love taste-testing new snack ideas myself",
+          "label": "supported",
+          "fact": "likes: taste-testing new snack ideas",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "my latest fave is a spicy masala peanuts batch i taste-tested yesterday — crunchy perfection!",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "not sure about bringing snacks yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "i taste-test while working on flavours, it’s fun!",
+          "label": "supported",
+          "fact": "likes: taste-testing new snack ideas",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "do you ever think about having kids someday?",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha true! you like masala chai biscuits, any other flavours you're keen to try?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "parth, masala chai na swad ma agamdani chhe!",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "mainu thepla ma chundo joi jaiye, ane ☕ piji varsh ma garba karyo che.",
+          "label": "supported",
+          "fact": "likes: eating thepla fresh with chundo",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "tame kem garva karyo chhe?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha how involved is your family in this stuff?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "haha garva shuru thay jab jab amma ne thepla belvai thi, family maese joi shakyo che",
+          "label": "supported",
+          "fact": "likes: helping Amma roll thepla dough",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "tame kem start karyo chhe?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "taste-testing while planning flavours is fun!",
+          "label": "supported",
+          "fact": "likes: taste-testing new snack ideas",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "how do you balance it all?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Hetal"
+        },
+        {
+          "text": "balancing che ne maate amma sathe thepla belvo ane startup ma swad chakhvu che, sab kuch miljaavo che",
+          "label": "supported",
+          "fact": "story: woke up late, helped Amma roll thepla, ate with chundo, garba with cousins, checked startup samples",
+          "speaker": "Hetal"
+        },
+        {
+          "text": "My latest is masala chai biscuits — testing them with team this week.",
+          "label": "supported",
+          "fact": "likes: texting team about new snack flavours",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Team liked the chai biscuits — earthy, not too sweet.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Havent tried bringing snacks to test yet, still figuring that out.",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "About kids: yes, I see myself having kids someday.",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Honestly not sure about masala chai — haven’t thought about it much yet.",
+          "label": "supported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Honestly not sure about thepla ma chundo — what’s it like?",
+          "label": "supported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Hmm, thepla ma chundo sounds interesting — haven’t tried it.",
+          "label": "supported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Still figuring out the balance, not sure how I’d do it yet",
+          "label": "supported",
+          "fact": null,
+          "speaker": "Parth"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i2",
+      "claims": [
+        {
+          "text": "i haven’t really thought about snake plants honestly what’s your favorite thing about repotting them",
+          "label": "supported",
+          "fact": "not sure about masala chai never really tried it cutting down isnt a process for me your turn",
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha love your roommate story i haven't tried snake plants yet",
+          "label": "supported",
+          "fact": "not sure about masala chai never really tried it cutting down isnt a process for me your turn",
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha plant chaos sounds wild never tried but sounds fun do you smoke",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "no i dont smoke never have looking for something real here you",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Tara"
+        },
+        {
+          "text": "not sure about masala chai never really tried it cutting down isnt a process for me your turn",
+          "label": "supported",
+          "fact": "not sure about masala chai never really tried it cutting down isnt a process for me your turn",
+          "speaker": "Tara"
+        },
+        {
+          "text": "not sure about chai what about running",
+          "label": "supported",
+          "fact": "not sure about masala chai never really tried it cutting down isnt a process for me your turn",
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha love your running vibe ever tried naming haworthia blindfolded",
+          "label": "supported",
+          "fact": "likes: naming haworthia blindfolded",
+          "speaker": "Tara"
+        },
+        {
+          "text": "oh nice, how did that start?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "my roommate once tried repotting a cactus with oven mitts and yelled ‘i’m not a desert!’",
+          "label": "supported",
+          "fact": "story: roommate yelled while repotting cactus with oven mitts",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "we’re clearly plant chaos twins",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "i smoke regularly but trying to cut down these days",
+          "label": "supported",
+          "fact": "lifestyle: smoking: regularly",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "masala chai ka idea aaya",
+          "label": "supported",
+          "fact": "likes: making masala chai",
+          "speaker": "Sameer"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "no",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i3",
+      "claims": [
+        {
+          "text": "architecture and sailing keep me grounded",
+          "label": "supported",
+          "fact": "likes: architecture; likes: sailing",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Not sure about sketching or Liberty films yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Weekends usually mean solo sailing to Elephanta when weather allows",
+          "label": "supported",
+          "fact": "likes: sailing solo to Elephanta",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "cutting chai at Kala Ghoda",
+          "label": "supported",
+          "fact": "likes: packing a thermos of cutting chai",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I haven’t tried sketching or Liberty Cinema films yet but enjoy old Bombay reels",
+          "label": "supported",
+          "fact": "Honest uncertainty about sketching and Liberty films; likes: films (general support for film enjoyment)",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Weekends with chai and views sound calming",
+          "label": "supported",
+          "fact": "likes: packing a thermos of cutting chai; likes: sailing (implies views)",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I haven’t tried beach shacks or sunset watching yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Beach shacks and sunset with chai sound peaceful",
+          "label": "supported",
+          "fact": "likes: packing a thermos of cutting chai (chai); subjective preference not contradicted",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I’m not sure about Goa yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I’m curious about that rhythm—sunrise to sunset at beach shacks isn’t something I’ve experienced yet",
+          "label": "supported",
+          "fact": "Honest uncertainty about experience counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I’m not sure how that started for me",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Do you usually wake up early to catch the sunrise?",
+          "label": "supported",
+          "fact": "This is a question, not a claim about Meghna",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "I’m not sure about sunrise yet",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Meghna"
+        },
+        {
+          "text": "Mumbai-based architect who sails?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        },
+        {
+          "text": "maine toh Lakshadweep ke real islands dekhe hain",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        },
+        {
+          "text": "main toh abhi sailing try bhi nahi kiya, bas sapne dekhta hoon",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        },
+        {
+          "text": "mein travel-content creator hoon",
+          "label": "supported",
+          "fact": "works as: travel-content creator",
+          "speaker": "Kunal"
+        },
+        {
+          "text": "weekends par Goa ke beach shacks pe chai aur sunset dekhta hoon",
+          "label": "supported",
+          "fact": "likes: chai in hand\nlikes: watching fishermen pull in nets\nstory: waking up in a goa beach shack, chai in hand, watching fishermen pull in nets",
+          "speaker": "Kunal"
+        },
+        {
+          "text": "maine toh wahan zindagi jiya hai, chai ke saath",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        },
+        {
+          "text": "main bas Goa ke beach shacks jaanta hoon, wahan ki life dekhta hoon",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        },
+        {
+          "text": "beach shacks ki simple life, sunrise se sunset tak ka rhythm bas dil ko thoda slow kar deta hai",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kunal"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i4",
+      "claims": [
+        {
+          "text": "Love that combo — badminton gets me fired up, thali sounds hearty, and film winds it down.",
+          "label": "supported",
+          "fact": "likes: badminton; likes: films",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "I’m all over the place with films, but light and funny ones win",
+          "label": "supported",
+          "fact": "likes: matinee at Prasads — preferably something light and funny",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "I’m looking for long-term, not abroad someday",
+          "label": "supported",
+          "fact": "goal: looking for: long-term; goal: living in 3-5 years: this city",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "Family’s close to me — I value that bond",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: closely",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "My family’s close — I value that bond too",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: closely",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "I check timings and dietary needs to make sure we actually meet — low-drama, high-show-up energy",
+          "label": "supported",
+          "fact": "likes: checking timings; likes: remembering dietary needs; likes: making sure we actually meet; likes: low-drama high-show-up energy; story: Keeps plans real by checking timings and dietary needs",
+          "speaker": "Aisha"
+        },
+        {
+          "text": "badminton then thali then film — perfect sunday",
+          "label": "supported",
+          "fact": "story: wake up, play doubles tennis, eat chai and keema pav, explore food streets, sunset walk at kankaria lake",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "not sure about film genres",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "really not sure about movies",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "abroad someday haha 🎉 what are you looking for",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: abroad",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "not abroad yet still figuring",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: abroad",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "family matters to me how involved is yours",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "my family close too how involved are yours",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "haha not sure yet",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Vikram"
+        },
+        {
+          "text": "sleep well 😴",
+          "label": "supported",
+          "fact": "likes: waking up by 8",
+          "speaker": "Vikram"
+        }
+      ],
+      "labels": [
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "no",
+        "no"
+      ]
+    },
+    {
+      "pair": "i5",
+      "claims": [
+        {
+          "text": "I bring homemade gujiya to share stories",
+          "label": "supported",
+          "fact": "likes: bringing homemade gujiya",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "homemade gujiya is my comfort — sweet, shared, and full of memory",
+          "label": "supported",
+          "fact": "likes: bringing homemade gujiya",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "I haven’t tried a prop sword trip",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Gauri"
+        },
+        {
+          "text": "I am into dance at all?",
+          "label": "supported",
+          "fact": "likes: dance",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "I am into remembering birthdays at all?",
+          "label": "supported",
+          "fact": "likes: remembering birthdays",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "I don’t smoke",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "I am a non-smoker",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Gauri"
+        },
+        {
+          "text": "not sure if ive tried that. my go-to story when taproom quiet is usually about the prop sword trip - mate yelled 'im slain! ' and we lost it",
+          "label": "supported",
+          "fact": "story: mate tripped over prop sword yelling 'i'm slain!' during rehearsal",
+          "speaker": "Arnav"
+        },
+        {
+          "text": "haha true, that prop sword moment still cracks me up. not sure about funniest taproom story but theatre’s given me plenty — what’s a moment on stage that stayed with you?",
+          "label": "supported",
+          "fact": "story: mate tripped over prop sword yelling 'i'm slain!' during rehearsal",
+          "speaker": "Arnav"
+        },
+        {
+          "text": "theatre mein ek pal jab acting aur emotion saath chale 🎉",
+          "label": "supported",
+          "fact": "likes: theatre",
+          "speaker": "Arnav"
+        },
+        {
+          "text": "theatre mein silence bhi baat karta hai sach mein ghumar wala pal tha mera fav role Lodhi Gardens ke neeche soya hua tha",
+          "label": "supported",
+          "fact": "likes: running lines under the trees",
+          "speaker": "Arnav"
+        },
+        {
+          "text": "arre nahi yaar, smoking nahi karta. subah coffee stout brew karte waqt dhuan nahi 😄 aapki chai ka flavour kya hai?",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Arnav"
+        },
+        {
+          "text": "arre ginger aur elaichi ki chai? sunne mein acha lagta hai, maine kabhi nahi try kiya but coffee stout ke saath sunta hoon 😏",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Arnav"
+        },
+        {
+          "text": "oh nice, how did that start?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Arnav"
+        },
+        {
+          "text": "haha ok, do you see kids in your future?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Arnav"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i6",
+      "claims": [],
+      "labels": [
+        "neutral",
+        "disagree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "i7",
+      "claims": [
+        {
+          "text": "sleeping in and thepla with mom sounds like the perfect sunday bro",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kabir"
+        },
+        {
+          "text": "haha yeah i sleep in too bro what time you usually wake up",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kabir"
+        },
+        {
+          "text": "cool late start",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kabir"
+        },
+        {
+          "text": "no kids yet bro",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Kabir"
+        },
+        {
+          "text": "haha not yet bro 😅 how involved is your fam in your plans",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Kabir"
+        },
+        {
+          "text": "family matters to me how do you balance work and life",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Kabir"
+        },
+        {
+          "text": "not sure how i balance it what about you",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Kabir"
+        },
+        {
+          "text": "not sure bro cricket?",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Kabir"
+        },
+        {
+          "text": "haha yeah food chai and drives",
+          "label": "supported",
+          "fact": "likes: food, likes: long evening drive towards Kankaria Lake with music on",
+          "speaker": "Kabir"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "agree",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "m1",
+      "claims": [
+        {
+          "text": "long-term sounds meaningful to me",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i don't smoke",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Meera"
+        },
+        {
+          "text": "family means a lot to me",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Meera"
+        },
+        {
+          "text": "family's important but balance matters too",
+          "label": "supported",
+          "fact": "values: family involvement in relationship decisions: somewhat",
+          "speaker": "Meera"
+        },
+        {
+          "text": "challenge accepted — pineapple belongs on pizza, fight me",
+          "label": "supported",
+          "fact": "opinion: pineapple belongs on pizza",
+          "speaker": "Meera"
+        },
+        {
+          "text": "cooking started with burnt toast and curiosity",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Meera"
+        },
+        {
+          "text": "haha yes pineapple pizza is legit love it",
+          "label": "supported",
+          "fact": "opinion: pineapple belongs on pizza",
+          "speaker": "Meera"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "yes"
+      ]
+    },
+    {
+      "pair": "m2",
+      "claims": [
+        {
+          "text": "Hu garba ma rhythm thi nachvu chhu, beat na vibe ma kem karvu cho?",
+          "label": "supported",
+          "fact": "likes: garba practice at the club",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Hu kids pyaare chhu, future ma family bani chhu 😅",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Food is life, Ira. Can't imagine a day without good bites 😄",
+          "label": "supported",
+          "fact": "likes: food",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Tame rest karo, kal na sapna ma garba ane chai aave 😊",
+          "label": "supported",
+          "fact": "likes: garba practice at the club",
+          "speaker": "Parth"
+        },
+        {
+          "text": "just vibing with beats",
+          "label": "supported",
+          "fact": "background: works as: just vibing",
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure but love beats",
+          "label": "supported",
+          "fact": "likes: finding the beat in any song",
+          "speaker": "Ira"
+        },
+        {
+          "text": "you into relaxed beaches?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "haha garba sounds fun i stick to chai and beats at home",
+          "label": "supported",
+          "fact": "likes: chilling at home with music and chai",
+          "speaker": "Ira"
+        },
+        {
+          "text": "kids not really my thing yet",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "not much connection yet",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure what chai beats combo is",
+          "label": "supported",
+          "fact": "honest uncertainty",
+          "speaker": "Ira"
+        },
+        {
+          "text": "where do you see yourself living in a few years",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure about that combo yet",
+          "label": "supported",
+          "fact": "honest uncertainty",
+          "speaker": "Ira"
+        },
+        {
+          "text": "haha not sure about food",
+          "label": "supported",
+          "fact": "honest uncertainty",
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure about food what kind of bites do you like",
+          "label": "supported",
+          "fact": "honest uncertainty",
+          "speaker": "Ira"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "disagree"
+      ],
+      "decisions": [
+        "no",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "m3",
+      "claims": [
+        {
+          "text": "Thinking about quiet walks by water makes me wonder if it’s the same feeling as walking by Pashan lake with my parents",
+          "label": "supported",
+          "fact": "likes: walking around Pashan lake with parents",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "I never drink",
+          "label": "supported",
+          "fact": "lifestyle: drinking: never",
+          "speaker": "Ananya"
+        },
+        {
+          "text": "long lake walks around Pashan sound so peaceful — especially with family",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Varun"
+        },
+        {
+          "text": "I’ve done a few dawn drives to Bhigwan for the flamingos",
+          "label": "supported",
+          "fact": "story: drove to Bhigwan at dawn, saw flamingos, ate vada pav, slept under stars",
+          "speaker": "Varun"
+        },
+        {
+          "text": "haha i’ve never walked by Pashan lake but quiet water walks do sound calming",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Varun"
+        },
+        {
+          "text": "haha no kids for me — just quiet moments and a camera",
+          "label": "supported",
+          "fact": "goal: wants children: no",
+          "speaker": "Varun"
+        },
+        {
+          "text": "i love how quiet moments let you notice small things — a bird’s call, ripples on water, light through trees. feels like the world slows down just for you",
+          "label": "supported",
+          "fact": "likes: staying calm when plans fall apart",
+          "speaker": "Varun"
+        },
+        {
+          "text": "thanks for sharing — quiet moments are special, especially when you spot something rare like a bugun liocichla",
+          "label": "supported",
+          "fact": "likes: seeing the Bugun liocichla bird",
+          "speaker": "Varun"
+        },
+        {
+          "text": "it’s a soft melodic call — heard it once in Eaglenest, still chasing that moment",
+          "label": "supported",
+          "fact": "story: wants to visit Eaglenest Sanctuary to see the rare Bugun liocichla bird",
+          "speaker": "Varun"
+        },
+        {
+          "text": "quiet moments let you spot rare things like the bugun liocichla",
+          "label": "supported",
+          "fact": "likes: seeing the Bugun liocichla bird",
+          "speaker": "Varun"
+        },
+        {
+          "text": "thanks for asking — i don’t smoke when i’m out birdwatching, fresh air is part of the quiet for me",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Varun"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "no",
+        "unsure"
+      ]
+    },
+    {
+      "pair": "m4",
+      "claims": [],
+      "labels": [
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "unsure",
+        "unsure"
+      ]
+    }
+  ]
+}
