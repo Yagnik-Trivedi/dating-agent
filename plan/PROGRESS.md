@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 evening, by Claude Code (judge fix merged; frontend most screens done on feat/plan-10-frontend)
+- **Last updated:** 2026-10-18 night, by Claude Code (plan 10 merged; Atlas connects; next: live-agent browser run, judge accounts, then plan 14 when Nebius is ready)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -32,7 +32,7 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 | 07 | Gate, brief, agenda, conversation (v2) | ✅ Done | main | `916f89d` | No facts about the other user are stored. |
 | 08 | Agent conversation: persona engine + per-turn pipeline (v2) | ✅ Done | main | `3072867` | ~76k tokens / 50 calls per conversation (v1 ~266k). Known gaps are listed in CLAUDE.md Status. `feat/plan-08-engine` is merged and can be deleted. |
 | 09 | Independent judges, handoff, compaction, date ideas (v2) | ✅ Done | main | `857aff1` | Includes the structural "ask my human" fix. Meera × Ishaan → Compatible (yes/yes). `feat/plan-09-judges` and `fix/ask-my-human` are merged and can be deleted. |
-| 10 | Frontend v2 (from the owner's design) | 🔄 In progress | `feat/plan-10-frontend` | — | Design in local `Frontend-Design/04-direction` (gitignored). Name **Prelude**. See the re-plan under Currently working on. |
+| 10 | Frontend v2 (from the owner's design) | ✅ Done (live-agent browser run pending) | main | merge of `feat/plan-10-frontend` | All screens in the design on real data; CodeRabbit + ponytail reviewed; 102/102, api-check 20/20, sign-up browser flow 6/6. Pending: take-over / pause in a live chat when NVIDIA stops 429-ing; licensed landing photo. |
 | 11 | Seed personas + evaluation (v2) | ✅ Done | main | `67a8666` | B1–B6 done. B5: 4/17, gate 1/1, fakes 2/2; the judges cluster on Maybe. Human labels for judge agreement pending (`eval/labels/`). |
 | 12 | Deploy on free tiers + keep-alive | 🔄 Code done | main | `67a8666` | render.yaml, keep-alive, self-ping, DEPLOY.md, credit guard, demo pacing, `--judges`. Human steps in DEPLOY.md after plan 14. |
 | 13 | Submission (README, video, Devpost) | ⬜ Not started | — | — | README skeleton is queued as side work. |
