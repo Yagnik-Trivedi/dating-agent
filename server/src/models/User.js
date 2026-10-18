@@ -18,6 +18,15 @@ const userSchema = new mongoose.Schema({
   graphVersion: { type: Number, default: 0 }, // $inc on every self-graph or voice write: plan 08's cache key
   settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
   isSeed: { type: Boolean, default: false },
+  // Plan 19 live check: the result only (never images, embeddings or landmarks); last 5 attempts. Never read across users.
+  liveCheck: {
+    status: { type: String, enum: ['none', 'passed', 'failed'], default: 'none' },
+    checkedAt: Date,
+    model: String,
+    actions: [String],
+    attempts: [{ at: Date, result: { type: String, enum: ['passed', 'failed'] }, reason: String, _id: false }],
+    _id: false,
+  },
   isJudge: { type: Boolean, default: false }, // pre-baked hackathon judge account (seed.js --judges, plan 12 §5)
   seedHash: { type: String, default: null }, // scripts/seed.js: hash of the persona the graph was built from
 }, {

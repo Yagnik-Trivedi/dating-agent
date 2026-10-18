@@ -29,7 +29,7 @@ export const costOf = (tier, promptTokens = 0, completionTokens = 0) => {
   const p = priceFor(tier);
   return (promptTokens * p.input + completionTokens * p.output) / 1e6;
 };
-const pricesActive = () => ['fast', 'mid', 'smart', 'embed'].some((t) => priceFor(t).input > 0 || priceFor(t).output > 0);
+const pricesActive = () => ['fast', 'mid', 'smart', 'embed', 'vision'].some((t) => priceFor(t).input > 0 || priceFor(t).output > 0);
 
 function rollover() {
   if (state.day !== today()) state = { ...fresh(), refreshedAt: 0 };
@@ -142,7 +142,7 @@ export async function usageToday() {
       allTimeUsd,
       capUsd: env.LLM_HARD_CAP_USD,
       remainingUsd: Math.max(0, env.LLM_HARD_CAP_USD - allTimeUsd),
-      pricesPer1M: Object.fromEntries(['fast', 'mid', 'smart', 'embed'].map((t) => [t, priceFor(t)])),
+      pricesPer1M: Object.fromEntries(['fast', 'mid', 'smart', 'embed', 'vision'].map((t) => [t, priceFor(t)])),
     },
     totals: {
       calls: sum('calls'),

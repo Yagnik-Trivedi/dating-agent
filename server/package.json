@@ -17,7 +17,8 @@
     "eval": "node scripts/eval.js",
     "generate-personas": "node scripts/generate-personas.js",
     "dev-db": "node scripts/dev-db.js",
-    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\""
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "live-check:vision": "node scripts/live-check-vision.js"
   },
   "dependencies": {
     "@tavily/core": "^0.7.14",

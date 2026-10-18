@@ -14,10 +14,10 @@ export class LLMJsonError extends Error {
   }
 }
 
-const MODEL_ENV = { fast: 'MODEL_FAST', mid: 'MODEL_MID', smart: 'MODEL_SMART', embed: 'MODEL_EMBED' };
-const DEFAULT_MAX_TOKENS = { fast: 2048, mid: 4096, smart: 8192 };
+const MODEL_ENV = { fast: 'MODEL_FAST', mid: 'MODEL_MID', smart: 'MODEL_SMART', embed: 'MODEL_EMBED', vision: 'MODEL_VISION' };
+const DEFAULT_MAX_TOKENS = { fast: 2048, mid: 4096, smart: 8192, vision: 2048 };
 // Generous: NVIDIA's free endpoints can take 30–40 s for a reasoning reply.
-const TIMEOUT_MS = { fast: 90_000, mid: 120_000, smart: 180_000, embed: 60_000 };
+const TIMEOUT_MS = { fast: 90_000, mid: 120_000, smart: 180_000, embed: 60_000, vision: 60_000 };
 const MAX_RETRIES = 3;
 const EMBED_BATCH = 64;
 const JSON_RULE = 'Return ONLY valid JSON matching the requested shape. No prose.';
@@ -96,7 +96,9 @@ export function extractJSON(text) {
 // Nemotron's reasoning can be switched off per request (vLLM-style chat_template_kwargs). Off = ~0.5–2 s replies
 // instead of 10–40 s, and no runaway reasoning eating max_tokens. Per tier via LLM_REASONING_*; if a provider
 // rejects the parameter we drop it for good, like input_type below.
-const REASONING_ENV = { fast: 'LLM_REASONING_FAST', mid: 'LLM_REASONING_MID', smart: 'LLM_REASONING_SMART' };
+const REASONING_ENV = { fast: 'LLM_REASONING_FAST', mid: 'LLM_REASONING_MID', smart: 'LLM_REASONING_SMART', vision: 'LLM_REASONING_VISION' };
+// Plan 19: frames travel as data: URLs. No log line may ever carry one (a provider error can echo the request).
+const scrub = (s) => String(s ?? '').replace(/data:image\/[a-z]+;base64,[A-Za-z0-9+/=]+/g, '[image]').slice(0, 500);
 let sendThinkingSwitch = true;
 const thinkingOff = (tier, reasoning) => sendThinkingSwitch && (reasoning ?? env[REASONING_ENV[tier]]) === false;
 
@@ -125,7 +127,7 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
       });
     } catch (err) {
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
-      console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${err.message}`);
+      console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${scrub(err.message)}`);
       throw err;
     }
     const latencyMs = Date.now() - started;
@@ -169,7 +171,7 @@ export async function chatJSON({ tier = 'fast', messages, schema, purpose, userI
       ];
     }
   }
-  console.error(`llm ${purpose}: invalid JSON after retry: ${lastError.message}`);
+  console.error(`llm ${purpose}: invalid JSON after retry: ${scrub(lastError.message)}`);
   throw new LLMJsonError(`${purpose}: model returned invalid JSON`);
 }
 

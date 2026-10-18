@@ -13,3 +13,6 @@ server/eval/logs/
 
 # Owner's design reference (kept local; plan 10 ports what it needs into client/)
 Frontend-Design/
+
+# Plan 19: your own selfies for npm run live-check:vision (never committed)
+server/scripts/live-check-samples/
