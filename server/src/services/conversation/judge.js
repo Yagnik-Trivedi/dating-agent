@@ -175,7 +175,7 @@ export async function judgeSide({ conversationId, userId }) {
         events: events.map((e) => `${e.type}${e.label ? ` (${e.label})` : ''}, ${Math.round((e.weight ?? 0.5) * 100) / 100}${e.quote ? `: "${e.quote}"` : ''}`),
         agenda: (match.brief?.[me]?.agenda ?? []).map((a) => `${a.topic}${a.dealbreaker ? ' [dealbreaker]' : ''}: ${a.status}`),
         endedBy: conv.endedBy,
-        transcript: transcript.map((m) => `[${m.id}] ${m.mine ? userName : matchName}${m.agent ? ' (agent)' : ''}: ${m.text}`),
+        transcript: transcript.map((m) => `[${m.id}] ${m.mine ? userName : matchName}${m.agent ? ' (agent)' : ''}${m.filler ? ' [system filler, not their words]' : ''}: ${m.text}`),
       };
       const first = await callJudge({ messages: judgePrompt.build(prompt), userId: me, matchId: match._id, purpose: 'judge' });
       judgeModel = first.model;
