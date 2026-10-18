@@ -52,7 +52,7 @@ const releaseLock = (matchId, userId) => Match.updateOne({ _id: matchId }, { $un
 /** The match if userId's agent may speak in it right now, else null. */
 async function mayReply(matchId, userId) {
   const [match, user] = await Promise.all([Match.findById(matchId), User.findById(userId, { agentMode: 1 }).lean()]);
-  const ok = match?.status === 'agent_chatting' && side(match, userId)?.agentActive && ['shadow', 'auto'].includes(user?.agentMode);
+  const ok = match?.status === 'agent_chatting' && !match.agentState?.frozen && side(match, userId)?.agentActive && ['shadow', 'auto'].includes(user?.agentMode);
   return ok ? match : null;
 }
 

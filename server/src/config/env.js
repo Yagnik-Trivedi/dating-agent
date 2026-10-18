@@ -18,6 +18,7 @@ const schema = z.object({
   JWT_SECRET: field(z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters')),
   ADMIN_TOKEN: optional,
   SEED_PASSWORD: optional, // shared login for seed personas (scripts/seed.js); never committed
+  JUDGE_PASSWORD: optional, // login for the pre-baked judge accounts (seed.js --judges); goes in Devpost's testing field only
 
   // LLM provider: Nebius Token Factory (final) or NVIDIA build.nvidia.com (temporary). Same variables, env-only switch.
   LLM_PROVIDER: field(z.enum(['nvidia', 'nebius']).default('nebius')), // logging + README notes only

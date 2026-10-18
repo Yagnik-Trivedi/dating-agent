@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
-import { cancelReplies } from '../services/agent/index.js';
+import { cancelReplies, thaw } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
@@ -25,6 +25,7 @@ matchesRouter.get('/matches', async (req, res) => {
 
 matchesRouter.get('/matches/:id', async (req, res) => {
   const match = await getMatchFor(req.params.id, req.user._id);
+  await thaw(match);
   res.json({ match: await matchDetail(match, req.user._id) });
 });
 
@@ -35,6 +36,7 @@ matchesRouter.get('/matches/:id/messages', async (req, res) => {
   }), req.query);
   const me = req.user._id;
   const match = await getMatchFor(req.params.id, me);
+  await thaw(match);
 
   const filter = { matchId: match._id, ...(before && { createdAt: { $lt: before } }) };
   const page = await Message.find(filter).sort({ createdAt: -1 }).limit(limit).lean();

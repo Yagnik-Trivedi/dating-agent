@@ -1,5 +1,4 @@
-// Plan 12 §7 credit guard: a daily live-chat cap per non-seed user (over it → 'scheduled', started the next day by a
-// job), seed accounts exempt from the per-user LLM cap, fast pacing only when asked for. No LLM.
+// Plan 12 §7, no LLM. Credit guard: a daily live-chat cap per non-seed user (over it → 'scheduled', started the next// day by a job), seeds exempt from the per-user LLM cap, fast pacing only when asked for. Judge demo: a frozen match// gets no agent turn until its user opens it (thaw).
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { env } from '../src/config/env.js';
@@ -7,6 +6,8 @@ import { Conversation } from '../src/models/Conversation.js';
 import { Job } from '../src/models/Job.js';
 import { Match } from '../src/models/Match.js';
 import { User } from '../src/models/User.js';
+import { Message } from '../src/models/Message.js';
+import { resumeConversations, thaw } from '../src/services/agent/index.js';
 import { paceMs } from '../src/services/agent/scheduler.js';
 import { checkBudget, flushUsage, recordUsage, refresh } from '../src/services/llm/budget.js';
 import { overDailyChats, runScheduledChat } from '../src/services/pipeline/index.js';
@@ -56,4 +57,17 @@ test('typing delays: fast only when asked for', () => {
   const long = 'word '.repeat(40);
   assert.ok(paceMs(long, true) <= 2000);
   assert.ok(paceMs(long) >= Math.min(env.AGENT_MIN_DELAY_MS + 40 * 350, env.AGENT_MAX_DELAY_MS));
+});
+
+test('a frozen judge demo match: no sweep resumes it; opening it queues a reply from the side that didn't speak last', async () => {
+  const [judge, seed] = await Promise.all([user('j2@t.local', { isJudge: true }), user('s8@t.local', { isSeed: true })]);
+  const m = await matchOf(judge, seed);
+  await Match.updateOne({ _id: m._id }, { $set: { status: 'agent_chatting', 'agentState.frozen': true } });
+  await Message.create({ matchId: m._id, senderId: seed._id, authoredBy: 'agent', text: 'so what do you do on weekends?', createdAt: new Date(Date.now() - 3_600_000) });
+  await Job.deleteMany({ type: 'agentTurn' });
+  await resumeConversations();
+  assert.equal(await Job.countDocuments({ type: 'agentTurn' }), 0, 'the sweep leaves it frozen');
+  await thaw(await Match.findById(m._id));
+  assert.equal((await Match.findById(m._id).lean()).agentState.frozen, undefined);
+  assert.deepEqual((await Job.find({ type: 'agentTurn' }).lean()).map((j) => j.payload.userId), [String(judge._id)]);
 });

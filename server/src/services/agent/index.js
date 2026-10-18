@@ -57,12 +57,24 @@ export async function onIncomingMessage(message) {
 }
 
 /**
+ * A judge demo match frozen mid-conversation (seed.js --judges) resumes when its user opens it: the agent that didn't
+ * send the last message replies, so a few live turns follow within seconds (DEMO_PACING=fast).
+ */
+export async function thaw(match) {
+  if (!match.agentState?.frozen) return;
+  const m = await Match.findOneAndUpdate({ _id: match._id, status: 'agent_chatting', 'agentState.frozen': true }, { $unset: { 'agentState.frozen': 1 } }, { new: true });
+  if (!m) return;
+  const last = await Message.findOne({ matchId: m._id }).sort({ createdAt: -1 }).lean();
+  await Promise.all(m.perUser.filter((p) => p.agentActive && String(p.userId) !== String(last?.senderId)).map((p) => scheduleReply(m._id, p.userId)));
+}
+
+/**
  * Boot + every 30 min: stop chats where the other side went quiet for AGENT_STALE_HOURS, open chats that never
  * started, and answer messages left unanswered by a restart (older than 30 s).
  */
 export async function resumeConversations() {
   const staleBefore = Date.now() - env.AGENT_STALE_HOURS * 3_600_000;
-  for (const m of await Match.find({ status: 'agent_chatting' })) {
+  for (const m of await Match.find({ status: 'agent_chatting', 'agentState.frozen': { $ne: true } })) {
     const last = await Message.findOne({ matchId: m._id }).sort({ createdAt: -1 }).lean();
     if ((last?.createdAt ?? m.updatedAt) < staleBefore) await stopConversation(m._id, 'stale');
     else if (!last) await startConversation(m);

@@ -23,7 +23,7 @@ const matchSchema = new mongoose.Schema({
   trust: Mixed, // { [userId]: { score, level, flags[] } } (plan 06)
   brief: Mixed, // { [userId]: { summary, agenda[], openers[], watchouts[] } } (plan 07): nothing about the other user is stored as facts
   closedReason: { type: String, enum: ['gate', null], default: null }, // 'gate': failed the match-time dealbreaker re-check (no detail)
-  agentState: Mixed, // { turnCount, lastAgentAt, stopReason, runningLock } (plan 08); startsAt when 'scheduled' (plan 12 credit guard)
+  agentState: Mixed, // { turnCount, lastAgentAt, stopReason, runningLock } (plan 08); startsAt when 'scheduled' (plan 12 credit guard); frozen: judge demo match paused until opened
   lastMessageAt: Date,
 }, { timestamps: true, versionKey: false });
 
