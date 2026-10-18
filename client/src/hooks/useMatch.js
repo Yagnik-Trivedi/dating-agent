@@ -3,12 +3,19 @@ import { api, errMsg } from '../lib/api'
 import { useSocket, useSocketEvent } from './useSocket'
 
 const REPORT_STATUSES = ['compatible', 'maybe', 'incompatible', 'flagged_fake', 'handed_off', 'closed']
+const merge = (prev, incoming) => {
+  const byId = new Map(prev.map((x) => [String(x._id), x]))
+  incoming.forEach((x) => byId.set(String(x._id), x))
+  return [...byId.values()]
+}
 
-/** Everything the match room needs, kept live over the socket. */
+/** Everything the match room needs, kept live over the socket: detail, messages, MY notes + chat moments, interest. */
 export function useMatch(matchId) {
   const [match, setMatch] = useState(null)
   const [messages, setMessages] = useState([])
   const [facts, setFacts] = useState([])
+  const [events, setEvents] = useState([])
+  const [interest, setInterest] = useState(null)
   const [typingUserId, setTypingUserId] = useState(null)
   const [error, setError] = useState(null)
   const typingTimer = useRef()
@@ -26,15 +33,21 @@ export function useMatch(matchId) {
     setMessages(data.messages)
   }, [matchId])
 
+  const loadNotes = useCallback(async () => {
+    const { data } = await api.get(`/api/matches/${matchId}/kg`)
+    setFacts(data.facts)
+    setEvents(data.events ?? [])
+    setInterest(data.interest ?? null)
+  }, [matchId])
+
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [, , kg] = await Promise.all([loadDetail(), loadMessages(), api.get(`/api/matches/${matchId}/kg`)])
-      setFacts(kg.data.facts)
+      await Promise.all([loadDetail(), loadMessages(), loadNotes()])
     } catch (err) {
       setError(errMsg(err))
     }
-  }, [matchId, loadDetail, loadMessages])
+  }, [loadDetail, loadMessages, loadNotes])
 
   useEffect(() => { load() }, [load])
 
@@ -58,15 +71,16 @@ export function useMatch(matchId) {
     if (REPORT_STATUSES.includes(status) || ['agent_chatting', 'evaluating'].includes(status)) loadDetail().catch(() => {})
   })
 
-  useSocketEvent('kg:update', ({ matchId: id, facts: incoming = [], agenda }) => {
+  // My agent's notes, chat moments and agenda progress, as it reads each of their messages.
+  const onNotes = ({ matchId: id, facts: f = [], events: e = [], agenda }) => {
     if (!same(id)) return
-    setFacts((prev) => {
-      const byId = new Map(prev.map((f) => [String(f._id), f]))
-      incoming.forEach((f) => byId.set(String(f._id), f))
-      return [...byId.values()]
-    })
+    if (f.length) setFacts((prev) => merge(prev, f))
+    if (e.length) setEvents((prev) => merge(prev, e))
     if (agenda) setMatch((m) => (m?.brief ? { ...m, brief: { ...m.brief, agenda } } : m))
-  })
+    if (e.length || f.length) loadNotes().catch(() => {}) // picks up the interest meter too
+  }
+  useSocketEvent('notes:update', onNotes)
+  useSocketEvent('kg:update', ({ matchId: id, agenda }) => { if (same(id) && agenda) setMatch((m) => (m?.brief ? { ...m, brief: { ...m.brief, agenda } } : m)) })
 
   useSocketEvent('report:ready', ({ matchId: id }) => {
     if (same(id)) loadDetail().catch(() => {})
@@ -78,8 +92,19 @@ export function useMatch(matchId) {
   }, [matchId])
 
   const takeover = useCallback(async () => {
-    setMatch((m) => ({ ...m, agentActive: false })) // instant; server confirms below
+    setMatch((m) => ({ ...m, agentActive: false, paused: false })) // instant; the server confirms below
     const { data } = await api.post(`/api/matches/${matchId}/takeover`)
+    setMatch(data.match)
+  }, [matchId])
+
+  const pause = useCallback(async () => {
+    setMatch((m) => ({ ...m, agentActive: false, paused: true }))
+    const { data } = await api.post(`/api/matches/${matchId}/pause`)
+    setMatch(data.match)
+  }, [matchId])
+
+  const resume = useCallback(async () => {
+    const { data } = await api.post(`/api/matches/${matchId}/resume`)
     setMatch(data.match)
   }, [matchId])
 
@@ -90,5 +115,14 @@ export function useMatch(matchId) {
     return data.match
   }, [matchId, loadMessages])
 
-  return { match, messages, facts, typingUserId, error, reload: load, send, takeover, decide, sendTyping }
+  const extend = useCallback(async () => {
+    const { data } = await api.post(`/api/matches/${matchId}/extend`)
+    setMatch(data.match)
+    return data.match
+  }, [matchId])
+
+  return { match, messages, facts, events, interest, typingUserId, error, reload: load, send, takeover, pause, resume, decide, extend, sendTyping }
 }
+
+/** "I wouldn't say that" on my own agent's message, optionally with how I'd say it. → { rule, kind } */
+export const wouldntSay = (messageId, fix) => api.post(`/api/messages/${messageId}/wouldnt-say`, fix ? { fix } : {}).then((r) => r.data)

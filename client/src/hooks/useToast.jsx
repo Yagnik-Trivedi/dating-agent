@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AgentIcon } from '../components/ui'
+import { PenLine, ShieldAlert } from 'lucide-react'
 
 const ToastContext = createContext(() => {})
 
@@ -18,17 +18,11 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-16 z-50 flex flex-col items-center gap-2 px-4">
+      <div aria-live="polite" className="toasts">
         {toasts.map((t) => {
-          const body = (
-            <>
-              {t.agent && <AgentIcon className="size-6 shrink-0" />}
-              <span>{t.text}</span>
-            </>
-          )
-          const cls = `pointer-events-auto animate-rise flex max-w-md items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium shadow-lg ${
-            t.tone === 'bad' ? 'border-bad/40 bg-surface text-bad' : 'border-line bg-surface text-ink'
-          }`
+          const Icon = t.tone === 'bad' ? ShieldAlert : PenLine
+          const body = <>{(t.agent || t.tone === 'bad') && <Icon size={18} strokeWidth={1.6} aria-hidden="true" />}<span>{t.text}</span></>
+          const cls = `toast animate-rise ${t.tone === 'bad' ? 'flag' : ''}`
           return t.to ? <Link key={t.id} to={t.to} className={cls}>{body}</Link> : <div key={t.id} className={cls}>{body}</div>
         })}
       </div>

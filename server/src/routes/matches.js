@@ -134,8 +134,13 @@ matchesRouter.get('/conversations/:id/replay', async (req, res) => {
 matchesRouter.get('/matches/:id/kg', async (req, res) => {
   const me = req.user._id;
   const match = await getMatchFor(req.params.id, me);
-  const facts = await KgFact.find({ matchId: match._id, observerId: me, subjectId: otherUserId(match, me) }).lean();
-  res.json({ facts });
+  // My notes about them, MY chat moments and how interested my agent reads them (never the other side's view).
+  const [facts, events, conv] = await Promise.all([
+    KgFact.find({ matchId: match._id, observerId: me, subjectId: otherUserId(match, me) }).lean(),
+    ChatEvent.find({ matchId: match._id, observerId: me }).sort({ createdAt: 1 }).lean(),
+    Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean(),
+  ]);
+  res.json({ facts, events, interest: conv?.agentState?.[String(me)]?.interest ?? null });
 });
 
 // Only once the agents think it's worth meeting (or both people took over).
