@@ -1,46 +1,46 @@
 # c2 (run 1): Riya × Aditya
 
-Expected **compatible**, predicted **maybe**. Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term.
+Expected **compatible**, predicted **incompatible**. Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term.
 
-Stop: natural · 17 messages · 85392 tokens · 820 s
+Stop: natural · 19 messages · 97415 tokens · 847 s
 
-### Riya's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You shared genuine laughs and warmth over indie music and cycling, and he respected your long-term goals. However, he’s still figuring out work-life balance, which matters to you, so more talk would help clarify if you’re aligned.
+### Riya's judge: no → incompatible (confidence 0.85, nvidia/nemotron-3-super-120b-a12b)
+You both enjoy cycling and share a warm, lighthearted vibe, which is nice. However, Aditya wants kids someday while you do not, and they didn’t explore whether this could work — it’s a core mismatch for your long-term goal.
 
-- ✓ "hey riya! saw you cycle to cubbon park and love indie music—what's your go-to track for a ride?": You both share indie music and cycling, which are meaningful to you, and he noticed your habits warmly.
-- ✓ "haha yeah i’m still exploring cubbon park too—no go-to track yet, still digging through indie playlists. what’s yours been lately?": You laughed together over shared indie music exploration, showing mutual curiosity and warmth.
-- ✓ "haha fair enough—jumped from beats to baby talk! but since you mentioned wanting something real and long-term, what does that look like for you?": He engaged seriously with your long-term goal after a lighthearted moment, showing attentiveness to your values.
-- ⚠ "balancing is something i’m still figuring out": You value balanced career ambition, but he admits he’s still figuring out work-life balance, which may signal misalignment.
-### Aditya's judge: unsure → maybe (confidence 0.65, nvidia/nemotron-3-ultra-550b-a55b)
-You share a love for indie music, cycling, and filter coffee, and she also wants a long-term, values-based relationship. However, she didn't answer whether she wants kids and sidestepped a question about her alone time, so it's too early to tell.
+- ✓ "cycling lalbagh sounds fun—ive been doing slow loops around my area lately": You both share a genuine interest in cycling Lalbagh, which matters to you.
+- ⚠ "haha yes i do see myself wanting kids someday. do you smoke?": They want kids, but you previously stated you do not want kids — a clear mismatch on a core goal.
+- ⚠ "haha fair enough—different paths, right?": They acknowledged differing views on wanting kids but did not engage further, leaving the disagreement unresolved.
+- ⛔ looking_for: "hope you find what you’re looking for."
+### Aditya's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
+You shared genuine warmth and common interests in music, cycling, and adventure. However, Riya gave conflicting signals about wanting children — first saying they see themselves wanting kids, then saying they do not — which creates uncertainty about a core goal of yours.
 
-- ✓ "i love indie tracks for rides": You both enjoy indie music and cycling, a shared interest that matters to you.
-- ✓ "looking for something real long-term means shared values and growing together": She explicitly wants a long-term relationship built on shared values, matching your goal.
-- ✓ "nope i dont smoke either!": She doesn't smoke, aligning with your smoke-free preference.
-- ✓ "balancing work and life is key for me—i make sure to unwind with music, coffee, and some quiet time": She values work-life balance and unwinds with music and coffee, resonating with your balanced ambition and tastes.
-- ✓ "how do you make your filter coffee?": She asks about filter coffee, showing interest in your coffee ritual.
-- ⚠ "haha that's a deep jump from playlists to parenting!": She dodged your question about wanting kids, which is a key goal for you.
-- ⚠ "haha i'm not really sure about quiet time yet—how do you make your filter coffee?": She avoided describing her quiet time and redirected, leaving you without insight into her alone-time needs.
+- ✓ "hey aditya! saw you’re into indie music and cycling lalbagh — what’s your go-to track for a slow ride?": You both share indie music and cycling, which are meaningful to you.
+- ✓ "im looking for something real and long-term, you know?": They expressed desire for a long-term relationship, matching your goal.
+- ✓ "that sounds like an adventure i havent tried yet but mist and curves on nilgiris intrigue me 🎉 have you ridden lalbagh at sunrise before?": They showed enthusiasm for your Nilgiri hills cycling story, indicating shared interest in adventure and nature.
+- ⚠ "i see myself wanting kids someday — how about you?": They said they see themselves wanting kids someday, which aligns with your goal.
+- ⚠ "i see myself not wanting kids actually — curious why you do": They later stated they do not want kids, which directly conflicts with your goal of having children.
 
 ## Transcript
 
-1. **Aditya** (agent): hey riya! saw you cycle to cubbon park and love indie music—what's your go-to track for a ride?
-2. **Riya** (agent): hey! haha not sure about cubbon park yet but i love indie tracks for rides — whats your current fav?
-3. **Aditya** (agent): haha yeah i’m still exploring cubbon park too—no go-to track yet, still digging through indie playlists. what’s yours been lately?
-4. **Riya** (agent): ha fair, what got you into that?
-5. **Aditya** (agent): haha i’m not sure what got me into it—just kinda grew on me. do you ever think about whether you want kids someday?
-6. **Riya** (agent): haha that’s a deep jump from playlists to parenting!
-7. **Aditya** (agent): haha fair enough—jumped from beats to baby talk! but since you mentioned wanting something real and long-term, what does that look like for you?
-8. **Riya** (agent): looking for something real long-term means shared values and growing together
-9. **Aditya** (agent): haha yeah it's a leap but i get it.
-10. **Riya** (agent): haha true, diving deep now 😅 do you smoke or prefer smoke-free vibes?
-11. **Aditya** (agent): nope i dont smoke—prefer smoke-free air. how about you?
-12. **Riya** (agent): nope i dont smoke either!
-13. **Aditya** (agent): got it—no smoke, clean air. how do you balance work and life outside of it?
-14. **Riya** (agent): balancing work and life is key for me—i make sure to unwind with music, coffee, and some quiet time
-15. **Aditya** (agent): that makes sense—balancing is something i’m still figuring out. how do you usually spend your quiet time when you’re unwinding?
-16. **Riya** (agent): haha i’m not really sure about quiet time yet—how do you make your filter coffee?
-17. **Aditya** (agent): haha i just brew it strong and slow—filter coffee’s my morning ritual. sleep well riya, hope your unwind time finds you soon.
+1. **Riya** (agent): hey aditya! saw you’re into indie music and cycling lalbagh — what’s your go-to track for a slow ride?
+2. **Aditya** (agent): cycling lalbagh sounds fun—ive been doing slow loops around my area lately
+3. **Riya** (agent): haha slow loops around your area sound peaceful! what’s your favorite time of day for that?
+4. **Aditya** (agent): haha i’m not sure i’ve thought about a favorite time—just ride when it feels right. how about you, what’s your ideal time for a slow loop?
+5. **Riya** (agent): what are you hoping to find on here?
+6. **Aditya** (agent): how about you, do you see yourself wanting kids someday?
+7. **Riya** (agent): i see myself wanting kids someday — how about you?
+8. **Aditya** (agent): haha ok, what are you hoping to find on here?
+9. **Riya** (agent): im looking for something real and long-term, you know?
+10. **Aditya** (agent): i want to ride the nilgiri hills—heard the mist and curves are unreal. would take my cycle, camp midway, wake up to birdsong.
+11. **Riya** (agent): that sounds like an adventure i havent tried yet but mist and curves on nilgiris intrigue me 🎉 have you ridden lalbagh at sunrise before?
+12. **Aditya** (agent): what draws you to sunrise rides there?
+13. **Riya** (agent): honestly not sure about sunrise rides there — but do you see yourself wanting kids someday?
+14. **Aditya** (agent): haha yes i do see myself wanting kids someday. do you smoke?
+15. **Riya** (agent): i see myself not wanting kids actually — curious why you do
+16. **Aditya** (agent): haha fair enough—different paths, right?
+17. **Riya** (agent): haha ok, what are you hoping to find on here?
+18. **Aditya** (agent): hope you find what you’re looking for.
+19. **Riya** (agent): hey! really enjoyed our chat, but i don't think we're quite on the same page. wishing you the best! 🙂
 
 ## Trust
 
