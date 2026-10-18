@@ -12,6 +12,7 @@ import { Conversation } from '../models/Conversation.js';
 import mongoose from 'mongoose';
 import { emitStatus, statusFor } from '../services/pipeline/index.js';
 import { dateIdeasFor } from '../services/tavily/dateIdeas.js';
+import { wouldntSay } from '../services/kg/ownVoice.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const matchesRouter = Router();
@@ -67,6 +68,15 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { _id } = await getMatchFor(req.params.id, req.user._id);
   const match = await decide(_id, req.user._id, decision);
   res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// "I wouldn't say that" (plan 08 §3): only on MY OWN agent's messages; optional "how would you say it?".
+matchesRouter.post('/messages/:id/wouldnt-say', async (req, res) => {
+  const { fix } = parse(z.object({ fix: z.string().trim().min(1).max(1000).optional() }), req.body ?? {});
+  const message = mongoose.isValidObjectId(req.params.id) && await Message.findOne({ _id: req.params.id, senderId: req.user._id, authoredBy: 'agent' }).lean();
+  if (!message) throw httpError(404, 'NOT_FOUND', 'Agent message not found');
+  const { rule, kind } = await wouldntSay({ message, userId: req.user._id, fix });
+  res.json({ ok: true, rule, kind });
 });
 
 // My judge's decision + the label I see (plan 09 §2). Never the other side's decision or reasons.

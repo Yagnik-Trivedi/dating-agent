@@ -29,8 +29,10 @@ meRouter.get('/me', async (req, res) => {
 });
 
 meRouter.put('/me/settings', async (req, res) => {
-  const { agentMode } = parse(z.object({ agentMode: z.enum(['off', 'shadow', 'auto']) }), req.body);
-  req.user.agentMode = agentMode;
+  const { agentMode, learnFromChats } = parse(z.object({ agentMode: z.enum(['off', 'shadow', 'auto']), learnFromChats: z.boolean() })
+    .partial().refine((b) => Object.keys(b).length, { message: 'Nothing to change' }), req.body);
+  if (agentMode) req.user.agentMode = agentMode;
+  if (learnFromChats !== undefined) req.user.settings.learnFromChats = learnFromChats;
   await req.user.save();
   res.json({ user: req.user });
 });
