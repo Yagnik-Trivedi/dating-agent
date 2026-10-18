@@ -155,7 +155,7 @@ export async function extend(matchId, userId) {
   if (!last || last.round > 1) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once');
   const endAfter = await Message.countDocuments({ matchId: match._id }) + KG.EXTEND_TURNS;
   try {
-    await Conversation.create({ matchId: match._id, round: last.round + 1, seed: (last.seed + 1) >>> 0, agentState: last.agentState, endAfter, naturalEndFrom: endAfter });
+    await Conversation.create({ matchId: match._id, round: last.round + 1, seed: (last.seed + 1) >>> 0, agentState: Object.fromEntries(Object.entries(last.agentState ?? {}).map(([u, s]) => [u, { ...s, lowInterestTurns: 0 }])), endAfter, naturalEndFrom: endAfter });
   } catch (err) {
     if (err.code === 11000) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once'); // a parallel request won
     throw err;

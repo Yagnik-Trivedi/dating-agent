@@ -52,13 +52,14 @@ async function runLive(judge, partner, log) {
     await sleep(2000);
     const { status } = await Match.findById(match._id, { status: 1 }).lean();
     const n = await Message.countDocuments({ matchId: match._id });
-    if (status === 'agent_chatting' && n >= LIVE_MESSAGES) {
+    const timedOut = Date.now() - t0 > 20 * 60_000;
+    if (status === 'agent_chatting' && (n >= LIVE_MESSAGES || (timedOut && n > 0))) {
       await Match.updateOne({ _id: match._id }, { $set: { 'agentState.frozen': true } });
       cancelReplies(match._id); // a reply being written is discarded by the pre-send re-check (frozen)
       log(`  live: frozen at ${n} messages after ${Math.round((Date.now() - t0) / 1000)} s`);
       return 'live';
     }
-    if (!['matched', 'trust_check', 'briefing', 'agent_chatting'].includes(status) || Date.now() - t0 > 20 * 60_000) return status;
+    if (!['matched', 'trust_check', 'briefing', 'agent_chatting'].includes(status) || timedOut) return status;
   }
 }
 

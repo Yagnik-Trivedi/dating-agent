@@ -36,7 +36,7 @@ test('after handoff my own typed messages become own_chat samples, unless learnF
   assert.equal(await learnOwnMessage({ ...mine.toObject(), authoredBy: 'agent' }, { status: 'handed_off' }), false, 'agent messages: nothing');
   assert.equal(await learnOwnMessage(mine, { status: 'handed_off' }), true);
   const s = await VoiceSample.findOne({ userId: me._id }).lean();
-  assert.deepEqual([s.source, s.incoming, s.text], ['own_chat', 'so what are you doing this weekend?', 'prob trekking at rajmachi haha']);
+  assert.deepEqual([s.source, s.incoming, s.text], ['own_chat', null, 'prob trekking at rajmachi haha'], 'only my words: their message never enters my voice data');
 
   await User.updateOne({ _id: me._id }, { $set: { 'settings.learnFromChats': false } });
   assert.equal(await learnOwnMessage(mine, { status: 'handed_off' }), false, 'setting off: nothing');

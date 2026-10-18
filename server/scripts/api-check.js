@@ -190,7 +190,7 @@ await mongoose.connect(process.env.MONGODB_URI);
 const db = mongoose.connection.db;
 const learned = await db.collection('voicesamples').find({ userId: new mongoose.Types.ObjectId(A.id), source: 'own_chat' }).toArray();
 assert.deepEqual(learned.map((x) => x.text), ['haha that sounds fun, sunday works for me'], 'one own_chat sample; none once turned off');
-assert.ok(learned[0].incoming, 'the sample keeps the message it replied to');
+assert.equal(learned[0].incoming, null, "the other person's message is never stored in my voice data");
 const bId = new mongoose.Types.ObjectId(B.id);
 const left = {
   users: await db.collection('users').countDocuments({ _id: bId }),

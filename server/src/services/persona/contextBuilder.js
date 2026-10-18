@@ -75,5 +75,5 @@ export function selectExemplars(persona, { incomingVec, rng, k = KG.EXEMPLARS_K 
     });
     out.push(pool.splice(best, 1)[0].s);
   }
-  return out.map((s) => ({ incoming: s.incoming ?? '(they start a new message)', text: s.text }));
+  return out.map((s) => ({ incoming: s.incoming ?? '(a message in a chat)', text: s.text }));
 }
