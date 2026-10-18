@@ -52,7 +52,8 @@ export async function onIncomingMessage(message) {
   }
   // Perceiving their message happens inside my next turn (one LLM call: perceive + observe, plan 08 §2.1).
   for (const viewer of others) {
-    if (side(match, viewer)?.agentActive) scheduleReply(match._id, viewer); // a side that took over neither replies nor learns
+    // No debounce after an agent's message (it never sends a burst); a human gets AGENT_DEBOUNCE_MS to finish typing.
+    if (side(match, viewer)?.agentActive) scheduleReply(match._id, viewer, message.authoredBy === 'agent' ? 0 : env.AGENT_DEBOUNCE_MS); // a side that took over neither replies nor learns
   }
 }
 
@@ -85,7 +86,7 @@ export async function resumeAgent(matchId, userId) {
 
 /**
  * A judge demo match frozen mid-conversation (seed.js --judges) resumes when its user opens it: the agent that didn't
- * send the last message replies, so a few live turns follow within seconds (DEMO_PACING=fast).
+ * send the last message replies, so a few live turns follow within seconds (AGENT_PACING=fast).
  */
 export async function thaw(match) {
   if (!match.agentState?.frozen) return;

@@ -23,7 +23,7 @@ const pol = z.coerce.number().transform((p) => (p < 0 ? -1 : 1)).catch(1);
 const attr = z.string().nullable().catch(null).transform((a) => (ATTRIBUTE_IDS.includes(a) ? a : null));
 const bool = z.preprocess((v) => v === true || v === 'true', z.boolean());
 
-const schema = z.object({
+export const perceiveSchema = z.object({
   concepts: items(z.object({ text: z.string().trim().min(1).max(60), type: z.string().catch('other'), polarity: pol })),
   claims: items(z.object({ text: z.string().trim().min(1).max(200), conceptText: z.string().max(60).nullable().catch(null), attribute: attr, value: z.string().nullable().catch(null), polarity: pol })),
   isQuestion: bool, aboutMe: bool, lowEffort: bool, humor: bool, warmth: bool, acknowledgesDifference: bool,
@@ -49,12 +49,22 @@ function ownReaction(persona, { conceptId, attribute }) {
  * persona: MY loaded persona; theirMsgs: their messages since my last one; conv: Conversation; agenda: my agenda.
  */
 export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs, context, myLast, agenda, turn }) {
-  const viewer = persona.userId;
-  const latest = theirMsgs.map((m) => m.text).join('\n');
   const out = await chatJSON({
-    tier: 'mid', reasoning: false, temperature: 0, schema, purpose: 'agent-perceive', userId: viewer, matchId: match._id,
-    messages: perceivePrompt.build({ myName: persona.firstName, theirName: context.theirName, latest, context: context.lines, myLast, agenda: agenda.filter((a) => a.status !== 'answered'), attributes: ATTRIBUTES }),
+    tier: 'mid', reasoning: false, temperature: 0, schema: perceiveSchema, purpose: 'agent-perceive', userId: persona.userId, matchId: match._id,
+    messages: perceivePrompt.build(perceiveArgs({ persona, theirMsgs, context, myLast, agenda })),
   });
+  return observe(out, { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn });
+}
+
+/** The perceive prompt's inputs (also used by the merged turn call, plan 30 S1). */
+export const perceiveArgs = ({ persona, theirMsgs, context, myLast, agenda }) => ({
+  myName: persona.firstName, theirName: context.theirName, latest: theirMsgs.map((m) => m.text).join('\n'), context: context.lines, myLast,
+  agenda: agenda.filter((a) => a.status !== 'answered'), attributes: ATTRIBUTES,
+});
+
+/** Code after the read: notes (verbatim quotes only), chat moments and agenda progress, compared with MY graph. */
+export async function observe(out, { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn }) {
+  const viewer = persona.userId;
   const quoteMsg = (q) => theirMsgs.find((m) => isVerbatim(q, m.text));
 
   // Compare with MY graph: what I feel about what they brought up.

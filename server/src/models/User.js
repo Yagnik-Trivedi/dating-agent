@@ -17,6 +17,9 @@ const userSchema = new mongoose.Schema({
   },
   styleProfile: { metrics: Mixed, description: String, doList: [String], dontList: [String] }, // v1; VoiceProfile replaces it (plan 05)
   graphVersion: { type: Number, default: 0 }, // $inc on every self-graph or voice write: plan 08's cache key
+  // Plan 30 S1: 'building' after the quick phase-1 build, 'ready' once stories/concepts/style are in (agent chats wait for it).
+  graphStatus: { type: String, enum: ['building', 'ready', 'failed'] },
+  graphReadyAt: Date,
   settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
   isSeed: { type: Boolean, default: false },
   // Plan 19 live check: the result only (never images, embeddings or landmarks); last 5 attempts. Never read across users.

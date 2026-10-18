@@ -57,8 +57,8 @@ test('seed accounts skip the per-user LLM cap; real users hit it', async () => {
 
 test('typing delays: fast only when asked for', () => {
   const long = 'word '.repeat(40);
-  assert.ok(paceMs(long, true) <= 2000);
-  assert.ok(paceMs(long) >= Math.min(env.AGENT_MIN_DELAY_MS + 40 * 350, env.AGENT_MAX_DELAY_MS));
+  assert.ok(paceMs(long, true) >= 800 && paceMs(long, true) <= 3000, 'fast: 0.8–3 s');
+  assert.ok(paceMs(long, false) >= Math.min(env.AGENT_MIN_DELAY_MS + 40 * 350, env.AGENT_MAX_DELAY_MS), 'normal: human-like');
 });
 
 test('a frozen judge demo match: no sweep resumes it; opening it queues a reply from the side that did not speak last', async () => {

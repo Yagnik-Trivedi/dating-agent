@@ -1,5 +1,6 @@
 // The only module that talks to the LLM provider (Nebius Token Factory, or NVIDIA build.nvidia.com while
 // we're on the temporary key). Everything else calls chat / chatJSON / embed. Provider switch = .env only.
+import { taskConfig } from './tasks.js';
 import OpenAI from 'openai';
 import { env } from '../../config/env.js';
 import { checkBudget, recordUsage } from './budget.js';
@@ -18,7 +19,7 @@ const MODEL_ENV = { fast: 'MODEL_FAST', mid: 'MODEL_MID', smart: 'MODEL_SMART', 
 const DEFAULT_MAX_TOKENS = { fast: 2048, mid: 4096, smart: 8192, vision: 2048 };
 // Generous: NVIDIA's free endpoints can take 30–40 s for a reasoning reply.
 const TIMEOUT_MS = { fast: 90_000, mid: 120_000, smart: 180_000, embed: 60_000, vision: 60_000 };
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 4; // 2 + 4 + 8 + 16 s: the last, slower retry outlasts a burst of 429s (plan 30 S1)
 const EMBED_BATCH = 64;
 const JSON_RULE = 'Return ONLY valid JSON matching the requested shape. No prose.';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -70,8 +71,9 @@ async function request(label, fn, retries = MAX_RETRIES) {
       return await fn();
     } catch (err) {
       if (!retryable(err) || attempt >= retries) throw err;
-      const retryAfter = Number(err.headers?.get?.('retry-after'));
-      const delay = retryAfter > 0 ? retryAfter * 1000 : Math.min(30_000, 2000 * 2 ** attempt) + Math.random() * 1000;
+      const ra = err.headers?.get?.('retry-after');
+      const retryAfter = Number(ra) || (ra ? Math.max(0, (Date.parse(ra) - Date.now()) / 1000) : 0); // seconds or an HTTP date
+      const delay = retryAfter > 0 ? Math.min(60_000, retryAfter * 1000) : Math.min(30_000, 2000 * 2 ** attempt) + Math.random() * 1000;
       console.warn(`llm ${label}: ${err.status ?? err.name}, retry ${attempt + 1}/${retries} in ${Math.round(delay / 1000)}s`);
       await sleep(delay);
     }
@@ -107,16 +109,19 @@ const thinkingOff = (tier, reasoning) => sendThinkingSwitch && (reasoning ?? env
  * the tier's model ID (budget + limits still follow the tier); `retries` caps our retries (default MAX_RETRIES).
  */
 export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId, reasoning, model: modelOverride, retries }) {
+  const task = taskConfig(purpose, tier);
+  if (task.tier !== tier) { reasoning ??= env[REASONING_ENV[tier]]; tier = task.tier; } // a moved task keeps its reasoning default
   const model = modelOverride ?? modelFor(tier);
   await checkBudget({ tier, userId });
-  let max = maxTokens ?? DEFAULT_MAX_TOKENS[tier];
+  let max = maxTokens ?? task.maxTokens ?? DEFAULT_MAX_TOKENS[tier];
+  retries ??= task.retries;
 
   for (let attempt = 0; ; attempt++) {
     const started = Date.now();
     let res;
     const call = () => client().chat.completions.create(
       { model, messages, max_tokens: max, temperature, ...(thinkingOff(tier, reasoning) && { chat_template_kwargs: { enable_thinking: false } }) },
-      { timeout: TIMEOUT_MS[tier] },
+      { timeout: task.timeoutMs ?? TIMEOUT_MS[tier] },
     );
     try {
       res = await request(`${purpose}/${tier}`, call, retries).catch(async (err) => {

@@ -12,6 +12,7 @@ import { Match } from '../models/Match.js';
 import { MatchDecision } from '../models/MatchDecision.js';
 import { Message } from '../models/Message.js';
 import { Profile } from '../models/Profile.js';
+import { ProfileCheck } from '../models/ProfileCheck.js';
 import { User } from '../models/User.js';
 import { pauseReason } from '../services/llm/budget.js';
 import { env } from '../config/env.js';
@@ -62,6 +63,7 @@ meRouter.delete('/me', async (req, res) => {
     ChatEvent.deleteMany({ observerId: me }),
     MatchDecision.deleteMany({ userId: me }),
     InboxItem.deleteMany({ userId: me }),
+    ProfileCheck.deleteMany({ userId: me }),
     Match.updateMany(
       { users: me },
       {

@@ -15,14 +15,15 @@ import { embed } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
+import { tagLanguageHeuristic } from '../kg/language.js';
 import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
-import { generate } from './generate.js';
+import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
-import { perceiveObserve } from './perceive.js';
+import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { MIN_MESSAGES_FOR_NATURAL_END, openMustAsk, planAct } from './planAct.js';
 import { debug } from '../../utils/log.js';
 
@@ -98,13 +99,20 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const opening = history.length === 0;
   const rulesOn = env.RULES !== 'off';
   let perception = {};
-  if (!opening) {
-    const myLast = lastMineIdx >= 0 ? history[lastMineIdx].text : null;
-    const context = { theirName: matchName, lines: history.slice(Math.max(0, lastMineIdx - 6), lastMineIdx + 1).map((m) => `${String(m.senderId) === me ? persona.firstName : matchName}: ${m.text}`) };
-    ({ perception } = await perceiveObserve({ match, conv, persona, otherId, theirMsgs, context, myLast, agenda, turn: state.turn }));
+  const myLast = lastMineIdx >= 0 ? history[lastMineIdx].text : null;
+  const context = { theirName: matchName, lines: history.slice(Math.max(0, lastMineIdx - 6), lastMineIdx + 1).map((m) => `${String(m.senderId) === me ? persona.firstName : matchName}: ${m.text}`) };
+  const observeArgs = { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn: state.turn };
+  const afterRead = async (p) => {
+    perception = p;
     if (rulesOn) Object.assign(state, updateInterest(state, { ...perception, laughsEasily: (persona.voice.laughRate ?? 0) > 0.2 }, { extraversion: persona.traits.extraversion }));
     if (rulesOn && state.interest < KG.LOW_INTEREST) await ChatEvent.create({ conversationId: conv._id, matchId: match._id, observerId: me, turn: state.turn, messageId: theirMsgs.at(-1)._id, type: 'boredom', weight: 1 - state.interest });
-  }
+  };
+  // Plan 30 S1: by default the read happens inside the reply call (one model round-trip). Until then the plan uses what
+  // code can see on its own (a question to me, their language); a strong conflict or a dealbreaker found by the read
+  // still forces the stance check / the ending through the one allowed regeneration.
+  const merged = !opening && env.AGENT_TURN_MODE === 'merged';
+  if (!opening && !merged) await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
+  if (merged) perception = { language: tagLanguageHeuristic(theirMsgs.map((m) => m.text).join('\n')), aboutMeQuestion: Boolean(questionToMe(theirMsgs.map((m) => m.text).join('\n'))) };
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
   const stories = storyCandidates(persona, state.toldStoryIds);
   const plan = rulesOn
@@ -161,7 +169,24 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
   const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || (agendaSettled(freshAgenda) && !openMustAsk(freshAgenda, state).length));
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
-    const draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
+    let draft;
+    if (merged && i === 0) {
+      // A broken merged answer (longer JSON) falls back to the two-call path for this turn instead of failing it.
+      const out = await generateTurn({ prompt, read: perceiveArgs({ persona, theirMsgs, context, myLast, agenda }), tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id })
+        .catch((err) => { if (err.name !== 'LLMJsonError') throw err; console.warn(`agent ${match._id}: merged turn unreadable, using two calls`); return null; });
+      if (out) {
+        draft = out.draft;
+        await afterRead((await observe(out.read, observeArgs)).perception);
+      } else {
+        await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
+        draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id });
+      }
+      // What the read found that the plan needed up front: a view I hold firmly → disagree; a dealbreaker → end.
+      const hold = rulesOn && perception.conflicts?.find((c) => c.ownStrength >= KG.STANCE_HOLD);
+      if (hold) Object.assign(plan, { mustDisagree: true, disagreeOn: hold.text });
+      if (rulesOn && perception.dealbreakerHit) Object.assign(plan, { end: 'dealbreaker_hint', topic: null, askBack: false });
+      plan.reactions = (perception.concepts ?? []).map((c) => ({ text: c.text, kind: !c.own ? 'unknown' : c.own.polarity === -1 ? 'dislike' : c.own.strength >= 0.75 ? 'excited' : c.own.strength >= 0.5 ? 'positive' : 'lukewarm' }));
+    } else draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
     const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
@@ -169,8 +194,13 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
     if (draft.end && !plan.end && !mayEnd) c.problems.push("you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");
+    if (plan.end === 'dealbreaker_hint' && !draft.end) c.problems.push('end the conversation now: one short, kind closing line, no question.');
     attempts.push({ draft, ...c });
     if (!c.problems.length) break;
+    // AGENT_REGEN=lean (plan 30 S1): when every problem is a grounding one, the failing sentences are dropped before
+    // sending anyway, so keep the rest instead of paying a second model call, if at least 3 words survive.
+    const onlyGrounding = c.problems.length === c.grounding.problems.length && c.grounding.drop.length;
+    if (env.AGENT_REGEN === 'lean' && onlyGrounding && words(draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !c.grounding.drop.includes(s) && !echoOf(s, recent)).join(' ')).length >= 3) break;
     warning = c.problems.join(' ');
     debug(`agent ${match._id}: draft rejected: ${warning}`);
   }

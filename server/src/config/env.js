@@ -47,6 +47,8 @@ const schema = z.object({
   LLM_REASONING_MID: bool(true),
   LLM_REASONING_SMART: bool(true),
   LLM_REASONING_VISION: bool(false),
+  // Move a task to another tier without code: "agent-stance-check=fast,icebreakers=fast" (services/llm/tasks.js).
+  LLM_TASK_TIERS: optional,
 
   // Rate limiting + budgets
   LLM_MAX_RPM: field(z.coerce.number().int().positive().default(35)),
@@ -69,8 +71,16 @@ const schema = z.object({
   AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
   LOG_LEVEL: field(z.enum(['info', 'debug']).default(process.env.NODE_ENV === 'production' ? 'info' : 'debug')),
-  DEMO_PACING: field(z.enum(['normal', 'fast']).default('normal')), // fast: 0.3–2 s typing delays for seed + judge accounts only (plan 12 §7)
+  // Agent typing delays (plan 30 S1): fast = 0.8–3 s for everyone (default), normal = human-like (350 ms/word, up to
+  // AGENT_MAX_DELAY_MS). The delay overlaps the next turn's model work. DEMO_PACING is the plan-12 name, kept as an alias.
+  AGENT_PACING: field(z.enum(['normal', 'fast']).optional()),
+  DEMO_PACING: field(z.enum(['normal', 'fast']).optional()),
+  AGENT_MAX_REPLIES_PER_MINUTE: field(z.coerce.number().int().positive().default(12)), // per match, both agents: the loop guard
   JUDGE_LIVE_CHATS_PER_DAY: field(z.coerce.number().int().positive().default(2)), // new agent chats per non-seed user per UTC day (plan 12 §7)
+  // Plan 30 S1: merged = read their message + write mine in ONE model call; split = two calls (perceive, then reply).
+  AGENT_TURN_MODE: field(z.enum(['merged', 'split']).default('merged')),
+  // full = regenerate on any problem (one regeneration max); lean = skip it when only ungrounded sentences failed (dropped in code)
+  AGENT_REGEN: field(z.enum(['full', 'lean']).default('lean')),
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
   KEEPALIVE_SELF_PING: bool(false), // Render: ping our own RENDER_EXTERNAL_URL/health so the free tier doesn't sleep (plan 12)
   KEEPALIVE_INTERVAL_MIN: field(z.coerce.number().positive().default(10)),

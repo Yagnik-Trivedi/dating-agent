@@ -79,7 +79,7 @@ test('steering: after the warm-up, every other turn names my next open agenda to
     topics.push(p.topic?.id ?? null);
     if (p.topic) state = { ...state, lastTopicTurn: turn, topicsTouched: [...state.topicsTouched, p.topic.id] };
   }
-  assert.equal(topics[2], 'a1', 'first steer right after the warm-up');
+  assert.equal(topics[KG.STEER_AFTER_TURNS], 'a1', 'first steer right after the warm-up');
   assert.ok(topics.includes('a2'), `the next topic follows: ${topics.join(',')}`);
 });
 
@@ -96,7 +96,7 @@ test('steering retries an important unanswered topic, but not a minor one', () =
 
 test('near MAX_TURNS an open important topic is the topic, even after its tries', () => {
   const agenda = [{ id: 'a1', topic: 'smoking', priority: 0.9, status: 'open' }];
-  const p = planAct({ state: { interest: 0.5, turn: 9, lastTopicTurn: 8, topicTries: { a1: 2 } }, voice, perception: {}, rng: rng(1), agenda, msgCount: 19 });
+  const p = planAct({ state: { interest: 0.5, turn: 9, lastTopicTurn: 8, topicTries: { a1: 2 } }, voice, perception: {}, rng: rng(1), agenda, msgCount: KG.MAX_TURNS - KG.NEAR_END_MESSAGES + 1 });
   assert.equal(p.topic?.id, 'a1');
 });
 
@@ -116,8 +116,8 @@ test('must-ask: dealbreakers and answers that matter a lot need a direct questio
 test('must-ask: steered to after its tries, asked directly, and no natural end while open', () => {
   const agenda = [{ id: 'a2', topic: 'drinking', attribute: 'drinking', priority: 0.9, status: 'answered' }];
   const state = { interest: 0.6, turn: 9, lastTopicTurn: 7, topicTries: { a2: 3 } };
-  const p = planAct({ state, voice, perception: {}, rng: rng(1), agenda, msgCount: 17, agendaSettled: true });
+  const p = planAct({ state, voice, perception: {}, rng: rng(1), agenda, msgCount: KG.NATURAL_END_FROM, agendaSettled: true });
   assert.deepEqual([p.end, p.topic?.id, p.topic?.ask], [null, 'a2', true]);
-  const done = planAct({ state: { ...state, askedAttrs: ['drinking'] }, voice, perception: {}, rng: rng(1), agenda, msgCount: 17, agendaSettled: true });
+  const done = planAct({ state: { ...state, askedAttrs: ['drinking'] }, voice, perception: {}, rng: rng(1), agenda, msgCount: KG.NATURAL_END_FROM, agendaSettled: true });
   assert.equal(done.end, 'natural');
 });

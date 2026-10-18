@@ -17,6 +17,7 @@ import { buildUserGraph } from '../src/services/kg/buildUserGraph.js';
 import { flushUsage } from '../src/services/llm/budget.js';
 import { mapLimit } from '../src/utils/mapLimit.js';
 import { buildGate } from '../src/services/match/gate.js';
+import { precheckProfile } from '../src/services/trust/checkProfile.js';
 
 const personas = JSON.parse(readFileSync(new URL('../seed/personas.json', import.meta.url)));
 const force = process.argv.includes('--force') || process.argv.includes('--rebuild');
@@ -45,6 +46,8 @@ try {
     );
     await Profile.updateOne({ userId: user._id }, { $set: { userId: user._id, ...p.profile } }, { upsert: true });
     await buildGate(user._id);
+    // Plan 30 S1: the trust check's model part, once per profile version, so a match with a seed never waits for it.
+    await precheckProfile({ userId: user._id }).catch((err) => console.error(`trust precheck ${p.email}: ${err.message}`));
     const hasGraph = await KgFact.exists({ subjectId: user._id, observerId: null, source: 'questionnaire_choice' }); // v2 graph
     if (hasGraph && !force && user.onboarding.status === 'done' && user.seedHash === hash) { skipped++; return console.log(`= ${p.profile.name} (${p.email}) unchanged`); }
     await User.updateOne({ _id: user._id }, { $set: { 'onboarding.status': 'processing' } });

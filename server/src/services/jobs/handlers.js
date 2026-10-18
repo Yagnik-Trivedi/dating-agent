@@ -9,14 +9,17 @@ import { runJudge } from '../conversation/judge.js';
 import { runUserGraphBuild } from '../kg/buildUserGraph.js';
 import { conceptCleanup, rebuildVoice, reconfirm, reflect } from '../kg/learning.js';
 import { createMatch } from '../matches.js';
-import { runMatchCreated, runScheduledChat } from '../pipeline/index.js';
+import { precheckProfile } from '../trust/checkProfile.js';
+import { runAwaitGraph, runMatchCreated, runScheduledChat } from '../pipeline/index.js';
 import { archiveNotes } from './archive.js';
 import { registerJob } from './queue.js';
 
 registerJob('buildUserGraph', runUserGraphBuild);
 registerJob('matchCreated', runMatchCreated);
 registerJob('startChat', runScheduledChat); // credit guard: a match over the daily live-chat cap starts the next day
+registerJob('awaitGraph', runAwaitGraph); // plan 30 S1: a match waits for both phase-2 graphs (max 10 min)
 registerJob('agentTurn', runAgentTurn);
+registerJob('profileCheck', precheckProfile); // plan 30 S1: the trust check's model part, once per profile version
 registerJob('evaluate', async ({ matchId, reason }) => {
   const match = await Match.findById(matchId);
   if (match) await startEvaluation(match, { reason });

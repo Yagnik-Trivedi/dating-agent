@@ -48,6 +48,18 @@ export function buildAgenda({ self, clarify = [] }) {
     .map((a, i) => ({ id: `a${i + 1}`, topic: a.topic, why: a.why, priority: r2(a.priority), confidence: 0, status: 'open', ...(a.dealbreaker && { dealbreaker: true }), ...(a.attribute && { attribute: a.attribute }) }));
 }
 
+/**
+ * The brief now runs in parallel with the trust check (plan 30 S1), so the trust check's gentle "clarify" topics join
+ * the agenda afterwards, exactly as buildAgenda would have placed them (priority CLARIFY_PRIORITY, size cap kept).
+ */
+export function addClarify(agenda = [], trust) {
+  const have = new Set(agenda.map((a) => a.topic.toLowerCase()));
+  const extra = (trust?.contradictions ?? []).filter((c) => c.severity <= 2 && !have.has(c.topic.toLowerCase()))
+    .map((c) => ({ topic: c.topic, why: WHY.clarify, priority: CLARIFY_PRIORITY, confidence: 0, status: 'open' }));
+  if (!extra.length) return agenda;
+  return [...agenda, ...extra].sort((a, b) => b.priority - a.priority).slice(0, AGENDA_SIZE).map((a, i) => ({ ...a, id: `a${i + 1}` }));
+}
+
 // Real sentences only: "yes please." and a trailing "😄" are chat fragments, not sentences (they dropped good openers).
 const sentences = (s) => s.split(/[.!?]+(?:\s|$)/).filter((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 3).length;
 

@@ -8,6 +8,7 @@ import { KG } from '../kg/config.js';
 import { passesGate } from '../match/gate.js';
 import { emitToUser } from '../../sockets/io.js';
 import { startConversation } from '../agent/index.js';
+import { addClarify } from '../brief/buildBrief.js';
 import { buildBriefs } from '../brief/index.js';
 import { enqueue } from '../jobs/queue.js';
 import { checkProfile } from '../trust/checkProfile.js';
@@ -86,9 +87,10 @@ export async function startConversationDoc(match) {
 }
 
 /** Step 2 (plan 07): briefs (public profile + own graph), the conversation doc, then the agent chat (08). */
-export async function runBrief(match) {
+export async function runBrief(match, ready = null) {
   await setStatus(match, 'briefing');
-  const briefs = await buildBriefs(match);
+  const briefs = (await ready) ?? await buildBriefs(match);
+  for (const u of Object.keys(briefs)) briefs[u].agenda = addClarify(briefs[u].agenda, match.trust?.[u]);
   const current = await Match.findById(match._id, { status: 1 }).lean();
   if (current?.status !== 'briefing') return;
 
@@ -124,7 +126,14 @@ async function scheduleChat(match) {
   await setStatus(match, 'scheduled');
 }
 
+const GRAPH_WAIT_MS = 10 * 60_000; // longest wait for a phase-2 graph before chatting on the phase-1 one
+
 async function startChat(match) {
+  // Plan 30 S1: agents chat only once both graphs are 'ready' (stories in), re-checked every 10 s by the awaitGraph job.
+  if (Date.now() - new Date(match.createdAt ?? 0) < GRAPH_WAIT_MS && await User.exists({ _id: { $in: match.users }, graphStatus: 'building' })) {
+    await enqueue('awaitGraph', { matchId: String(match._id) }, { runAt: new Date(Date.now() + 10_000), dedupeKey: `awaitGraph:${match._id}` });
+    return;
+  }
   await startConversationDoc(match);
   await setStatus(match, 'agent_chatting');
   return startConversation(match);
@@ -136,6 +145,13 @@ export async function runScheduledChat({ matchId }) {
   if (match?.status !== 'scheduled') return { skipped: true };
   if (await overDailyChats(match)) return scheduleChat(match);
   return startChat(match);
+}
+
+/** The awaitGraph job: a briefed match whose users' graphs were still building. */
+export async function runAwaitGraph({ matchId }) {
+  const match = await Match.findById(matchId);
+  if (match?.status === 'briefing' && match.brief) return startChat(match);
+  return { skipped: true };
 }
 
 /** Gate re-check at match creation (plan 07 §2): answers may have changed since discover. Boolean only, no LLM. */
@@ -153,8 +169,11 @@ export async function gateCheck(match) {
 /** Called after a mutual like: trust (06) → brief (07) → agent chat (08). */
 export async function onMatchCreated(match) {
   if (!(await gateCheck(match))) return;
+  // The brief reads only public profiles + my own graph, so it runs alongside the trust check (plan 30 S1); a flagged
+  // match just discards it. The first agent turn is queued as soon as both are done.
+  const briefs = buildBriefs(match).catch((err) => { console.error(`brief ${match._id} failed: ${err.message}`); return null; });
   if (!(await runTrustCheck(match))) return;
-  await runBrief(match);
+  await runBrief(match, briefs);
 }
 
 /** `matchCreated` job: picks up wherever the match is (a restart mid-pipeline re-runs the unfinished step). */

@@ -1,0 +1,182 @@
+{
+  "c2#1": {
+    "id": "c2",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Indie music and cycling in Bengaluru; both want kids, balanced careers, long-term",
+    "names": [
+      "Riya",
+      "Aditya"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.85,
+      0.9
+    ],
+    "stopReason": "natural",
+    "status": "compatible",
+    "turns": 13,
+    "tokens": 61399,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 469,
+    "file": "transcripts/c2-s1-merged-lean-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "i1#1": {
+    "id": "i1",
+    "run": 1,
+    "expected": "gated",
+    "predicted": "gated",
+    "reason": "Nisha's dealbreaker is kids (yes only); Varun doesn't want any and it's not in his public tags. The gate must keep them apart: never a match.",
+    "names": [
+      "Nisha",
+      "Varun"
+    ],
+    "verdicts": [
+      null,
+      null
+    ],
+    "scores": [
+      null,
+      null
+    ],
+    "stopReason": null,
+    "status": "closed",
+    "turns": 0,
+    "tokens": 0,
+    "smartCalls": 0,
+    "costUsd": 0,
+    "seconds": 4,
+    "file": "transcripts/i1-s1-merged-lean-run1.md",
+    "agentMsgs": 0,
+    "templateFallbacks": 0,
+    "constrained": 0
+  },
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "compatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.85
+    ],
+    "stopReason": "natural",
+    "status": "compatible",
+    "turns": 13,
+    "tokens": 64722,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 582,
+    "file": "transcripts/c1-s1-merged-lean-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 0,
+    "constrained": 2
+  },
+  "m1#1": {
+    "id": "m1",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "compatible",
+    "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style",
+    "names": [
+      "Meera",
+      "Arjun"
+    ],
+    "verdicts": [
+      "compatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "compatible",
+    "turns": 13,
+    "tokens": 61568,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 600,
+    "file": "transcripts/m1-s1-merged-lean-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 1,
+    "constrained": 0
+  },
+  "i2#1": {
+    "id": "i2",
+    "run": 1,
+    "expected": "incompatible",
+    "predicted": "incompatible",
+    "reason": "Tara can't be around smoke (dealbreaker); Sameer smokes regularly (hidden from his tags)",
+    "names": [
+      "Tara",
+      "Sameer"
+    ],
+    "verdicts": [
+      "incompatible",
+      "compatible"
+    ],
+    "scores": [
+      0.8,
+      0.75
+    ],
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 14,
+    "tokens": 66200,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 787,
+    "file": "transcripts/i2-s1-merged-lean-run1.md",
+    "agentMsgs": 14,
+    "templateFallbacks": 0,
+    "constrained": 1
+  },
+  "m2#1": {
+    "id": "m2",
+    "run": 1,
+    "expected": "maybe",
+    "predicted": "maybe",
+    "reason": "Ira's profile and replies are too thin to judge",
+    "names": [
+      "Ira",
+      "Parth"
+    ],
+    "verdicts": [
+      "maybe",
+      "compatible"
+    ],
+    "scores": [
+      0.5,
+      0.7
+    ],
+    "stopReason": "natural",
+    "status": "maybe",
+    "turns": 13,
+    "tokens": 60024,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 421,
+    "file": "transcripts/m2-s1-merged-lean-run1.md",
+    "agentMsgs": 13,
+    "templateFallbacks": 0,
+    "constrained": 1
+  }
+}

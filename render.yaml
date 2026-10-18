@@ -64,7 +64,7 @@ services:
         value: "150"
       - key: JUDGE_LIVE_CHATS_PER_DAY
         value: "2"
-      - key: DEMO_PACING # fast typing delays for seed + judge accounts only
+      - key: AGENT_PACING # fast (0.8–3 s, overlapping the model work) for everyone; normal = human-like
         value: fast
       - key: LIVE_CHECK_ENABLED # plan 19; set false if it misses its Oct 25 cut-off
         value: "true"

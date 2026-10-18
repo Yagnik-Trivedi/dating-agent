@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step and **commits locally**. Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-18, by Claude Code (S0 done; S1 step 0 measured → STOP for the owner)
+- **Last updated:** 2026-10-19, by Claude Code (S1 done, committed locally; S6 in progress, waiting for the owner to continue)
 - **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -15,8 +15,8 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
 | S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ✅ | (this commit) | Results below. Render `CLIENT_URL` value for S7 noted. |
-| S1 | Speed (two-phase onboarding, agent pacing) | ⏸ Step 0 done, STOP | (this commit) | **STOP after step 0** (speed-before numbers). |
-| S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | ⬜ | — | Right after S1. |
+| S1 | Speed (two-phase onboarding, agent pacing) | ✅ | (this commit) | Results below; first-message target missed on 429s (explained). |
+| S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | 🔄 started | — | Tokens, one component kit, nav and the approved dependencies are in `git stash` "s6-wip" (not committed); next: the 4 designed screens on real data, then S6.6. |
 | S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ⬜ | — | |
 | S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ⬜ | — | Cloudinary stub if `CLOUDINARY_*` missing. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
@@ -26,6 +26,45 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 Local commits since the last push (`780d210`):
 - `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
 - `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
+
+## S1 results: speed (2026-10-18/19) ✅
+
+Full numbers: `server/eval/results/speed-after.md` (3 local runs with `node scripts/speed-check.js`) vs `speed-before.md`.
+
+| What | Before | After (median of 3, local) | Target |
+|---|---|---|---|
+| Submit → app usable | ~92 s | **0.2 s** | ≤ 5 s ✓ |
+| Full graph ready | 92 s | **14.5 s** | p50 ≤ 2 min ✓ |
+| Match → first agent message | 40 s | 43 s | ≤ 20 s ✗ (NVIDIA 429s) |
+| Whole agent chat | 23 min, 18 msgs | **4.7 min, 13 msgs** (4.0–5.0) | p50 ≤ 4 min (close) |
+| Model time per agent message | 26 s | **16 s** | ~15 s ✓ |
+
+**6-pair quality check** (c1 c2 i1 i2 m1 m2), one-call turn + lean regeneration vs the old two calls:
+- verdicts **5/6** vs 3/6;
+- template fallbacks **1/66** vs 3/66;
+- unsupported self-claims 9/35 = 26% vs 9/38 = 24% (same count);
+- style distance 0.16 (unchanged from B5);
+- tokens per pair ~63k vs ~83k.
+
+New defaults: `AGENT_TURN_MODE=merged`, `AGENT_REGEN=lean`.
+
+**Gaps (explained with numbers):**
+- **First message:** the code path is now a cached trust check (no model call) plus the brief (~6 s). In every run the shared NVIDIA key answered 429s (99 in one run), so briefs failed after ~33 s of retries and the opener waited out a 30 s back-off.
+- **Whole chat:** 4.0–5.0 min, and the 429 back-offs are most of the gap to 4 min.
+- **Re-measure:** with the owner's separate local key, on Token Factory (Oct 26) and on the deployed site (S7).
+
+**Not built in S1:**
+- The "Your agents are talking, about 3 min" banner and the end-of-chat toast are UI, so they come with the new design in S6. The server already sends `match:status` and `report:ready`.
+- Merging the story extract + support check into one call was skipped: the support check is the quality guard on story facts.
+
+**Checks:**
+- `npm test` 119/119 (+5 in `test/speed.test.js`).
+- `api-check` all passed.
+- Client build green.
+- `smoke:browsers` on the local production build: chromium ✓ firefox ✓ webkit ✓.
+- Killing the server mid-build: phase 1 is committed in the submit request, and phase 2 is a `buildUserGraph` job the worker reclaims after a restart (plan 17 behaviour; the 3 runs didn't kill it).
+
+**Env changes for Render at S7 (new, all optional with defaults):** `AGENT_PACING` replaces `DEMO_PACING` (render.yaml updated). Optional: `AGENT_MAX_REPLIES_PER_MINUTE`, `AGENT_TURN_MODE`, `AGENT_REGEN`, `LLM_TASK_TIERS`. After deploying, run the seed script again so every seed gets its cached trust check (`ProfileCheck`).
 
 ## S1 step 0: speed before (2026-10-18) — ⏸ STOP, waiting for the owner
 

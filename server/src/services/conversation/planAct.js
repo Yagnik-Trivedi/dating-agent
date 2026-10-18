@@ -13,7 +13,7 @@ export function openMustAsk(agenda = [], state = {}) {
   return agenda.filter((a) => (a.dealbreaker || a.priority >= KG.ASK_EXPLICIT_PRIORITY) && agendaAttribute(a) && !done.has(agendaAttribute(a)));
 }
 
-export const MIN_MESSAGES_FOR_NATURAL_END = 16; // 12 gave judges too little to go on (tuning it2: c1 and c7 ended at 13 → "unsure")
+export const MIN_MESSAGES_FOR_NATURAL_END = KG.NATURAL_END_FROM; // was 16 (tuning it2); plan 30 S1 shortens chats to 12–14
 const pick = (xs, rng) => xs[Math.floor(rng() * xs.length)];
 function pickWeighted(dist, rng) {
   const entries = Object.entries(dist ?? {}).filter(([, w]) => w > 0);

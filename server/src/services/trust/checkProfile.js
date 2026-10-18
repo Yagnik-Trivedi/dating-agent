@@ -1,11 +1,14 @@
 // Step 1: each user's agent checks the OTHER profile for fakes and inconsistencies before any conversation.
 // "Inconsistent" is not "fake": mild contradictions become gentle "clarify" topics for the brief (plan 07).
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { items } from '../../utils/zodItems.js';
 import { Profile, PUBLIC_PROFILE } from '../../models/Profile.js';
+import { ProfileCheck } from '../../models/ProfileCheck.js';
 import { User } from '../../models/User.js';
 import { asActor } from '../actor.js';
 import { isVerbatim } from '../kg/extractFacts.js';
+import { enqueue } from '../jobs/queue.js';
 import { chatJSON } from '../llm/client.js';
 import * as profileConsistency from '../prompts/profileConsistency.js';
 import { profileText, ruleChecks } from './rules.js';
@@ -36,6 +39,35 @@ export const publicProfile = (p) => ({
   photos: (p.photos ?? []).length,
 });
 
+/** Hash of exactly what the consistency check reads: same public content → same result, for every viewer. */
+export const profileVersion = (profile) => createHash('sha256').update(JSON.stringify(publicProfile(profile))).digest('hex').slice(0, 24);
+
+/**
+ * The model part of the check, once per profile version (plan 30 S1): a cached result is reused by every viewer; a
+ * failed call is never cached (the next check retries). → { contradictions, scamSignals, genericBio, summary }
+ */
+export async function consistency(profile, { userId, matchId } = {}) {
+  const version = profileVersion(profile);
+  if (profile.userId) {
+    const hit = await ProfileCheck.findOne({ userId: profile.userId, version }, { llm: 1 }).lean();
+    if (hit) return hit.llm;
+  }
+  try {
+    const llm = await chatJSON({ tier: 'mid', messages: profileConsistency.build({ profile: publicProfile(profile) }), schema, purpose: 'trust-check', userId, matchId });
+    if (profile.userId) await ProfileCheck.updateOne({ userId: profile.userId, version }, { $setOnInsert: { llm } }, { upsert: true }).catch(() => {});
+    return llm;
+  } catch (err) {
+    console.error(`trust-check: consistency check unavailable (${err.code ?? err.name}): ${err.message}`);
+    return { contradictions: [], scamSignals: [], genericBio: false, summary: 'Automatic consistency check unavailable; rule checks only.' };
+  }
+}
+
+/** `profileCheck` job: precompute my own profile's check after onboarding or an edit, so a match never waits for it. */
+export async function precheckProfile({ userId }) {
+  const profile = await Profile.findOne({ userId }).select(PUBLIC_PROFILE).lean();
+  if (profile) await consistency(profile, { userId });
+}
+
 const levelFor = (score, autoFake) => (autoFake || score < 40 ? 'likely_fake' : score < 70 ? 'caution' : 'ok');
 
 /**
@@ -47,14 +79,7 @@ export async function checkProfileData({ profile, accountAgeMinutes, userId, mat
   const text = profileText(profile);
   let points = rules.points;
   const flags = [...rules.flags];
-  let llm = { contradictions: [], scamSignals: [], genericBio: false, summary: '' };
-
-  try {
-    llm = await chatJSON({ tier: 'mid', messages: profileConsistency.build({ profile: publicProfile(profile) }), schema, purpose: 'trust-check', userId, matchId });
-  } catch (err) {
-    console.error(`trust-check: consistency check unavailable (${err.code ?? err.name}): ${err.message}`);
-    llm.summary = 'Automatic consistency check unavailable; rule checks only.';
-  }
+  const llm = await consistency(profile, { userId, matchId });
 
   // Every contradiction and scam signal must quote the profile's own words; drop the ones that don't.
   const contradictions = llm.contradictions.filter((c) => isVerbatim(c.b, text));
@@ -96,3 +121,7 @@ export const checkProfile = (viewerId, subjectId, matchId) => asActor({ role: 't
   const accountAgeMinutes = subject?.createdAt ? (Date.now() - new Date(subject.createdAt)) / 60_000 : Infinity;
   return checkProfileData({ profile, accountAgeMinutes, userId: viewerId, matchId });
 });
+
+/** Queue my profile's check (debounced: a burst of edits runs it once). */
+export const queueProfileCheck = (userId) => enqueue('profileCheck', { userId: String(userId) }, { dedupeKey: `profileCheck:${userId}`, runAt: new Date(Date.now() + 5000) })
+  .catch((err) => console.error(`profileCheck ${userId} not queued: ${err.message}`));

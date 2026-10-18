@@ -124,3 +124,60 @@ export async function resolveConcept({ text, type, userId }, deps = {}) {
   await log({ text, type, decision: 'created', conceptId: created.id, best: best?.score ?? null });
   return { conceptId: created.id, decision: 'created', score: best?.score };
 }
+
+/**
+ * Plan 30 S1: resolve many phrases at once (an onboarding build). Same decisions as resolveConcept, but: normalised +
+ * deduped first, exact/alias lookups, then ONE embedding call for the rest, and every ambiguous-band phrase in ONE
+ * tie-break call. → Map(`${type}|${text}` → conceptId)
+ */
+export async function resolveConcepts(items, { userId } = {}, deps = {}) {
+  const embedMany = deps.embed ?? ((texts) => embed(texts, { purpose: 'concept', userId, inputType: 'query' }));
+  const tieBreakMany = deps.tieBreakMany ?? ((batch) => chatJSON({
+    tier: 'mid', reasoning: false, temperature: 0, purpose: 'concept-tiebreak', userId,
+    schema: z.object({ answers: z.array(z.object({ i: z.coerce.number(), conceptId: z.string().nullable().catch(null) })).catch([]) }),
+    messages: sameConcept.buildBatch(batch),
+  }).catch(() => ({ answers: [] })));
+  const out = new Map();
+  const list = await loadCache();
+  const todo = new Map(); // `${kind}|${name}` → { kind, name, keys: [original keys], text }
+  for (const { text, type } of items) {
+    const name = normalise(text);
+    const key = `${type}|${text}`;
+    if (!name) { out.set(key, null); continue; }
+    const kind = CONCEPT_TYPES.includes(type) ? type : null;
+    const pool = kind ? list.filter((c) => c.type === kind) : list;
+    const exact = pool.find((c) => c.name === name || c.aliases.includes(name));
+    if (exact) { out.set(key, exact.id); continue; }
+    const k = `${kind}|${name}`;
+    if (!todo.has(k)) todo.set(k, { kind, name, text, keys: [] });
+    todo.get(k).keys.push(key);
+  }
+  const rest = [...todo.values()];
+  if (!rest.length) return out;
+  const vectors = await embedMany(rest.map((r) => r.name));
+  const ambiguous = [];
+  for (const [i, r] of rest.entries()) {
+    r.vector = vectors[i];
+    const pool = r.kind ? list.filter((c) => c.type === r.kind) : list;
+    const scored = pool.filter((c) => c.vector).map((c) => ({ c, score: cosine(r.vector, c.vector) })).sort((a, b) => b.score - a.score);
+    r.best = scored[0];
+    if (r.best && r.best.score >= KG.T_HIGH) { r.hit = r.best.c; r.decision = 'embedding'; continue; }
+    r.borderline = scored.filter((s) => s.score >= KG.T_LOW).slice(0, 3);
+    if (r.borderline.length) ambiguous.push(r);
+  }
+  if (ambiguous.length) {
+    const { answers } = await tieBreakMany(ambiguous.map((r) => ({ text: r.text, type: r.kind, candidates: r.borderline.map((s) => ({ id: s.c.id, label: s.c.label, aliases: s.c.aliases })) })));
+    for (const a of answers) {
+      const r = ambiguous[a.i - 1];
+      const hit = r && a.conceptId && r.borderline.find((s) => s.c.id === a.conceptId);
+      if (hit) { r.hit = hit.c; r.decision = 'llm'; }
+    }
+  }
+  for (const r of rest) {
+    if (r.hit) await addAlias(r.hit, r.name);
+    const id = r.hit?.id ?? (await createConcept({ name: r.name, label: String(r.text).trim().toLowerCase(), type: r.kind ?? 'other', vector: r.vector })).id;
+    await log({ text: r.text, type: r.kind, decision: r.decision ?? 'created', conceptId: id, score: r.best?.score ?? null, batch: true });
+    for (const key of r.keys) out.set(key, id);
+  }
+  return out;
+}

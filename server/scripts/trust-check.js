@@ -105,6 +105,7 @@ try {
   const recs = stopSpy();
   const theirs = readsOfOther(recs, 'trust');
   const allowed = (r) => (r.model === 'Profile' && ['gate', 'dealbreakers', 'geo'].every((f) => r.projection[f] === 0))
+    || r.model === 'ProfileCheck' // plan 30 S1: the cached model check of their PUBLIC profile
     || (r.model === 'User' && Object.keys(r.projection).every((k) => ['createdAt', '_id'].includes(k)));
   assert.ok(theirs.length >= 4, `trust reads of the other side were recorded (${theirs.length})`);
   assert.deepEqual(theirs.filter((r) => !allowed(r)).map((r) => `${r.model}.${r.op} ${JSON.stringify(r.projection)}`), [], 'only the public profile + createdAt');

@@ -19,3 +19,15 @@ export function build({ text, type, candidates }) {
     },
   ];
 }
+
+/** Plan 30 S1: every ambiguous phrase of one onboarding build in ONE call. Output: { answers: [{ i, conceptId|null }] } */
+export function buildBatch(items) {
+  const [system] = build({ text: '', type: null, candidates: [] });
+  return [
+    { role: 'system', content: system.content.replace(/Output JSON: .*$/, 'For EACH numbered phrase, output its matching candidate id or null.\nOutput JSON: {"answers": [{"i": 1, "conceptId": "<id>" or null}]}') },
+    {
+      role: 'user',
+      content: items.map((it, n) => `${n + 1}. Phrase: "${it.text}" (type: ${it.type ?? 'unknown'})\n   Candidates:\n${it.candidates.map((c) => `   - id ${c.id}: "${c.label}" (aliases: ${c.aliases.join(', ') || 'none'})`).join('\n')}`).join('\n'),
+    },
+  ];
+}

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
 import { cityGeo } from '../services/cities.js';
 import { buildGate } from '../services/match/gate.js';
+import { queueProfileCheck } from '../services/trust/checkProfile.js';
 import { parse } from '../utils/http.js';
 
 const text = (max) => z.string().trim().max(max);
@@ -44,5 +45,6 @@ profileRouter.put('/profile', async (req, res) => {
     { new: true, upsert: true, runValidators: true },
   ).lean();
   await buildGate(req.user._id);
+  queueProfileCheck(req.user._id); // public content changed → the trust check's cached part follows (plan 30 S1)
   res.json({ profile });
 });

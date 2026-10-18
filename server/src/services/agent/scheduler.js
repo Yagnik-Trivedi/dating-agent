@@ -14,7 +14,6 @@ import { composeTurn } from '../conversation/engine.js';
 import { fileQuestion } from './askMyHuman.js';
 
 const LOCK_STALE_MS = 2 * 60_000;
-const MAX_AGENT_REPLIES_PER_MINUTE = 2; // per match, both agents together: the agent↔agent loop guard
 const RETRY_MS = 30_000;
 const MAX_REPLY_RETRIES = 5;
 const failures = new Map();
@@ -56,9 +55,10 @@ async function mayReply(matchId, userId) {
   return ok ? match : null;
 }
 
-/** clamp(min + 350 ms/word + 0–2 s, max); fast (DEMO_PACING=fast, seed + judge accounts) = 0.3–2 s. */
-export function paceMs(text, fast = false) {
-  if (fast) return 300 + Math.random() * 1700;
+export const pacing = () => env.AGENT_PACING ?? env.DEMO_PACING ?? 'fast';
+/** Typing delay for one message: fast (default) 0.8–3 s; normal = clamp(min + 350 ms/word + 0–2 s, max). */
+export function paceMs(text, fast = pacing() === 'fast') {
+  if (fast) return 800 + Math.random() * 2200;
   const words = text.split(/\s+/).filter(Boolean).length;
   return Math.min(env.AGENT_MIN_DELAY_MS + words * 350 + Math.random() * 2000, env.AGENT_MAX_DELAY_MS);
 }
@@ -91,7 +91,7 @@ export async function stopConversation(matchId, reason, detail = null) {
 export async function runReply(matchId, userId) {
   const key = `${matchId}:${userId}`;
   const recent = await Message.find({ matchId, authoredBy: 'agent', createdAt: { $gt: new Date(Date.now() - 60_000) } }, { createdAt: 1 }).sort({ createdAt: 1 }).lean();
-  if (recent.length >= MAX_AGENT_REPLIES_PER_MINUTE) {
+  if (recent.length >= env.AGENT_MAX_REPLIES_PER_MINUTE) {
     return scheduleReply(matchId, userId, recent[0].createdAt.getTime() + 60_000 - Date.now() + 250);
   }
   if (!(await mayReply(matchId, userId))) return;
@@ -101,11 +101,15 @@ export async function runReply(matchId, userId) {
     const match = await mayReply(matchId, userId);
     if (!match) return;
     let last = (await Message.findOne({ matchId }).sort({ createdAt: -1 }).lean())?._id ?? null;
+    const started = Date.now();
+    io.to(`match:${matchId}`).emit('typing', { matchId: String(matchId), userId: String(userId) });
     const turn = await composeTurn(match, userId); // plan 08 engine: perceive → interest → act plan → generate → checks
     if (!turn) return;
 
     for (const [i, text] of turn.messages.entries()) {
-      await typeFor(matchId, userId, paceMs(text, env.DEMO_PACING === 'fast' && Boolean(await User.exists({ _id: userId, $or: [{ isSeed: true }, { isJudge: true }] }))));
+      // The delay overlaps the model work: the first message waits only for what's left of its typing time (plan 30 S1).
+      const pace = paceMs(text);
+      await typeFor(matchId, userId, i === 0 ? Math.max(0, pace - (Date.now() - started)) : pace);
       // Re-check: took over, status changed, agent switched off, or a newer message arrived → discard the rest.
       const current = await mayReply(matchId, userId);
       if (!current) return;

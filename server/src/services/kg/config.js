@@ -22,15 +22,17 @@ export const KG = Object.freeze({
   STANCE_HOLD: 0.7, STANCE_BEND: 0.4, RESOLVE_WINDOW: 4,
   K_LIKE: 0.25, K_DISLIKE: 0.25, K_QUESTION: 0.05, K_HUMOR: 0.05,
   K_LOW_EFFORT: 0.1, K_REPEAT: 0.05, K_DECAY: 0.1,
-  LOW_INTEREST: 0.3, END_AFTER_LOW_TURNS: 3, MAX_TURNS: 24,
+  LOW_INTEREST: 0.3, END_AFTER_LOW_TURNS: 3,
+  // Plan 30 S1: 12–14 messages, agenda-driven (dealbreaker topics first). Was 16 / 24: a 4-minute chat needs fewer turns.
+  MAX_TURNS: 14, NATURAL_END_FROM: 12,
   EXTEND_TURNS: 8, // "Let them talk a bit longer" on a Maybe: at most this many more messages (plan 10 backend addition)
   TOPIC_SHIFT: 0.25, STORY_RATE: 0.2, TEMP_RANGE: [0.7, 1.0],
-  STEER_AFTER_TURNS: 2, // my turns of warm-up before every-other-turn agenda steering
+  STEER_AFTER_TURNS: 1, // my turns of warm-up before every-other-turn agenda steering
   STEER_RETRY_PRIORITY: 0.7, // agenda items at least this important are steered to again until answered…
   STEER_TRIES: 2, // …up to this many tries (eval i2: smoking was tried once, ignored by the model, never retried)
   END_BLOCK_PRIORITY: 0.7, // no natural end while an agenda item this important is unanswered (owner's tuning spec)
   ASK_EXPLICIT_PRIORITY: 0.9, // agenda items this important (and dealbreakers) need a direct question on their exact attribute before a natural end
-  NEAR_END_MESSAGES: 6, // this close to MAX_TURNS, an open important item is the topic every turn
+  NEAR_END_MESSAGES: 4, // this close to MAX_TURNS, an open important item is the topic every turn
   ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
@@ -49,6 +51,6 @@ export const KG = Object.freeze({
   JOB_POLL_MS: 1000, JOB_LOCK_MS: 120_000, JOB_MAX_ATTEMPTS: 5, JOB_DONE_TTL_DAYS: 7,
   JOB_CONCURRENCY: Object.freeze({
     buildUserGraph: 1, matchCreated: 2, agentTurn: 3, evaluate: 2, judge: 2, compactNotes: 1,
-    rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2,
+    rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2,
   }),
 });

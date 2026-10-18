@@ -1,0 +1,486 @@
+{
+  "summary": {
+    "tag": "s1-split",
+    "conversations": 5,
+    "claims": 38,
+    "unsupported": 9,
+    "contradicts": 0,
+    "replies": 61,
+    "agree": 7,
+    "disagree": 0,
+    "judgeYes": 8,
+    "judges": 10
+  },
+  "rows": [
+    {
+      "pair": "c1",
+      "claims": [
+        {
+          "text": "I love trekking too, especially when there’s no network around.",
+          "label": "supported",
+          "fact": "likes: trekking; likes: spending a week without network",
+          "speaker": "Meera"
+        },
+        {
+          "text": "looking for long-term too",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i hope to build a life filled with calm moments and shared adventures like trekking",
+          "label": "supported",
+          "fact": "likes: being the calm one when things go wrong; likes: trekking",
+          "speaker": "Meera"
+        },
+        {
+          "text": "i’ve never smoked",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Meera"
+        },
+        {
+          "text": "not sure about pune trails yet, still exploring around my city haha 😏",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: this city",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "haha i'm looking for long-term connection, what about you?",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "nope never smoke 🎉 how about you",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i usually unwind with quiet weekends or sketching buildings from memory",
+          "label": "supported",
+          "fact": "likes: sketching buildings from memory after one minute glance",
+          "speaker": "Ishaan"
+        },
+        {
+          "text": "i see myself open to kids someday what about you",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Ishaan"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "yes",
+        "yes"
+      ]
+    },
+    {
+      "pair": "c2",
+      "claims": [
+        {
+          "text": "filter coffee + cubbon park cycling + rooftop jam? that’s a perfect sundae",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Riya"
+        },
+        {
+          "text": "im also looking for long term yeah",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Riya"
+        },
+        {
+          "text": "kids?",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Riya"
+        },
+        {
+          "text": "nah i never smoke haha",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Riya"
+        },
+        {
+          "text": "social drinker here!",
+          "label": "supported",
+          "fact": "lifestyle: drinking: socially",
+          "speaker": "Riya"
+        },
+        {
+          "text": "my go-to’s that bassline from ‘sunny’ by babe rainbow when i’m cycling",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Riya"
+        },
+        {
+          "text": "not really sure how i balance it yet haha",
+          "label": "supported",
+          "fact": "values: career ambition: balanced",
+          "speaker": "Riya"
+        },
+        {
+          "text": "unwind with music and chai most days, keeps me sane",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Riya"
+        },
+        {
+          "text": "dream of cycling village roads",
+          "label": "supported",
+          "fact": "likes: cycling quiet village roads in Kerala backwaters",
+          "speaker": "Riya"
+        },
+        {
+          "text": "strong filter coffee’s my jam too",
+          "label": "supported",
+          "fact": "likes: proper filter kaapi",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "looking for something real—long term",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "kids someday",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "never smoke",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "just socially drink",
+          "label": "supported",
+          "fact": "lifestyle: drinking: socially",
+          "speaker": "Aditya"
+        },
+        {
+          "text": "havent really thought about that one",
+          "label": "supported",
+          "fact": "honest uncertainty counts as supported",
+          "speaker": "Aditya"
+        }
+      ],
+      "labels": [
+        "agree",
+        "neutral",
+        "neutral",
+        "agree",
+        "agree",
+        "neutral",
+        "neutral",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "yes",
+        "yes"
+      ]
+    },
+    {
+      "pair": "i2",
+      "claims": [
+        {
+          "text": "not sure about cutting chai honestly",
+          "label": "supported",
+          "fact": "Honest uncertainty ('not sure', 'never really thought about it') counts as supported.",
+          "speaker": "Tara"
+        },
+        {
+          "text": "haha i have no idea what that means. do you smoke?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "got it. you smoke regularly. do you ever run?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "cool what are you looking for on here",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "long term sounds good. i like bands like local trains and parekh & singh. know any haworthia types?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "bachna ae haseeno is my go-to 😏 ever tried naming haworthia blindfolded by leaf texture?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Tara"
+        },
+        {
+          "text": "smoke karta hoon regularly",
+          "label": "supported",
+          "fact": "lifestyle: smoking: regularly",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "my roommate tried to repot a cactus with oven mitts and yelled ‘i’m not a desert! ’ when a spine got him",
+          "label": "supported",
+          "fact": "story: roommate yelled while repotting cactus with oven mitts",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "running karta hoon!",
+          "label": "supported",
+          "fact": "likes: running",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "long term yaar, kisi ke saath chai peene tak",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "i love identifying indie songs from drum intros",
+          "label": "supported",
+          "fact": "likes: identifying indie bands by drum patterns",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "not sure about haworthia types",
+          "label": "supported",
+          "fact": "Honest uncertainty counts as supported",
+          "speaker": "Sameer"
+        },
+        {
+          "text": "kal ka early start acchi vibes (aur decent coffee) ke saath ho",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        },
+        {
+          "text": "mere plants ke sapne dekhna jo mere haath se nahi marte",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Sameer"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "no",
+        "yes"
+      ]
+    },
+    {
+      "pair": "m1",
+      "claims": [
+        {
+          "text": "I’m a product designer who loves cooking and dal chawal",
+          "label": "supported",
+          "fact": "background: works as: product designer; likes: cooking; opinion: dal chawal is the best comfort food on earth",
+          "speaker": "Meera"
+        },
+        {
+          "text": "I don't smoke either",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Meera"
+        },
+        {
+          "text": "Backend engineering ka kaam chalta raha, cooking ke saath thoda balance lagaya.",
+          "label": "supported",
+          "fact": "background: works as: backend engineer",
+          "speaker": "Arjun"
+        },
+        {
+          "text": "Long-term connection dhoond raha hoon yaar.",
+          "label": "supported",
+          "fact": "goal: looking for: long-term",
+          "speaker": "Arjun"
+        },
+        {
+          "text": "Main kabhi smoke nahi karta, tum?",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Arjun"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "agree",
+        "agree",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "yes",
+        "yes"
+      ]
+    },
+    {
+      "pair": "m2",
+      "claims": [
+        {
+          "text": "Garba at dawn?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Beaches nice 😊 Tame future ma kids chhe vochanu?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Yes I want kids someday 😊",
+          "label": "supported",
+          "fact": "goal: wants children: yes",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Kem chhe long term dhundi rhe chhe?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Majama, future ma Ahmedabad ma rahiye chhu, garba ane undhiyu no maza lejvanu.",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: this city",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Tame kem chhe?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Parth"
+        },
+        {
+          "text": "Majama, Ahmedabad ma rahiye chhu.",
+          "label": "supported",
+          "fact": "goal: living in 3-5 years: this city",
+          "speaker": "Parth"
+        },
+        {
+          "text": "Majama, I never smoke.",
+          "label": "supported",
+          "fact": "lifestyle: smoking: never",
+          "speaker": "Parth"
+        },
+        {
+          "text": "garba at dawn sounds like the perfect start to a sunday 😊",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure about garba but i do like relaxed beaches ever been to any nice ones",
+          "label": "supported",
+          "fact": "likes: relaxed beaches",
+          "speaker": "Ira"
+        },
+        {
+          "text": "open to kids someday you?",
+          "label": "supported",
+          "fact": "goal: wants children: open",
+          "speaker": "Ira"
+        },
+        {
+          "text": "kids yes 😊 where do you see yourself living in a few years",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "not sure where i see myself but ahmedabad sounds interesting how about you",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "cool 😅 you smoke?",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        },
+        {
+          "text": "cool thanks for sharing!!",
+          "label": "unsupported",
+          "fact": null,
+          "speaker": "Ira"
+        }
+      ],
+      "labels": [
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral",
+        "neutral"
+      ],
+      "decisions": [
+        "yes",
+        "unsure"
+      ]
+    }
+  ]
+}

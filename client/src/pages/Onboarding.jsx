@@ -305,7 +305,8 @@ export default function Onboarding() {
     setSubmitting(true)
     setError(null)
     try {
-      await api.post('/api/onboarding/submit', { answers })
+      const { data } = await api.post('/api/onboarding/submit', { answers })
+      if (data.status === 'done') return onDone() // plan 30 S1: phase 1 is ready at once; stories keep loading in the background
       setProcessing(true)
     } catch (err) {
       setError(errMsg(err))

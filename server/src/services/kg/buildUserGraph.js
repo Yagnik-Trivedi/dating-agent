@@ -20,7 +20,7 @@ import { buildGate } from '../match/gate.js';
 import * as describeStyle from '../prompts/describeStyle.js';
 import * as findContradictions from '../prompts/findContradictions.js';
 import * as tagLanguage from '../prompts/tagLanguage.js';
-import { resolveConcept } from './canonicalize.js';
+import { lookupConcept, resolveConcepts } from './canonicalize.js';
 import { pruneToCap } from './caps.js';
 import { KG } from './config.js';
 import { extractFacts } from './extractFacts.js';
@@ -31,7 +31,7 @@ import { QUESTIONS } from './questions.js';
 import { questionnaireFacts } from './questionnaireFacts.js';
 import { applyCorrections, computeVoiceProfile } from './voiceProfile.js';
 
-const LLM_CONCURRENCY = 2; // gentle on the provider's rate limit
+const LLM_CONCURRENCY = 4; // stories in parallel (plan 30 S1); the global RPM limiter still applies
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
 const LIFESTYLE_CHECKED = ['smoking', 'drinking', 'diet'];
 const EVIDENCE = {
@@ -45,12 +45,12 @@ const tagSchema = z.object({ tags: z.array(z.object({ i: z.coerce.number(), lang
 const contraSchema = z.object({ contradictions: z.array(z.object({ attribute: z.string(), fact: z.coerce.number(), why: z.string().catch('') })).catch([]) });
 const styleSchema = z.object({ description: z.string().catch(''), doList: z.array(z.string()).catch([]), dontList: z.array(z.string()).catch([]) });
 
-/** Section E answers → voice samples tagged with language (LLM, code fallback). */
-async function onboardingSamples(answers, userId) {
+/** Section E answers → voice samples tagged with language (LLM, code fallback; code only with llm=false). */
+async function onboardingSamples(answers, userId, { llm = true } = {}) {
   const items = section('E').items.filter((q) => String(answers.E?.[q.id] ?? '').trim());
   const texts = items.map((q) => String(answers.E[q.id]).trim());
   if (!texts.length) return [];
-  const tags = (await chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema: tagSchema, purpose: 'voice-language-tags', userId,
+  const tags = !llm ? [] : (await chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema: tagSchema, purpose: 'voice-language-tags', userId,
     messages: tagLanguage.build({ texts }) }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return { tags: [] }; })).tags;
   return items.map((q, i) => {
     const t = tags.find((x) => x.i === i + 1);
@@ -76,31 +76,56 @@ function styleProfileV1(v) {
   };
 }
 
-/** → { facts, dropped } for the user; throws on failure (the job marks onboarding failed; the old graph is untouched). */
-export async function buildUserGraph(userId, { failBeforeCommit = false } = {}) { // failBeforeCommit: checks only
+const NO_STYLE = { description: '', doList: [], dontList: [] };
+
+/**
+ * → { facts, dropped } for the user; throws on failure (the job marks onboarding failed; the old graph is untouched).
+ * Plan 30 S1, two phases: `quick` (inside the submit request, no model calls) commits the questionnaire facts, voice
+ * metrics and the gate, so the app is usable at once (graphStatus 'building'); the full build (a job) adds the stories,
+ * concepts, checks and style, then sets graphStatus 'ready'. Both end in the same single swap transaction.
+ */
+export async function buildUserGraph(userId, { quick = false, failBeforeCommit = false } = {}) { // failBeforeCommit: checks only
   const user = await User.findById(userId);
   const answers = user?.onboarding?.answers ?? {};
   const buildId = randomUUID();
-  const stories = section('C').items.filter((q) => String(answers.C?.[q.id] ?? '').trim());
+  const stories = quick ? [] : section('C').items.filter((q) => String(answers.C?.[q.id] ?? '').trim());
+  const progress = (step, done, total) => { if (!quick) emitToUser(userId, 'onboarding:progress', { step, done, total }); };
 
-  // 1–3. Deterministic facts + story extraction (verbatim + support checks, sensitivity) + voice samples.
-  const [extracted, samples] = await Promise.all([
-    mapLimit(stories, LLM_CONCURRENCY, (q) => extractFacts({
+  // 1–3. Deterministic facts + story extraction (verbatim + support checks, sensitivity) + voice samples. The voice
+  // style description runs alongside the stories (it needs only the samples).
+  const othersP = VoiceSample.find({ userId, source: { $ne: 'onboarding' } }).lean();
+  const voiceP = onboardingSamples(answers, userId, { llm: !quick }).then(async (samples) => {
+    const now = Date.now();
+    const recency = (s) => 0.5 ** ((now - new Date(s.createdAt ?? now)) / (90 * 86_400_000)); // 90-day half-life
+    const voice = computeVoiceProfile([...samples, ...await othersP].map((s) => ({ ...s, weight: recency(s) })));
+    const style = quick ? NO_STYLE : await chatJSON({ tier: 'mid', reasoning: false, schema: styleSchema, purpose: 'onboarding-style', userId,
+      messages: describeStyle.build({ samples: samples.map((s) => ({ incoming: s.incoming ?? '(they start a new message)', reply: s.text })), metrics: { wordCounts: voice.wordCounts, emojiPerMessage: voice.emojiPerMessage, laughForms: voice.laughForms, language: voice.language } }),
+    }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return NO_STYLE; });
+    return { samples, voice, style };
+  });
+  let storiesDone = 0;
+  progress('stories', 0, stories.length);
+  const extracted = await mapLimit(stories, LLM_CONCURRENCY, async (q) => {
+    // A story that fails is skipped (logged), not the whole build: "teach your agent more" can add it later.
+    const r = await extractFacts({
       question: q.text, answer: answers.C[q.id], userId, source: 'questionnaire_story', sourceRef: { kind: 'answer', id: `C.${q.id}` }, purpose: 'onboarding-story-facts',
-    })),
-    onboardingSamples(answers, userId),
-  ]);
+    }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; console.error(`onboarding ${userId}: story C.${q.id} skipped: ${err.message}`); return { facts: [], dropped: 0, story: null }; });
+    progress('stories', ++storiesDone, stories.length);
+    return r;
+  });
   const dropped = extracted.reduce((s, e) => s + e.dropped, 0);
   const storyFacts = extracted.flatMap((e) => e.facts);
   const all = [...questionnaireFacts(answers), ...storyFacts, ...extracted.map((e) => e.story).filter(Boolean)];
 
-  // 4. Concepts (dictionary only), sequential per text so aliases added by one resolution help the next.
-  const conceptOf = new Map();
-  for (const f of all.filter((x) => x.conceptText)) {
-    const key = `${f.conceptType}|${f.conceptText}`;
-    if (!conceptOf.has(key)) conceptOf.set(key, (await resolveConcept({ text: f.conceptText, type: f.conceptType, userId })).conceptId);
-    f.conceptId = conceptOf.get(key);
-  }
+  // 4. Concepts (dictionary only). Quick: exact/alias lookups only. Full: one batched pass (one embedding call, one
+  // tie-break call for the ambiguous band).
+  progress('concepts', 0, 1);
+  const withConcept = all.filter((x) => x.conceptText);
+  const conceptOf = quick
+    ? new Map(await Promise.all(withConcept.map(async (f) => [`${f.conceptType}|${f.conceptText}`, (await lookupConcept(f.conceptText))?.id ?? null])))
+    : await resolveConcepts(withConcept.map((f) => ({ text: f.conceptText, type: f.conceptType })), { userId });
+  for (const f of withConcept) f.conceptId = conceptOf.get(`${f.conceptType}|${f.conceptText}`) ?? null;
+  progress('concepts', 1, 1);
 
   // 5. Merge by factKey (dedupe across sections); opposite polarity → CONTRADICTS.
   const { facts: merged, contradictions } = mergeFacts(all.map(({ conceptText, conceptType, ...f }) => f));
@@ -108,7 +133,7 @@ export async function buildUserGraph(userId, { failBeforeCommit = false } = {}) 
   // 6. Contradictions between B lifestyle answers and stories (one batched LLM call).
   const bFacts = merged.filter((f) => LIFESTYLE_CHECKED.includes(f.attribute));
   const storyMerged = merged.filter((f) => f.source === 'questionnaire_story' && f.predicate !== 'story');
-  if (bFacts.length && storyMerged.length) {
+  if (!quick && bFacts.length && storyMerged.length) {
     const out = await chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema: contraSchema, purpose: 'onboarding-contradictions', userId,
       messages: findContradictions.build({ answers: bFacts.map((f) => ({ attribute: f.attribute, label: f.object })), facts: storyMerged.map((f) => ({ ...f, quote: f.evidence?.[0]?.quote ?? '' })) }),
     }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return { contradictions: [] }; });
@@ -129,19 +154,14 @@ export async function buildUserGraph(userId, { failBeforeCommit = false } = {}) 
   ]);
   const plan = planResubmit({ merged, existing, tombstones });
 
-  // 8. Embed only facts with no concept (stories, odd free text).
-  const needVector = plan.inserts.filter((f) => !f.conceptId);
+  // 8. Embed only facts with no concept (stories, odd free text). Quick: none (phase 2 embeds them).
+  const needVector = quick ? [] : plan.inserts.filter((f) => !f.conceptId);
   const vectors = needVector.length ? await embed(needVector.map(factText), { purpose: 'onboarding-embed', userId }) : [];
   needVector.forEach((f, i) => { f.embedding = vectors[i]; f.embeddingModel = embeddingModel(); });
 
-  // 9. Voice profile from all of the user's samples (the new onboarding ones replace the old ones).
-  const others = await VoiceSample.find({ userId, source: { $ne: 'onboarding' } }).lean();
-  const now = Date.now();
-  const recency = (s) => 0.5 ** ((now - new Date(s.createdAt ?? now)) / (90 * 86_400_000)); // 90-day half-life
-  const voice = computeVoiceProfile([...samples, ...others].map((s) => ({ ...s, weight: recency(s) })));
-  const style = await chatJSON({ tier: 'mid', reasoning: false, schema: styleSchema, purpose: 'onboarding-style', userId,
-    messages: describeStyle.build({ samples: samples.map((s) => ({ incoming: s.incoming ?? '(they start a new message)', reply: s.text })), metrics: { wordCounts: voice.wordCounts, emojiPerMessage: voice.emojiPerMessage, laughForms: voice.laughForms, language: voice.language } }),
-  }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return { description: '', doList: [], dontList: [] }; });
+  // 9. Voice profile from all of the user's samples (the new onboarding ones replace the old ones) + its description.
+  const { samples, voice, style } = await voiceP;
+  progress('saving', 0, 1);
 
   // The swap: one transaction.
   const keyToId = new Map(plan.keyToId);
@@ -184,7 +204,7 @@ export async function buildUserGraph(userId, { failBeforeCommit = false } = {}) 
       protect: (d) => d.userEdited || PROTECTED_SOURCES.has(d.source) || d.isDealbreaker || d.predicate === 'trait',
     });
     await User.updateOne({ _id: userId }, {
-      $set: { styleProfile: styleProfileV1(profile), 'onboarding.status': 'done', 'onboarding.completedAt': new Date() },
+      $set: { styleProfile: styleProfileV1(profile), 'onboarding.status': 'done', 'onboarding.completedAt': new Date(), graphStatus: quick ? 'building' : 'ready', ...(!quick && { graphReadyAt: new Date() }) },
       $inc: { graphVersion: 1 },
     }, { session });
     if (failBeforeCommit) throw new Error('injected failure before commit');
@@ -201,11 +221,13 @@ export async function runUserGraphBuild({ userId }) {
   try {
     const { facts, dropped, edges, samples } = await buildUserGraph(userId);
     console.log(`onboarding ${userId}: ${facts} facts, ${edges} edges, ${samples} voice samples (${dropped} unsupported/unquoted dropped)`);
-    emitToUser(userId, 'onboarding:done', { status: 'done' });
+    emitToUser(userId, 'onboarding:done', { status: 'done', graphStatus: 'ready' });
   } catch (err) {
     if (err.name === 'BudgetExceededError') throw err; // re-queued by the worker, onboarding stays "processing"
     console.error(`onboarding ${userId} failed: ${err.message}`);
-    await User.updateOne({ _id: userId }, { $set: { 'onboarding.status': 'failed' } });
-    emitToUser(userId, 'onboarding:done', { status: 'failed' });
+    // After a phase-1 build the app stays usable: only the graph is marked failed (agents use the phase-1 facts).
+    const phase1 = await User.exists({ _id: userId, 'onboarding.status': 'done', graphStatus: 'building' });
+    await User.updateOne({ _id: userId }, { $set: phase1 ? { graphStatus: 'failed' } : { 'onboarding.status': 'failed' } });
+    emitToUser(userId, 'onboarding:done', { status: phase1 ? 'done' : 'failed', graphStatus: 'failed' });
   }
 }
