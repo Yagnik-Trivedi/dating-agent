@@ -13,6 +13,7 @@ import { chatJSON } from '../llm/client.js';
 import * as matchBrief from '../prompts/matchBrief.js';
 import { selfClaimSentences } from '../persona/checks.js';
 import { publicProfile } from '../trust/checkProfile.js';
+import { debug } from '../../utils/log.js';
 
 const AGENDA_SIZE = 8;
 const CLARIFY_PRIORITY = 0.6;
@@ -97,7 +98,7 @@ export const buildBrief = ({ viewerId, subjectId, matchId, trust, viewerName }) 
     });
     // Models sometimes paste a fact id into the text ("… lately? F4"): strip it before validating.
     const cleaned = out.openers.map((o) => ({ ...o, text: o.text.replace(/\s*\[?\bF\d+\b\]?/g, '').trim() }));
-    const openers = validOpeners(cleaned, new Set(factIds.keys()), console.warn).map((o) => ({ text: o.text, hook: o.hook, usedFactIds: o.factIds.map((id) => factIds.get(id)) }));
+    const openers = validOpeners(cleaned, new Set(factIds.keys()), debug).map((o) => ({ text: o.text, hook: o.hook, usedFactIds: o.factIds.map((id) => factIds.get(id)) }));
     written = { summary: out.summary, openers, watchouts: out.watchouts.slice(0, 3) };
   } catch (err) {
     if (err.name === 'BudgetExceededError') throw err;

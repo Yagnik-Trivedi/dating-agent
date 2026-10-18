@@ -52,7 +52,9 @@ const schema = z.object({
   AGENT_MIN_DELAY_MS: field(z.coerce.number().int().nonnegative().default(1500)),
   AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
-  DEMO_FAST: bool(false),
+  LOG_LEVEL: field(z.enum(['info', 'debug']).default(process.env.NODE_ENV === 'production' ? 'info' : 'debug')),
+  DEMO_PACING: field(z.enum(['normal', 'fast']).default('normal')), // fast: 0.3–2 s typing delays for seed + judge accounts only (plan 12 §7)
+  JUDGE_LIVE_CHATS_PER_DAY: field(z.coerce.number().int().positive().default(2)), // new agent chats per non-seed user per UTC day (plan 12 §7)
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
 });

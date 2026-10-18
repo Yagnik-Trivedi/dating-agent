@@ -3,6 +3,7 @@
 import { InboxItem } from '../../models/InboxItem.js';
 import { emitToUser } from '../../sockets/io.js';
 import { KG } from '../kg/config.js';
+import { debug } from '../../utils/log.js';
 
 /** item: { question, topicKey, topicLabel } → { action: 'created' | 'merged' | 'duplicate' | 'capped', item? } */
 export async function fileQuestion(userId, matchId, item, { askedBy = null, emit = emitToUser } = {}) {
@@ -17,7 +18,7 @@ export async function fileQuestion(userId, matchId, item, { askedBy = null, emit
     return { action: 'duplicate' };
   }
   if (await InboxItem.countDocuments({ userId, matchId }) >= KG.MAX_INBOX_PER_CONVERSATION) {
-    console.warn(`inbox ${userId}/${matchId}: cap reached, not filing "${item.question}"`);
+    debug(`inbox ${userId}/${matchId}: cap reached, not filing "${item.question}"`);
     return { action: 'capped' };
   }
   const created = await InboxItem.create({ userId, matchId, question: item.question, topicKey: item.topicKey ?? null, topicLabel: item.topicLabel ?? null });

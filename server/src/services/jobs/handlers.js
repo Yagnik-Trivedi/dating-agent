@@ -9,12 +9,13 @@ import { runJudge } from '../conversation/judge.js';
 import { runUserGraphBuild } from '../kg/buildUserGraph.js';
 import { conceptCleanup, rebuildVoice, reconfirm, reflect } from '../kg/learning.js';
 import { createMatch } from '../matches.js';
-import { runMatchCreated } from '../pipeline/index.js';
+import { runMatchCreated, runScheduledChat } from '../pipeline/index.js';
 import { archiveNotes } from './archive.js';
 import { registerJob } from './queue.js';
 
 registerJob('buildUserGraph', runUserGraphBuild);
 registerJob('matchCreated', runMatchCreated);
+registerJob('startChat', runScheduledChat); // credit guard: a match over the daily live-chat cap starts the next day
 registerJob('agentTurn', runAgentTurn);
 registerJob('evaluate', async ({ matchId, reason }) => {
   const match = await Match.findById(matchId);

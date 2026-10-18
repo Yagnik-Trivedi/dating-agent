@@ -24,6 +24,7 @@ import { generate } from './generate.js';
 import { updateInterest } from './interest.js';
 import { perceiveObserve } from './perceive.js';
 import { MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { debug } from '../../utils/log.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest answer (consent covers AI handling).
 export const AI_QUESTION = /\b(are|r)\s+(you|u)\s+(an?\s+)?(bot|ai|robot|real|human|chatgpt|gpt)\b|talking\s+to\s+(an?\s+)?(bot|ai|robot|machine|chatgpt|real\s+person|human)\b|\b(is\s+this|this\s+is)\s+(an?\s+)?(bot|ai|chatgpt|real\s+person|human)\b|\b(bot|chatgpt|automated)\b[^.!]*\?/i;
@@ -171,7 +172,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     attempts.push({ draft, ...c });
     if (!c.problems.length) break;
     warning = c.problems.join(' ');
-    console.warn(`agent ${match._id}: draft rejected: ${warning}`);
+    debug(`agent ${match._id}: draft rejected: ${warning}`);
   }
   // A clean draft wins; otherwise the one that keeps the most words once failing sentences are dropped (eval: picking
   // by fewest problems often left nothing, and the fixed fallback read as low effort to the judges).
