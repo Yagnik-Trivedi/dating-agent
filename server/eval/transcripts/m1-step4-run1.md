@@ -1,56 +1,51 @@
 # m1 (run 1): Meera × Arjun
 
-Expected **maybe**, predicted **incompatible**. Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style.
+Expected **maybe**, predicted **compatible**. Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style.
 
-Stop: dealbreaker · 18 messages · 84735 tokens · 1059 s
+Stop: natural · 17 messages · 75008 tokens · 865 s
 
-### Meera's judge: no → incompatible (confidence 0.9, nvidia/nemotron-3-ultra-550b-a55b)
-Arjun doesn't smoke and enjoys mild treks, which aligns with your lifestyle. However, he explicitly says he's new to long-term relationships and still figuring out what he wants, while you're looking for a committed long-term connection.
+### Meera's judge: yes → compatible (confidence 0.7, nvidia/nemotron-3-ultra-550b-a55b)
+Arjun shares your love for board games and is looking for a long-term relationship, which matches your goal. He doesn't smoke and values clean living, though he didn't share where he sees himself in a few years when asked.
 
-- ✓ "smoking nahi karta": Arjun confirms he doesn't smoke, which matches your dealbreaker.
-- ✓ "Haan yaar trekking bohot mild se hoon par kabhi koi choti walk try karta hoon": You both enjoy trekking, even if he keeps it mild.
-- ✓ "slow connections dhoond raha hoon yaha": He says he's looking for slow connections, showing some intentionality.
-- ⚠ "still new to long-term yaar just seeing how things go": He directly says he's new to long-term and just seeing how things go, while you need a long-term commitment.
-- ⚠ "Haan still figuring out yaar what I'm looking for here": He repeats he's still figuring out what he wants, which clashes with your clarity on long-term.
-- ⚠ "Haha still figuring that out yaar, just taking it slow.": When asked what he's hoping to find, he says he's still figuring it out and taking it slow.
-- ⚠ "Haha not sure yet yaar, still exploring games": He dodges your question about board games instead of sharing a preference.
-- ⚠ "Haan not sure yaar what made me smile lately, just enjoying small moments these days how about you?": He deflects the personal question about what made him smile.
-- ⛔ smoking: "smoking nahi karta"
-- ⛔ looking_for: "still new to long-term yaar just seeing how things go"
+- ✓ "Haan yaar, board games se pyaar hai. Catan aur Ticket to Ride favorites hain": You both love board games, a shared interest you enjoy.
+- ✓ "Haan yaar, looking for something real long-term and maybe kids someday too": They want a long-term relationship and are open to kids, matching your goals.
+- ✓ "No smoking yaar, never do": They never smoke, aligning with your dealbreaker.
+- ✓ "Long-term means building something steady, growing together. That reminds me of how I remember chai orders after hearing them once 😴 What does it mean to you?": They shared a thoughtful view on long-term and a personal habit, showing warmth.
+- ⚠ "Haan yaar, clean living ke saath aage badhna hai. Aap smoke karti ho ya nahi?": They didn't answer where they see themselves in a few years, instead asking you about smoking.
+- ⛔ smoking: "No smoking yaar, never do"
+- ⛔ looking_for: "looking for something real long-term"
 ### Arjun's judge: yes → compatible (confidence 0.7, nvidia/nemotron-3-ultra-550b-a55b)
-You shared laughs over board games and mild treks, and both prefer taking it slow. Meera didn't answer your question about family involvement and ended the conversation when you said you're still figuring out long-term.
+Meera showed genuine curiosity about your board game interests and shares your non-smoking lifestyle. However, she's still figuring out what she wants long-term, which differs from your clear goal of a serious relationship and children.
 
-- ✓ "haha board game nights over clubbing? same here!": You both enjoy board game nights over clubbing.
-- ✓ "haha exploring games is fun!": You laughed together while exploring games.
-- ✓ "haha totally get that, taking it slow is nice.": They showed warmth and agreed on taking it slow.
-- ✓ "no worries me neither": You both don't smoke.
-- ✓ "haha nice! mild treks sound fun 😅": You both enjoy mild treks.
-- ✓ "i know what I want — a long-term connection": They are looking for a long-term connection like you.
-- ⚠ "haha not sure yet 😅 what are you hoping to find on here?": They dodged your question about what games they like.
-- ⚠ "not sure about small moments honestly. Do you smoke?": They avoided sharing a small moment and asked about smoking instead.
-- ⚠ "i know what I want — a long-term connection": They didn't answer your question about family's role in relationships.
-- ⚠ "take care and hope you find what you're looking for 😊": They ended the conversation after you said you're still new to long-term.
+- ✓ "hi i saw you like board games what’s your favorite": You both like board games and she asked about your favorite.
+- ✓ "i havent tried catan or ticket to ride but im curious about them": She's curious about your favorite games even though she hasn't played them.
+- ✓ "haha sounds fun! 🍍 what are you hoping to find here?": You laughed together and she asked about your intentions.
+- ✓ "no worries totally get it 😄": She responded warmly to your non-smoking lifestyle.
+- ✓ "clean living sounds good where do you see yourself in a few years": She liked your clean lifestyle and asked about your future plans.
+- ✓ "no i dont smoke": She doesn't smoke either, aligning with your lifestyle.
+- ⚠ "honestly im still figuring that out too, what does long-term mean to you?": She's still figuring out long-term goals while you're clear about wanting long-term and kids.
+- ⚠ "honestly not sure yet 🍍 but do you smoke?": She didn't clarify what long-term means to her, just said not sure and changed topic.
+- ⚠ "hope you find what you're looking for ☀️": The chat ended with a generic well-wish rather than continued engagement.
 
 ## Transcript
 
-1. **Meera** (agent): haha board game nights over clubbing? same here! what’s your go-to game when you’re hosting? 🎲
-2. **Arjun** (agent): Haha not sure yet yaar, still exploring games
-3. **Meera** (agent): haha exploring games is fun!
-4. **Arjun** (agent): Haan exploring games sounds cool yaar, what kind do you like?
-5. **Meera** (agent): haha not sure yet 😅 what are you hoping to find on here?
-6. **Arjun** (agent): Haha still figuring that out yaar, just taking it slow.
-7. **Meera** (agent): haha totally get that, taking it slow is nice. what’s something small that’s made you smile recently?
-8. **Arjun** (agent): Haan not sure yaar what made me smile lately, just enjoying small moments these days how about you?
-9. **Meera** (agent): not sure about small moments honestly. Do you smoke?
-10. **Arjun** (agent): Haan slow connections dhoond raha hoon yaha, smoking nahi karta
-11. **Meera** (agent): no worries me neither do you like trekking
-12. **Arjun** (agent): Haan yaar trekking bohot mild se hoon par kabhi koi choti walk try karta hoon
-13. **Meera** (agent): haha nice! mild treks sound fun 😅 what are you hoping to find on here?
-14. **Arjun** (agent): Haan still figuring out yaar what I'm looking for here, family ka kya role hai relationships me?
-15. **Meera** (agent): i know what I want — a long-term connection
-16. **Arjun** (agent): still new to long-term yaar just seeing how things go
-17. **Meera** (agent): take care and hope you find what you're looking for 😊
-18. **Meera** (agent): hey! really enjoyed our chat! i don't think we're quite on the same page, but wishing you the best 🙂 haha
+1. **Meera** (agent): hi i saw you like board games what’s your favorite
+2. **Arjun** (agent): Haan yaar, board games se pyaar hai. Catan aur Ticket to Ride favorites hain
+3. **Meera** (agent): i havent tried catan or ticket to ride but im curious about them
+4. **Arjun** (agent): Catan ka setup dekhna mazaak lagta hai, Ticket to Ride ka map dekh ke excited hoon
+5. **Meera** (agent): haha sounds fun! 🍍 what are you hoping to find here?
+6. **Arjun** (agent): Haan yaar, looking for something real long-term and maybe kids someday too
+7. **Meera** (agent): honestly im still figuring that out too, what does long-term mean to you?
+8. **Arjun** (agent): Long-term means building something steady, growing together. That reminds me of how I remember chai orders after hearing them once 😴 What does it mean to you?
+9. **Meera** (agent): honestly not sure yet 🍍 but do you smoke?
+10. **Arjun** (agent): No smoking yaar, never do
+11. **Meera** (agent): no worries totally get it 😄
+12. **Arjun** (agent): Haan yaar, smoking kabhi nahi kiya. Clean lifestyle hai mera
+13. **Meera** (agent): clean living sounds good where do you see yourself in a few years
+14. **Arjun** (agent): Haan yaar, clean living ke saath aage badhna hai. Aap smoke karti ho ya nahi?
+15. **Meera** (agent): no i dont smoke
+16. **Arjun** (agent): Arre yaar, that’s great to hear. Clean habits make life simpler, no?
+17. **Meera** (agent): hope you find what you're looking for ☀️
 
 ## Trust
 

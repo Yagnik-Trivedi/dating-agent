@@ -63,29 +63,29 @@
     "id": "m1",
     "run": 1,
     "expected": "maybe",
-    "predicted": "incompatible",
+    "predicted": "compatible",
     "reason": "Shared trekking and cooking, both long-term; differ on where to live, career pace and conflict style",
     "names": [
       "Meera",
       "Arjun"
     ],
     "verdicts": [
-      "incompatible",
+      "compatible",
       "compatible"
     ],
     "scores": [
-      0.9,
+      0.7,
       0.7
     ],
-    "stopReason": "dealbreaker",
-    "status": "closed",
-    "turns": 18,
-    "tokens": 84735,
+    "stopReason": "natural",
+    "status": "compatible",
+    "turns": 17,
+    "tokens": 75008,
     "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 1059,
+    "seconds": 865,
     "file": "transcripts/m1-step4-run1.md",
-    "agentMsgs": 18,
+    "agentMsgs": 17,
     "templateFallbacks": 0,
     "constrained": 0
   },
@@ -93,30 +93,30 @@
     "id": "i5",
     "run": 1,
     "expected": "incompatible",
-    "predicted": "none (agent_chatting)",
+    "predicted": "incompatible",
     "reason": "Gauri needs a non-drinker (dealbreaker); Arnav brews beer and drinks regularly (hidden from his tags)",
     "names": [
       "Gauri",
       "Arnav"
     ],
     "verdicts": [
-      null,
-      null
+      "incompatible",
+      "compatible"
     ],
     "scores": [
-      null,
-      null
+      0.8,
+      0.7
     ],
-    "stopReason": null,
-    "status": "agent_chatting",
-    "turns": 14,
-    "tokens": 152566,
-    "smartCalls": 0,
+    "stopReason": "natural",
+    "status": "closed",
+    "turns": 18,
+    "tokens": 119026,
+    "smartCalls": 2,
     "costUsd": 0,
-    "seconds": 2703,
+    "seconds": 1587,
     "file": "transcripts/i5-step4-run1.md",
-    "agentMsgs": 14,
-    "templateFallbacks": 1,
-    "constrained": 0
+    "agentMsgs": 18,
+    "templateFallbacks": 3,
+    "constrained": 1
   }
 }
