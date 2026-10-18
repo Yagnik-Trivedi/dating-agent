@@ -2,7 +2,6 @@
 // 10 px buttons (never pills), 6 px chips, the design's segmented control, calm states, no alarm red.
 import { useEffect, useId, useRef } from 'react'
 import { PenLine, X } from 'lucide-react'
-import { stateLine } from '../pages/Matches'
 
 const cx = (...c) => c.filter(Boolean).join(' ')
 const KIND = { primary: 'primary', agent: 'primary', secondary: 'secondary', ghost: 'secondary', danger: 'primary danger' }
@@ -45,16 +44,6 @@ export function ErrorBox({ message, onRetry }) {
     <div role="alert" className="form-error ui-error">
       <p>{message}</p>
       {onRetry && <button className="link-btn" onClick={onRetry}>Try again</button>}
-    </div>
-  )
-}
-
-export function EmptyState({ title, children, action }) {
-  return (
-    <div className="st-center ui-empty">
-      <h2 className="t-h2">{title}</h2>
-      {children && <p className="t-body muted">{children}</p>}
-      {action}
     </div>
   )
 }
@@ -112,15 +101,6 @@ export function Modal({ open, onClose, title, children }) {
   )
 }
 
-const TONES = { agent: 'trust', accent: 'shared', good: 'trust', warn: 'shared', bad: 'flag', muted: '' }
-export function Badge({ tone = 'muted', size = 'sm', children, className }) {
-  return <span className={cx('pip', TONES[tone], size === 'lg' && 'pip-lg', className)}>{children}</span>
-}
-
-export function StatusBadge({ status, agentActive }) {
-  return <Badge tone="agent">{stateLine({ status, agentActive })}</Badge>
-}
-
 /** The agent's mark: the design's pen (drafted by your agent). */
 export function AgentIcon({ className = '' }) {
   return <PenLine className={cx('ui-agent', className)} size={18} strokeWidth={1.6} aria-hidden="true" />
@@ -138,8 +118,4 @@ export function ProgressBar({ value, tone = 'accent', label }) {
       <div className={tone === 'agent' || tone === 'good' ? 'trust' : ''} style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }} />
     </div>
   )
-}
-
-export function TypingDots() {
-  return <span className="typing" aria-hidden="true"><i /><i /><i /></span>
 }

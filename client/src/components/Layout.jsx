@@ -23,7 +23,7 @@ export default function Layout() {
   const { user, system } = useAuth()
   const mobile = useMobile()
   const narrow = useMobile(1100)
-  const fullScreen = narrow && /^\/matches\/[^/]+/.test(pathname) // below 1100 px the room and the verdict bring their own top bar
+  const fullScreen = narrow && /^\/matches\/[^/]+(\/report)?\/?$/.test(pathname) // below 1100 px the room and the verdict bring their own top bar
 
   useSocketEvent('match:new', ({ match }) => toast(`You and ${match.other.name} liked each other. Your agent is reading their profile…`, { to: `/matches/${match._id}`, agent: true }))
   useSocketEvent('inbox:new', () => { if (!pathname.startsWith('/inbox')) toast('Your agent has a question for you', { to: '/inbox', agent: true }) })

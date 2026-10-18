@@ -38,8 +38,8 @@ export default function Report() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(null)
 
-  const load = () => api.get(`/api/matches/${id}/report`).then(({ data: d }) => setData(d)).catch((err) => setError(errMsg(err)))
-  useEffect(() => { load() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const load = () => { setError(null); return api.get(`/api/matches/${id}/report`).then(({ data: d }) => setData(d)).catch((err) => setError(errMsg(err))) }
+  useEffect(() => { load() }, [id, match?.status]) // eslint-disable-line react-hooks/exhaustive-deps -- a waiting read reloads when the judges finish
   const lineOf = useMemo(() => new Map(messages.map((m, i) => [String(m._id), i + 1])), [messages])
 
   const report = data?.report

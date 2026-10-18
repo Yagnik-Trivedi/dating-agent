@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { Btn, EmptyNote, Thumb } from '../components/prelude'
+import { useAuth } from '../hooks/useAuth'
 import { useSocketEvent } from '../hooks/useSocket'
 import { api, errMsg } from '../lib/api'
 
@@ -30,13 +31,14 @@ const when = (d) => {
 }
 
 export default function Matches() {
+  const { user } = useAuth()
   const [matches, setMatches] = useState(null)
   const [error, setError] = useState(null)
   const load = () => api.get('/api/matches').then((r) => { setMatches(r.data.matches); setError(null) }).catch((e) => setError(errMsg(e)))
   useEffect(() => { load() }, [])
   useSocketEvent('match:new', ({ match }) => setMatches((m) => (m && !m.some((x) => x._id === match._id) ? [match, ...m] : m)))
   useSocketEvent('match:status', ({ matchId, status, agentActive }) => setMatches((m) => m?.map((x) => (String(x._id) === String(matchId) ? { ...x, status, agentActive } : x))))
-  useSocketEvent('message:new', ({ message }) => setMatches((m) => m?.map((x) => (String(x._id) === String(message.matchId) ? { ...x, lastMessage: message, lastMessageAt: message.createdAt, unread: (x.unread ?? 0) + 1 } : x))))
+  useSocketEvent('message:new', ({ message }) => setMatches((m) => m?.map((x) => (String(x._id) === String(message.matchId) ? { ...x, lastMessage: message, lastMessageAt: message.createdAt, unread: (x.unread ?? 0) + (String(message.senderId) === String(user?._id) ? 0 : 1) } : x))))
 
   return (
     <div className="page">

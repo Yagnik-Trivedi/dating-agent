@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { PenLine, ShieldCheck, ShieldAlert } from 'lucide-react'
 
-export const DUR = { fast: 0.2, base: 0.3, slow: 0.45 }
-export const EASE = [0.45, 0, 0.55, 1]
+const DUR = { fast: 0.2, base: 0.3, slow: 0.45 }
+const EASE = [0.45, 0, 0.55, 1]
 export const calm = { duration: DUR.base, ease: EASE }
 export const ICON = { size: 18, strokeWidth: 1.6 }
 
@@ -80,14 +80,12 @@ export function Stream({ text, animate = true }) {
 }
 
 /** Calm reveal: fades up 8 px (450 ms); sections follow 60 ms apart. */
-export function Reveal({ i = 0, children, className = '', as = 'div' }) {
+export function Reveal({ i = 0, children, className = '' }) {
   const rm = useReducedMotion()
-  const M = motion[as]
-  return <M className={className} initial={rm ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: DUR.slow, ease: EASE, delay: 0.15 + i * 0.06 }}>{children}</M>
+  return <motion.div className={className} initial={rm ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: DUR.slow, ease: EASE, delay: 0.15 + i * 0.06 }}>{children}</motion.div>
 }
 
 /** Loading skeleton, empty and error states (design: States.jsx). */
-export const Skeleton = ({ className = '' }) => <div className={`sk ${className}`} />
 export function EmptyNote({ title, children, action }) {
   return <div className="st-center"><h2 className="t-h2">{title}</h2>{children && <p className="t-body muted">{children}</p>}{action}</div>
 }
