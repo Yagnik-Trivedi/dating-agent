@@ -1,0 +1,62 @@
+# Render blueprint (plan 12): exactly ONE free web service. A second free service in the same workspace would use up
+# the 750 free hours/month and suspend both. Secrets are `sync: false`: fill them in the dashboard, never here.
+services:
+  - type: web
+    name: dating-agent-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: KEEPALIVE_SELF_PING
+        value: "true"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL # the Vercel URL; comma-separated for preview URLs
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      # LLM: Nebius Token Factory (plan 14). Model IDs from `node scripts/smoke.js`.
+      - key: LLM_PROVIDER
+        value: nebius
+      - key: NEBIUS_BASE_URL
+        value: https://api.tokenfactory.nebius.com/v1/
+      - key: NEBIUS_API_KEY
+        sync: false
+      - key: MODEL_FAST
+        sync: false
+      - key: MODEL_MID
+        sync: false
+      - key: MODEL_SMART
+        sync: false
+      - key: MODEL_EMBED
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      # Spending protection: per-model prices (USD per 1M tokens, "input,output") make the all-time cap work.
+      - key: LLM_PRICE_FAST
+        sync: false
+      - key: LLM_PRICE_MID
+        sync: false
+      - key: LLM_PRICE_SMART
+        sync: false
+      - key: LLM_PRICE_EMBED
+        sync: false
+      - key: LLM_HARD_CAP_USD
+        value: "35"
+      - key: LLM_DAILY_CALLS_PER_USER # credit guard for judging (seed accounts are exempt)
+        value: "150"
+      - key: JUDGE_LIVE_CHATS_PER_DAY
+        value: "2"
+      - key: DEMO_PACING # fast typing delays for seed + judge accounts only
+        value: fast

@@ -57,6 +57,8 @@ const schema = z.object({
   DEMO_PACING: field(z.enum(['normal', 'fast']).default('normal')), // fast: 0.3–2 s typing delays for seed + judge accounts only (plan 12 §7)
   JUDGE_LIVE_CHATS_PER_DAY: field(z.coerce.number().int().positive().default(2)), // new agent chats per non-seed user per UTC day (plan 12 §7)
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
+  KEEPALIVE_SELF_PING: bool(false), // Render: ping our own RENDER_EXTERNAL_URL/health so the free tier doesn't sleep (plan 12)
+  KEEPALIVE_INTERVAL_MIN: field(z.coerce.number().positive().default(10)),
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
 });
 
