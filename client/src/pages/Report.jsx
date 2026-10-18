@@ -45,6 +45,14 @@ export default function Report() {
   const report = data?.report
   if (error) return <div className="scr state err"><div className="st-center"><h2 className="t-h2">We couldn’t load your agent’s read</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div></div>
   if (!data || !match) return <Loading mobile={mobile} />
+  if (['flagged_fake', 'closed'].includes(data.status) && !report) return (
+    <div className={`scr verdict ${mobile ? 'm' : 'd'}`}><Reveal className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : 620 }}>
+      <p className="v-eyebrow flag"><Eye size={15} strokeWidth={1.7} aria-hidden="true" />Your agent’s read · only you can see this</p>
+      <h1 className="t-h1">{data.status === 'flagged_fake' ? 'Your agent thinks this profile is fake.' : 'This conversation is closed.'}</h1>
+      <p className="v-sub">{data.status === 'flagged_fake' ? (match.trust?.flags ?? []).join(' · ') || 'It stopped talking and nothing more will be sent.' : 'Nothing more will be sent.'}</p>
+      <div className="v-actions"><Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Back to matches</Btn></div>
+    </div></Reveal></div>
+  )
   if (!report) return <Loading mobile={mobile} waiting />
 
   const them = match.other.name
@@ -75,10 +83,10 @@ export default function Report() {
     <>
       <Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Okay, thank you</Btn>
       {!decided && <Btn kind="secondary" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Talk anyway</Btn>}
-      <Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}`}>Read the chat</Link>
+      <Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the chat</Link>
     </>
   ) : decided || handedOff ? (
-    <><Btn size="lg" block={mobile} onClick={() => navigate(`/matches/${id}`)}>{handedOff ? `Chat with ${them}` : 'Back to the chat'}</Btn><Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}`}>Read the whole chat</Link></>
+    <><Btn size="lg" block={mobile} onClick={() => navigate(`/matches/${id}`)}>{handedOff ? `Chat with ${them}` : 'Back to the chat'}</Btn><Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the whole chat</Link></>
   ) : verdict === 'maybe' ? (
     <>
       <Btn size="lg" block={mobile} onClick={more} loading={busy === 'extend'}>Let them talk a bit longer</Btn>
@@ -89,7 +97,7 @@ export default function Report() {
     <>
       <Btn size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Continue as myself</Btn>
       <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn>
-      {!mobile && <Link className="text-link push" to={`/matches/${id}`}>Read the whole chat</Link>}
+      {!mobile && <Link className="text-link push" to={`/matches/${id}/replay`}>Read the whole chat</Link>}
     </>
   )
 

@@ -10,8 +10,9 @@ import { Login, Signup } from './pages/Auth'
 import MatchRoom from './pages/MatchRoom'
 import Matches from './pages/Matches'
 import Onboarding from './pages/Onboarding'
-import OnboardingReview from './pages/OnboardingReview'
 import Profile from './pages/Profile'
+import Replay from './pages/Replay'
+import WakeUp from './components/WakeUp'
 import Report from './pages/Report'
 import Settings from './pages/Settings'
 import You from './pages/You'
@@ -34,6 +35,7 @@ function PublicOnly({ children }) {
 
 export default function App() {
   return (
+    <WakeUp>
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
@@ -43,11 +45,12 @@ export default function App() {
             <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
             <Route path="/onboarding" element={<Protected onboarding><Onboarding /></Protected>} />
             <Route element={<Protected><Layout /></Protected>}>
-              <Route path="/onboarding/review" element={<OnboardingReview />} />
+              <Route path="/onboarding/review" element={<You review />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/matches" element={<Matches />} />
               <Route path="/matches/:id" element={<MatchRoom />} />
               <Route path="/matches/:id/report" element={<Report />} />
+              <Route path="/matches/:id/replay" element={<Replay />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/you" element={<You />} />
               <Route path="/profile" element={<Profile />} />
@@ -58,5 +61,6 @@ export default function App() {
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
+    </WakeUp>
   )
 }

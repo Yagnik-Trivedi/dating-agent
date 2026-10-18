@@ -55,7 +55,7 @@ function Note({ n, line, open: o0 }) {
 }
 
 /** "I wouldn't say that": optional "how would you say it?", then a toast. */
-function WouldntSay({ messageId }) {
+export function WouldntSay({ messageId }) {
   const toast = useToast()
   const [open, setOpen] = useState(false)
   const [fix, setFix] = useState('')

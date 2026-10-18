@@ -2,7 +2,8 @@
 // the knowledge map: sector = area, distance from centre = how sure the agent is, dot size = how much it matters,
 // fill = who can see it. Facts can be edited, deleted (they never come back) and made public / if asked / private.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Check, Globe, Lock, MessageCircleQuestion, Pencil, Trash2, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Check, Globe, Lock, MessageCircleQuestion, Pencil, Trash2, X } from 'lucide-react'
 import { Btn, useMobile } from '../components/prelude'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
@@ -131,7 +132,7 @@ function HowYouText({ voice, onChanged }) {
   )
 }
 
-export default function You() {
+export default function You({ review = false }) {
   const mobile = useMobile()
   const [graph, setGraph] = useState(null)
   const [conflicts, setConflicts] = useState([])
@@ -163,6 +164,7 @@ export default function You() {
     <div className={`scr you page-you ${mobile ? 'm' : 'd'}`}>
       <header className="you-head"><div><h1 className="t-h1">This is you</h1>{!mobile && <p>Everything your agent knows about you, and who can see it. It learns only from your answers and from chats you approve. Change anything, any time.</p>}</div>
         <span className="t-data">{all.length} facts · {all.filter((f) => f.privacy === 'private').length} private</span></header>
+      {review && <div className="card you-review"><div><h2 className="t-h3">This is what your agent learned from your answers</h2><p className="small">Fix anything that’s off, mark things private, or delete them. Your agent only uses what’s here.</p></div><Link className="btn primary" to="/discover">Looks right, start meeting people<ArrowRight size={16} strokeWidth={1.6} /></Link></div>}
       {mobile && <div className="seg big" role="tablist"><button role="tab" className={view === 'map' ? 'on' : ''} aria-selected={view === 'map'} onClick={() => setView('map')}>Map</button><button role="tab" className={view === 'list' ? 'on' : ''} aria-selected={view === 'list'} onClick={() => setView('list')}>List</button></div>}
       <div className="you-grid">
         {(!mobile || view === 'map') && (
