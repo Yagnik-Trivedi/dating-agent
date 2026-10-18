@@ -79,7 +79,7 @@ export default function Profile() {
   }
 
   return (
-    <form onSubmit={save} className="mx-auto max-w-2xl space-y-5">
+    <form onSubmit={save} className="page profile-page space-y-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-semibold">Your profile</h1>
         <Button type="submit" loading={busy}>Save</Button>

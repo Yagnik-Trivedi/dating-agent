@@ -3,19 +3,22 @@ import Layout from './components/Layout'
 import { Loading } from './components/ui'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ToastProvider } from './hooks/useToast'
-import Discover from './pages/Discover'
-import Inbox from './pages/Inbox'
+import { lazy, Suspense } from 'react'
 import Landing from './pages/Landing'
 import { Login, Signup } from './pages/Auth'
-import MatchRoom from './pages/MatchRoom'
-import Matches from './pages/Matches'
-import Onboarding from './pages/Onboarding'
-import Profile from './pages/Profile'
-import Replay from './pages/Replay'
 import WakeUp from './components/WakeUp'
-import Report from './pages/Report'
-import Settings from './pages/Settings'
-import You from './pages/You'
+
+// The landing and auth pages load first; every signed-in screen is its own chunk.
+const Discover = lazy(() => import('./pages/Discover'))
+const Inbox = lazy(() => import('./pages/Inbox'))
+const MatchRoom = lazy(() => import('./pages/MatchRoom'))
+const Matches = lazy(() => import('./pages/Matches'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Replay = lazy(() => import('./pages/Replay'))
+const Report = lazy(() => import('./pages/Report'))
+const Settings = lazy(() => import('./pages/Settings'))
+const You = lazy(() => import('./pages/You'))
 
 /** Not logged in → /login. Onboarding not done → /onboarding (unless this page is part of onboarding). */
 function Protected({ children, onboarding = false }) {
@@ -39,6 +42,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
+          <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<PublicOnly><Landing /></PublicOnly>} />
             <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
@@ -58,6 +62,7 @@ export default function App() {
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

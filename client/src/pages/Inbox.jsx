@@ -1,6 +1,8 @@
+// Ask my human: when someone asks something the agent doesn't know, it never makes it up; it asks here instead.
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AgentIcon, Button, EmptyState, ErrorBox, Loading } from '../components/ui'
+import { MessageCircleQuestion } from 'lucide-react'
+import { Btn, EmptyNote } from '../components/prelude'
 import { useSocketEvent } from '../hooks/useSocket'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
@@ -9,7 +11,6 @@ function Question({ item, onAnswered }) {
   const toast = useToast()
   const [answer, setAnswer] = useState('')
   const [busy, setBusy] = useState(false)
-
   async function submit(e) {
     e.preventDefault()
     setBusy(true)
@@ -19,19 +20,19 @@ function Question({ item, onAnswered }) {
       onAnswered(item._id)
     } catch (err) {
       toast(errMsg(err), { tone: 'bad' })
-    } finally {
-      setBusy(false)
-    }
+    } finally { setBusy(false) }
   }
-
+  const asked = 1 + (item.askedAgain?.length ?? 0)
   return (
-    <li className="animate-rise rounded-3xl border border-line bg-surface p-5">
-      <p className="flex items-start gap-3 font-medium"><AgentIcon className="size-6 shrink-0" />{item.question}</p>
-      {item.matchId && <Link to={`/matches/${item.matchId}`} className="ml-9 mt-1 inline-block text-xs font-semibold text-accent">See the conversation</Link>}
-      <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
+    <li className="card inbox-q">
+      <p className="inbox-meta small"><MessageCircleQuestion size={15} strokeWidth={1.7} aria-hidden="true" />
+        {item.askedBy ? `${item.askedBy} asked` : 'Your agent wants to know'}{item.topicLabel?.length > 3 && ` · about ${item.topicLabel}`}{asked > 1 && ` · asked ${asked} times`}</p>
+      <p className="inbox-text">{item.question}</p>
+      {item.matchId && <Link to={`/matches/${item.matchId}`} className="text-link small">See the conversation</Link>}
+      <form onSubmit={submit} className="composer inbox-form">
         <label htmlFor={`a-${item._id}`} className="sr-only">Your answer</label>
-        <input id={`a-${item._id}`} value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={1000} placeholder="Tell your agent…" className="flex-1 rounded-full border border-line bg-bg px-4 py-2.5 focus:border-accent focus:outline-none" />
-        <Button type="submit" variant="agent" loading={busy} disabled={!answer.trim()}>Teach my agent</Button>
+        <input id={`a-${item._id}`} className="composer-input" value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={1000} placeholder="Answer the way you’d say it…" />
+        <Btn type="submit" loading={busy} disabled={!answer.trim()}>Teach my agent</Btn>
       </form>
     </li>
   )
@@ -40,23 +41,19 @@ function Question({ item, onAnswered }) {
 export default function Inbox() {
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
-
   const load = useCallback(() => {
     api.get('/api/inbox').then((r) => { setItems(r.data.items); setError(null) }).catch((e) => setError(errMsg(e)))
   }, [])
   useEffect(load, [load])
   useSocketEvent('inbox:new', ({ item }) => setItems((list) => (list && !list.some((i) => i._id === item._id) ? [item, ...list] : list)))
 
-  if (error) return <ErrorBox message={error} onRetry={load} />
-  if (!items) return <Loading label="Loading inbox…" />
-
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-semibold">Ask my human</h1>
-      <p className="mb-5 mt-1 text-muted">When someone asks something your agent doesn’t know, it never makes it up. It asks you here instead.</p>
-      {items.length === 0
-        ? <EmptyState title="Nothing to answer">Your agent will ask when it needs you.</EmptyState>
-        : <ul className="space-y-3">{items.map((i) => <Question key={i._id} item={i} onAnswered={(id) => setItems((l) => l.filter((x) => x._id !== id))} />)}</ul>}
+    <div className="page inbox">
+      <header className="page-head"><div><h1 className="t-h1">Ask my human</h1><p>When someone asks something your agent doesn’t know about you, it never makes it up. It asks you here, and your answer teaches it.</p></div></header>
+      {error ? <div className="st-center"><h2 className="t-h2">We couldn’t load your questions</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div>
+        : !items ? <div className="card inbox-q" aria-busy="true"><div className="sk sk-l" /><div className="sk sk-s" /></div>
+        : items.length === 0 ? <EmptyNote title="Nothing to answer">Your agent will ask when it needs you.</EmptyNote>
+        : <ul className="inbox-list">{items.map((i) => <Question key={i._id} item={i} onAnswered={(id) => setItems((l) => l.filter((x) => x._id !== id))} />)}</ul>}
     </div>
   )
 }
