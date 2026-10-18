@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 night, by Claude Code (plan 10 merged; Atlas connects; next: live-agent browser run, judge accounts, then plan 14 when Nebius is ready)
+- **Last updated:** 2026-10-18 late night, by Claude Code (plan 19 built on feat/plan-19-live-check; README + SUBMISSION drafted; new NVIDIA key fast; judge accounts seeding)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -68,6 +68,19 @@ Build order (`00-START-HERE` phase table, owner 2026-10-17):
 Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optional).
 
 ## Currently working on
+
+**Owner, 2026-10-18 night:** commit the plan edits and finish everything except plan 14 (it can come after deploy); show everything on localhost before deploying; run CodeRabbit before shipping. A new NVIDIA key from a teammate's account is in : all 5 model IDs are listed and Super answers in ~0.7 s (the old key took 16–163 s per call).
+
+- ✅ **Plan 19 live check** on  (owner's plan, committed ):
+  - **Backend:** challenge with 2 random moves; code checks (single-use nonce → 409; order, timing, JPEG ≤ 120 KB, timeline → 400); ONE vision call; decision in code; only the result stored; trust-check bonus.
+  - **Client:**  (MediaPipe self-hosted, lazy), Live-checked badge with the exact tooltip, Settings row.
+  - **Model:**  = ; Nano 12B v2 VL isn't on our NVIDIA account.
+  - **Checks:** 108/108 tests. Headless Chrome with a fake camera: page, consent gate, camera + MediaPipe start, kind timeout with no face, no failed requests.
+  - **Pending (owner):**  on your own selfies (left/right mapping, phone-screen photo); pass on a laptop and a phone; a held-up phone fails. Cut-off Oct 25.
+- ✅ **Plan 13 drafts:** README in full + SUBMISSION.md.  marks the live URL, final Token Factory IDs, team names and the screenshot. No credentials.
+- 🔄 **Judge accounts** seeding on the dev DB with the new key. The local judge password is in  ().
+- **Next:** CodeRabbit on plan 19 → live-agent browser run (take-over latency, pause) → merge → localhost demo for the owner → deploy (plan 12) → plan 14.
+
 
 **Re-plan (owner, 2026-10-18 afternoon).** The design arrived (`Frontend-Design/04-direction/`, local only and gitignored), and the Tavily key is in (only **1,000 credits** for everything). Atlas: the IP allow-list is `0.0.0.0/0`, but login still fails (`bad auth`), so the **owner fixes the DB user/password in `MONGODB_URI`**. On this machine Node also needs public DNS for the Atlas SRV lookup; Render won't.
 
