@@ -67,3 +67,10 @@
 .sheet-h { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px 6px 20px; border-bottom: 1px solid var(--line); }
 .sheet-body { overflow-y: auto; padding: 14px 16px 28px; display: grid; gap: 10px; }
 .sheet-body .r-side { border: 0; padding: 12px 4px 0; gap: 20px; overflow: visible; }
+
+/* ============ Verdict (fluid) ============ */
+.verdict.d { min-height: calc(100dvh - 64px); padding: 40px 24px; background-image: var(--light); }
+.verdict.d .v-inner { max-width: 100%; }
+.verdict.m { min-height: 100dvh; }
+.verdict .v-list a { font-weight: 600; }
+.verdict.state .v-card { padding: 28px; }
