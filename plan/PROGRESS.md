@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step and **commits locally**. Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-18, by Claude Code (S0 done, committed locally; next S1 step 0 → STOP)
+- **Last updated:** 2026-10-18, by Claude Code (S0 done; S1 step 0 measured → STOP for the owner)
 - **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -15,7 +15,7 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
 | S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ✅ | (this commit) | Results below. Render `CLIENT_URL` value for S7 noted. |
-| S1 | Speed (two-phase onboarding, agent pacing) | ⬜ | — | **STOP after step 0** (speed-before numbers). |
+| S1 | Speed (two-phase onboarding, agent pacing) | ⏸ Step 0 done, STOP | (this commit) | **STOP after step 0** (speed-before numbers). |
 | S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | ⬜ | — | Right after S1. |
 | S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ⬜ | — | |
 | S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ⬜ | — | Cloudinary stub if `CLOUDINARY_*` missing. |
@@ -26,6 +26,32 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 Local commits since the last push (`780d210`):
 - `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
 - `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
+
+## S1 step 0: speed before (2026-10-18) — ⏸ STOP, waiting for the owner
+
+Full report: `server/eval/results/speed-before.md`, from `node scripts/speed-report.js` (read-only, production `Usage`). Production provider: **NVIDIA**. Models: fast `nemotron-3.5-lightning-30b-a3b`, mid `nemotron-3-super-120b-a12b`, smart `nemotron-3-ultra-550b-a55b`, embed `nemotron-3-embed-1b`.
+
+| What | Production now | Target |
+|---|---|---|
+| Onboarding build (one real user, 23 calls) | **92 s** wall | p50 ≤ 2 min |
+| Submit → app usable | ~92 s (waits for the whole build) | ≤ 5 s |
+| Match → first agent message | 40 s | ≤ 20 s |
+| Whole agent chat (18 messages) | **23 min**; gap p50 49 s, p95 335 s | p50 ≤ 4 min, 12–14 messages |
+
+**What the numbers say (some of it differs from plan 30's list of causes):**
+1. **The onboarding build is already ~1.5 min with the current key.** The 15–20 min earlier came from the old key and from seeding running at the same time. Two-phase onboarding is still needed for "usable in ≤ 5 s".
+2. **The fast tier is the slowest tier on NVIDIA:**
+   - Lightning p50 is 33–59 s, and 8 of 34 calls hit the 90 s timeout.
+   - Super, with reasoning off, takes 2–9 s.
+   - Moving tags, contradictions, style and perceive to the fast tier, as plan 30 says, would make them **slower** on NVIDIA.
+3. **3% of calls fail after all 4 attempts.** These are quick 429/5xx answers; each costs ~16 s and loses the result. That accounts for 21 of 202 perceive calls and 24 of 323 replies, and for most of the p95 stalls. At the time, seeding (local) and Render shared one key, while our limiter is per process.
+4. **Agent chats are mostly pacing:** ~26 s of LLM time per agent message, but a 49 s p50 gap. The rest is the 2-replies-per-minute cap, typing delays of up to 20 s and the 4 s debounce. These are exactly plan 30's B items.
+
+**Proposed plan (owner to approve):**
+- **B as written:** pacing env, no agent↔agent debounce, overlap compose with the delay, 12–14 messages.
+- **A as written, with one change:** keep the tier for tags / contradictions / style / perceive in config. They stay on **mid** while on NVIDIA. Re-measure the fast tier on Token Factory on Oct 26 and switch only if it's faster there.
+- **Move fast-tier calls to mid on NVIDIA** for now: stance check, icebreakers, wind-down and date ideas, via the same config.
+- **429/5xx:** honour `Retry-After`. Give onboarding and agent turns one more slow retry instead of failing after 16 s. Never run seeding against production at the same time as judges or users.
 
 ## S0 results (2026-10-18)
 
