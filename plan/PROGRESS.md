@@ -219,8 +219,8 @@ Cached ideas never cost a credit.
 
 ## Blocked / needs a human
 
-- **Atlas:** the DB user login fails, so `MONGODB_URI` in `.env` doesn't work. Every check runs on the local replica set (`npm run dev-db`). Fix the Atlas user/password and allow the IP.
-- **`TAVILY_API_KEY` is empty:** date ideas return 503 `DATE_IDEAS_UNAVAILABLE`.
+- ✅ **Atlas (resolved 2026-10-18):** login and writes work; the network allows 0.0.0.0/0. On this laptop Node needs `DNS_SERVERS=8.8.8.8,1.1.1.1` for the SRV lookup (local only). The production DB is empty until seeding after plan 14.
+- ✅ **Tavily key (resolved 2026-10-18):** works; only 1,000 credits for everything, so the guard caps searches (dev 30, production 700) and caches ideas for 30 days.
 - **Nebius account + promo credits** for plan 14 (switch by Oct 26). Until then dev runs on NVIDIA's free API (~40 requests/min; it sometimes times out).
 - **Plan 18:** 19 and 20 are not for Claude Code (owner, 2026-10-17). Plan 18 §2–§11 ideas get folded in only where plans 09–11 already call for them; no retro-fit of 05/17 unless the owner asks.
 - **Waiting for the owner:** step 1 failed on the "ask my human" check. Options: run step 2 first (it fixes exactly this), then finish step 1.
