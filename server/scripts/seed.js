@@ -1,7 +1,9 @@
 // Plan 11: load seed/personas.json into Mongo (users, profiles, knowledge graphs). Idempotent and incremental: users are
 // upserted by email, and a graph is (re)built only when it is missing or the persona changed (contentHash of its
 // profile + answers, stored as User.seedHash). --force rebuilds every graph.
-//   node scripts/seed.js [--force] [--concurrency N]
+//   node scripts/seed.js [--force] [--concurrency N] [--judges]
+// --judges then creates the pre-baked judge accounts (seed/judges.json, scripts/seed/judges.js): real engine runs,
+// ~1 hour and ~0.5M tokens on the first run; re-runs only fill missing states. Logins use JUDGE_PASSWORD.
 // Seed logins use SEED_PASSWORD from server/.env (never committed). Without it, seed accounts can't be logged into.
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -35,8 +37,9 @@ try {
     const user = await User.findOneAndUpdate(
       { email: p.email },
       {
-        $set: { name: p.profile.name, agentMode: p.agentMode, isSeed: true, consentAgent: true, 'onboarding.answers': p.answers, passwordHash },
-        $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing' },
+        $set: { name: p.profile.name, agentMode: p.agentMode, isSeed: true, consentAgent: true, 'onboarding.answers': p.answers, ...(env.SEED_PASSWORD && { passwordHash }) },
+        // Without SEED_PASSWORD the random hash is for new accounts only: a re-run never locks out an existing login.
+        $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing', ...(!env.SEED_PASSWORD && { passwordHash }) },
       },
       { upsert: true, new: true, runValidators: true },
     );
@@ -61,6 +64,16 @@ try {
   if (failed.length) {
     console.log(`${failed.length} graph(s) failed: ${failed.join(', ')}. Run the seed again to build them.`);
     process.exitCode = 1;
+  }
+  if (process.argv.includes('--judges') && !failed.length) {
+    if (!env.JUDGE_PASSWORD) console.warn('⚠ JUDGE_PASSWORD is not set: judge accounts get a random password nobody knows');
+    const { seedJudges } = await import('./seed/judges.js'); // starts a job worker: only when asked
+    const report = await seedJudges({ passwordHash: await bcrypt.hash(env.JUDGE_PASSWORD ?? randomUUID(), 10) });
+    const missing = Object.entries(report).filter(([, r]) => r.missing.length);
+    console.log(missing.length
+      ? `\nJudge states missing: ${missing.map(([e, r]) => `${e}: ${r.missing.join(', ')}`).join('; ')}. Re-run to try the remaining partners.`
+      : '\nJudge accounts ready: every state present.');
+    (await import('./lib/worker.js')).stopWorker();
   }
 } finally {
   await flushUsage();

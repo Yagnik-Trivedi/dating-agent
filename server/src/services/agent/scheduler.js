@@ -52,13 +52,13 @@ const releaseLock = (matchId, userId) => Match.updateOne({ _id: matchId }, { $un
 /** The match if userId's agent may speak in it right now, else null. */
 async function mayReply(matchId, userId) {
   const [match, user] = await Promise.all([Match.findById(matchId), User.findById(userId, { agentMode: 1 }).lean()]);
-  const ok = match?.status === 'agent_chatting' && side(match, userId)?.agentActive && ['shadow', 'auto'].includes(user?.agentMode);
+  const ok = match?.status === 'agent_chatting' && !match.agentState?.frozen && side(match, userId)?.agentActive && ['shadow', 'auto'].includes(user?.agentMode);
   return ok ? match : null;
 }
 
-/** clamp(min + 350 ms/word + 0–2 s, max); DEMO_FAST = 0.3–2 s. */
-export function paceMs(text) {
-  if (env.DEMO_FAST) return 300 + Math.random() * 1700;
+/** clamp(min + 350 ms/word + 0–2 s, max); fast (DEMO_PACING=fast, seed + judge accounts) = 0.3–2 s. */
+export function paceMs(text, fast = false) {
+  if (fast) return 300 + Math.random() * 1700;
   const words = text.split(/\s+/).filter(Boolean).length;
   return Math.min(env.AGENT_MIN_DELAY_MS + words * 350 + Math.random() * 2000, env.AGENT_MAX_DELAY_MS);
 }
@@ -105,7 +105,7 @@ export async function runReply(matchId, userId) {
     if (!turn) return;
 
     for (const [i, text] of turn.messages.entries()) {
-      await typeFor(matchId, userId, paceMs(text));
+      await typeFor(matchId, userId, paceMs(text, env.DEMO_PACING === 'fast' && Boolean(await User.exists({ _id: userId, $or: [{ isSeed: true }, { isJudge: true }] }))));
       // Re-check: took over, status changed, agent switched off, or a newer message arrived → discard the rest.
       const current = await mayReply(matchId, userId);
       if (!current) return;

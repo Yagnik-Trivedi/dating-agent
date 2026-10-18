@@ -18,6 +18,7 @@ const schema = z.object({
   JWT_SECRET: field(z.string({ error: 'JWT_SECRET is required' }).min(32, 'JWT_SECRET must be at least 32 characters')),
   ADMIN_TOKEN: optional,
   SEED_PASSWORD: optional, // shared login for seed personas (scripts/seed.js); never committed
+  JUDGE_PASSWORD: optional, // login for the pre-baked judge accounts (seed.js --judges); goes in Devpost's testing field only
 
   // LLM provider: Nebius Token Factory (final) or NVIDIA build.nvidia.com (temporary). Same variables, env-only switch.
   LLM_PROVIDER: field(z.enum(['nvidia', 'nebius']).default('nebius')), // logging + README notes only
@@ -52,8 +53,12 @@ const schema = z.object({
   AGENT_MIN_DELAY_MS: field(z.coerce.number().int().nonnegative().default(1500)),
   AGENT_MAX_DELAY_MS: field(z.coerce.number().int().nonnegative().default(20000)),
   AGENT_STALE_HOURS: field(z.coerce.number().positive().default(24)),
-  DEMO_FAST: bool(false),
+  LOG_LEVEL: field(z.enum(['info', 'debug']).default(process.env.NODE_ENV === 'production' ? 'info' : 'debug')),
+  DEMO_PACING: field(z.enum(['normal', 'fast']).default('normal')), // fast: 0.3–2 s typing delays for seed + judge accounts only (plan 12 §7)
+  JUDGE_LIVE_CHATS_PER_DAY: field(z.coerce.number().int().positive().default(2)), // new agent chats per non-seed user per UTC day (plan 12 §7)
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
+  KEEPALIVE_SELF_PING: bool(false), // Render: ping our own RENDER_EXTERNAL_URL/health so the free tier doesn't sleep (plan 12)
+  KEEPALIVE_INTERVAL_MIN: field(z.coerce.number().positive().default(10)),
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
 });
 

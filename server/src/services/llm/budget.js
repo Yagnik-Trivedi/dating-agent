@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { env } from '../../config/env.js';
 import { Usage } from '../../models/Usage.js';
+import { User } from '../../models/User.js';
 
 export class BudgetExceededError extends Error {
   constructor(message, code = 'BUDGET_EXCEEDED') {
@@ -14,7 +15,8 @@ export class BudgetExceededError extends Error {
 
 const REFRESH_MS = 5 * 60_000;
 const today = () => new Date().toISOString().slice(0, 10); // UTC day
-const fresh = () => ({ day: today(), refreshedAt: 0, tokens: 0, smartCalls: 0, perUser: new Map() });
+// exempt: seed accounts skip the per-user cap (shared by every judge who matches them) but count toward the global one.
+const fresh = () => ({ day: today(), refreshedAt: 0, tokens: 0, smartCalls: 0, perUser: new Map(), exempt: new Set() });
 
 let state = fresh();
 // All-time spend. `loaded` = we have read the total from Mongo at least once in this process.
@@ -38,15 +40,16 @@ export async function refresh({ force = false } = {}) {
   rollover();
   if ((!force && Date.now() - state.refreshedAt < REFRESH_MS) || mongoose.connection.readyState !== 1) return;
   state.refreshedAt = Date.now();
-  const [rows, [all]] = await Promise.all([
+  const [rows, [all], seeds] = await Promise.all([
     Usage.aggregate([
       { $match: { at: { $gte: new Date(`${state.day}T00:00:00Z`) } } },
       { $group: { _id: { userId: '$userId', tier: '$tier' }, calls: { $sum: 1 }, tokens: { $sum: { $add: ['$promptTokens', '$completionTokens'] } } } },
     ]),
     // ponytail: full scan of `usage` every 5 min; keep a running counter doc if the collection grows large.
     Usage.aggregate([{ $group: { _id: null, usd: { $sum: '$costUsd' } } }]),
+    User.find({ isSeed: true }, { _id: 1 }).lean(),
   ]);
-  const next = { ...fresh(), refreshedAt: state.refreshedAt };
+  const next = { ...fresh(), refreshedAt: state.refreshedAt, exempt: new Set(seeds.map((u) => String(u._id))) };
   for (const r of rows) {
     next.tokens += r.tokens;
     if (r._id.tier === 'smart') next.smartCalls += r.calls;
@@ -79,7 +82,7 @@ export async function checkBudget({ tier, userId }) {
   const paused = pauseReason();
   if (paused) throw new BudgetExceededError(paused.message, paused.code);
   if (tier === 'smart' && state.smartCalls >= env.LLM_SMART_DAILY_CALLS) throw new BudgetExceededError('Agent paused — daily limit reached (verdicts)');
-  if (userId && (state.perUser.get(String(userId)) ?? 0) >= env.LLM_DAILY_CALLS_PER_USER) {
+  if (userId && !state.exempt.has(String(userId)) && (state.perUser.get(String(userId)) ?? 0) >= env.LLM_DAILY_CALLS_PER_USER) {
     throw new BudgetExceededError('Agent paused — daily limit reached');
   }
 }
@@ -88,6 +91,7 @@ export async function checkBudget({ tier, userId }) {
 export function recordUsage(doc) {
   rollover();
   const costUsd = costOf(doc.tier, doc.promptTokens, doc.completionTokens);
+  console.log(`llm ${doc.purpose} ${doc.tier}: ${(doc.promptTokens ?? 0) + (doc.completionTokens ?? 0)} tokens, ${doc.latencyMs ?? 0} ms${doc.ok === false ? ', FAILED' : ''}`);
   state.tokens += (doc.promptTokens ?? 0) + (doc.completionTokens ?? 0);
   spend.usd += costUsd;
   if (doc.tier === 'smart') state.smartCalls++;

@@ -11,6 +11,10 @@ const conversationSchema = new mongoose.Schema({
   endedBy: { type: String, enum: ['interest', 'max_turns', 'natural', 'dealbreaker_hint', 'take_over', 'stale', null], default: null },
   // { [userId]: { interest, lowInterestTurns, turn, toldStoryIds, topicsTouched, temperature, model } }
   agentState: Mixed,
+  // Round 2+ ("Let them talk a bit longer"): the match's message count at which it ends, and from which a natural end is
+  // allowed. Unset on round 1 → KG.MAX_TURNS / MIN_MESSAGES_FOR_NATURAL_END.
+  endAfter: Number,
+  naturalEndFrom: Number,
   startedAt: { type: Date, default: Date.now },
   endedAt: Date,
   archiveAt: Date, // TTL (plan 17 archiveNotes / plan 09 compaction)

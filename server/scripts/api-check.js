@@ -153,6 +153,19 @@ assert.equal(r.body.messages[1].authoredBy, 'human');
 assert.ok('reveal' in r.body, 'messages response carries the reveal (null when no agent spoke)');
 ok('both continue → handed_off; authoredBy revealed');
 
+// --- after handoff: my own messages teach my agent (plan 15 stage 7) unless I turn it off; extend / wouldn't-say guards
+r = await call('POST', `/matches/${matchId}/messages`, { token: A.token, body: { text: 'haha that sounds fun, sunday works for me' } });
+assert.equal(r.status, 201);
+const humanMessageId = r.body.message._id;
+r = await call('PUT', '/me/settings', { token: A.token, body: { learnFromChats: false } });
+assert.equal(r.body.user.settings.learnFromChats, false);
+await call('POST', `/matches/${matchId}/messages`, { token: A.token, body: { text: 'this one is not learned' } });
+r = await call('POST', `/matches/${matchId}/extend`, { token: A.token });
+assert.equal(r.body.error.code, 'CANNOT_EXTEND', 'extend only on a Maybe with my own unsure');
+r = await call('POST', `/messages/${humanMessageId}/wouldnt-say`, { token: A.token, body: {} });
+assert.equal(r.status, 404, "wouldn't-say only on my own agent's messages");
+ok("learnFromChats toggle; extend refused outside a Maybe; wouldn't-say refused on a human message");
+
 // --- settings, onboarding, kg, inbox
 r = await call('PUT', '/me/settings', { token: A.token, body: { agentMode: 'auto' } });
 assert.equal(r.body.user.agentMode, 'auto');
@@ -175,6 +188,9 @@ assert.equal(r.status, 401);
 
 await mongoose.connect(process.env.MONGODB_URI);
 const db = mongoose.connection.db;
+const learned = await db.collection('voicesamples').find({ userId: new mongoose.Types.ObjectId(A.id), source: 'own_chat' }).toArray();
+assert.deepEqual(learned.map((x) => x.text), ['haha that sounds fun, sunday works for me'], 'one own_chat sample; none once turned off');
+assert.equal(learned[0].incoming, null, "the other person's message is never stored in my voice data");
 const bId = new mongoose.Types.ObjectId(B.id);
 const left = {
   users: await db.collection('users').countDocuments({ _id: bId }),

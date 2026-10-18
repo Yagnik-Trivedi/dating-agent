@@ -1,0 +1,23 @@
+# Layer 3 of the keep-alive (plan 12 §2): a backup waker for the Render free tier. cron-job.org is the primary one;
+# GitHub may run this late when busy. Needs the repo secret RENDER_HEALTH_URL (https://<service>.onrender.com/health).
+name: keep-alive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+permissions: {}
+jobs:
+  ping:
+    runs-on: ubuntu-24.04 # pinned, like ci.yml (ubuntu-latest moves to a new image)
+    timeout-minutes: 5
+    steps:
+      - name: Ping Render health endpoint (retries cover cold starts)
+        env:
+          HEALTH_URL: ${{ secrets.RENDER_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then echo "RENDER_HEALTH_URL secret is not set; skipping"; exit 0; fi
+          for i in 1 2 3 4; do
+            if curl -fsS --max-time 60 "$HEALTH_URL"; then echo " ok"; exit 0; fi
+            echo "attempt $i failed, retrying in 20s"; sleep 20
+          done
+          exit 1

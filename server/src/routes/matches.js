@@ -3,15 +3,16 @@ import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
-import { cancelReplies } from '../services/agent/index.js';
+import { cancelReplies, thaw } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
-import { decide, reportFor, revealFor } from '../services/compat/index.js';
+import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
 import { ChatEvent } from '../models/ChatEvent.js';
 import { Conversation } from '../models/Conversation.js';
 import mongoose from 'mongoose';
 import { emitStatus, statusFor } from '../services/pipeline/index.js';
 import { dateIdeasFor } from '../services/tavily/dateIdeas.js';
+import { wouldntSay } from '../services/kg/ownVoice.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const matchesRouter = Router();
@@ -24,6 +25,7 @@ matchesRouter.get('/matches', async (req, res) => {
 
 matchesRouter.get('/matches/:id', async (req, res) => {
   const match = await getMatchFor(req.params.id, req.user._id);
+  await thaw(match);
   res.json({ match: await matchDetail(match, req.user._id) });
 });
 
@@ -34,6 +36,7 @@ matchesRouter.get('/matches/:id/messages', async (req, res) => {
   }), req.query);
   const me = req.user._id;
   const match = await getMatchFor(req.params.id, me);
+  await thaw(match);
 
   const filter = { matchId: match._id, ...(before && { createdAt: { $lt: before } }) };
   const page = await Message.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
@@ -67,6 +70,22 @@ matchesRouter.post('/matches/:id/decision', async (req, res) => {
   const { _id } = await getMatchFor(req.params.id, req.user._id);
   const match = await decide(_id, req.user._id, decision);
   res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// "Let them talk a bit longer" on a Maybe: once per match, up to EXTEND_TURNS more messages, then both judges again.
+matchesRouter.post('/matches/:id/extend', async (req, res) => {
+  const { _id } = await getMatchFor(req.params.id, req.user._id);
+  const match = await extend(_id, req.user._id);
+  res.json({ match: await matchDetail(match, req.user._id) });
+});
+
+// "I wouldn't say that" (plan 08 §3): only on MY OWN agent's messages; optional "how would you say it?".
+matchesRouter.post('/messages/:id/wouldnt-say', async (req, res) => {
+  const { fix } = parse(z.object({ fix: z.string().trim().min(1).max(1000).optional() }), req.body ?? {});
+  const message = mongoose.isValidObjectId(req.params.id) && await Message.findOne({ _id: req.params.id, senderId: req.user._id, authoredBy: 'agent' }).lean();
+  if (!message) throw httpError(404, 'NOT_FOUND', 'Agent message not found');
+  const { rule, kind } = await wouldntSay({ message, userId: req.user._id, fix });
+  res.json({ ok: true, rule, kind });
 });
 
 // My judge's decision + the label I see (plan 09 §2). Never the other side's decision or reasons.

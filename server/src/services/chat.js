@@ -4,6 +4,7 @@ import { Message } from '../models/Message.js';
 import { emitToUser } from '../sockets/io.js';
 import { httpError } from '../utils/http.js';
 import { onIncomingMessage } from './agent/index.js';
+import { learnOwnMessage } from './kg/ownVoice.js';
 
 export const MAX_MESSAGE_LENGTH = 1000;
 
@@ -36,5 +37,6 @@ export async function sendMessage({ match, senderId, authoredBy, text, meta, ext
     emitToUser(uid, 'message:new', { message: serializeMessage(message, uid, match.status) });
   }
   onIncomingMessage(message).catch((err) => console.error(`onIncomingMessage failed: ${err.message}`));
+  learnOwnMessage(message, match).catch((err) => console.error(`learnOwnMessage failed: ${err.message}`));
   return message;
 }

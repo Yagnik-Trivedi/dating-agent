@@ -42,6 +42,7 @@ export async function matchListItem(match, viewerId) {
     _id: match._id,
     status: statusFor(match, viewerId),
     closedReason: match.closedReason ?? null,
+    startsAt: match.status === 'scheduled' ? match.agentState?.startsAt ?? null : null, // "your agent will start this chat tomorrow"
     createdAt: match.createdAt,
     lastMessageAt: match.lastMessageAt ?? null,
     agentActive: mine?.agentActive ?? false,

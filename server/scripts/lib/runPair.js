@@ -14,7 +14,7 @@ import './worker.js'; // job worker for the match pipeline (plan 17)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LIVE = ['matched', 'trust_check', 'briefing', 'agent_chatting', 'evaluating'];
-export const NO_PACING = { AGENT_DEBOUNCE_MS: 0, AGENT_MIN_DELAY_MS: 0, AGENT_MAX_DELAY_MS: 0, DEMO_FAST: false };
+export const NO_PACING = { AGENT_DEBOUNCE_MS: 0, AGENT_MIN_DELAY_MS: 0, AGENT_MAX_DELAY_MS: 0, DEMO_PACING: 'normal' };
 
 /** → { match (final, lean), messages, seconds, usage: [{ _id: purpose, calls, smart, tokens }], tokens, smartCalls } */
 export async function runPair(a, b, { log = console.log, timeoutMin = 45 } = {}) {

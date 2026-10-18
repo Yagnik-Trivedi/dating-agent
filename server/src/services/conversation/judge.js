@@ -18,6 +18,7 @@ import { chatJSON, modelId } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import * as icebreakersPrompt from '../prompts/icebreakers.js';
 import * as judgePrompt from '../prompts/judge.js';
+import { debug } from '../../utils/log.js';
 
 const quoted = { quote: z.string().trim().max(400).catch(''), why: z.string().trim().min(1).max(300), messageId: z.string().nullable().catch(null) };
 export const judgeSchema = z.object({
@@ -169,7 +170,7 @@ export async function judgeSide({ conversationId, userId }) {
       let checked = validateDecision(first.out, { transcript, hints });
       if (checked.problems.length) {
         validation.reasked = true;
-        console.warn(`judge ${match._id}/${me}: re-asking (${checked.problems.join(' ')})`);
+        debug(`judge ${match._id}/${me}: re-asking (${checked.problems.join(' ')})`);
         try {
           const again = await callJudge({ messages: judgePrompt.build({ ...prompt, warning: checked.problems.join(' ') }), userId: me, matchId: match._id, purpose: 'judge-reask', prefer: first.opt });
           const second = validateDecision(again.out, { transcript, hints });

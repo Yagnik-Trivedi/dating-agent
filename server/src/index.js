@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
 import { env, clientOrigins } from './config/env.js';
+import { keepaliveStatus, startKeepalive, stopKeepalive } from './keepalive.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { adminRouter } from './routes/admin.js';
@@ -32,6 +33,9 @@ app.use(express.json({ limit: '1mb' }));
 app.get('/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime(), time: new Date().toISOString() });
 });
+
+// Did the service restart / is the self-ping running? (plan 12)
+app.get('/health/keepalive-status', (req, res) => res.json(keepaliveStatus()));
 
 app.get('/health/deep', (req, res) => {
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
@@ -68,12 +72,14 @@ async function connectMongo(attempt = 1) {
 }
 
 server.listen(env.PORT, () => console.log(`✓ Server listening on :${env.PORT}`));
+startKeepalive();
 connectMongo();
 
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down');
   io.close();
   stopPeriodic();
+  stopKeepalive();
   server.close(async () => {
     await stopWorker();
     await mongoose.disconnect();

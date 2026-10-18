@@ -12,9 +12,8 @@ import { resolveConcept } from '../services/kg/canonicalize.js';
 import { factEmbeddingFields } from '../services/kg/factEmbedding.js';
 import { factKey } from '../services/kg/factKey.js';
 import { userGraph, voiceNodes } from '../services/kg/graph.js';
-import { chatJSON } from '../services/llm/client.js';
+import { addRule, correctionRule } from '../services/kg/ownVoice.js';
 import { buildGate } from '../services/match/gate.js';
-import * as voiceCorrection from '../services/prompts/voiceCorrection.js';
 import { httpError, objectId, parse } from '../utils/http.js';
 
 export const kgRouter = Router();
@@ -110,11 +109,7 @@ kgRouter.post('/kg/voice/corrections', async (req, res) => {
     profile.corrections.push({ rule: 'never use emoji', kind: 'never_say', from: 'graph_edit', at });
     if (!profile.neverSay.includes('emoji')) profile.neverSay.push('emoji');
   } else {
-    const out = await chatJSON({ tier: 'mid', reasoning: false, purpose: 'voice-correction', userId: req.user._id,
-      schema: z.object({ rule: z.string().trim().min(1).max(160), kind: z.enum(['style', 'never_say', 'fact']).catch('style') }),
-      messages: voiceCorrection.build({ correction: text ?? "That's not me", about: node.label }) });
-    profile.corrections.push({ rule: out.rule, kind: out.kind === 'never_say' ? 'never_say' : 'style', from: 'graph_edit', at });
-    if (out.kind === 'never_say') profile.neverSay.push(out.rule);
+    addRule(profile, await correctionRule({ userId: req.user._id, correction: text ?? "That's not me", about: node.label }), 'graph_edit');
   }
   await profile.save();
   await bump(req.user._id);

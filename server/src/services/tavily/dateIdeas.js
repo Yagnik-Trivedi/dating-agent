@@ -12,6 +12,7 @@ import { asActor } from '../actor.js';
 import { myDecision } from '../compat/report.js';
 import { otherUserId } from '../matches.js';
 import * as dateIdeasPrompt from '../prompts/dateIdeas.js';
+import { debug } from '../../utils/log.js';
 
 const ideasSchema = z.object({
   ideas: z.array(z.object({ title: z.string().trim().min(1).max(120), why: z.string().trim().max(240).catch(''), link: z.string().trim() })).default([]),
@@ -44,7 +45,7 @@ async function ideas(match, viewerId, { search = tavilySearch } = {}) {
   const icebreakers = (await myDecision(match._id, viewerId))?.icebreakers ?? [];
   const hit = await SearchCache.findOne({ query }).lean();
   if (hit) {
-    console.log(`date-ideas: cache hit for "${query}"`);
+    debug(`date-ideas: cache hit for "${query}"`);
     return { ideas: hit.ideas, icebreakers, cached: true };
   }
   const results = (await search(query)).filter((r) => r.url);
@@ -60,6 +61,6 @@ async function ideas(match, viewerId, { search = tavilySearch } = {}) {
     ideas = results.slice(0, 3).map((r) => ({ title: String(r.title ?? r.url).slice(0, 120), why: String(r.content ?? '').slice(0, 200), link: r.url }));
   }
   if (ideas.length) await SearchCache.updateOne({ query }, { $setOnInsert: { query, ideas } }, { upsert: true });
-  console.log(`date-ideas: searched "${query}" → ${ideas.length} ideas`);
+  debug(`date-ideas: searched "${query}" → ${ideas.length} ideas`);
   return { ideas, icebreakers, cached: false };
 }

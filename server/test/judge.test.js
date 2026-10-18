@@ -11,7 +11,9 @@ import { Match } from '../src/models/Match.js';
 import { MatchDecision } from '../src/models/MatchDecision.js';
 import { Message } from '../src/models/Message.js';
 import { compactNotes } from '../src/services/compat/compactNotes.js';
-import { decide, reportFor, revealFor, settle } from '../src/services/compat/index.js';
+import { cancelReplies, stopConversation } from '../src/services/agent/scheduler.js';
+import { decide, extend, reportFor, revealFor, settle, startEvaluation } from '../src/services/compat/index.js';
+import { planAct } from '../src/services/conversation/planAct.js';
 import { judgeSchema, validateDecision } from '../src/services/conversation/judge.js';
 import { start, stop } from '../scripts/lib/testDb.js';
 
@@ -150,4 +152,29 @@ test('compactNotes archives a closed match (summary kept on the decision); a han
   assert.deepEqual([r.notes, r.events, r.messages], [1, 1, 4]);
   const at = (await ChatEvent.findOne().lean()).archiveAt;
   assert.ok(at > Date.now() + 29 * 86_400_000);
+});
+
+test('"Let them talk a bit longer": only my own unsure, once; round 2 ends after EXTEND_TURNS and its verdict replaces the old one', async () => {
+  await decision(A, 'yes');
+  await decision(B, 'unsure');
+  await settle(match._id, conv._id);
+  await assert.rejects(extend(match._id, A), (e) => e.code === 'CANNOT_EXTEND', 'my verdict is yes');
+  await extend(match._id, B);
+  cancelReplies(match._id); // no agent turns in this test
+  assert.equal(await status(), 'agent_chatting');
+  const round2 = await Conversation.findOne({ matchId: match._id, round: 2 }).lean();
+  assert.deepEqual([round2.status, round2.endAfter, round2.naturalEndFrom], ['active', 12, 12]);
+  await assert.rejects(extend(match._id, B), (e) => e.status === 409, 'once per match');
+
+  // Round 2's limits reach planAct: no natural end before endAfter, max_turns at it.
+  const plan = (msgCount) => planAct({ state: {}, rng: () => 0.5, msgCount, agendaSettled: true, maxMessages: round2.endAfter, naturalEndFrom: round2.naturalEndFrom }).end;
+  assert.deepEqual([plan(8), plan(11)], [null, 'max_turns']);
+
+  assert.ok(await stopConversation(match._id, 'max_turns'));
+  await startEvaluation(match); // what the queued 'evaluate' job runs
+  assert.ok(await Job.exists({ type: 'judge', dedupeKey: `judge:${round2._id}:${B}` }), 'judges re-run on round 2');
+  for (const [u, d] of [[A, 'yes'], [B, 'yes']]) await MatchDecision.create({ conversationId: round2._id, matchId: match._id, userId: u, otherUserId: u === A ? B : A, decision: d, confidence: 0.8, summaryForUser: 'round 2' });
+  assert.equal(await settle(match._id, round2._id), 'compatible');
+  assert.equal((await reportFor(match._id, B)).verdict, 'compatible');
+  assert.equal(await MatchDecision.countDocuments({ matchId: match._id, userId: B }), 2, 'history kept');
 });

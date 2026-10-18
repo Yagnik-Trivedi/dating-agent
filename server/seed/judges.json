@@ -1,0 +1,14 @@
+[
+  {
+    "email": "judge1@demo.local",
+    "base": "seed13@demo.local",
+    "name": "Naina",
+    "note": "Copies Pooja's onboarding answers (Delhi, woman → men): her gate pool is seed14, seed26, seed34 and the fake seed28."
+  },
+  {
+    "email": "judge2@demo.local",
+    "base": "seed12@demo.local",
+    "name": "Rehan",
+    "note": "Copies Karthik's onboarding answers (Pune, man → women): his gate pool is seed01, seed11, seed17 and seed38 (no fake in Pune)."
+  }
+]

@@ -1,6 +1,8 @@
 import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
 import { Profile } from '../../models/Profile.js';
+import { User } from '../../models/User.js';
+import { env } from '../../config/env.js';
 import { rng, newSeed } from '../../utils/rng.js';
 import { KG } from '../kg/config.js';
 import { passesGate } from '../match/gate.js';
@@ -93,9 +95,47 @@ export async function runBrief(match) {
   match.brief = briefs;
   await Match.updateOne({ _id: match._id }, { $set: { brief: briefs } });
   for (const u of Object.keys(briefs)) emitToUser(u, 'kg:update', { matchId: String(match._id), facts: [], agenda: briefs[u].agenda });
+  if (await overDailyChats(match)) return scheduleChat(match);
+  return startChat(match);
+}
+
+const utcDay = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+
+/**
+ * Credit guard (plan 12 §7): a non-seed user starts at most JUDGE_LIVE_CHATS_PER_DAY agent conversations per UTC day.
+ * Only when an agent would run; humans chatting cost nothing.
+ */
+export async function overDailyChats(match) {
+  if (!match.perUser.some((p) => p.agentActive)) return false;
+  const since = utcDay();
+  for (const u of await User.find({ _id: { $in: match.users }, isSeed: { $ne: true } }, { _id: 1 }).lean()) {
+    // ponytail: lists the user's matches each time; fine for tens of matches a day.
+    const ids = (await Match.find({ users: u._id, _id: { $ne: match._id } }, { _id: 1 }).lean()).map((m) => m._id);
+    if (await Conversation.countDocuments({ matchId: { $in: ids }, round: 1, startedAt: { $gte: since } }) >= env.JUDGE_LIVE_CHATS_PER_DAY) return true;
+  }
+  return false;
+}
+
+/** Over the cap: the match waits as 'scheduled' ("your agent will start this chat tomorrow") until the next UTC day. */
+async function scheduleChat(match) {
+  const startsAt = new Date(utcDay().getTime() + 86_400_000 + 60_000);
+  await Match.updateOne({ _id: match._id }, { $set: { 'agentState.startsAt': startsAt } });
+  await enqueue('startChat', { matchId: String(match._id) }, { runAt: startsAt, dedupeKey: `startChat:${match._id}` });
+  await setStatus(match, 'scheduled');
+}
+
+async function startChat(match) {
   await startConversationDoc(match);
   await setStatus(match, 'agent_chatting');
   return startConversation(match);
+}
+
+/** The startChat job: a scheduled match starts now, or waits another day if the cap is still full. */
+export async function runScheduledChat({ matchId }) {
+  const match = await Match.findById(matchId);
+  if (match?.status !== 'scheduled') return { skipped: true };
+  if (await overDailyChats(match)) return scheduleChat(match);
+  return startChat(match);
 }
 
 /** Gate re-check at match creation (plan 07 §2): answers may have changed since discover. Boolean only, no LLM. */

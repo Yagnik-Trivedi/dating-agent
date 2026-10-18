@@ -41,7 +41,8 @@ const reactionOf = (own) => {
  * humor, language: { languages }, mood, dealbreakerHit }; agenda: my agenda items; stories: my untold story facts.
  * → { targetWords, burst, askBack, emoji, laugh, reactions, mustDisagree, disagreeOn, topic, language, end }
  */
-export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], stories = [], msgCount = 0, opening = false, agendaSettled = false }) {
+export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], stories = [], msgCount = 0, opening = false, agendaSettled = false,
+  maxMessages = KG.MAX_TURNS, naturalEndFrom = MIN_MESSAGES_FOR_NATURAL_END }) {
   const interest = state.interest ?? 0.5;
   const counts = voice.wordCounts?.length ? voice.wordCounts : [10];
   const targetWords = Math.max(2, Math.round(pick(counts, rng) * (0.5 + interest)));
@@ -74,7 +75,7 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
     // and chats looped on one topic); in between, a random shift (more likely when bored) or a story.
     const steerTurn = (state.turn ?? 0) >= KG.STEER_AFTER_TURNS && (state.lastTopicTurn ?? -2) < (state.turn ?? 0) - 1;
     // Near MAX_TURNS an open important item is the topic every turn, tries or not (owner's tuning spec).
-    const nearEnd = msgCount >= KG.MAX_TURNS - KG.NEAR_END_MESSAGES && agenda.filter((a) => a.status !== 'answered' && important(a)).sort((a, b) => b.priority - a.priority)[0];
+    const nearEnd = msgCount >= maxMessages - KG.NEAR_END_MESSAGES && agenda.filter((a) => a.status !== 'answered' && important(a)).sort((a, b) => b.priority - a.priority)[0];
     if (nearEnd) topic = { kind: 'agenda', id: nearEnd.id, text: nearEnd.topic };
     else if (nextAgenda && (steerTurn || rng() < shift)) topic = { kind: 'agenda', id: nextAgenda.id, text: nextAgenda.topic };
     else if (stories.length && rng() < KG.STORY_RATE) { const s = pick(stories, rng); topic = { kind: 'story', id: String(s._id), text: s.object }; }
@@ -84,7 +85,7 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   let end = null;
   if (perception.dealbreakerHit) end = 'dealbreaker_hint';
   else if ((state.lowInterestTurns ?? 0) >= KG.END_AFTER_LOW_TURNS) end = 'interest';
-  else if (msgCount + 1 >= KG.MAX_TURNS) end = 'max_turns';
-  else if (agendaSettled && msgCount >= MIN_MESSAGES_FOR_NATURAL_END) end = 'natural';
+  else if (msgCount + 1 >= maxMessages) end = 'max_turns';
+  else if (agendaSettled && msgCount >= naturalEndFrom) end = 'natural';
   return { targetWords, burst, answerFirst: Boolean(perception.aboutMeQuestion), askBack: end ? false : askBack, emoji, laugh, reactions, mustDisagree, disagreeOn: hold?.text ?? null, topic: end ? null : topic, language, end };
 }

@@ -23,6 +23,7 @@ export const KG = Object.freeze({
   K_LIKE: 0.25, K_DISLIKE: 0.25, K_QUESTION: 0.05, K_HUMOR: 0.05,
   K_LOW_EFFORT: 0.1, K_REPEAT: 0.05, K_DECAY: 0.1,
   LOW_INTEREST: 0.3, END_AFTER_LOW_TURNS: 3, MAX_TURNS: 24,
+  EXTEND_TURNS: 8, // "Let them talk a bit longer" on a Maybe: at most this many more messages (plan 10 backend addition)
   TOPIC_SHIFT: 0.25, STORY_RATE: 0.2, TEMP_RANGE: [0.7, 1.0],
   STEER_AFTER_TURNS: 2, // my turns of warm-up before every-other-turn agenda steering
   STEER_RETRY_PRIORITY: 0.7, // agenda items at least this important are steered to again until answered…
