@@ -16,7 +16,7 @@ const ATTRIBUTE_WORDS = {
   religion: /\b(religion|religious|pray|praying|spiritual)\b/i,
   diet: /\b(vegetarian|veg|non-veg|nonveg|vegan|meat|eggetarian)\b/i,
   location: /\b(settle|settling|relocate|relocating)\b/i,
-  looking_for: /\b(looking for|long[- ]term|something serious|casual dating)\b/i,
+  looking_for: /\b(looking for|long[- ]term|something serious|casual dating|hoping to find|brings you here|here for)\b/i,
 };
 // Words that never name the topic of a question about me.
 const NOT_TOPIC = new Set(['what', 'whats', "what's", 'how', 'do', 'does', 'did', 'you', 'your', 'yours', 'u', 'ur', 'the', 'a', 'an', 'is', 'are',

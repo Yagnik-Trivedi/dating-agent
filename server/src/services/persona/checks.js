@@ -107,7 +107,7 @@ export const selfClaimSentences = (text) => sentencesOf(ascii(text)).filter((s) 
 // for something casual" and "not sure yet, just exploring" while his answer, a dealbreaker, is long-term). Negations first.
 const STATED = {
   looking_for: [[/\b(something|nothing) (casual|serious)\b|\bshort[- ]term\b|\bnothing serious\b|\bjust (having fun|casual)\b/i, (m) => (/serious/i.test(m) && !/nothing serious/i.test(m) ? 'long_term' : 'short_term')],
-    [/\b(not sure (yet|what i want)|just exploring|figuring (it|things) out)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
+    [/\b(not sure (yet|what i want|what i'?m (hoping|looking))|just exploring|figuring (it|things) out|see(ing)? where (things|it) go(es)?)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
   smoking: [[/\b(don'?t|never|do not) smoke\b|\bnon[- ]?smoker\b|\bquit smoking\b/i, () => 'never'], [/\bsmoke (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bi smoke\b|\bi'?m a smoker\b/i, () => 'regularly']],
   drinking: [[/\b(don'?t|never|do not) drink\b|\bteetotal\b|\bsober\b/i, () => 'never'], [/\bdrink (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bdrink (a lot|regularly|every day|daily)\b/i, () => 'regularly']],
   kids: [[/\b(don'?t|do not|never) want (kids|children)\b|\bno kids for me\b/i, () => 'no'], [/\b(open to|not sure about|maybe) (kids|children)\b/i, () => 'open'], [/\b(want|see) (kids|children)\b/i, () => 'yes']],

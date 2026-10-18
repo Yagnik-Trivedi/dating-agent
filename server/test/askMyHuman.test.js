@@ -83,3 +83,7 @@ test('at most 3 new items per conversation', async () => {
   for (const k of ['a', 'b', 'c', 'd']) actions.push((await fileQuestion(user, m, { question: `q ${k}?`, topicKey: `concept:${k}`, topicLabel: k }, { emit: noEmit })).action);
   assert.deepEqual(actions, ['created', 'created', 'created', 'capped']);
 });
+
+test('"what are you hoping to find on here?" asks about looking_for', async () => {
+  assert.equal((await topicOf('what are you hoping to find on here?', lookup))?.key, 'looking_for');
+});

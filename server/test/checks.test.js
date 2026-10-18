@@ -139,3 +139,9 @@ test('structured answers stated in a message must match mine (B5: "something cas
   const g = groundingCheck({ text: "i'm looking for something casual right now", facts: new Map(), myAttributes: mine });
   assert.ok(g.problems.some((p) => p.includes('looking for is long term')) && g.drop.length === 1);
 });
+
+test('"not sure what i\'m hoping to find" / "see where things go" contradict a long-term answer (B5 day run)', () => {
+  const mine = { looking_for: 'long_term' };
+  assert.equal(attributeContradictions("not sure what i'm hoping to find honestly", mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions("i'm open to seeing where things go", mine)[0]?.stated, 'figuring_it_out');
+});

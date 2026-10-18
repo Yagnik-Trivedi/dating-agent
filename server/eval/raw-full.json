@@ -1,0 +1,32 @@
+{
+  "c1#1": {
+    "id": "c1",
+    "run": 1,
+    "expected": "compatible",
+    "predicted": "incompatible",
+    "reason": "Trekking, reading, cooking; both long-term, staying in Pune, talk conflicts out, never smoke",
+    "names": [
+      "Meera",
+      "Ishaan"
+    ],
+    "verdicts": [
+      "incompatible",
+      "maybe"
+    ],
+    "scores": [
+      0.85,
+      0.6
+    ],
+    "stopReason": "dealbreaker",
+    "status": "closed",
+    "turns": 15,
+    "tokens": 66415,
+    "smartCalls": 2,
+    "costUsd": 0,
+    "seconds": 683,
+    "file": "transcripts/c1-full-run1.md",
+    "agentMsgs": 15,
+    "templateFallbacks": 0,
+    "constrained": 0
+  }
+}
