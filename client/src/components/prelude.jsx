@@ -29,9 +29,9 @@ export const Btn = ({ kind = 'primary', size, block, icon: Ic, loading, children
   </button>
 )
 
-/** chatting · paused · you (took over / handed off) */
+/** chatting · paused · you (took over / handed off) · done (the agents stepped back) */
 export function Status({ state = 'chatting', short }) {
-  const text = { chatting: short ? 'Your agent is chatting' : 'Your agent is chatting for you', paused: 'Paused · nothing is being sent', you: 'You’re chatting' }[state]
+  const text = { chatting: short ? 'Your agent is chatting' : 'Your agent is chatting for you', paused: 'Paused · nothing is being sent', you: 'You’re chatting', done: 'The agents stepped back' }[state]
   return <span className={`status s-${state}`} role="status"><i aria-hidden="true" />{text}</span>
 }
 

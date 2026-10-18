@@ -125,10 +125,12 @@ export default function MatchRoom() {
 
   const them = match.other.name
   const handedOff = match.status === 'handed_off'
-  const agentOn = match.agentActive && AGENT_PHASES.includes(match.status)
+  const live = AGENT_PHASES.includes(match.status) && match.status !== 'evaluating' // the agents are (about to be) talking
+  const agentOn = live && match.agentActive
   const locked = LOCKED.includes(match.status)
-  const canType = !agentOn && !locked
-  const state = agentOn ? 'chatting' : match.paused ? 'paused' : 'you'
+  // Type yourself after handoff, or during a live chat once your agent is off (took over, paused, or never on).
+  const canType = !locked && (handedOff || (live && !match.agentActive))
+  const state = agentOn ? 'chatting' : match.paused ? 'paused' : handedOff || (live && !match.agentActive) ? 'you' : 'done'
   const lastNote = notes.map((n, i) => (n.some((x) => x.q) ? i : -1)).filter((i) => i >= 0).pop()
   const noteCount = notes.reduce((s, n) => s + n.length, 0)
   const who = (m) => (String(m.senderId) === me ? (m.authoredBy === 'agent' ? 'Your agent' : 'You') : m.authoredBy === 'agent' ? `${them}’s agent` : them)
@@ -144,7 +146,7 @@ export default function MatchRoom() {
     try { await send(text); setText('') } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
   }
 
-  const controls = !locked && !handedOff && (match.agentActive || match.paused) && (
+  const controls = live && (match.agentActive || match.paused) && (
     <>
       {match.paused
         ? <Btn kind="secondary" icon={Play} onClick={act('resume', resume)} loading={busy === 'resume'}>{mobile ? 'Resume' : 'Resume my agent'}</Btn>
@@ -206,8 +208,8 @@ export default function MatchRoom() {
       ) : canType ? (
         <div className="r-composer typing-on"><Composer text={text} setText={setText} submit={submit} busy={busy === 'send'} sendTyping={sendTyping} them={them} /></div>
       ) : (
-        <div className="r-composer"><Lock size={16} strokeWidth={1.7} aria-hidden="true" /><span>{locked ? 'This conversation is closed.' : 'Your agent is writing for you. You can take over whenever you like.'}</span>
-          {!locked && <Btn kind="secondary" icon={Hand} onClick={act('takeover', takeover)} loading={busy === 'takeover'}>Write it myself</Btn>}</div>
+        <div className="r-composer"><Lock size={16} strokeWidth={1.7} aria-hidden="true" /><span>{locked ? 'This conversation is closed.' : live ? 'Your agent is writing for you. You can take over whenever you like.' : 'The agents stepped back. You can write here once you both say yes.'}</span>
+          {live && <Btn kind="secondary" icon={Hand} onClick={act('takeover', takeover)} loading={busy === 'takeover'}>Write it myself</Btn>}</div>
       )}
 
       {mobile && sheet && (
