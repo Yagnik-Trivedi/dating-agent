@@ -69,6 +69,16 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
 
 ## Currently working on
 
+**Judge fix (owner, 2026-10-18; plan 11 follow-up) on `feat/judge-fix`:** steps 1–3 need no new chats; step 4 re-runs i3, i5, c4 and m1 only after telling the owner.
+- ✅ **Step 1** (`04047d6`): the decision is made in code (`services/conversation/judgeDecision.js`, numbers in `kg/config.js` `JUDGE_*`, unit-tested). The LLM lists evidence only: positives/frictions carry the F-id of my fact, dealbreakerRisk carries the option they stated.
+  - **No:** a stated dealbreaker value outside my accepts, or a severity-3 friction on a fact with importance ≥ 0.9.
+  - **Yes:** ≥ 2 distinct verified positives in their words on key facts (importance ≥ 0.6, a dealbreaker, or a like with strength ≥ 0.6), with no severity-3 friction and no conflicting or unclear dealbreaker.
+  - **Undiscussed dealbreaker:** a severity-2 friction plus "worth asking" in the summary.
+  - **Otherwise:** unsure.
+  - `npm test` 97/97.
+- Next: step 2 (prompt cleanup, filler lines labelled in the transcript) → step 3 (`scripts/eval/rejudge.js` on the B5 conversations).
+- Also: the live `seed.js --judges` run hit NVIDIA 429 (rate limit) while building the first judge's graph; it will be retried after the judge fix.
+
 **Owner, 2026-10-18:** finish ALL backend today (every KG learning path, plan 10's backend additions, plan 12's backend-only parts) plus tests; frontend only if the design arrives. B5 stays at 2 pairs at a time. Code-critique tools (ponytail, CodeRabbit) run once the coding is complete.
 
 **B5 ✅ (final full run, `feat/plan-11-tuning` `72a9a9e`, 07:51 → 10:05 IST, RULES=on, 2 pairs at a time):**
