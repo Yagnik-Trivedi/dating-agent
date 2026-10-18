@@ -5,13 +5,14 @@ import { Heart, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Btn, EmptyNote, Reveal, Thumb, calm } from '../components/prelude'
 import { useToast } from '../hooks/useToast'
+import { LiveBadge } from '../components/LiveBadge'
 import { api, errMsg } from '../lib/api'
 
 function Card({ p }) {
   return (
     <motion.article className="card intro" aria-label={`${p.name}${p.age ? `, ${p.age}` : ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={calm}>
       <div className="intro-who"><Thumb src={p.photos?.[0]} name={p.name} size={64} />
-        <div><h2 className="t-h2">{p.name}{p.age && <span className="muted">, {p.age}</span>}</h2>{p.city && <p className="small">{p.city}</p>}</div></div>
+        <div><h2 className="t-h2">{p.name}{p.age && <span className="muted">, {p.age}</span>}</h2>{p.city && <p className="small">{p.city}</p>}{p.liveChecked && <LiveBadge />}</div></div>
       {p.bio && <p className="t-lead intro-bio">{p.bio}</p>}
       {p.prompts?.map((q) => <div key={q.q} className="intro-q"><p className="t-label">{q.q}</p><p className="intro-a">{q.a}</p></div>)}
       {p.tags?.interests?.length > 0 && <div className="chips" aria-label="Interests">{p.tags.interests.map((i) => <span key={i} className="chip">{i}</span>)}</div>}

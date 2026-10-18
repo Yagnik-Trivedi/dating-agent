@@ -30,7 +30,7 @@ judges), once, on NVIDIA's free API. Full numbers: [`server/eval/results/latest.
 **What this tells us.** The agent is good at the part we trust it with: catching fakes and hard dealbreakers before
 anyone spends time. The first run showed the judges hedging (one side said "unsure" in most chats), so the model now
 only lists evidence (quotes, each tied to something that matters to you) and **code decides**: a stated dealbreaker or
-a serious clash on something that matters a lot is a no; two or more verified positives on what matters to you, with no
+a serious clash on something that matters a lot is a no; two or more quote-checked positives on what matters to you, with no
 serious friction, is a yes; anything else is a Maybe. Re-judging the same 17 saved chats doubled accuracy
 ([rejudge.md](server/eval/results/rejudge.md)). The remaining misses were hidden conflicts nobody asked about, so the agent
 now has to ask directly about anything that matters a lot to you before a chat can end; on fresh chats for those

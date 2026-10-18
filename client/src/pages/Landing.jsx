@@ -9,7 +9,7 @@ import { HANDOFF, PEOPLE, SCRIPT } from '../lib/demoScript'
 import { duskPhoto } from '../lib/placeholderPhoto'
 
 const TRUST = [
-  [ShieldCheck, 'Every profile is checked for fakes before anyone says hello'],
+  [ShieldCheck, 'Your agent checks each match’s profile for fakes before saying hello'],
   [Eye, 'You can read everything your agent says'],
   [Hand, 'Take over or pause at any time'],
 ]

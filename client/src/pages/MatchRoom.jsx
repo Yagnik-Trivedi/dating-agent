@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useMatch, wouldntSay } from '../hooks/useMatch'
 import { useToast } from '../hooks/useToast'
 import { errMsg } from '../lib/api'
+import { LiveBadge } from '../components/LiveBadge'
 
 const AGENT_PHASES = ['matched', 'trust_check', 'briefing', 'agent_chatting', 'evaluating']
 const LOCKED = ['closed', 'flagged_fake']
@@ -162,7 +163,7 @@ export default function MatchRoom() {
         <Thumb src={match.other.photo} name={them} size={mobile ? 38 : 44} clear={handedOff} />
         <div className="r-name">
           <h2 className="t-h2">{them}</h2>
-          {mobile ? <Status state={state} short /> : <p>{[match.other.age, match.other.city].filter(Boolean).join(' · ')}<span className="dot-sep" /><TrustBadge level={match.trust?.level} /></p>}
+          {mobile ? <Status state={state} short /> : <p>{[match.other.age, match.other.city].filter(Boolean).join(' · ')}<span className="dot-sep" /><TrustBadge level={match.trust?.level} />{match.other.liveChecked && <><span className="dot-sep" /><LiveBadge /></>}</p>}
         </div>
         {!mobile && <Status state={state} />}
         {!mobile && controls}

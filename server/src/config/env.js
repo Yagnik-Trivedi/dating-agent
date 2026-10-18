@@ -31,8 +31,8 @@ const schema = z.object({
   MODEL_MID: optional,
   MODEL_SMART: optional,
   MODEL_EMBED: optional,
-  // Plan 19 live check: Nemotron Nano 2 VL (on Token Factory, copy its ID from GET /v1/models; plan 14 checklist).
-  MODEL_VISION: field(z.string().trim().default('nvidia/nemotron-nano-12b-v2-vl')),
+  // Plan 19 live check: a Nemotron VL model (on Token Factory, copy its ID from GET /v1/models; plan 14 checklist).
+  MODEL_VISION: field(z.string().trim().default('nvidia/nemotron-3.5-super-vl-120b-a12b')), // NVIDIA lists this Nemotron VL; nano-12b-v2-vl isn't on our account
   LIVE_CHECK_ENABLED: bool(true),
   LIVE_CHECK_MAX_PER_DAY: field(z.coerce.number().int().positive().default(5)),
   LIVE_CHECK_TTL_S: field(z.coerce.number().int().positive().default(90)),

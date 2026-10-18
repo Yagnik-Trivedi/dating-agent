@@ -253,3 +253,19 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 .rounded-3xl { border-radius: 14px; }
 .profile-page { max-width: 780px; }
 @media (max-width: 820px) { .inbox-form .composer-input { flex: none; } }
+
+/* ============ Live check (plan 19) ============ */
+.live { max-width: 760px; }
+.live-card-in { padding: 22px; display: grid; gap: 14px; }
+.live-stage { padding: 14px; display: grid; gap: 14px; }
+.live-video { position: relative; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: var(--sunken); }
+.live-video video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); /* preview mirrored; captured frames are not */ }
+.live-over { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; background: color-mix(in srgb, var(--surface) 70%, transparent); text-align: center; }
+.live-step { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.live-hold { color: var(--trust); font-weight: 600; }
+.live-dots { list-style: none; display: flex; gap: 8px; padding: 0; margin: 6px 0 0; }
+.live-dots li { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 600 13px var(--sans); background: var(--sunken); color: var(--ink-2); }
+.live-dots li.now { background: var(--accent); color: var(--on-accent); }
+.live-dots li.done { background: var(--trust); color: var(--surface); }
+.live-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: var(--trust-tint); color: var(--trust); font-size: 13px; font-weight: 600; cursor: help; }
+.intro-who .live-badge { margin-top: 4px; }
