@@ -69,16 +69,16 @@ Humans, before Phase 3: Nebius account + credits, Atlas login, Tavily key (optio
 
 ## Currently working on
 
-**Owner, 2026-10-18 night:** commit the plan edits and finish everything except plan 14 (it can come after deploy); show everything on localhost before deploying; run CodeRabbit before shipping. A new NVIDIA key from a teammate's account is in : all 5 model IDs are listed and Super answers in ~0.7 s (the old key took 16–163 s per call).
+**Owner, 2026-10-18 night:** commit the plan edits and finish everything except plan 14 (it can come after deploy); show everything on localhost before deploying; run CodeRabbit before shipping. A new NVIDIA key from a teammate's account is in `server/.env`: all 5 model IDs are listed and Super answers in ~0.7 s (the old key took 16–163 s per call).
 
-- ✅ **Plan 19 live check** on  (owner's plan, committed ):
+- ✅ **Plan 19 live check** on `feat/plan-19-live-check` (owner's plan, committed `be15b41`):
   - **Backend:** challenge with 2 random moves; code checks (single-use nonce → 409; order, timing, JPEG ≤ 120 KB, timeline → 400); ONE vision call; decision in code; only the result stored; trust-check bonus.
-  - **Client:**  (MediaPipe self-hosted, lazy), Live-checked badge with the exact tooltip, Settings row.
-  - **Model:**  = ; Nano 12B v2 VL isn't on our NVIDIA account.
+  - **Client:** `/live-check` (MediaPipe self-hosted, lazy), "Live-checked" badge with the exact tooltip, Settings row.
+  - **Model:** `MODEL_VISION` = `nvidia/nemotron-3.5-super-vl-120b-a12b`; Nano 12B v2 VL isn't on our NVIDIA account.
   - **Checks:** 108/108 tests. Headless Chrome with a fake camera: page, consent gate, camera + MediaPipe start, kind timeout with no face, no failed requests.
-  - **Pending (owner):**  on your own selfies (left/right mapping, phone-screen photo); pass on a laptop and a phone; a held-up phone fails. Cut-off Oct 25.
-- ✅ **Plan 13 drafts:** README in full + SUBMISSION.md.  marks the live URL, final Token Factory IDs, team names and the screenshot. No credentials.
-- 🔄 **Judge accounts** seeding on the dev DB with the new key. The local judge password is in  ().
+  - **Pending (owner):** `npm run live-check:vision` on your own selfies (left/right mapping, phone-screen photo); pass on a laptop and a phone; a held-up phone fails. Cut-off Oct 25.
+- ✅ **Plan 13 drafts:** README in full + SUBMISSION.md. `TODO(deploy)` marks the live URL, final Token Factory IDs, team names and the screenshot. No credentials.
+- 🔄 **Judge accounts** seeding on the dev DB with the new key. The local judge password is in `server/.env` (`JUDGE_PASSWORD`).
 - **Next:** CodeRabbit on plan 19 → live-agent browser run (take-over latency, pause) → merge → localhost demo for the owner → deploy (plan 12) → plan 14.
 
 
