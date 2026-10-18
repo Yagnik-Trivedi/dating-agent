@@ -37,8 +37,9 @@ try {
     const user = await User.findOneAndUpdate(
       { email: p.email },
       {
-        $set: { name: p.profile.name, agentMode: p.agentMode, isSeed: true, consentAgent: true, 'onboarding.answers': p.answers, passwordHash },
-        $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing' },
+        $set: { name: p.profile.name, agentMode: p.agentMode, isSeed: true, consentAgent: true, 'onboarding.answers': p.answers, ...(env.SEED_PASSWORD && { passwordHash }) },
+        // Without SEED_PASSWORD the random hash is for new accounts only: a re-run never locks out an existing login.
+        $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing', ...(!env.SEED_PASSWORD && { passwordHash }) },
       },
       { upsert: true, new: true, runValidators: true },
     );

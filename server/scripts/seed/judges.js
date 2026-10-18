@@ -29,8 +29,9 @@ async function upsertJudge(spec, base, passwordHash, log) {
   const hash = createHash('sha1').update(JSON.stringify({ spec, answers: base.answers, profile: base.profile })).digest('hex').slice(0, 16);
   const user = await User.findOneAndUpdate(
     { email: spec.email },
-    { $set: { name: spec.name, agentMode: 'shadow', isJudge: true, isSeed: false, consentAgent: true, 'onboarding.answers': base.answers, passwordHash },
-      $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing' } },
+    { $set: { name: spec.name, agentMode: 'shadow', isJudge: true, isSeed: false, consentAgent: true, 'onboarding.answers': base.answers, ...(env.JUDGE_PASSWORD && { passwordHash }) },
+      // Without JUDGE_PASSWORD the random hash is for new accounts only: a re-run never breaks the login shared in Devpost.
+      $setOnInsert: { consentAt: new Date(), 'onboarding.status': 'processing', ...(!env.JUDGE_PASSWORD && { passwordHash }) } },
     { upsert: true, new: true, runValidators: true },
   );
   const profile = { ...base.profile, name: spec.name, photos: [`https://api.dicebear.com/9.x/notionists/svg?seed=${spec.name}`] };
