@@ -16,7 +16,7 @@ const ATTRIBUTE_WORDS = {
   religion: /\b(religion|religious|pray|praying|spiritual)\b/i,
   diet: /\b(vegetarian|veg|non-veg|nonveg|vegan|meat|eggetarian)\b/i,
   location: /\b(settle|settling|relocate|relocating)\b/i,
-  looking_for: /\b(looking for|long[- ]term|something serious|casual dating)\b/i,
+  looking_for: /\b(looking for|long[- ]term|something serious|casual dating|hoping to find|brings you here|here for)\b/i,
 };
 // Words that never name the topic of a question about me.
 const NOT_TOPIC = new Set(['what', 'whats', "what's", 'how', 'do', 'does', 'did', 'you', 'your', 'yours', 'u', 'ur', 'the', 'a', 'an', 'is', 'are',
@@ -46,12 +46,14 @@ export async function topicOf(question, lookup) {
 }
 
 /** Does my graph hold ANY fact on the topic (any polarity, any disclosure)? */
-export function knowsTopic(topic, facts) {
-  if (topic.kind === 'attribute') return facts.some((f) => f.attribute === topic.key);
+/** My facts on the topic (any polarity, any disclosure). */
+export function factsOnTopic(topic, facts) {
+  if (topic.kind === 'attribute') return facts.filter((f) => f.attribute === topic.key);
   const label = normalise(topic.label);
-  return facts.some((f) => String(f.conceptId ?? '') === topic.id
+  return facts.filter((f) => String(f.conceptId ?? '') === topic.id
     || [f.object, f.conceptLabel].some((t) => t && ` ${normalise(t)} `.includes(` ${label} `)));
 }
+export const knowsTopic = (topic, facts) => factsOnTopic(topic, facts).length > 0;
 
 export const topicKey = (topic) => (topic.kind === 'attribute' ? `attr:${topic.key}` : `concept:${topic.id}`);
 

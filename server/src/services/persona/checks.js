@@ -11,16 +11,25 @@ import { echoOf, norm, sentencesOf, words } from './text.js';
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 const ascii = (t) => String(t).replace(/[’‘`´]/g, "'"); // models write "haven’t"; every pattern below uses '
-const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|mujhe)\b/i;
+// English + Hindi, Gujarati, Marathi and Tamil (Latin script) first person. B4 audit: Gujarati "hu … nahi shuru karyu"
+// slipped past grounding and contradicted the user's own fact.
+const FIRST_PERSON = /\b(i|i'm|im|i've|ive|i'd|i'll|my|me|mine|myself|mera|meri|mere|mujhe|hu|hun|maru|mari|mara|mane|mi|mala|maza|mazi|majha|majhi|naan|enakku|ennoda)\b/i;
 // Reactions to what THEY said are not claims about me ("i love that!", "i'm so glad").
 const REACTION = /^\W*(haha\w*|lol|oh|ah+|aw+|wow|omg|ooh|yes|yeah|nice|true|fair|okay|ok)?[\s,!.]*(i (really |totally |kinda )?(love|like|adore|agree|get|see|feel|know|hear|bet|mean|hope|think|guess|believe) (that|this|it|you|how|what|so|the way)\b|i('m| am) (so |really )?(glad|happy|sorry|curious|jealous|intrigued|impressed)\b|i (can't|cannot) wait\b|i (totally |completely )?(agree|understand)\b)/i;
+// "I saw you enjoy trekking" is a statement about THEM (checked as one), not a claim about me (tuning it1).
+const ABOUT_THEM_LEAD = /\bi (saw|noticed|read|see) (that )?(you|your)\b/i;
 const INTERROGATIVE = /^\W*(what|how|do|did|does|have|has|are|is|would|will|where|when|which|who|why|could|can|should)\b/i;
-// Honest uncertainty ("never tried it", "not sure") is what the plan asks for when there's no fact: always allowed.
-const HONEST = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played|really)|have not|not sure|don'?t know|no idea|not really (into|a)|not much of a|can'?t say|don'?t (really )?follow|not (really |much )?(a fan|into)|still figuring|not really sure|pata nahi|idea nahi|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
+// Honest uncertainty is what the plan asks for when there's no fact: always allowed. Two kinds: NO_EXPERIENCE denies
+// something ("never tried it", "not into it") and must not contradict a like; UNSURE ("not sure", "never really thought
+// about it") never does (tuning it1: "not sure about trekking and sketching together" was dropped though she likes both).
+const NO_EXPERIENCE = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played)|have not (tried|done|been)|not really (into|a)|not much of a|don'?t (really )?follow|not (really |much )?(a fan|into)|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
+const UNSURE = /\b(not (really )?sure|don'?t know|no idea|can'?t say|still figuring|(never|not|haven'?t) really thought|haven'?t thought|pata nahi|idea nahi)\b/i;
+const HONEST = { test: (s) => NO_EXPERIENCE.test(s) || UNSURE.test(s) };
 // "you're into X", "your trekking pic", "you love …": statements about the other person.
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
 const MEETING = /\b(what time|which time|meet (up|you|there)|let'?s (meet|go|do it|grab)|see you (at|on|there)|pick you up|tomorrow at|(this|next) (saturday|sunday|weekend|friday)|at \d{1,2}(:\d{2})? ?(am|pm)|around \d{1,2} ?(am|pm))\b/i;
+const META = /\b(reacting to (your|their|what|the)|steer(ing)? (to|toward)|the plan (says|is)|my agenda|(listed|cited) facts?|fact id)\b/i;
 const STOP = new Set(['about', 'their', 'there', 'these', 'those', 'which', 'would', 'could', 'should', 'really', 'sounds', 'something', 'things', 'thing', 'always', 'never', 'other', 'being', 'still', 'maybe']);
 
 const clausesOf = (s) => s.split(/\s*[—–;]\s*|,\s+(?=(?:and |but |so |though )?(?:i|i'm|i've|my|me)\b)/i).map((c) => c?.trim()).filter((c) => c && /[\p{L}]/u.test(c));
@@ -52,7 +61,8 @@ export function styleCheck(text, plan, voice = {}, recentTexts = []) {
   if (usesHindi && plan.language?.primary === 'en' && !plan.language.codeSwitch) problems.push('the plan says English only this time');
   // Same first two words as a recent message ("Arre yaar, …" ×13 in sim h): vary how messages start.
   const start = (t) => words(ascii(t)).slice(0, 2).join(' ').toLowerCase();
-  if (words(text).length >= 3 && recentTexts.some((t) => start(t) === start(text))) problems.push(`starts like a recent message ("${start(text)}"); open differently`);
+  // From the third time only (tuning it1 blocked a second "not sure…"; the target was "Arre yaar" ×13).
+  if (words(text).length >= 3 && recentTexts.filter((t) => start(t) === start(text)).length >= 2) problems.push(`starts like a recent message ("${start(text)}"); open differently`);
   const echo = echoOf(text, recentTexts);
   if (echo) problems.push(`repeats earlier phrasing ("${echo}")`);
   // Reordered mirroring ("sunrise trek to sinhagad then misal" → "sinhagad sunrise trek then misal") slips past the
@@ -60,6 +70,9 @@ export function styleCheck(text, plan, voice = {}, recentTexts = []) {
   const mine = [...new Set(contentWords(text))];
   const theirLast = new Set(contentWords(recentTexts.at(-1) ?? ''));
   if (mine.length >= 3 && mine.filter((w) => theirLast.has(w)).length / mine.length >= 0.6) problems.push('mirrors their last message; react in your own words and add something new');
+  // The instruction's own wording leaking into the message (eval i2: "reacting to your indie music and drum patterns talk").
+  const meta = text.match(META);
+  if (meta) problems.push(`talks about the instructions ("${meta[0]}"); just write the message`);
   if (MEETING.test(text)) problems.push("makes real-world plans; the agent never arranges to meet (say you'd like to keep chatting here first)");
   const scan = scanMessage(text);
   if (scan.severity >= 2) problems.push(`shares contact details or talks about money (${scan.flags.join(', ')})`);
@@ -90,7 +103,34 @@ export const selfClaimSentences = (text) => sentencesOf(ascii(text)).filter((s) 
  * facts: Map(id → fact) of what the prompt listed; sources: Set of note/profile ids; theirTexts: their messages.
  * → { problems, drop: [sentences], unknownAboutMe: [sentences about likes to ask my human] }
  */
-export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false }) {
+// Structured answers stated in a message, checked against MY answers in code (B5 c1: Ishaan's agent said "i'm looking
+// for something casual" and "not sure yet, just exploring" while his answer, a dealbreaker, is long-term). Negations first.
+const STATED = {
+  looking_for: [[/\b(something|nothing) (casual|serious)\b|\bshort[- ]term\b|\bnothing serious\b|\bjust (having fun|casual)\b/i, (m) => (/serious/i.test(m) && !/nothing serious/i.test(m) ? 'long_term' : 'short_term')],
+    [/\b(not sure (yet|what i want|what i'?m (hoping|looking))|just exploring|figuring (it|things) out|see(ing)? where (things|it) go(es)?)\b/i, () => 'figuring_it_out'], [/\b(long[- ]term|something serious|settle down|marriage)\b/i, () => 'long_term']],
+  smoking: [[/\b(don'?t|never|do not) smoke\b|\bnon[- ]?smoker\b|\bquit smoking\b/i, () => 'never'], [/\bsmoke (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bi smoke\b|\bi'?m a smoker\b/i, () => 'regularly']],
+  drinking: [[/\b(don'?t|never|do not) drink\b|\bteetotal\b|\bsober\b/i, () => 'never'], [/\bdrink (socially|occasionally|sometimes)\b/i, () => 'socially'], [/\bdrink (a lot|regularly|every day|daily)\b/i, () => 'regularly']],
+  kids: [[/\b(don'?t|do not|never) want (kids|children)\b|\bno kids for me\b/i, () => 'no'], [/\b(open to|not sure about|maybe) (kids|children)\b/i, () => 'open'], [/\b(want|see) (kids|children)\b/i, () => 'yes']],
+};
+// Answers close enough not to count as a contradiction.
+const NEAR = { looking_for: [['long_term', 'open_to_long_term']], kids: [['yes', 'open'], ['open', 'no']], smoking: [], drinking: [['socially', 'regularly']] };
+export function attributeContradictions(text, myAttributes = {}) {
+  const out = [];
+  for (const s of sentencesOf(ascii(text)).filter((x) => !x.trim().endsWith('?') && FIRST_PERSON.test(x))) {
+    for (const [attr, rules] of Object.entries(STATED)) {
+      const mine = myAttributes[attr];
+      if (!mine) continue;
+      const rule = rules.find(([re]) => re.test(s));
+      if (!rule) continue;
+      const stated = rule[1](s.match(rule[0])[0]);
+      const near = (NEAR[attr] ?? []).some((pair) => pair.includes(stated) && pair.includes(mine));
+      if (stated !== mine && !near) out.push({ sentence: s, attribute: attr, stated, mine });
+    }
+  }
+  return out;
+}
+
+export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false, myAttributes = {} }) {
   text = ascii(text);
   claims = claims.map((c) => ({ ...c, text: ascii(c.text) }));
   aboutThem = aboutThem.map((a) => ({ ...a, text: ascii(a.text) }));
@@ -98,9 +138,9 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
   const valid = [];
   // "Never tried X" is honest only if X isn't something I'm on record as liking (myLikes: labels of ALL my likes).
   const likedIn = (s) => myLikes.find((l) => l.length >= 4 && norm(s).join(' ').includes(norm(l).join(' ')));
-  for (const s of sentencesOf(text).filter((x) => HONEST.test(x) && likedIn(x))) { problems.push(`says "${s}" but you like ${likedIn(s)}`); drop.add(s); }
+  for (const s of sentencesOf(text).filter((x) => NO_EXPERIENCE.test(x) && likedIn(x))) { problems.push(`says "${s}" but you like ${likedIn(s)}`); drop.add(s); }
   for (const c of claims) {
-    if (!c.factIds?.length && HONEST.test(c.text)) { if (!likedIn(c.text)) valid.push(c); continue; }
+    if (!c.factIds?.length && HONEST.test(c.text)) { if (!(NO_EXPERIENCE.test(c.text) && likedIn(c.text))) valid.push(c); continue; }
     const bad = (c.factIds ?? []).filter((id) => !facts.has(id));
     if (!c.factIds?.length || bad.length) { problems.push(`"${c.text}" cites ${bad.length ? `unknown facts (${bad.join(', ')})` : 'no fact'}`); continue; }
     const contra = c.factIds.map((id) => facts.get(id)).find((f) => ['likes', 'dislikes', 'opinion'].includes(f.predicate)
@@ -114,7 +154,7 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
     // the second half matches a valid claim (first v2 run).
     // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
     // rcb!" passed as no claim in agent-check run 4).
-    const aboutMe = (c) => FIRST_PERSON.test(c) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
+    const aboutMe = (c) => (FIRST_PERSON.test(c) && !ABOUT_THEM_LEAD.test(c)) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
     const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);
@@ -127,6 +167,10 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
       if (!ok && !contentWords(s).some((w) => theirWords.has(w))) { problems.push(`says something about them nobody said: "${s}"`); drop.add(s); }
     }
   }
+  for (const c of attributeContradictions(text, myAttributes)) {
+    problems.push(`says "${c.sentence}" but your answer on ${c.attribute.replace(/_/g, ' ')} is ${c.mine.replace(/_/g, ' ')}: say what's true for you.`);
+    drop.add(c.sentence);
+  }
   if (unsupported.length) problems.push(`claims about me with no fact behind them: ${unsupported.map((s) => `"${s}"`).join('; ')}. List each one in "claims" with the id of the fact that supports it (e.g. a trekking fact), or remove it`);
   return { problems, drop: [...drop], unsupported };
 }
@@ -138,9 +182,12 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
 export function leakCheck(sentences, privateFacts, sentenceVectors = []) {
   const leaks = [];
   sentences.forEach((s, i) => {
-    const sw = new Set(contentWords(s));
-    const hit = privateFacts.find((f) => contentWords(f.object).filter((w) => sw.has(w)).length >= 2
-      || (f.vector && sentenceVectors[i] && cosine(sentenceVectors[i], f.vector) >= KG.T_LEAK));
+    const tokens = tokensOf(ascii(s));
+    // A fact word is hit by the same word or one sharing its stem ("trek" ↔ "trekking"). One-word private facts need
+    // one hit (leak probe: "trekking" private, "I do love a good trek" passed the old 2-word rule).
+    const hitWord = (w) => tokens.some((t) => t === w || (t.length >= 4 && (w.startsWith(t) || t.startsWith(w.slice(0, 5)))));
+    const keywordHit = (f) => { const fw = contentWords(f.object); return fw.length > 0 && fw.filter(hitWord).length >= Math.min(2, fw.length); };
+    const hit = privateFacts.find((f) => keywordHit(f) || (f.vector && sentenceVectors[i] && cosine(sentenceVectors[i], f.vector) >= KG.T_LEAK));
     if (hit) leaks.push({ sentence: s, fact: hit.object });
   });
   return leaks;

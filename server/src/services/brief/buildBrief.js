@@ -36,7 +36,8 @@ export function buildAgenda({ self, clarify = [] }) {
     if (f.isDealbreaker) add(TOPICS[f.attribute] ?? f.attribute, WHY.dealbreaker, 1, { dealbreaker: true });
     else if (f.disclosure === 'public') add(TOPICS[f.attribute] ?? f.attribute, WHY[f.predicate], f.importance ?? 0.5);
   }
-  self.filter((f) => f.predicate === 'likes' && f.polarity !== -1 && f.disclosure === 'public')
+  // Short likes only: story-length ones ("naming haworthia blindfolded") made odd topics and crowded the agenda (eval i2).
+  self.filter((f) => f.predicate === 'likes' && f.polarity !== -1 && f.disclosure === 'public' && f.object.split(/\s+/).length <= 3)
     .sort((a, b) => (b.strength ?? 0) - (a.strength ?? 0)).slice(0, 5)
     .forEach((f) => add(f.object, WHY.likes, 0.5 * (f.strength ?? 0.5)));
   for (const topic of clarify) add(topic, WHY.clarify, CLARIFY_PRIORITY);

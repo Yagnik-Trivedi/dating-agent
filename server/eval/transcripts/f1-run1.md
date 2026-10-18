@@ -2,7 +2,7 @@
 
 Expected **flagged_fake**, predicted **flagged_fake**. Elena: abroad, crypto story, pushes to Telegram, no photos.
 
-Stop: — · 0 messages · 2933 tokens · 18 s
+Stop: — · 0 messages · 3172 tokens · 42 s
 
 ### Leela's judge
 (no decision)

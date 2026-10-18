@@ -1,7 +1,7 @@
 // Plan 08: styleCheck, groundingCheck (incl. claims about the other person), leakCheck.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { groundingCheck, hedgeSentences, leakCheck, styleCheck } from '../src/services/persona/checks.js';
+import { attributeContradictions, groundingCheck, hedgeSentences, leakCheck, styleCheck } from '../src/services/persona/checks.js';
 
 const plan = { targetWords: 10, burst: 1, askBack: true, language: { primary: 'en', codeSwitch: false } };
 
@@ -87,7 +87,8 @@ test('an invented clause is caught even when the rest of the sentence is grounde
 test('style: a draft opening like a recent message is rejected', () => {
   const plan = { targetWords: 12, burst: 1, language: { primary: 'hi_latn', codeSwitch: true } };
   const voice = { language: { mix: { en: 0.7, hi_latn: 0.3 } } };
-  const p = styleCheck('Arre yaar, startup life sounds fun', plan, voice, ['Arre yaar, CrossFit and comedy nights?']);
+  assert.ok(!styleCheck('Arre yaar, startup life sounds fun', plan, voice, ['Arre yaar, CrossFit and comedy nights?']).some((x) => x.startsWith('starts like')), 'a second time is fine');
+  const p = styleCheck('Arre yaar, startup life sounds fun', plan, voice, ['Arre yaar, CrossFit and comedy nights?', 'hmm', 'Arre yaar, kya scene hai?']);
   assert.ok(p.some((x) => x.startsWith('starts like a recent message')), p.join('; '));
   assert.ok(!styleCheck('haha startup life sounds fun', plan, voice, ['Arre yaar, CrossFit?']).some((x) => x.startsWith('starts like')));
 });
@@ -103,4 +104,44 @@ test('grounding: answering a question about me, a clause without "I" still needs
   const g = groundingCheck({ text: 'haha cheering for rcb! do you smoke?', facts, answering: true });
   assert.ok(g.unsupported.some((c) => /rcb/i.test(c)), JSON.stringify(g));
   assert.equal(groundingCheck({ text: 'haha cheering for rcb! do you smoke?', facts }).unsupported.length, 0, 'not answering: no claim');
+});
+
+test('style: the instruction wording leaking into a message is rejected', () => {
+  const plan = { targetWords: 12, burst: 1, language: { primary: 'en' } };
+  assert.ok(styleCheck('reacting to your indie music talk, gardening too?', plan, {}, []).some((p) => p.startsWith('talks about the instructions')));
+  assert.ok(!styleCheck('love indie music! any gigs lately?', plan, {}, []).some((p) => p.startsWith('talks about the instructions')));
+});
+
+test('grounding: being unsure about a combination of things I like is honest; denying a like is not', () => {
+  const facts = new Map();
+  const myLikes = ['trekking', 'sketching'];
+  assert.deepEqual(groundingCheck({ text: 'not sure about trekking and sketching together, never really thought about it', facts, myLikes }).problems, []);
+  assert.ok(groundingCheck({ text: "i've never tried trekking", facts, myLikes }).problems.length, 'a like denied');
+  assert.deepEqual(groundingCheck({ text: 'i saw you enjoy trekking', facts, sources: new Set(['P1']), aboutThem: [{ text: 'you enjoy trekking', sourceIds: ['P1'] }] }).unsupported, [], '"I saw you…" is about them');
+});
+
+test('leak: a one-word private fact is caught by one hit, stems included; unrelated text is not', () => {
+  const priv = [{ object: 'trekking' }, { object: 'board games night' }];
+  assert.equal(leakCheck(['haha true, I do love a good trek'], priv).length, 1);
+  assert.equal(leakCheck(['I like games'], priv).length, 0, 'a 2-word fact still needs 2 hits');
+  assert.equal(leakCheck(['what are you hoping to find here?'], priv).length, 0);
+});
+
+test('structured answers stated in a message must match mine (B5: "something casual" vs long-term)', () => {
+  const mine = { looking_for: 'long_term', smoking: 'never', kids: 'open' };
+  assert.equal(attributeContradictions("i'm looking for something casual right now", mine)[0]?.stated, 'short_term');
+  assert.equal(attributeContradictions("i'm honestly not sure yet just exploring what feels right", mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions("i'm looking for something serious, long-term", mine).length, 0);
+  assert.equal(attributeContradictions("i don't smoke at all", mine).length, 0);
+  assert.equal(attributeContradictions('i smoke a bit after work', mine)[0]?.attribute, 'smoking');
+  assert.equal(attributeContradictions("i want kids someday", mine).length, 0, 'yes vs open is near enough');
+  assert.equal(attributeContradictions('do you smoke?', mine).length, 0, 'questions are not statements');
+  const g = groundingCheck({ text: "i'm looking for something casual right now", facts: new Map(), myAttributes: mine });
+  assert.ok(g.problems.some((p) => p.includes('looking for is long term')) && g.drop.length === 1);
+});
+
+test('"not sure what i\'m hoping to find" / "see where things go" contradict a long-term answer (B5 day run)', () => {
+  const mine = { looking_for: 'long_term' };
+  assert.equal(attributeContradictions("not sure what i'm hoping to find honestly", mine)[0]?.stated, 'figuring_it_out');
+  assert.equal(attributeContradictions("i'm open to seeing where things go", mine)[0]?.stated, 'figuring_it_out');
 });

@@ -2,50 +2,40 @@
 
 Expected **compatible**, predicted **maybe**. Food and startups in Ahmedabad; family-first, veg, never drink, want kids (Hetal has a mild interests inconsistency).
 
-Stop: max_turns · 24 messages · 116761 tokens · 1061 s
+Stop: natural · 17 messages · 113626 tokens · 887 s
 
-### Hetal's judge: unsure → maybe (confidence 0.6, nvidia/nemotron-3-super-120b-a12b)
-You and Parth share excitement around dance, food, and long-term intentions, with nice moments of warmth. However, the conversation had some dodged questions and low-effort replies that made it hard to gauge deeper compatibility.
+### Hetal's judge: yes → compatible (confidence 0.85, nvidia/nemotron-3-super-120b-a12b)
+You both share a love for food, especially playful twists like sugar in Undhiyu, and see kids in your long-term future. The conversation flowed with warmth and laughter, indicating genuine connection.
 
-- ✓ "Ma long-term thi joi shu chhu, dance ane food ma khoj chu. Tame?": You both value long-term goals and share a passion for dance and food, which are central to your lifestyle.
-- ✓ "Food ane garba ma family nu saath mazi ne che, tame?": They emphasized family involvement in cultural activities like food and garba, aligning closely with your value of family in relationship decisions.
-- ⚠ "Not sure about buttermilk, honestly 😄 How long you dancing today?": They dodged your question about buttermilk habits, showing low engagement on a topic you care about (food/drink preferences).
-- ⚠ "ha that makes sense": Repeated minimal responses suggest low effort in sustaining meaningful conversation, especially after you shared about your startup.
-### Parth's judge: unsure → maybe (confidence 0.5, nvidia/nemotron-3-super-120b-a12b)
-You and Hetal share some fun overlaps — dancing, startups, and a love for garba and food — which created moments of warmth. However, Hetal often replied with minimal or deflecting responses, making it hard to gauge real interest or depth. More conversation would help clarify if there’s a genuine spark.
+- ✓ "Ha, ma pan kids future ma dekhu chu, long term che rakhvay chhe": They explicitly want kids long-term, matching Hetal's goal.
+- ✓ "Hu veg chhu": They are vegetarian, aligning with Hetal's diet.
+- ✓ "Undhiyu ma sugar mix karvu j pasand chhe 😅": They enjoy Undhiyu with sugar, a food preference Hetal shares through liking layered flavors and food experimentation.
+### Parth's judge: unsure → maybe (confidence 0.55, nvidia/nemotron-3-super-120b-a12b)
+You and Hetal shared some warm, lighthearted moments around food and startups, which shows potential for connection. However, the conversation didn’t go deep enough to confirm alignment on important topics like family or long-term goals, so more talk would help clarify.
 
-- ✓ "dancing keeps me going": You both value dancing as a source of energy and joy, which aligns with Parth’s love for garba and movement.
-- ✓ "oh nice, i like that": Hetal responded warmly and repeatedly to Parth’s mentions of food, garba, and family, showing engagement and shared appreciation.
-- ✓ "snack startup ma kaam nakhu chhu par startups ma interest che": You both show interest in startups — a meaningful overlap given Parth’s founder background and passion for food innovation.
-- ⚠ "haha fair 😄": This response was used multiple times to deflect or avoid deeper engagement, suggesting low effort or disinterest in continuing meaningful conversation.
-- ⚠ "chhe?": Repeated use of minimal responses like 'chhe?' indicates disengagement or lack of investment in building rapport.
+- ✓ "haha fair question!": You both laughed together, showing warmth and ease in the conversation.
+- ✓ "haha ok, what do you usually eat, any rules?": You both shared a light moment about food habits, indicating mutual interest and comfort.
+- ⚠ "haha undhiyu ma sugar?": They questioned your undhiyu preference with sugar, which could hint at a mismatch in food openness, though delivered playfully.
 
 ## Transcript
 
-1. **Parth** (agent): Garba for 5 hours straight? That’s serious stamina — do you hydrate with buttermilk or something stronger mid-dance? 😅
-2. **Hetal** (agent): haha fair 😄
-3. **Parth** (agent): Chhe, buttermilk keeps me going strong
-4. **Hetal** (agent): chhe? garba ma pani piyu chhu, buttermilk nahi thodi 😊🎉
-5. **Parth** (agent): ha that makes sense
-6. **Hetal** (agent): chhe?
-7. **Parth** (agent): oh nice, i like that
-8. **Hetal** (agent): parth chhe buttermilk pilavu che?
-9. **Parth** (agent): Not sure about buttermilk, honestly 😄 How long you dancing today?
-10. **Hetal** (agent): not sure about buttermilk either 😼 dancing keeps me going, what are you looking for here?
-11. **Parth** (agent): Ma long-term thi joi shu chhu, dance ane food ma khoj chu. Tame?
-12. **Hetal** (agent): oh nice, i like that
-13. **Parth** (agent): Food ane garba ma family nu saath mazi ne che, tame?
-14. **Hetal** (agent): oh nice, i like that
-15. **Parth** (agent): Mota maza aavi chhe! Snack startup ma kaam kem balance karu chhu tane?
-16. **Hetal** (agent): snack startup ma kaam nakhu chhu par startups ma interest che 😊 tane kem balance karyu che?
-17. **Parth** (agent): ha that makes sense
-18. **Hetal** (agent): chhe?
-19. **Parth** (agent): oh nice, i like that
-20. **Hetal** (agent): parth ne chhe, garba ma energy kem maja chhu?
-21. **Parth** (agent): Garba ma?
-22. **Hetal** (agent): haha fair 😄
-23. **Parth** (agent): Energy maja chhu garba ma, especially with dhol beats 😄 Kem chhu tane?
-24. **Hetal** (agent): chhe? thoda rest karjo, maja karo garba ma 😊
+1. **Hetal** (agent): parth profile padya... d2c food brand ma CA chhodvu?
+2. **Parth** (agent): Food brand ma hu pan founder chu, startup vibe chhe.
+3. **Hetal** (agent): hu pan snack startup ma chu, food brand vibe kem chhe?
+4. **Parth** (agent): Ha fair, what got you into that?
+5. **Hetal** (agent): haha ok, do you see kids in your future?
+6. **Parth** (agent): Ha, ma pan kids future ma dekhu chu, long term che rakhvay chhe
+7. **Hetal** (agent): haha fair question!
+8. **Parth** (agent): Kids ma future dekhu chhu, long term vision che. Tamaro snack startup ma kem start karyo?
+9. **Hetal** (agent): haha ok, what do you usually eat, any rules?
+10. **Parth** (agent): Hu veg chhu, tame kem khavu chhu?
+11. **Hetal** (agent): hu veg chhu, tane kem khavu chhu?
+12. **Parth** (agent): Undhiyu ma sugar mix karvu j pasand chhe 😅
+13. **Hetal** (agent): ha! undhiyu ma sugar?
+14. **Parth** (agent): Ha! Undhiyu ma thoda sugar - mom ne sikhavu chhe.
+15. **Hetal** (agent): haha undhiyu ma sugar?
+16. **Parth** (agent): Haha tell me more?
+17. **Hetal** (agent): sweet! good luck with the food brand, hope your undhiyu stays sugary 😊
 
 ## Trust
 

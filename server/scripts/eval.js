@@ -21,7 +21,11 @@ const opt = (name, fallback) => (args.includes(`--${name}`) ? args[args.indexOf(
 const runs = Number(opt('runs', 1));
 const concurrency = Number(opt('concurrency', 2));
 const DIR = new URL('../eval/', import.meta.url);
-const RAW = new URL('raw.json', DIR);
+// --rules off (plan 11 B4 ablation) runs plain agents; --tag keeps that run's files apart (raw-<tag>.json, results-<tag>.md).
+const rules = opt('rules', 'on');
+const tag = opt('tag', rules === 'off' ? 'rules-off' : null);
+const suffix = tag ? `-${tag}` : '';
+const RAW = new URL(`raw${suffix}.json`, DIR);
 // Measured on NVIDIA (v2 plans 08/09): ~76k tokens per conversation + ~10k for the two judges; a fake stops at the trust check.
 const EST = { normal: 90_000, fake: 6_000 };
 
@@ -37,7 +41,7 @@ if (!args.includes('--yes')) {
   process.exit(0);
 }
 
-Object.assign(env, NO_PACING);
+Object.assign(env, NO_PACING, { RULES: rules });
 // Personas are bots: each appears in several pairs, so the per-user daily call cap would stop them mid-eval.
 // The global daily token budget and the all-time USD cap still apply.
 env.LLM_DAILY_CALLS_PER_USER = Math.max(env.LLM_DAILY_CALLS_PER_USER, 5000);
@@ -73,9 +77,23 @@ function transcriptMd(job, a, b, res, predicted, decisions) {
   ].join('\n');
 }
 
+// Owner's tuning target: < 5% of agent messages are a template fallback, and no fixed filler line ever.
+const FILLER = /^(haha fair 😄|oh nice, i like that|ha that makes sense)$/i;
+const fallbacksOf = (messages) => {
+  const agent = messages.filter((m) => m.authoredBy === 'agent');
+  return {
+    agentMsgs: agent.length,
+    templateFallbacks: agent.filter((m) => m.checks?.fallback === 'template' || FILLER.test(m.text.trim())).length,
+    constrained: agent.filter((m) => m.checks?.fallback === 'constrained').length,
+  };
+};
+
 let stopped = null;
+// --stop-at HH:MM (local time): start no new pair after then; running pairs finish. Resume later with --resume.
+const stopAt = opt('stop-at') ? (() => { const [h, m] = opt('stop-at').split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); if (d < Date.now() - 12 * 3600_000) d.setDate(d.getDate() + 1); return d; })() : null;
 await mapLimit(jobs, concurrency, async (job) => {
   if (stopped) return;
+  if (stopAt && Date.now() >= stopAt) { stopped = `stop time ${opt('stop-at')} reached`; return; }
   const today = await usageToday();
   const need = EST[job.pair.expected === 'flagged_fake' ? 'fake' : 'normal'];
   if (today.totals.tokens + need > env.LLM_DAILY_TOKENS_GLOBAL || today.paused) {
@@ -89,7 +107,7 @@ await mapLimit(jobs, concurrency, async (job) => {
   const decisions = await MatchDecision.find({ matchId: res.match._id }).lean();
   const predicted = predictedOf(res.match, decisions);
   const costUsd = (await Usage.aggregate([{ $match: { matchId: res.match._id } }, { $group: { _id: null, usd: { $sum: '$costUsd' } } }]))[0]?.usd ?? 0;
-  const file = `transcripts/${job.pair.id}-run${job.run}.md`;
+  const file = `transcripts/${job.pair.id}${suffix}-run${job.run}.md`;
   writeFileSync(new URL(file, DIR), transcriptMd(job, a, b, res, predicted, decisions));
   raw[job.key] = {
     id: job.pair.id, run: job.run, expected: job.pair.expected, predicted, reason: job.pair.reason,
@@ -98,6 +116,7 @@ await mapLimit(jobs, concurrency, async (job) => {
     scores: [a, b].map((u) => decisions.find((x) => String(x.userId) === String(u._id))?.confidence ?? null),
     stopReason: res.match.agentState?.stopReason ?? null, status: res.match.status,
     turns: res.messages.length, tokens: res.tokens, smartCalls: res.smartCalls, costUsd, seconds: res.seconds, file,
+    ...fallbacksOf(res.messages),
   };
   writeFileSync(RAW, `${JSON.stringify(raw, null, 2)}\n`);
   console.log(`  ${predicted === job.pair.expected ? '✓' : '✖'} ${job.key}: predicted ${predicted} (${res.match.agentState?.stopReason ?? '—'}, ${res.messages.length} msgs, ${res.tokens} tokens, ${res.seconds} s)`);
@@ -131,16 +150,17 @@ const md = [
   `- **Gate**: ${gated.filter((r) => r.predicted === 'gated').length}/${gated.length} gated pairs never became a chat`,
   `- **Fake detection**: ${fakes.filter((r) => r.predicted === 'flagged_fake').length}/${fakes.length} fake pairs flagged; ${normal.filter((r) => r.predicted === 'flagged_fake').length} genuine pairs wrongly flagged`,
   multi.length ? `- **Stability**: ${stable}/${multi.length} pairs got the same verdict on every run` : null,
+  `- **Fallback rate** (template or filler, target < 5%): ${pct(rows.reduce((s, r) => s + (r.templateFallbacks ?? 0), 0), rows.reduce((s, r) => s + (r.agentMsgs ?? 0), 0))} of agent messages; constrained regenerations: ${rows.reduce((s, r) => s + (r.constrained ?? 0), 0)}`,
   `- **Mean turns to verdict**: ${mean(normal.map((r) => r.turns)).toFixed(1)} messages`,
   `- **Mean tokens per pair**: ${Math.round(mean(normal.map((r) => r.tokens))).toLocaleString('en')} (fake pairs: ${Math.round(mean(fakes.map((r) => r.tokens))).toLocaleString('en')}); total ${rows.reduce((s, r) => s + r.tokens, 0).toLocaleString('en')} tokens across ${rows.length} runs`,
   `- **Cost per pair** at the configured \`LLM_PRICE_*\`: $${mean(normal.map((r) => r.costUsd)).toFixed(4)}${env.LLM_PROVIDER === 'nvidia' ? ' (NVIDIA free tier: prices are 0)' : ''}`,
   `- **Smart-tier calls**: ${rows.reduce((s, r) => s + r.smartCalls, 0)} (max 2 per pair: one judge per side; a fallback to mid is recorded per decision)`, '',
   '## Every pair', '',
-  '| pair | people | expected | predicted | judges (confidence) | stop | turns | tokens | why it was labelled | transcript |', '|---|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((r) => `| ${r.id}${r.run > 1 ? ` #${r.run}` : ''} | ${r.names.join(' × ')} | ${r.expected} | ${r.predicted === r.expected ? '✓ ' : '✖ '}${r.predicted} | ${r.verdicts.map((v, i) => `${v ?? '—'}${r.scores[i] != null ? ` (${r.scores[i]})` : ''}`).join(' / ')} | ${r.stopReason ?? '—'} | ${r.turns} | ${r.tokens.toLocaleString('en')} | ${r.reason} | [link](${r.file}) |`),
+  '| pair | people | expected | predicted | judges (confidence) | stop | turns | fallbacks | tokens | why it was labelled | transcript |', '|---|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((r) => `| ${r.id}${r.run > 1 ? ` #${r.run}` : ''} | ${r.names.join(' × ')} | ${r.expected} | ${r.predicted === r.expected ? '✓ ' : '✖ '}${r.predicted} | ${r.verdicts.map((v, i) => `${v ?? '—'}${r.scores[i] != null ? ` (${r.scores[i]})` : ''}`).join(' / ')} | ${r.stopReason ?? '—'} | ${r.turns} | ${r.templateFallbacks ?? '—'}/${r.agentMsgs ?? '—'} | ${r.tokens.toLocaleString('en')} | ${r.reason} | [link](${r.file}) |`),
   '',
 ].filter((l) => l !== null).join('\n');
-writeFileSync(new URL('results.md', DIR), `${md}\n`);
-console.log(`\nWrote eval/results.md (${first.length} pairs).`);
+writeFileSync(new URL(`results${suffix}.md`, DIR), `${md}\n`);
+console.log(`\nWrote eval/results${suffix}.md (${first.length} pairs, RULES=${rules}).`);
 await flushUsage();
 await mongoose.disconnect();
