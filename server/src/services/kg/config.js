@@ -29,11 +29,22 @@ export const KG = Object.freeze({
   STEER_RETRY_PRIORITY: 0.7, // agenda items at least this important are steered to again until answered…
   STEER_TRIES: 2, // …up to this many tries (eval i2: smoking was tried once, ignored by the model, never retried)
   END_BLOCK_PRIORITY: 0.7, // no natural end while an agenda item this important is unanswered (owner's tuning spec)
+  ASK_EXPLICIT_PRIORITY: 0.9, // agenda items this important (and dealbreakers) need a direct question on their exact attribute before a natural end
   NEAR_END_MESSAGES: 6, // this close to MAX_TURNS, an open important item is the topic every turn
   ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
-  JUDGE_YES_MIN: 0.6,
+  JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)
+  // The decision is made in code from the judge's verified evidence (owner's judge fix, 2026-10-18; judgeDecision.js).
+  JUDGE_YES_POSITIVES: 2, // verified positives, in THEIR words, on my key facts needed for a yes
+  JUDGE_KEY_IMPORTANCE: 0.6, // a key fact: a B answer that matters at least this much (medium/high) or a dealbreaker…
+  JUDGE_KEY_STRENGTH: 0.6, // …or an interest I hold at least this strongly
+  JUDGE_NO_IMPORTANCE: 0.9, // a severity-3 friction on a fact this important (or a dealbreaker) → no
+  JUDGE_CONF: {
+    NO_DEALBREAKER: 0.9, NO_SERIOUS: 0.8, // no: a stated dealbreaker conflict / a serious friction on a core fact
+    YES_BASE: 0.7, YES_PER_EXTRA_POSITIVE: 0.05, YES_PER_NOTABLE_FRICTION: 0.05, YES_MAX: 0.95,
+    UNSURE_BASE: 0.3, UNSURE_PER_EVIDENCE: 0.05, UNSURE_MAX: 0.5,
+  },
   // jobs (plan 17)
   JOB_POLL_MS: 1000, JOB_LOCK_MS: 120_000, JOB_MAX_ATTEMPTS: 5, JOB_DONE_TTL_DAYS: 7,
   JOB_CONCURRENCY: Object.freeze({

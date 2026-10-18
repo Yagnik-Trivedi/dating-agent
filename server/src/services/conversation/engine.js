@@ -15,7 +15,7 @@ import { embed } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
-import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf } from '../persona/askedAboutMe.js';
+import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
@@ -23,7 +23,7 @@ import { startConversationDoc } from '../pipeline/index.js';
 import { generate } from './generate.js';
 import { updateInterest } from './interest.js';
 import { perceiveObserve } from './perceive.js';
-import { MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { MIN_MESSAGES_FOR_NATURAL_END, openMustAsk, planAct } from './planAct.js';
 import { debug } from '../../utils/log.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest answer (consent covers AI handling).
@@ -159,7 +159,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || agendaSettled(freshAgenda));
+  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || (agendaSettled(freshAgenda) && !openMustAsk(freshAgenda, state).length));
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     const draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
@@ -230,6 +230,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     topicsTouched: [...new Set([...(state.topicsTouched ?? []), ...(plan.topic ? [plan.topic.id] : []), ...(perception.topics ?? [])])],
     ...(plan.topic?.kind === 'agenda' && { topicTries: { ...(state.topicTries ?? {}), [plan.topic.id]: (state.topicTries?.[plan.topic.id] ?? 0) + 1 } }),
     toldStoryIds: [...(state.toldStoryIds ?? []), ...told],
+    // What my agent asked directly / they stated themselves, per section-B attribute (openMustAsk).
+    askedAttrs: [...new Set([...(state.askedAttrs ?? []), ...attributesIn(messages.join(' '), { questions: true })])],
+    heardAttrs: [...new Set([...(state.heardAttrs ?? []), ...theirMsgs.flatMap((m) => attributesIn(m.text, { questions: false }))])],
   });
   const end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
   return {

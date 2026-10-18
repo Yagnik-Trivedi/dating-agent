@@ -54,9 +54,9 @@ test('a dealbreaker_hint event without dealbreakerRisk → re-ask', () => {
   const out = parse({ noFrictionJustification: 'ok' });
   const { value, problems } = validateDecision(out, { transcript, hints });
   assert.ok(problems.some((p) => p.includes('dealbreakerRisk is empty')));
-  const ok = validateDecision(parse({ decision: 'no', dealbreakerRisk: [{ attribute: 'smoking', quote: 'I smoke a bit on treks' }], frictions: [{ quote: 'I smoke a bit on treks', why: 'x' }] }), { transcript, hints });
+  const ok = validateDecision(parse({ dealbreakerRisk: [{ attribute: 'smoking', quote: 'I smoke a bit on treks' }], frictions: [{ quote: 'I smoke a bit on treks', why: 'x' }] }), { transcript, hints });
   assert.deepEqual(ok.problems, []);
-  assert.equal(ok.value.decision, 'no');
+  assert.equal(ok.value.dealbreakerRisk[0].attribute, 'smoking'); // the decision itself is made in code (judgeDecision.test.js)
 });
 
 test('a dealbreakerRisk quote must be their words, not mine', () => {
@@ -65,17 +65,23 @@ test('a dealbreakerRisk quote must be their words, not mine', () => {
   assert.deepEqual(value.dealbreakerRisk.map((d) => d.quote), ['I smoke a bit on treks']);
 });
 
-test('a low-confidence yes becomes unsure', () => {
-  const just = { noFrictionJustification: 'fine' };
-  assert.equal(validateDecision(parse({ ...just, confidence: 0.4 }), { transcript, yesMin: 0.6 }).value.decision, 'unsure');
-  assert.equal(validateDecision(parse({ ...just, confidence: 0.7 }), { transcript, yesMin: 0.6 }).value.decision, 'yes');
+test('validators: whose words, filler lines are never evidence, unknown fact ids and off-list dealbreaker values are nulled', () => {
+  const filler = { id: 'm4', _id: oid(), mine: false, filler: true, text: 'do you smoke, by the way?' };
+  const out = parse({
+    noFrictionJustification: 'x',
+    positives: [{ quote: 'Kudremukh!', why: 'They trek too.', messageId: 'm2', factId: 'F1' }, { quote: 'Sahyadri day hikes', why: 'Mine.', messageId: 'm3', factId: 'F9' }, { quote: 'do you smoke, by the way', why: 'filler', messageId: 'm4' }],
+    dealbreakerRisk: [{ attribute: 'smoking', quote: 'I smoke a bit on treks', value: 'socially' }, { attribute: 'drinking', quote: 'I smoke a bit on treks', value: 'sometimes' }],
+  });
+  const { value } = validateDecision(out, { transcript: [...transcript, filler], factIds: new Set(['F1']), options: { smoking: ['never', 'socially', 'regularly'], drinking: ['never', 'socially', 'regularly'] } });
+  assert.deepEqual(value.positives.map((p) => [p.factId, p.theirs]), [['F1', true], [null, false]]);
+  assert.deepEqual(value.dealbreakerRisk.map((d) => d.value), ['socially', null]);
 });
 
 test('malformed model output degrades instead of failing', () => {
   const out = judgeSchema.parse({ decision: 'maybe?', confidence: 'high', positives: [{ nope: 1 }], frictions: 'none' });
-  assert.equal(out.decision, 'unsure');
-  assert.equal(out.confidence, 0);
+  assert.equal(out.decision, undefined, 'the LLM no longer decides');
   assert.deepEqual(out.positives, []);
+  assert.deepEqual(out.frictions, []);
 });
 
 // --- settle / decide / compaction on a real (in-memory) DB
