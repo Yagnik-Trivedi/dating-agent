@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every task, plan step, checkpoint, pause or switch, and pushes it to `main`. `CLAUDE.md` → Status has the detailed acceptance results for each plan.
 
-- **Last updated:** 2026-10-18 13:30 IST, by Claude Code (re-plan: design arrived, frontend started; Tavily budget; Atlas login still failing)
+- **Last updated:** 2026-10-18 evening, by Claude Code (judge fix merged; frontend most screens done on feat/plan-10-frontend)
 - **Main-line branch:** `main` (`feat/plan-11-tuning` and `feat/backend-finish` merged) · **main:** `67a8666`
 - **Last commit (main line):** `feat/backend-finish` (KG own-side learning, extend, plan 12 backend parts, `--judges`)
 
@@ -79,10 +79,10 @@ Owner's decisions:
 
 | # | Track | What | Estimate | Status |
 |---|---|---|---|---|
-| 1 | Backend | Judge fix: i5 + m1 re-run → merge `feat/judge-fix` → README numbers | ~45 min | 🔄 re-run running |
-| 2 | Backend | Tavily budget guard: basic depth, all-time cap `TAVILY_MAX_SEARCHES`, per-user daily cap, 30-day cache with a normalised key, pre-warm the 5 demo cities, never called from tests | ~45 min | ⬜ |
-| 3 | Backend | Pause / Resume per match (`POST /matches/:id/pause` and `/resume`) | ~30 min | ⬜ |
-| 4 | Frontend | Plan 10 from the design, on `feat/plan-10-frontend`: tokens, fonts, icons and motion; Landing; Auth; Onboarding ("How would you reply?" + learning panel); This is you (radial knowledge map, facts with privacy, Which is right?, How you text); Introductions; Matches; Match room (notes in the margin, Trust / Shared / How they seem / Agenda, Pause, Take over, I wouldn't say that); Verdict Compatible / Maybe (Let them talk a bit longer) / Not compatible (Talk anyway); Replay; Inbox; Settings; loading / empty / error / wake-up states; light + lamplight; 375 → 1440 | ~1.5 days | ⬜ starting |
+| 1 | Backend | Judge fix merged to main (`6eb1cc2`): rejudge 8/17, compatible 5/7, harmful 1 at JUDGE_YES_MIN 0.65; step 4 on i3/i5/c4/m1 → 2/4, 0 harmful (i5 drinking conflict caught); README numbers updated | done | ✅ |
+| 2 | Backend | Tavily guard (`3ab63e8`): basic depth, TAVILY_MAX_SEARCHES (dev 30 / prod 700) + 3 per user per day as Usage rows, 30-day cache keyed by sorted interests, city fallback; key verified live by api-check (1 credit) | done | ✅ |
+| 3 | Backend | Pause / Resume per match (`3ab63e8`) + /matches/:id/kg returns my chat moments and interest | done | ✅ |
+| 4 | Frontend | Plan 10 on `feat/plan-10-frontend` (pushed, main merged in, 102/102 tests, api-check 20/20): design tokens/fonts/icons/motion, light + lamplight; Landing (demo chat), Sign-up (basics + consent) / Log in, Onboarding (segmented progress, How would you reply? + learning panel), This is you (radial map on real data, privacy, edit/delete, Which is right?, How you text), Introductions (blurred photos), Matches, Match room (notes in the margin, trust / shared / how they seem / agenda, Pause / Resume / Take over, I wouldn't say that, mobile sheet), Verdict (Compatible / Maybe + Let them talk longer / Not compatible + Talk anyway, date ideas after Continue), Replay, Settings (Learn from my chats, lamplight), wake-up screen. Checked in headless Chrome at 1440 and 375 (no overflow, no console errors). Left: Profile + Inbox polish, plan 10 end-to-end browser run, code-splitting (bundle 600 KB) | ~1 day → ~3 h left | 🔄 |
 | 5 | Backend | Retry `seed.js --judges` (NVIDIA 429s today) | ~1 h of LLM | ⬜ |
 | 6 | Review | CodeRabbit + ponytail audit once the frontend is done | ~1 h | ⬜ |
 | 7 | Go live | Plan 14 (Nebius, by Oct 26) → plan 12 (DEPLOY.md human steps + live smoke) | ~4–5 h + humans | ⬜ needs Nebius + Atlas login |
