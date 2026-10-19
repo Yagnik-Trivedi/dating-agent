@@ -1,6 +1,6 @@
 // The pre-chat gate (plan 15 §1, plan 17 §5): basics + dealbreakers in both directions, code only, boolean only.
 // Profile.gate is denormalised from Profile basics and section B answers; it is never shown to an LLM or another user.
-import { Profile } from '../../models/Profile.js';
+import { NOT_ACTIVE, Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
 import { distanceKm } from '../cities.js';
 import { QUESTIONS } from '../kg/questions.js';
@@ -41,7 +41,7 @@ export async function buildGate(userId) {
 /** One indexed filter for my discover deck: everyone who passes my gate and whose gate I pass. */
 export function discoverQuery(me, excludeUserIds = []) {
   const g = me ?? {};
-  const and = [{ userId: { $nin: excludeUserIds } }];
+  const and = [{ userId: { $nin: excludeUserIds } }, { status: { $nin: NOT_ACTIVE } }]; // plan 30 S2: missing = active
   // Location, my side: within my radius when I set one (and we both have coordinates), else the same city.
   // No city → only others without one (mirrors passesGate). Their side: same city, unless they set a radius;
   // those are checked exactly by passesGate after the query (the discover route filters with it).

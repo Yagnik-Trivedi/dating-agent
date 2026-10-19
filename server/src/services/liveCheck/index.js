@@ -8,6 +8,7 @@ import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
 import { httpError } from '../../utils/http.js';
 import { chatJSON, modelId } from '../llm/client.js';
+import { settleStatus } from '../profileStatus.js';
 import * as prompt from '../prompts/liveCheck.js';
 import { HINTS, THRESHOLDS, checkFrames, decide, pickActions } from './decide.js';
 
@@ -65,7 +66,10 @@ async function record(userId, result, reason, actions) {
     'liveCheck.model': modelId('vision'),
     'liveCheck.actions': { $literal: actions },
   } }]);
-  if (passed) await Profile.updateOne({ userId }, { $set: { liveChecked: true, liveCheckedAt: at } });
+  if (passed) {
+    await Profile.updateOne({ userId }, { $set: { liveChecked: true, liveCheckedAt: at } });
+    settleStatus(userId).catch((err) => console.error(`live check ${userId}: status not settled: ${err.message}`)); // browse_only → active
+  }
 }
 
 /**

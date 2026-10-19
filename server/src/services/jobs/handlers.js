@@ -9,7 +9,8 @@ import { runJudge } from '../conversation/judge.js';
 import { runUserGraphBuild } from '../kg/buildUserGraph.js';
 import { conceptCleanup, rebuildVoice, reconfirm, reflect } from '../kg/learning.js';
 import { createMatch } from '../matches.js';
-import { precheckProfile } from '../trust/checkProfile.js';
+import { moderatePhoto } from '../photos.js';
+import { profileCheckJob } from '../profileStatus.js';
 import { runAwaitGraph, runMatchCreated, runScheduledChat } from '../pipeline/index.js';
 import { archiveNotes } from './archive.js';
 import { registerJob } from './queue.js';
@@ -19,7 +20,8 @@ registerJob('matchCreated', runMatchCreated);
 registerJob('startChat', runScheduledChat); // credit guard: a match over the daily live-chat cap starts the next day
 registerJob('awaitGraph', runAwaitGraph); // plan 30 S1: a match waits for both phase-2 graphs (max 10 min)
 registerJob('agentTurn', runAgentTurn);
-registerJob('profileCheck', precheckProfile); // plan 30 S1: the trust check's model part, once per profile version
+registerJob('moderatePhoto', moderatePhoto); // plan 30 S3.1: one vision call per photo, retried while the model is down
+registerJob('profileCheck', profileCheckJob); // plan 30 S1/S2: the trust check's model part + my own self-check and status
 registerJob('evaluate', async ({ matchId, reason }) => {
   const match = await Match.findById(matchId);
   if (match) await startEvaluation(match, { reason });

@@ -8,6 +8,7 @@ import { Profile } from '../models/Profile.js';
 import { User } from '../models/User.js';
 import { CITY_NAMES, cityGeo } from '../services/cities.js';
 import { buildGate } from '../services/match/gate.js';
+import { initialStatus } from '../services/profileStatus.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const CONSENT_TEXT = 'Early conversations with your matches may be handled by AI agents, including yours.';
@@ -57,7 +58,7 @@ authRouter.post('/signup', async (req, res) => {
   let user;
   await mongoose.connection.transaction(async (session) => {
     [user] = await User.create([{ email, name, dob, passwordHash, consentAgent: true, consentAt: new Date() }], { session });
-    await Profile.create([{ userId: user._id, name, age, gender, interestedIn, city: geo ? CITY_NAMES.find((c) => c.toLowerCase() === city.toLowerCase()) : city, ...(geo && { geo }) }], { session });
+    await Profile.create([{ userId: user._id, status: initialStatus(), name, age, gender, interestedIn,city: geo ? CITY_NAMES.find((c) => c.toLowerCase() === city.toLowerCase()) : city, ...(geo && { geo }) }], { session });
   });
   await buildGate(user._id);
   res.status(201).json({ token: signToken(user), user });
