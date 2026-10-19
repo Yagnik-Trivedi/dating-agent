@@ -1,187 +1,210 @@
-// "This is you" (owner's design: screens/You.jsx) on real data from GET /api/kg/me. The only graphic in the product is
-// the knowledge map: sector = area, distance from centre = how sure the agent is, dot size = how much it matters,
-// fill = who can see it. Facts can be edited, deleted (they never come back) and made public / if asked / private.
-import { useCallback, useEffect, useMemo, useState } from 'react'
+// "This is you" (Round 7 Step 2 design, You.jsx) on real data from GET /api/kg/me: a calm 3D constellation of what my
+// agent knows (2D radial view under reduced motion, without WebGL or on weak devices), search + hub filters, and a
+// side sheet (bottom sheet on mobile) with the quote, where it came from and who can see it. List view + "How I text".
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check, Globe, Lock, MessageCircleQuestion, Pencil, Trash2, X } from 'lucide-react'
-import { Btn, useMobile } from '../components/prelude'
+import { useReducedMotion } from 'motion/react'
+import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Quote, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw } from '../components/r7'
+import { TextBars } from '../components/charts'
+import { useMobile } from '../components/prelude'
+import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
+import { buildGraph, canRender3D, CONF_WORD, IMP_WORD, lighten } from '../lib/graph'
 
-const HUBS = [['who', 'Who I am'], ['likes', 'Likes'], ['dislikes', 'Dislikes'], ['values', 'Values & lifestyle'], ['goals', 'Goals'], ['stories', 'Stories'], ['opinions', 'Opinions & humour'], ['voice', 'How I text']]
-const SHORT = { values: 'Values', opinions: 'Humour', voice: 'Texting' }
-const CONF = ['', 'Unsure', 'Fairly sure', 'Sure']
-const PRIV = { public: ['Public', Globe], if_asked: ['If asked', MessageCircleQuestion], private: ['Private', Lock] }
-const conf = (c) => (c >= 0.8 ? 3 : c >= 0.5 ? 2 : 1)
-const weight = (w) => (w >= 0.85 ? 3 : w >= 0.5 ? 2 : 1)
-const SOURCE = { questionnaire_choice: 'Your answer', questionnaire_story: 'Your story', user_answer: 'You told your agent', own_chat: 'A chat of yours', reflection: 'Your agent noticed', agent_observed: 'From a chat' }
+const Graph3D = lazy(() => import('../components/Graph3D')) // three.js only loads when this screen opens
+const PRIV_L = { public: 'Public', if_asked: 'Only if asked', private: 'Private' }
+const day = (d) => (d ? new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short' }) : null)
 
-/** Radial dot plot (the design's KnowledgeMap), fed with real facts. */
-function KnowledgeMap({ hubs, selected, onSelect, size, w, compact }) {
-  const cx = w / 2, cy = size / 2, R = Math.min(size / 2 - (compact ? 34 : 44), w / 2 - (compact ? 60 : 142))
-  const rings = [0, 0.4, 0.66, 0.92].map((f) => f * R)
-  const span = (Math.PI * 2) / hubs.length, gap = 0.07
-  const pt = (a, r) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r]
-  const arc = (a0, a1, r0, r1) => { const [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0); return `M${x0} ${y0} A${r1} ${r1} 0 0 1 ${x1} ${y1} L${x2} ${y2} A${r0} ${r0} 0 0 0 ${x3} ${y3}Z` }
-  const ds = compact ? [0, 3, 4.5, 6.5] : [0, 4, 6, 8.5]
+/** 2D radial fallback: same encoding, flat; edges draw in from You (anime.js, skipped under reduced motion). */
+function Radial2D({ L, selected, onSelect, w, h }) {
+  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.29
+  const hubXY = Object.fromEntries(L.hubs.map((hb, i) => { const a = -Math.PI / 2 + (i / L.hubs.length) * Math.PI * 2; return [hb.id, [cx + Math.cos(a) * R, cy + Math.sin(a) * R, a]] }))
+  const groups = {}; L.facts.forEach((f) => { (groups[f.hub] ||= []).push(f) })
+  const pos = {}
+  Object.entries(groups).forEach(([hid, fs]) => { const [x, y, a] = hubXY[hid]; const step = Math.min(0.42, 2.4 / fs.length); fs.forEach((f, k) => { const b = a + (k - (fs.length - 1) / 2) * step; const d = R * (0.34 + (k % 3) * 0.08); pos[f.id] = [x + Math.cos(b) * d, y + Math.sin(b) * d] }) })
+  const rad = (f) => 3.5 + f.r * 44
+  const ref = useRef(null)
+  useDraw(ref, { duration: 420, stagger: 14, ease: 'outQuad', deps: [L] })
   return (
-    <svg className="kmap" viewBox={`0 0 ${w} ${size}`} width="100%" style={{ maxWidth: w }} role="img" aria-label="Map of what your agent knows about you, grouped into eight areas">
-      {rings.slice(1).map((r, i) => <circle key={i} cx={cx} cy={cy} r={r} className="k-ring" />)}
-      {!compact && [1, 2, 3].map((c) => { const [x, y] = pt(-Math.PI / 2 - span / 2, rings[c]); return <text key={c} x={x} y={y + 4} textAnchor="middle" className="k-ringlabel">{CONF[c]}</text> })}
-      {hubs.map((h, hi) => {
-        const a0 = -Math.PI / 2 - span / 2 + hi * span + gap / 2, a1 = a0 + span - gap, am = (a0 + a1) / 2, sel = h.id === selected
-        const [lx, ly] = pt(am, R + (compact ? 14 : 20))
-        const anchor = Math.abs(Math.cos(am)) < 0.25 ? 'middle' : Math.cos(am) > 0 ? 'start' : 'end'
-        return (
-          <g key={h.id} className={`k-hub ${sel ? 'sel' : ''}`} onClick={() => onSelect(h.id)} style={{ cursor: 'pointer' }}>
-            <path d={arc(a0, a1, rings[1] * 0.55, R)} className="k-sector" />
-            <text x={lx} y={ly + 4} textAnchor={anchor} className="k-label">{compact ? (SHORT[h.id] || h.name) : h.name}{!compact && <tspan className="k-count"> {h.facts.length}</tspan>}</text>
-            {h.facts.map((f, fi) => {
-              const a = a0 + ((fi + 0.5) / h.facts.length) * (a1 - a0), [x, y] = pt(a, rings[f.conf] - (fi % 2) * (compact ? 4 : 6)), r = ds[f.weight]
-              return (
-                <g key={f.id} tabIndex={0} className={`k-fact p-${f.privacy}`} aria-label={`${f.t}. ${CONF[f.conf]}. ${PRIV[f.privacy]?.[0] ?? ''}.`} onKeyDown={(e) => e.key === 'Enter' && onSelect(h.id)}>
-                  <title>{`${f.t} · ${CONF[f.conf]} · ${PRIV[f.privacy]?.[0] ?? ''}`}</title>
-                  {f.conflict && <circle cx={x} cy={y} r={r + 4} className="k-conflict" />}
-                  {f.privacy === 'if_asked' ? <><circle cx={x} cy={y} r={r} className="k-ring-dot" /><path d={`M${x} ${y - r} A${r} ${r} 0 0 0 ${x} ${y + r}Z`} className="k-fill" /></>
-                    : <circle cx={x} cy={y} r={r} className={f.privacy === 'private' ? 'k-private' : 'k-fill'} />}
-                </g>
-              )
-            })}
-          </g>
-        )
-      })}
-      <circle cx={cx} cy={cy} r={compact ? 16 : 22} className="k-you" />
-      <text x={cx} y={cy + (compact ? 4 : 5)} textAnchor="middle" className="k-youlabel">You</text>
+    <svg ref={ref} className="radial" width={w} height={h} role="img" aria-label="Your knowledge graph, flat view">
+      {L.hubs.map((hb) => <line data-draw key={hb.id} x1={cx} y1={cy} x2={hubXY[hb.id][0]} y2={hubXY[hb.id][1]} className="r-line" />)}
+      {L.facts.map((f) => <line data-draw key={f.id} x1={hubXY[f.hub][0]} y1={hubXY[f.hub][1]} x2={pos[f.id][0]} y2={pos[f.id][1]} className="r-line l2" />)}
+      {L.contra.map(([a, b], i) => <line key={i} x1={pos[a.id][0]} y1={pos[a.id][1]} x2={pos[b.id][0]} y2={pos[b.id][1]} className="r-contra" />)}
+      {L.facts.map((f) => <g key={f.id} tabIndex={0} role="button" aria-label={f.t} onClick={() => onSelect(f.id)} onKeyDown={(e) => e.key === 'Enter' && onSelect(f.id)} className="r-node">
+        {f.privacy === 'private' ? <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f)} fill="#FBF8F3" stroke={f.tint} strokeWidth="2" /> : <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f)} fill={lighten(f.tint)} opacity={0.3 + 0.7 * f.conf} />}
+        {selected === f.id && <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f) + 5} fill="none" stroke="#A2613F" strokeWidth="2" />}
+      </g>)}
+      {L.hubs.map((hb) => <g key={hb.id}><circle cx={hubXY[hb.id][0]} cy={hubXY[hb.id][1]} r={9} fill={hb.tint} /><text x={hubXY[hb.id][0]} y={hubXY[hb.id][1] - 16} textAnchor="middle" className="r-hub">{hb.name}</text></g>)}
+      <circle cx={cx} cy={cy} r={14} fill="#2B2420" /><text x={cx} y={cy + 32} textAnchor="middle" className="r-hub">You</text>
     </svg>
   )
 }
-const MapLegend = ({ compact }) => (
-  <div className={`k-legend ${compact ? 'c' : ''}`}>
-    <span><svg width="34" height="14" aria-hidden="true"><circle cx="5" cy="7" r="3" className="k-fill" /><circle cx="15" cy="7" r="4.5" className="k-fill" /><circle cx="28" cy="7" r="6" className="k-fill" /></svg>How much it matters</span>
-    <span><svg width="16" height="14" aria-hidden="true"><circle cx="8" cy="7" r="6" className="k-ring-dot" /><circle cx="8" cy="7" r="2" className="k-fill" /></svg>Further out = more sure</span>
-    <span><svg width="52" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" className="k-fill" /><circle cx="25" cy="7" r="5.5" className="k-ring-dot" /><path d="M25 1.5 A5.5 5.5 0 0 0 25 12.5Z" className="k-fill" /><circle cx="43" cy="7" r="5.5" className="k-private" /></svg>Public · if asked · private</span>
-  </div>
-)
 
-function FactRow({ f, onChanged }) {
+/** Measures the canvas box so the 2D view fills it. */
+function useSize(ref) {
+  const [s, setS] = useState({ w: 0, h: 0 })
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return
+    const ro = new ResizeObserver(() => setS({ w: el.clientWidth, h: el.clientHeight })); ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+  return s
+}
+
+function FactSheet({ f, hub, mobile, conflict, onClose, onChanged }) {
   const toast = useToast()
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState(f.t)
+  const [fix, setFix] = useState('')
+  const [pick, setPick] = useState(null)
+  useEffect(() => { setEditing(false); setText(f.t); setFix(''); setPick(null) }, [f.id, f.t])
   const run = async (fn, done) => { try { await fn(); onChanged(); if (done) toast(done) } catch (err) { toast(errMsg(err), { tone: 'bad' }) } }
-  const privacy = (disclosure) => run(() => api.patch(`/api/kg/facts/${f.id}`, { disclosure }))
   const save = (e) => { e.preventDefault(); setEditing(false); if (text.trim() && text.trim() !== f.t) run(() => api.patch(`/api/kg/facts/${f.id}`, { object: text.trim() }), 'Saved. Your agent will use the new wording.') }
-  const del = () => run(() => api.delete(`/api/kg/facts/${f.id}`), 'Deleted. It won’t come back when you re-submit your answers.')
   return (
-    <li className="fact">
+    <aside className={`fact-sheet ${mobile ? 'bottom' : 'side'}`} aria-label="Fact details">
+      {mobile && <i className="grab" aria-hidden="true" />}
+      <div className="fs-top"><span className="hub-pill"><i style={{ background: hub.tint }} />{hub.name}</span><IconBtn icon={X} label="Close" onClick={onClose} /></div>
       {editing ? (
-        <form className="fact-t fact-edit" onSubmit={save}><input className="input" value={text} onChange={(e) => setText(e.target.value)} maxLength={120} autoFocus aria-label="Edit this fact" />
-          <Btn size="sm" type="submit" icon={Check}>Save</Btn><button type="button" className="icon-btn sm" aria-label="Cancel" onClick={() => setEditing(false)}><X size={16} strokeWidth={1.6} /></button></form>
-      ) : <div className="fact-t"><p>{f.t}</p><span>{f.src} · {CONF[f.conf].toLowerCase()}</span></div>}
-      {!editing && f.editable && (
+        <form className="fs-edit" onSubmit={save}><span className="input"><input value={text} onChange={(e) => setText(e.target.value)} maxLength={120} autoFocus aria-label="Edit this fact" /></span><Btn size="sm" type="submit">Save</Btn></form>
+      ) : <h2 className="fs-t">{f.t}</h2>}
+      <p className="fs-meta"><span>{CONF_WORD(f.conf)}</span><span aria-hidden="true">·</span><span>{f.dealbreaker ? 'A dealbreaker' : IMP_WORD[f.imp]}</span></p>
+      {f.q ? <figure className="evq"><blockquote><Quote size={15} strokeWidth={1.8} aria-hidden="true" />{f.q}</blockquote><figcaption>{[f.src, day(f.at)].filter(Boolean).join(', ')}</figcaption></figure>
+        : <p className="fs-src small">From: {f.src}</p>}
+      {conflict && (
+        <div className="nbox"><b>Which is right?</b> Your agent heard two different things and won’t use either until you say.
+          <div className="chips" style={{ marginTop: 8 }}>{[conflict.a, conflict.b].map((o) => <button type="button" key={o.id} className={`chipx ${pick === o.id ? 'on' : ''}`} onClick={() => setPick(o.id)}>{o.object}</button>)}</div>
+          <Btn size="sm" disabled={!pick} onClick={() => run(() => api.post(`/api/kg/contradictions/${conflict.id}/resolve`, { keepFactId: pick }), 'Thanks. Your agent will go with that.')}>Save</Btn>
+        </div>
+      )}
+      {f.voice ? (
+        <form className="fs-fix" onSubmit={(e) => { e.preventDefault(); run(() => api.post('/api/kg/voice/corrections', { nodeId: f.id, text: fix.trim() || undefined }), 'Your agent will remember') }}>
+          <p className="fs-l">That’s not me</p>
+          <span className="input"><input value={fix} onChange={(e) => setFix(e.target.value)} maxLength={300} placeholder="How is it really? e.g. “I never use emojis”" aria-label="How is it really?" /></span>
+          <Btn size="sm" kind="secondary" type="submit">Correct it</Btn>
+        </form>
+      ) : (
         <>
-          <div className="seg" role="radiogroup" aria-label="Who can see this">
-            {Object.entries(PRIV).map(([k, [label, I]]) => <button key={k} role="radio" aria-checked={f.privacy === k} className={f.privacy === k ? 'on' : ''} onClick={() => privacy(k)} title={label}><I size={14} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span></button>)}
+          <p className="fs-l">Who can see this</p>
+          <Privacy value={f.privacy} compact={mobile} onChange={(disclosure) => run(() => api.patch(`/api/kg/facts/${f.id}`, { disclosure }))} />
+          <div className="fs-act">
+            <Btn kind="secondary" icon={Pencil} onClick={() => setEditing(true)}>Edit</Btn>
+            <Btn kind="ghost" icon={Trash2} onClick={() => run(() => api.delete(`/api/kg/facts/${f.id}`), 'Deleted. It won’t come back, even if you answer again.').then(onClose)}>Delete</Btn>
           </div>
-          <button className="icon-btn sm" aria-label={`Edit: ${f.t}`} onClick={() => setEditing(true)}><Pencil size={16} strokeWidth={1.6} /></button>
-          <button className="icon-btn sm" aria-label={`Delete: ${f.t}`} onClick={del}><Trash2 size={16} strokeWidth={1.6} /></button>
         </>
       )}
-    </li>
+    </aside>
   )
 }
 
-function Conflicts({ items, onChanged }) {
-  const toast = useToast()
-  const [pick, setPick] = useState({})
-  if (!items.length) return null
-  return items.map((c) => (
-    <div key={c.id} className="card conflict">
-      <h3 className="t-h3">Which is right?</h3>
-      <p className="small">Your agent heard two different things. It won’t use either until you say.</p>
-      <div className="opts">{[c.a, c.b].map((o) => (
-        <label key={o.id} className={`opt ${pick[c.id] === o.id ? 'on' : ''}`}><input type="radio" name={`cf-${c.id}`} checked={pick[c.id] === o.id} onChange={() => setPick((p) => ({ ...p, [c.id]: o.id }))} />
-          <span><b>{o.object}</b><em>{o.quote ? `“${o.quote}”` : o.predicate}</em></span></label>
-      ))}</div>
-      <div className="conflict-a"><span /><Btn size="sm" disabled={!pick[c.id]} onClick={async () => {
-        try { await api.post(`/api/kg/contradictions/${c.id}/resolve`, { keepFactId: pick[c.id] }); toast('Thanks. Your agent will go with that.'); onChanged() } catch (err) { toast(errMsg(err), { tone: 'bad' }) }
-      }}>Save</Btn></div>
-    </div>
-  ))
+const Legend = () => (
+  <ul className="legend" aria-label="How to read the graph">
+    <li><span className="lg-size"><i /><i /><i /></span>Bigger = matters more</li>
+    <li><span className="lg-op"><i /><i /></span>Fainter = less sure</li>
+    <li><span className="lg-priv"><Lock size={9} strokeWidth={2.4} /></span>Private</li>
+    <li><span className="lg-dash" />Contradiction</li>
+  </ul>
+)
+
+function howIText(v) {
+  if (!v) return []
+  return [
+    { k: 'Message length', v: `${v.medianWords < 10 ? 'Short' : v.medianWords < 20 ? 'Medium' : 'Long'} · about ${v.medianWords} words`, you: Math.min(1, v.medianWords / 30), scale: ['Short', 'Long'] },
+    { k: 'Emoji use', v: v.emojiPerMessage >= 0.15 ? `Often · ${Math.round(v.emojiPerMessage * 10)} in 10 messages` : 'Rarely', you: Math.min(1, v.emojiPerMessage), scale: ['Rarely', 'Often'] },
+    { k: 'Language mix', v: v.nonEnglishShare >= 0.1 ? `About ${Math.round(v.nonEnglishShare * 100)}% not in English` : 'Mostly English', you: v.nonEnglishShare, scale: ['English', 'Mixed'] },
+    { k: 'Laugh style', v: v.laugh ? `“${v.laugh}”` : 'Rarely laughs in text', you: Math.min(1, v.laughRate * 2), scale: ['Rarely', 'A lot'] },
+  ]
 }
 
-function HowYouText({ voice, onChanged }) {
-  const toast = useToast()
-  const [open, setOpen] = useState(null)
-  const [fix, setFix] = useState('')
-  if (!voice.length) return null
-  async function save(e) {
-    e.preventDefault()
-    try { await api.post('/api/kg/voice/corrections', { nodeId: open, text: fix.trim() || undefined }); toast('Your agent will remember'); setOpen(null); setFix(''); onChanged() } catch (err) { toast(errMsg(err), { tone: 'bad' }) }
-  }
+function ListView({ L, voice, onSelect }) {
   return (
-    <div className="card how">
-      <div className="card-h"><h3 className="t-h3">How you text</h3><span className="small">So your agent sounds like you</span></div>
-      <div className="style-chips">{voice.map((c) => <button key={c.id} className="style-chip" onClick={() => { setOpen(c.id); setFix('') }} aria-label={`${c.t}. Correct this`}><span>{c.t}</span><Pencil size={13} strokeWidth={1.6} aria-hidden="true" /></button>)}</div>
-      {open && (
-        <form className="how-fix" onSubmit={save}>
-          <label className="field-l" htmlFor="how-fix">That’s not me: how is it really? <span className="small">(e.g. “I never use emojis”)</span></label>
-          <div className="how-row"><input id="how-fix" className="input" value={fix} onChange={(e) => setFix(e.target.value)} maxLength={300} autoFocus /><Btn type="submit">Save</Btn><button type="button" className="icon-btn" aria-label="Cancel" onClick={() => setOpen(null)}><X size={16} strokeWidth={1.6} /></button></div>
-        </form>
-      )}
+    <div className="y-list">
+      <div className="yl-facts">{L.hubs.filter((h) => h.id !== 'voice').map((h) => {
+        const fs = L.facts.filter((f) => f.hub === h.id)
+        return (
+          <section key={h.id} className="yl-sec"><h2 className="yl-h"><i style={{ background: h.tint }} />{h.name}<span>{fs.length}</span></h2>
+            <ul className="card flush">{fs.map((f) => <li key={f.id} className="yl-row" role="button" tabIndex={0} onClick={() => onSelect(f.id)} onKeyDown={(e) => e.key === 'Enter' && onSelect(f.id)}><div><b>{f.t}</b><span className="small">{CONF_WORD(f.conf)} · {f.src}</span></div><span className={`pv pv-${f.privacy === 'if_asked' ? 'asked' : f.privacy}`}>{f.privacy === 'private' && <Lock size={12} strokeWidth={2.2} aria-hidden="true" />}{PRIV_L[f.privacy]}</span><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></li>)}</ul></section>
+        )
+      })}</div>
+      <aside className="yl-side card"><h2 className="h3">How I text</h2><p className="small">Learned from your replies. Your agent uses this to sound like you. Tap a “How I text” dot in the graph to correct it.</p>{voice ? <TextBars items={howIText(voice)} /> : <p className="small">Not enough replies yet.</p>}</aside>
     </div>
   )
 }
 
 export default function You({ review = false }) {
   const mobile = useMobile()
-  const [graph, setGraph] = useState(null)
-  const [conflicts, setConflicts] = useState([])
+  const rm = useReducedMotion()
+  const { user } = useAuth()
+  const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [selected, setSelected] = useState('likes')
-  const [view, setView] = useState('map')
+  const [sel, setSel] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [query, setQuery] = useState('')
+  const [view, setView] = useState('graph')
+  const canvas = useRef(null)
+  const size = useSize(canvas)
   const load = useCallback(() => Promise.all([api.get('/api/kg/me'), api.get('/api/kg/contradictions')])
-    .then(([g, c]) => { setGraph(g.data); setConflicts(c.data.contradictions); setError(null) })
+    .then(([g, c]) => { setData({ graph: g.data, contradictions: c.data.contradictions }); setError(null) })
     .catch((e) => setError(errMsg(e))), [])
   useEffect(() => { load() }, [load])
+  const L = useMemo(() => (data ? buildGraph(data.graph, data.contradictions) : null), [data])
+  const use3D = useMemo(() => !rm && canRender3D(), [rm])
+  const building = user?.graphStatus === 'building'
 
-  const hubs = useMemo(() => {
-    if (!graph) return []
-    const conflictIds = new Set(conflicts.flatMap((c) => [c.a.id, c.b.id]))
-    const facts = graph.nodes.filter((n) => n.hub && !n.hubNode && n.type !== 'self')
-    return HUBS.map(([id, name]) => ({ id, name, facts: facts.filter((n) => n.hub === id).map((n) => ({
-      id: n.id, t: n.label, conf: conf(n.confidence ?? 0.6), weight: weight(n.weight ?? 0.5), privacy: n.disclosure ?? 'public',
-      src: n.type === 'voice' ? 'Learned from your replies' : SOURCE[n.source] ?? 'Your answer', conflict: conflictIds.has(n.id), editable: n.type !== 'voice',
-    })) }))
-  }, [graph, conflicts])
+  const f = L?.facts.find((x) => x.id === sel)
+  const hub = f && L.hubs.find((h) => h.id === f.hub)
+  const conflict = f && data.contradictions.find((c) => c.a.id === f.id || c.b.id === f.id)
+  const isList = view === 'list'
+  const privateN = L?.facts.filter((x) => x.privacy === 'private').length ?? 0
 
-  if (error) return <div className="page"><div className="st-center"><h2 className="t-h2">We couldn’t load what your agent knows</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div></div>
-  if (!graph) return <div className="page" aria-busy="true"><div className="sk sk-t" /><div className="card map-card" style={{ height: 420, marginTop: 16 }}><div className="sk" style={{ width: '60%', height: '80%', margin: 'auto' }} /></div></div>
+  let graph
+  if (error) graph = <Empty icon={CircleAlert} title="We couldn’t load your graph" action={<Btn kind="secondary" icon={RefreshCw} onClick={load}>Try again</Btn>}>Your facts are safe. Try again, or switch to the list view.</Empty>
+  else if (!L) graph = <div className="g-loading"><span className="sk-dot" />Loading your graph…</div>
+  else if (!L.facts.length) graph = building ? <div className="g-state" role="status"><Dots /><h2 className="h3">Your agent is still reading your stories</h2><p className="small">Your graph fills in as it learns. This usually takes a minute or two after onboarding.</p></div>
+    : <Empty icon={Orbit} title="Nothing here yet" action={<Link className="btn primary" to="/onboarding"><BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />Teach your agent</Link>}>Answer a few prompts or tell a story, and your agent will start mapping what matters to you.</Empty>
+  else if (use3D) graph = <Suspense fallback={<div className="g-loading"><span className="sk-dot" />Loading your graph…</div>}><Graph3D L={L} selected={sel} onSelect={setSel} filter={filter} query={query} mobile={mobile} /></Suspense>
+  else graph = size.w > 0 && <Radial2D L={L} selected={sel} onSelect={setSel} w={size.w} h={size.h} />
 
-  const all = hubs.flatMap((h) => h.facts)
-  const hub = hubs.find((h) => h.id === selected)
-  const shown = (mobile && view === 'list') ? hubs.flatMap((h) => h.facts.map((f) => ({ ...f, hubName: h.name }))) : hub.facts
+  const controls = (
+    <div className="y-controls">
+      <label className="search"><Search size={17} strokeWidth={1.7} aria-hidden="true" /><span className="sr-only">Search what your agent knows</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={mobile ? 'Search facts' : 'Search what your agent knows'} /></label>
+      <Tabs id="you-view" value={view} onChange={setView} items={[['graph', 'Graph'], ['list', 'List']]} />
+    </div>
+  )
+  const chips = L && (
+    <div className="hub-chips" role="group" aria-label="Filter by hub">
+      <button type="button" className={`chip ${filter === 'all' ? 'on' : ''}`} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>All · {L.facts.length}</button>
+      {L.hubs.map((h) => <button type="button" key={h.id} className={`chip ${filter === h.id ? 'on' : ''}`} aria-pressed={filter === h.id} onClick={() => setFilter(h.id)}><i style={{ background: h.tint }} />{h.name}</button>)}
+    </div>
+  )
+  const reviewBar = review && <div className="nbox ok you-review"><span><b>This is what your agent learned from your answers.</b> Fix anything that’s off, mark things private, or delete them.</span><Link className="btn primary sm" to="/discover">Looks right<ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link></div>
+  const sheet = f && hub && <FactSheet f={f} hub={hub} mobile={mobile} conflict={conflict} onClose={() => setSel(null)} onChanged={load} />
+  const list = L && <ListView L={L} voice={data.graph.voice} onSelect={setSel} />
+
+  if (mobile) return (
+    <div className="scr app-scr you m">
+      <header className="y-head"><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</header>
+      {reviewBar}
+      {controls}{!isList && chips}
+      {isList ? <div className="y-lwrap">{list}</div> : <div className="y-canvas" ref={canvas}>{graph}</div>}
+      {sheet}
+      <TabBar />
+    </div>
+  )
   return (
-    <div className={`scr you page-you ${mobile ? 'm' : 'd'}`}>
-      <header className="you-head"><div><h1 className="t-h1">This is you</h1>{!mobile && <p>Everything your agent knows about you, and who can see it. It learns only from your answers and from chats you approve. Change anything, any time.</p>}</div>
-        <span className="t-data">{all.length} facts · {all.filter((f) => f.privacy === 'private').length} private</span></header>
-      {review && <div className="card you-review"><div><h2 className="t-h3">This is what your agent learned from your answers</h2><p className="small">Fix anything that’s off, mark things private, or delete them. Your agent only uses what’s here.</p></div><Link className="btn primary" to="/discover">Looks right, start meeting people<ArrowRight size={16} strokeWidth={1.6} /></Link></div>}
-      {mobile && <div className="seg big" role="tablist"><button role="tab" className={view === 'map' ? 'on' : ''} aria-selected={view === 'map'} onClick={() => setView('map')}>Map</button><button role="tab" className={view === 'list' ? 'on' : ''} aria-selected={view === 'list'} onClick={() => setView('list')}>List</button></div>}
-      <div className="you-grid">
-        {(!mobile || view === 'map') && (
-          <div className="you-left">
-            <div className="card map-card"><KnowledgeMap hubs={hubs} selected={selected} onSelect={setSelected} size={mobile ? 330 : 430} w={mobile ? 343 : 620} compact={mobile} /><MapLegend compact={mobile} /></div>
-            {!mobile && <HowYouText voice={hubs.find((h) => h.id === 'voice').facts} onChanged={load} />}
-          </div>
-        )}
-        <div className="you-right">
-          <div className="card list-card">
-            <div className="card-h"><h3 className="t-h3">{mobile && view === 'list' ? 'Everything' : hub.name}</h3><span className="t-data">{shown.length} facts</span></div>
-            {shown.length ? <ul className="facts">{shown.map((f) => <FactRow key={f.id} f={f} onChanged={load} />)}</ul> : <p className="small" style={{ padding: '12px 0' }}>Nothing here yet.</p>}
-          </div>
-          <Conflicts items={conflicts} onChanged={load} />
-          {mobile && <HowYouText voice={hubs.find((h) => h.id === 'voice').facts} onChanged={load} />}
-        </div>
+    <div className="scr app-scr you d">
+      <TopNav />
+      <div className="y-top">
+        <div><h1 className="h1">This is you</h1><p className="lead">Everything your agent knows about you, and who can see it. Tap any dot to check it, fix it or make it private.</p></div>
+        {controls}
       </div>
+      {reviewBar}
+      {!isList && chips}
+      {isList ? <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div> : <div className="y-main">
+        <div className="y-canvas" ref={canvas}>{graph}{L?.facts.length > 0 && <><Legend /><p className="y-hint small">{use3D ? 'Drag to turn · scroll to zoom · tap a dot' : 'Tap a dot'}</p></>}</div>
+        {sheet || <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>}
+      </div>}
     </div>
   )
 }
