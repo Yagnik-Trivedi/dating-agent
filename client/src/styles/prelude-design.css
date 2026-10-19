@@ -233,8 +233,6 @@
 .learn li b { display: block; font-size: 15.5px; font-weight: 600; } .learn li em { font-style: normal; font-size: 14.5px; color: var(--ink-2); }
 .learn li:not(.on) b, .learn li:not(.on) em { color: var(--muted); }
 .learn-a { display: flex; gap: 2px; }
-.privacy-note { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; line-height: 20px; color: var(--muted); }
-.privacy-note svg { margin-top: 3px; flex: none; color: var(--trust); }
 .onb.m .onb-top { height: 64px; padding: 0 16px 0 4px; gap: 6px; }
 .onb.m .onb-prog { width: auto; flex: 1; margin: 0 8px 0 0; }
 .onb.m .onb-grid { display: block; padding: 20px 20px 0; }

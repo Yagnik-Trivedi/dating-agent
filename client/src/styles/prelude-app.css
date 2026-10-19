@@ -74,20 +74,10 @@
 .input { height: 46px; width: 100%; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-strong); font: inherit; font-size: 16px; color: var(--ink); }
 textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height: 1.5; resize: vertical; }
 .input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .seg.wide { display: flex; flex-wrap: wrap; }
 .seg.wide button { height: 36px; padding: 0 14px; font-size: 14.5px; }
 .seg button[role="checkbox"].on { background: var(--surface); color: var(--ink); box-shadow: var(--e1), 0 0 0 1px var(--line); }
 .form-error { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--flag-tint); color: var(--flag); font-size: 14.5px; }
-.auth { display: flex; flex-direction: column; align-items: center; padding: 28px 16px 48px; background-image: var(--light); }
-.auth-mark { text-decoration: none; margin: 8px 0 28px; }
-.auth-card { width: min(520px, 100%); padding: 32px clamp(20px, 5vw, 40px) 28px; box-shadow: var(--e2); }
-.auth-sub { margin: 8px 0 22px; font-size: 17px; line-height: 26px; }
-.auth-form { display: grid; gap: 16px; }
-.auth-alt { text-align: center; }
-.consent { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: var(--trust-tint); color: var(--ink); font-size: 14.5px; line-height: 21px; cursor: pointer; }
-.consent input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--trust); flex: none; }
-.consent b { font-weight: 600; }
 
 /* ============ Matches + Introductions ============ */
 .m-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 760px; }
