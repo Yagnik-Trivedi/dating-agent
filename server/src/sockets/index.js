@@ -41,7 +41,7 @@ export function registerSockets(io) {
     socket.on('message:send', handle(async ({ matchId, text }) => {
       const match = await getMatchFor(matchId, userId);
       const message = await sendMessage({ match, senderId: userId, authoredBy: 'human', text });
-      return { message: serializeMessage(message, userId, match.status) };
+      return { message: serializeMessage(message, userId) };
     }));
 
     socket.on('typing', ({ matchId } = {}) => {
