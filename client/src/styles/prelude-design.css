@@ -60,8 +60,6 @@
 .seg button[role="radio"].on:last-child { color: var(--trust); }
 
 /* ============ Landing ============ */
-.live-foot { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; }
-.live-foot .typing { padding: 0; }
 .eyebrow { font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 18px; letter-spacing: .01em; }
 
 /* ============ Match room ============ */

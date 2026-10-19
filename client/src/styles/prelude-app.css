@@ -189,16 +189,5 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 .profile-page { max-width: 780px; }
 
 /* ============ Live check (plan 19) ============ */
-.live { max-width: 760px; }
-.live-stage { padding: 14px; display: grid; gap: 14px; }
-.live-video { position: relative; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: var(--sunken); }
-.live-video video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); /* preview mirrored; captured frames are not */ }
-.live-over { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; background: color-mix(in srgb, var(--surface) 70%, transparent); text-align: center; }
-.live-step { text-align: center; display: grid; gap: 6px; justify-items: center; }
-.live-hold { color: var(--trust); font-weight: 600; }
-.live-dots { list-style: none; display: flex; gap: 8px; padding: 0; margin: 6px 0 0; }
-.live-dots li { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 600 13px var(--sans); background: var(--sunken); color: var(--ink-2); }
-.live-dots li.now { background: var(--accent); color: var(--on-accent); }
-.live-dots li.done { background: var(--trust); color: var(--surface); }
 .nav-avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; background: var(--beige); color: var(--text); font-weight: 700; font-size: 14px; }
 .topnav-r .tb-i .count { position: absolute; right: -4px; top: -2px; }

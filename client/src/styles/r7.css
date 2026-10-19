@@ -2,7 +2,7 @@
    Ported as-is except: the board-only component gallery is left out, and .app-scr gives the app shell the board's
    full-height frame. Tokens are also on :root in index.css. */
 .scr.app-scr { height: 100dvh; }
-.app-scrim { position: fixed; z-index: 60; }
+.scrim.app-scrim { position: fixed; z-index: 60; }
 .app-toasts.toasts { position: fixed; z-index: 70; }
 @media (max-width: 820px) { .app-toasts.toasts { bottom: 92px; } }
 textarea.cm-field { border: 0; resize: none; background: none; font: inherit; color: var(--text); display: block; }
