@@ -66,27 +66,6 @@
 .verdict.state .v-card { padding: 28px; }
 
 /* ============ Landing (fluid) ============ */
-.landing { min-height: 100dvh; padding-bottom: 64px; }
-.landing.d { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 616px); grid-template-rows: 80px auto; justify-content: space-between; column-gap: 56px; padding: 0 clamp(24px, 4.5vw, 64px) 72px; }
-.landing.d .l-nav { grid-column: 1 / -1; padding: 0; }
-.landing.d .l-photo { position: relative; right: auto; top: auto; grid-column: 2; grid-row: 2; width: 100%; height: min(700px, 78dvh); margin-top: 20px; }
-.landing.d .l-copy { position: static; grid-column: 1; grid-row: 2; width: auto; align-self: center; }
-.landing.d .live-card { width: min(392px, calc(100% - 48px)); }
-.landing.d .l-more { grid-column: 1 / -1; }
-.landing.m .l-copy { padding-top: 124px; }
-.landing .l-links a, .landing .l-login { text-decoration: none; }
-.landing .btn { text-decoration: none; }
-.l-menu { position: absolute; z-index: 5; right: 12px; top: 60px; display: grid; gap: 4px; padding: 10px; min-width: 220px; }
-.l-menu a { padding: 10px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
-.l-menu a:hover { background: var(--sunken); }
-.l-more { margin-top: 72px; }
-.landing.m .l-more { margin: 56px 20px 0; }
-.l-steps { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.l-steps li { padding: 20px 22px; }
-.l-steps .t-h3 { margin: 8px 0 6px; }
-.l-steps .t-body { color: var(--ink-2); }
-.l-pi { color: var(--trust); }
-.l-end { margin-top: 28px; }
 @media (max-width: 1000px) { .l-steps { grid-template-columns: 1fr; } }
 
 /* ============ Forms + auth ============ */
@@ -221,7 +200,6 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 
 /* ============ Live check (plan 19) ============ */
 .live { max-width: 760px; }
-.live-card-in { padding: 22px; display: grid; gap: 14px; }
 .live-stage { padding: 14px; display: grid; gap: 14px; }
 .live-video { position: relative; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: var(--sunken); }
 .live-video video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); /* preview mirrored; captured frames are not */ }

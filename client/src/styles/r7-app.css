@@ -19,3 +19,7 @@
 a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-decoration: underline; text-underline-offset: 3px; }
 .set-note { display: flex; gap: 6px; align-items: flex-start; margin-top: 16px; }
 .app-wake { position: fixed; inset: 0; z-index: 100; }
+.scr.landing-page { height: auto; min-height: 100dvh; overflow: visible; }
+.landing.m .hero-art { margin: 0 auto; }
+.l-menu { position: absolute; top: 64px; left: 12px; right: 12px; z-index: 5; display: flex; flex-direction: column; padding: 8px; }
+.l-menu a { padding: 12px; font-weight: 600; text-decoration: none; color: var(--text); border-radius: 10px; } .l-menu a:hover { background: var(--cream); }

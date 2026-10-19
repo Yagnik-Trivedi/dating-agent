@@ -1,115 +1,81 @@
-// Landing (owner's design: screens/Landing.jsx): photography slot with the live agent conversation as the product
-// moment. The demo loops the design's scripted chat (fictional people) and then the hand-off to the humans.
-import { useEffect, useState } from 'react'
+// Landing (Round 7 Step 2 design, Landing.jsx): hero line, the quiet "introduced" moment (two dots connect into one
+// thin line, anime.js), how it works, trust and privacy, and a call to action. Never "verified".
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, Eye, Hand, Lock, Menu, ShieldCheck, X } from 'lucide-react'
-import { Btn, ICON, Typing, calm, useMobile } from '../components/prelude'
-import { HANDOFF, PEOPLE, SCRIPT } from '../lib/demoScript'
-import { duskPhoto } from '../lib/placeholderPhoto'
+import { motion, useReducedMotion } from 'motion/react'
+import { ArrowRight, Eye, Flag, Lock, MailOpen, Menu, MessageSquareText, PenLine, ScanFace, X } from 'lucide-react'
+import { IconBtn, T, Wordmark, useDraw } from '../components/r7'
+import { useMobile } from '../components/prelude'
+import { illustration } from '../lib/art'
 
-const TRUST = [
-  [ShieldCheck, 'Your agent checks each match’s profile for fakes before saying hello'],
-  [Eye, 'You can read everything your agent says'],
-  [Hand, 'Take over or pause at any time'],
-]
-
-/** Steps through the demo chat like a real one: typing, then the line; loops after the hand-off. */
-function useDemo(pace = 2800) {
+function HeroArt({ mobile }) {
+  const ref = useRef(null)
   const rm = useReducedMotion()
-  const all = [...SCRIPT, { sys: true }, ...HANDOFF]
-  const [shown, setShown] = useState(rm ? all.length : 0)
-  const [typing, setTyping] = useState(null)
-  useEffect(() => {
-    if (rm) return
-    let alive = true
-    let i = 0
-    const timers = []
-    const later = (fn, ms) => timers.push(setTimeout(() => alive && fn(), ms))
-    const tick = () => {
-      if (i >= all.length) { later(() => { i = 0; setShown(0); later(tick, 900) }, 6000); return }
-      const m = all[i]
-      if (m.sys) { i++; setShown(i); later(tick, pace * 1.3); return }
-      setTyping(m.from)
-      later(() => { setTyping(null); i++; setShown(i); later(tick, pace * 0.45) }, Math.min(pace * 1.1, 500 + m.t.length * 18))
-    }
-    later(tick, 600)
-    return () => { alive = false; timers.forEach(clearTimeout) }
-  }, [rm]) // eslint-disable-line react-hooks/exhaustive-deps
-  const visible = all.slice(0, shown)
-  return { visible, typing, handoff: visible.some((m) => m.sys) }
-}
-
-/** Phrases that became shared ground are set in the signature colour (the design's `hl`). */
-function Highlighted({ m }) {
-  if (!m.hl?.length) return m.t
-  const parts = m.t.split(new RegExp(`(${m.hl.map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`))
-  return parts.map((p, i) => (m.hl.includes(p) ? <span key={i} className="hl">{p}</span> : p))
-}
-
-function LiveCard({ mobile }) {
-  const demo = useDemo()
-  const lines = demo.visible.filter((m) => !m.sys).slice(mobile ? -1 : -2)
+  useDraw(ref, { duration: 1100, delay: 450, ease: 'inOutQuad' })
+  const W = mobile ? 343 : 600, H = mobile ? 390 : 560
+  const a = mobile ? [96, 168] : [170, 290], b = mobile ? [248, 150] : [430, 262]
   return (
-    <div className="live-card" aria-live="polite">
-      <div className="live-h"><span>First conversation</span><span className="live-s"><i aria-hidden="true" />{demo.handoff ? 'They’re chatting now' : 'Both agents chatting'}</span></div>
-      <AnimatePresence initial={false} mode="popLayout">
-        {lines.map((m) => (
-          <motion.div layout="position" key={demo.visible.indexOf(m)} className={`live-line ${m.from} ${m.human ? 'human' : ''}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={calm}>
-            <span className="who">{PEOPLE[m.from].name}<em>{m.human ? 'in person' : 'drafted by their agent'}</em></span>
-            <p><Highlighted m={m} /></p>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      <div className="live-foot">{demo.typing ? <><Typing />{PEOPLE[demo.typing].name}’s agent is writing</> : demo.handoff ? 'The agents stepped back after 11 messages.' : 'You can read along at any time.'}</div>
+    <div className="hero-art" ref={ref} style={{ width: W, height: H, maxWidth: '100%' }}>
+      <motion.img className="ha-card a" src={illustration('demo-aarav', 'portrait')} alt="An illustrated person" initial={rm ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...T.slow, delay: 0.05 }} />
+      <motion.img className="ha-card b" src={illustration('demo-meera', 'portrait')} alt="Another illustrated person" initial={rm ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...T.slow, delay: 0.15 }} />
+      <svg className="ha-line" viewBox={`0 0 ${W} ${H}`} width={W} height={H} aria-hidden="true">
+        <path data-draw d={`M${a[0]} ${a[1]} C ${a[0] + 60} ${a[1] - 90}, ${b[0] - 60} ${b[1] - 90}, ${b[0]} ${b[1]}`} className="ha-path" />
+        <motion.circle cx={a[0]} cy={a[1]} r="6" className="ha-dot" initial={rm ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ ...T.base, delay: 0.3 }} />
+        <motion.circle cx={b[0]} cy={b[1]} r="6" className="ha-dot" initial={rm ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ ...T.base, delay: 0.38 }} />
+      </svg>
+      <motion.p className="ha-msg" initial={rm ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ ...T.slow, delay: 1.45 }}>
+        <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />Written by Meera’s agent</span>
+        <span className="bubble">Real treks or Instagram treks? 😄</span>
+      </motion.p>
     </div>
   )
 }
-
+function Reveal({ children, i = 0, className = '' }) {
+  const rm = useReducedMotion()
+  return <motion.div className={className} initial={rm ? { opacity: 0 } : { opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ ...T.slow, delay: i * 0.06 }}>{children}</motion.div>
+}
 const STEPS = [
-  ['You both say yes', 'Like someone’s profile. If they like you back, it’s a match. Your agent first checks their profile for fakes and inconsistencies.'],
-  ['Your agents talk first', 'Your agent has the early conversation in your own words, from what you told it about yourself. It never makes things up about you; when it doesn’t know, it asks you.'],
-  ['You get an honest read', 'Compatible, Maybe or Not compatible, with their own words as evidence. Only you see your read. You decide what happens next.'],
+  [MessageSquareText, 'Like a photo or a prompt', 'Profiles are photos and prompts. Like the part that caught your eye.'],
+  [PenLine, 'Let your agents break the ice', 'When you both like each other, your agents talk first, in your own texting style. You read along and can take over any time.'],
+  [MailOpen, 'Read a private letter', 'Your agent tells you what clicked, with their actual words. Then you decide. There’s never a score.'],
 ]
-const PRINCIPLES = [
-  [Lock, 'You stay in control', 'Watch every line, pause your agent, or take over in one tap. Agents only start after you both agree to it at sign-up.'],
-  [ShieldCheck, 'Private stays private', 'Things you mark private are never sent as something your agent may say. The other person’s agent never sees your profile notes.'],
-  [Eye, 'No guessing about who you are', 'Your agent never infers religion, caste, ethnicity or anything else from names or photos.'],
+const TRUST = [
+  [ScanFace, 'Live-checked accounts', 'A quick camera check shows a real person made the account. It doesn’t check photos or ID, and we say so.'],
+  [Eye, 'You see every word', 'Every message an agent writes is labelled, for both of you. Take over at any moment.'],
+  [Lock, 'Private stays private', 'Mark anything Public, Only if asked, or Private. Your agent never shares Private.'],
+  [Flag, 'Fakes get caught early', 'Your agent checks each profile before it says hello, and stops talking to anything that looks like a scam.'],
 ]
 
 export default function Landing() {
-  const mobile = useMobile(1000)
+  const mobile = useMobile()
   const [menu, setMenu] = useState(false)
   return (
-    <div className={`scr landing ${mobile ? 'm' : 'd'}`}>
-      <nav className="l-nav">
-        <span className="wordmark">Prelude</span>
-        {!mobile && <div className="l-links"><a href="#how">How it works</a><a href="#principles">Safety</a><a href="#principles">Our principles</a></div>}
-        {mobile ? <button className="icon-btn" aria-label={menu ? 'Close menu' : 'Menu'} aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? <X {...ICON} /> : <Menu {...ICON} />}</button>
-          : <div className="l-right"><Link className="l-login" to="/login">Log in</Link><Link to="/signup" className="btn primary">Get started</Link></div>}
-      </nav>
-      {mobile && menu && <div className="l-menu card"><a href="#how" onClick={() => setMenu(false)}>How it works</a><a href="#principles" onClick={() => setMenu(false)}>Safety and principles</a><Link to="/login">Log in</Link></div>}
-      <figure className="l-photo">
-        <img src={duskPhoto()} alt="" />
-        <LiveCard mobile={mobile} />
-      </figure>
-      <section className="l-copy">
-        {!mobile && <p className="eyebrow">Dating, with an introduction</p>}
-        <h1 className="t-display">Introduced by someone who knows you.</h1>
-        <p className="t-lead">After you both like each other, your agents have the first conversation, in your own words. You read every line, and you step in when it feels right.</p>
-        <div className="l-ctas"><Link to="/signup" className={`btn primary lg ${mobile ? 'block' : ''}`}>Get started</Link>{!mobile && <a className="text-link" href="#how">See how it works <ArrowRight size={16} strokeWidth={1.6} /></a>}</div>
-        <ul className="l-trust">{TRUST.slice(0, mobile ? 2 : 3).map(([I, t]) => <li key={t}><I {...ICON} aria-hidden="true" />{t}</li>)}</ul>
+    <div className={`scr landing landing-page ${mobile ? 'm' : 'd'}`}>
+      <header className="l-nav"><Wordmark />
+        {!mobile && <nav className="l-links"><a href="#how">How it works</a><a href="#trust">Safety and privacy</a></nav>}
+        {mobile ? <IconBtn icon={menu ? X : Menu} label={menu ? 'Close menu' : 'Menu'} aria-expanded={menu} onClick={() => setMenu(!menu)} />
+          : <div className="l-right"><Link className="link plain" to="/login">Log in</Link><Link className="btn primary" to="/signup">Join Prelude</Link></div>}
+      </header>
+      {mobile && menu && <nav className="l-menu card"><a href="#how" onClick={() => setMenu(false)}>How it works</a><a href="#trust" onClick={() => setMenu(false)}>Safety and privacy</a><Link to="/login">Log in</Link></nav>}
+      <section className="l-hero">
+        <div className="l-copy">
+          <h1 className="l-h">A dating app that breaks the ice for you.</h1>
+          <p className="lead">Photos, prompts and likes, like any good app. When you both like each other, your agents can have the first conversation in your own words. You read every line, and take over whenever you like.</p>
+          <div className="l-ctas"><Link className={`btn primary lg ${mobile ? 'block' : ''}`} to="/signup">Join Prelude</Link>{!mobile && <a className="btn ghost lg" href="#how">See how it works<ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></a>}</div>
+          <p className="small">{mobile ? <>Already here? <Link className="link" to="/login">Log in</Link></> : 'Free to use.'}</p>
+        </div>
+        <HeroArt mobile={mobile} />
       </section>
-
-      <section className="l-more" id="how">
-        <h2 className="t-h2">How it works</h2>
-        <ol className="l-steps">{STEPS.map(([h, p], i) => <li key={h} className="card"><span className="t-data">{i + 1}</span><h3 className="t-h3">{h}</h3><p className="t-body">{p}</p></li>)}</ol>
+      <section className="l-steps" id="how" aria-labelledby="how-h">
+        <h2 className="h2" id="how-h">How it works</h2>
+        <ol>{STEPS.map(([I, t, d], i) => <Reveal key={t} i={i}><li><span className="st-n">{i + 1}</span><I size={22} strokeWidth={1.6} aria-hidden="true" /><h3 className="h3">{t}</h3><p>{d}</p></li></Reveal>)}</ol>
       </section>
-      <section className="l-more" id="principles">
-        <h2 className="t-h2">Our principles</h2>
-        <ul className="l-steps">{PRINCIPLES.map(([I, h, p]) => <li key={h} className="card"><I {...ICON} className="l-pi" aria-hidden="true" /><h3 className="t-h3">{h}</h3><p className="t-body">{p}</p></li>)}</ul>
-        <div className="l-ctas l-end"><Link to="/signup" className={`btn primary lg ${mobile ? 'block' : ''}`}>Get started</Link><Link className="text-link" to="/login">I already have an account</Link></div>
+      <section className="l-trust" id="trust">
+        <h2 className="h2">Built to be trusted</h2>
+        <ul>{TRUST.map(([I, t, d], i) => <Reveal key={t} i={i}><li><I size={20} strokeWidth={1.7} aria-hidden="true" /><div><h3 className="h3">{t}</h3><p>{d}</p></div></li></Reveal>)}</ul>
       </section>
+      <section className="l-cta"><Reveal><h2 className="h2">Ready when you are.</h2><p className="lead">Setting up takes a few minutes. Teaching your agent more is optional.</p><Link className="btn primary lg" to="/signup">Join Prelude</Link></Reveal></section>
+      <footer className="l-foot"><Wordmark /><span className="small">Built for the Nebius x NVIDIA hackathon · illustrated people only</span></footer>
     </div>
   )
 }

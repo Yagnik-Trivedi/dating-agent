@@ -60,42 +60,9 @@
 .seg button[role="radio"].on:last-child { color: var(--trust); }
 
 /* ============ Landing ============ */
-.landing { background-image: var(--light); }
-.l-nav { position: relative; z-index: 3; display: flex; align-items: center; gap: 40px; height: 80px; padding: 0 64px; }
-.l-links { display: flex; gap: 28px; font-size: 15.5px; color: var(--ink-2); }
-.l-right { margin-left: auto; display: flex; align-items: center; gap: 24px; font-weight: 600; }
-.l-photo { margin: 0; }
-.l-photo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 20px; }
-.ph-tag { position: absolute; top: 14px; left: 14px; font-size: 12px; font-weight: 600; color: #FFF6EC; background: rgb(28 18 12 / .5); padding: 4px 9px; border-radius: 6px; }
-.landing.d .l-photo { position: absolute; right: 64px; top: 100px; width: 616px; height: 700px; }
-.live-card { position: absolute; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--e3); padding: 14px 18px 12px; }
-.landing.d .live-card { left: 24px; bottom: 24px; width: 392px; }
-.live-h { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-.live-s { display: inline-flex; gap: 6px; align-items: center; color: var(--trust); }
-.live-s i { width: 6px; height: 6px; border-radius: 50%; background: var(--trust); animation: breathe 3s var(--ease) infinite; }
-.live-line { padding: 8px 0; border-top: 1px solid var(--line); }
-.live-line .who { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }
-.live-line .who em { font-style: normal; font-weight: 400; color: var(--muted); margin-left: 6px; }
-.live-line p { margin: 2px 0 0; font-size: 16px; line-height: 1.45; color: var(--ink-2); }
-.live-line.human p { color: var(--ink); font-weight: 500; }
 .live-foot { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; }
 .live-foot .typing { padding: 0; }
-.landing.d .l-copy { position: absolute; left: 64px; top: 196px; width: 560px; }
 .eyebrow { font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 18px; letter-spacing: .01em; }
-.l-copy .t-lead { margin: 22px 0 32px; max-width: 30em; }
-.l-ctas { display: flex; align-items: center; gap: 26px; }
-.l-trust { list-style: none; padding: 0; margin: 44px 0 0; display: grid; gap: 12px; font-size: 15px; color: var(--ink-2); }
-.l-trust li { display: flex; align-items: center; gap: 10px; }
-.l-trust svg { color: var(--trust); flex: none; }
-.landing.m .l-nav { height: 64px; padding: 0 8px 0 20px; justify-content: space-between; }
-.landing.m .wordmark { font-size: 22px; }
-.landing.m .l-photo { position: relative; margin: 4px 16px 0; height: 232px; }
-.landing.m .l-photo img { border-radius: 16px; }
-.landing.m .live-card { left: 12px; right: 12px; bottom: -104px; padding: 12px 14px 10px; }
-.landing.m .live-line p { font-size: 15px; }
-.landing.m .l-copy { padding: 124px 20px 0; }
-.landing.m .l-copy .t-lead { font-size: 16px; line-height: 24px; margin: 12px 0 18px; }
-.landing.m .l-trust { margin-top: 18px; font-size: 14px; gap: 8px; }
 
 /* ============ Match room ============ */
 .r-head { display: flex; align-items: center; gap: 14px; padding: 0 40px 0 24px; border-bottom: 1px solid var(--line); position: relative; z-index: 2; background: var(--bg); }
