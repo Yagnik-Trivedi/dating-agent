@@ -1,10 +1,12 @@
-// Plan 19 live check: 2 random moves on camera. MediaPipe runs in the browser for live guidance only; one still per move
-// goes to the server, where code checks + ONE Nemotron vision call decide. Frames are never stored. Functional screen in
-// the Prelude look; "Live-checked" is the only claim (never "verified").
+// Plan 19 live check in the Round 7 Step 2 design (LiveCheck.jsx): consent, camera with an oval guide and a nudging
+// arrow, then the result. MediaPipe runs in the browser for live guidance only; one still per move goes to the server,
+// where code checks + ONE Nemotron vision call decide. Frames are never stored. "Live-checked" only, never "verified".
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Camera, Check, Lock, RefreshCw } from 'lucide-react'
-import { Btn, Typing } from '../components/prelude'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'motion/react'
+import { ArrowLeft, ArrowRight, ArrowUp, Camera, Check, CircleCheck, Info, Lock, RefreshCw, ScanFace, Smile, Sun } from 'lucide-react'
+import { Check2, Dots, LiveBadge } from '../components/r7'
+import OnbShell from '../components/OnbShell'
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
 
@@ -12,11 +14,11 @@ import { api, errMsg } from '../lib/api'
 // yaw > 0 = you turned to YOUR right. Turns are checked by size only here; the server's vision call checks direction.
 const GUIDE = { yawScale: 100, pitchScale: 200, neutralYaw: 8, turnDeg: 20, upDeg: 15, smile: 0.6, holdMs: 300, actionTimeoutMs: 15_000 }
 const STEP = {
-  neutral: ['Look straight at the camera', 'Keep a relaxed face, centred in the frame.'],
-  turn_left: ['Turn your head to your left', 'Slowly, until we say hold.'],
-  turn_right: ['Turn your head to your right', 'Slowly, until we say hold.'],
-  look_up: ['Look up a little', 'Tilt your chin up, eyes on the ceiling.'],
-  smile: ['Smile', 'A real, clear smile.'],
+  neutral: ['Look straight at the camera', 'Keep a relaxed face, centred in the oval.', 'Look ahead'],
+  turn_left: ['Turn your head left', 'Slowly, until the oval fills.', 'Turn left'],
+  turn_right: ['Turn your head right', 'Slowly, until the oval fills.', 'Turn right'],
+  look_up: ['Look up a little', 'Tilt your chin up, eyes on the ceiling.', 'Look up'],
+  smile: ['Smile', 'A real, clear smile.', 'Smile'],
 }
 const FAIL = 'That didn’t work. Let’s try again.'
 
@@ -65,7 +67,9 @@ async function grab(video) {
 
 export default function LiveCheck() {
   const { refresh } = useAuth()
+  const rm = useReducedMotion()
   const navigate = useNavigate()
+  const onb = Boolean(useLocation().state?.onb) // step 6 of onboarding: pass or skip goes on to Done
   const [phase, setPhase] = useState('consent') // consent · loading · camera · sending · passed · failed · nocam
   const [agree, setAgree] = useState(false)
   const [step, setStep] = useState(0)
@@ -146,52 +150,50 @@ export default function LiveCheck() {
   }
 
   const a = actions[step]
+  const back = () => navigate(-1)
+  const NUDGE = { turn_left: ArrowLeft, turn_right: ArrowRight, look_up: ArrowUp, smile: Smile }
+  const Nudge = NUDGE[a]
+  if (phase === 'consent') return (
+    <OnbShell label="Live check" step={onb ? 6 : undefined} title="A quick live check" sub="Two small camera moves show that a real person made this account. It takes about 20 seconds." onBack={back}
+      next="Start the camera" nextIcon={Camera} nextDisabled={!agree} onNext={run} skip="Skip for now" onSkip={() => navigate(onb ? '/welcome' : '/settings')}>
+      <ul className="lc-points">
+        <li><ScanFace size={20} strokeWidth={1.7} aria-hidden="true" /><span><b>What it checks:</b> that a live person is in front of the camera, doing two random moves in order.</span></li>
+        <li><Info size={20} strokeWidth={1.7} aria-hidden="true" /><span><b>What it doesn’t:</b> it doesn’t check your photos or your ID.</span></li>
+        <li><Lock size={20} strokeWidth={1.7} aria-hidden="true" /><span><b>Your camera:</b> one still per move goes to our AI provider (NVIDIA / Nebius) for the check, then it’s gone. We keep only the result.</span></li>
+      </ul>
+      <Check2 checked={agree} onChange={setAgree} required>I agree to a one-time live camera check.</Check2>
+      <div className="nbox"><b>If you skip:</b> everything else works. Your profile won’t show the Live-checked badge.</div>
+    </OnbShell>
+  )
+  if (phase === 'passed') return (
+    <OnbShell label="Live check" step={onb ? 6 : undefined} title="You’re live-checked" sub="Thanks. The stills were checked and not kept; only the result is." next="Continue" onNext={() => navigate(onb ? '/welcome' : '/discover')}>
+      <div className="lc-ok"><span className="lc-ok-i"><CircleCheck size={36} strokeWidth={1.5} aria-hidden="true" /></span><LiveBadge tip /></div>
+      <p className="small">This badge shows on your profile. It means a real person made the account; it doesn’t confirm photos or identity.</p>
+    </OnbShell>
+  )
+  if (phase === 'failed' || phase === 'nocam') return (
+    <OnbShell label="Live check" step={onb ? 6 : undefined} title={phase === 'nocam' ? 'We can’t use your camera' : 'Let’s try that once more'} onBack={back}
+      sub={phase === 'nocam' ? 'The live check needs your front camera. If you blocked it, allow camera access for this site in your browser settings.' : hint || FAIL}
+      next="Try again" nextIcon={RefreshCw} onNext={run} skip="Skip for now" onSkip={() => navigate(onb ? '/welcome' : '/settings')}>
+      {phase === 'failed' && <ul className="lc-points"><li><Sun size={20} strokeWidth={1.7} aria-hidden="true" /><span>Face a window or a lamp, not away from it.</span></li><li><Smile size={20} strokeWidth={1.7} aria-hidden="true" /><span>Hold the phone at eye level and move slowly.</span></li></ul>}
+      <p className="small">Nothing from this attempt was kept.</p>
+    </OnbShell>
+  )
+  // loading · camera · sending
   return (
-    <div className="page live">
-      <header className="page-head"><div><h1 className="t-h1">Live check</h1><p>Two quick moves on camera show you’re a real person. It doesn’t check your photos or your ID.</p></div></header>
-
-      {phase === 'consent' && (
-        <div className="card live-card-in">
-          <label className="consent">
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-            <span><b>Live check.</b> You’ll do 2 quick moves on camera. We take one still photo per move and send them to our AI provider (NVIDIA / Nebius) to confirm a real person did them, in order. We don’t keep the photos or any face data, only the result. This shows you’re a real person. It doesn’t check your profile photos or your ID.</span>
-          </label>
-          <div className="v-actions" style={{ borderTop: 0, paddingTop: 0 }}><Btn icon={Camera} disabled={!agree} onClick={run}>Start the live check</Btn><Link className="text-link push" to="/settings">Not now</Link></div>
+    <OnbShell label="Live check" step={onb ? 6 : undefined} title={phase === 'camera' && a ? STEP[a][0] : phase === 'sending' ? 'Checking…' : 'Starting the camera…'}
+      sub={phase === 'camera' && a ? (held ? 'Hold it…' : STEP[a][1]) : phase === 'sending' ? 'This takes a few seconds.' : 'Allow camera access if your browser asks.'} footer={false}>
+      <div className="cam" aria-live="polite">
+        <div className="cam-view">
+          <video ref={video} playsInline muted aria-hidden="true" className="cam-video" />
+          <div className="cam-oval" aria-hidden="true"><svg viewBox="0 0 220 280"><ellipse cx="110" cy="140" rx="104" ry="134" className="oval-track" /><ellipse cx="110" cy="140" rx="104" ry="134" className="oval-prog" pathLength="100" strokeDasharray={`${held ? 100 : actions.length ? Math.round((step / actions.length) * 100) : 0} 100`} /></svg></div>
+          {phase === 'camera' && Nudge && <motion.span className={`cam-arrow n-${a}`} animate={rm ? {} : { x: a === 'turn_left' ? [0, -6, 0] : a === 'turn_right' ? [0, 6, 0] : 0, y: a === 'look_up' ? [0, -6, 0] : 0 }} transition={{ duration: 0.3, repeat: Infinity, repeatType: 'mirror', repeatDelay: 0.9, ease: 'easeInOut' }} aria-hidden="true"><Nudge size={28} strokeWidth={2} /></motion.span>}
+          {phase !== 'camera' && <span className="cam-wait"><Dots label={phase === 'sending' ? 'Checking' : 'Starting the camera'} /></span>}
+          <span className="cam-tag">Camera preview</span>
         </div>
-      )}
-
-      {['loading', 'camera', 'sending'].includes(phase) && (
-        <div className="card live-stage">
-          <div className="live-video"><video ref={video} playsInline muted aria-hidden="true" />
-            {phase !== 'camera' && <div className="live-over"><Typing label={phase === 'loading' ? 'Starting the camera' : 'Checking'} /><p>{phase === 'loading' ? 'Starting the camera…' : 'Checking… this takes a few seconds.'}</p></div>}
-          </div>
-          {phase === 'camera' && a && (
-            <div className="live-step" aria-live="assertive">
-              <p className="t-label">Step {step + 1} of {actions.length}</p>
-              <h2 className="t-h2">{STEP[a][0]}</h2>
-              <p className={`small ${held ? 'live-hold' : ''}`}>{held ? 'Hold it…' : STEP[a][1]}</p>
-              <ol className="live-dots">{actions.map((x, k) => <li key={x + k} className={k < step ? 'done' : k === step ? 'now' : ''}>{k < step ? <Check size={14} strokeWidth={2} /> : k + 1}</li>)}</ol>
-            </div>
-          )}
-        </div>
-      )}
-
-      {phase === 'passed' && (
-        <div className="card live-card-in"><p className="v-eyebrow"><Check size={15} strokeWidth={1.8} aria-hidden="true" />Live-checked</p>
-          <h2 className="t-h2">Thanks, you’re live-checked.</h2>
-          <p className="t-body muted">Your profile now shows “Live-checked”. A live camera check showed a real person made this account. It doesn’t check your photos or ID.</p>
-          <div className="v-actions" style={{ borderTop: 0 }}><Btn onClick={() => navigate('/discover')}>Back to introductions</Btn></div></div>
-      )}
-      {phase === 'failed' && (
-        <div className="card live-card-in"><h2 className="t-h2">Let’s try that again</h2><p className="t-body">{hint || FAIL}</p>
-          <div className="v-actions" style={{ borderTop: 0 }}><Btn icon={RefreshCw} onClick={run}>Try again</Btn><Link className="text-link push" to="/settings">Skip for now</Link></div></div>
-      )}
-      {phase === 'nocam' && (
-        <div className="card live-card-in"><h2 className="t-h2">We can’t use your camera</h2>
-          <p className="t-body">The live check needs your front camera. If you blocked it, allow camera access for this site in your browser settings, then try again. It’s optional: everything else works without it.</p>
-          <div className="v-actions" style={{ borderTop: 0 }}><Btn kind="secondary" icon={RefreshCw} onClick={run}>Try again</Btn><Link className="text-link push" to="/settings">Skip for now</Link></div></div>
-      )}
-      <p className="privacy-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />Photos are used only for this check and never stored. Only the result is kept.</p>
-    </div>
+        {actions.length > 0 && <ol className="cam-steps">{actions.map((x, k) => <li key={x + k} className={k === step ? 'now' : k < step ? 'done' : ''}><span>{k < step ? <Check size={13} strokeWidth={2.4} /> : k + 1}</span>{STEP[x][2]}{k === step && <em>now</em>}</li>)}</ol>}
+        <p className="small"><Sun size={14} strokeWidth={1.8} aria-hidden="true" /> Tip: face a window or a lamp.</p>
+      </div>
+    </OnbShell>
   )
 }
