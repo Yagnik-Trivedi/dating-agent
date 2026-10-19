@@ -8,6 +8,9 @@ export const KG = Object.freeze({
   T_ASKED: 0.45, T_LEAK: 0.62,
   DECAY_HALF_LIFE_DAYS: 365, CURRENT_FACT_TTL_DAYS: 180,
   SELECT_K: 10, EXEMPLARS_K: 4, MIN_STORIES: 4, TOPIC_TEMP: 0.7,
+  // Plan 30 S2 core onboarding: 5 replies (greeting, curious, opinion, plan, disagree); below VOICE_CONFIDENT_SAMPLES
+  // the voice profile is marked low-confidence and the "Teach your agent more" card stays up.
+  CORE_REPLY_IDS: ['e1', 'e2', 'e3', 'e6', 'e10'], VOICE_CONFIDENT_SAMPLES: 10,
   MAX_REGENERATIONS: 1, // Checkpoint A: one regeneration per message, max
   MAX_INBOX_PER_CONVERSATION: 3, // new "ask my human" items per match; repeats of an open topic merge instead
   STYLE_REBUILD_EVERY: 20, REFLECT_EVERY: 10,
@@ -51,6 +54,6 @@ export const KG = Object.freeze({
   JOB_POLL_MS: 1000, JOB_LOCK_MS: 120_000, JOB_MAX_ATTEMPTS: 5, JOB_DONE_TTL_DAYS: 7,
   JOB_CONCURRENCY: Object.freeze({
     buildUserGraph: 1, matchCreated: 2, agentTurn: 3, evaluate: 2, judge: 2, compactNotes: 1,
-    rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2,
+    rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2, moderatePhoto: 2,
   }),
 });

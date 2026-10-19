@@ -1,7 +1,8 @@
-// Plan 05 §4: answer validation (importance required, dealbreaker needs a non-accepted option, ≥ 4 stories, 15 samples).
+// Plan 05 §4 + plan 30 S2: answer validation (importance required, dealbreaker needs a non-accepted option, the core).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { answersSchema } from '../src/services/kg/answers.js';
+import { answersSchema, moreSchema } from '../src/services/kg/answers.js';
+import { KG } from '../src/services/kg/config.js';
 import { QUESTIONS } from '../src/services/kg/questions.js';
 
 const sec = (id) => QUESTIONS.sections.find((s) => s.id === id);
@@ -34,11 +35,15 @@ test('a dealbreaker that accepts everything is rejected; with one option exclude
   assert.equal(answersSchema.safeParse(a).success, true);
 });
 
-test('fewer than 4 stories or a missing voice sample is rejected', () => {
-  const few = valid();
-  few.C = { sunday: 'a', hill: 'b', argue: '   ' };
-  assert.equal(answersSchema.safeParse(few).success, false);
-  const noSample = valid();
-  delete noSample.E.e15;
-  assert.equal(answersSchema.safeParse(noSample).success, false);
+test('plan 30 S2 core: stories, personality and extra replies are optional; the 5 core replies are required', () => {
+  const core = valid()
+  delete core.A; delete core.C
+  for (const id of Object.keys(core.E)) if (!KG.CORE_REPLY_IDS.includes(id)) delete core.E[id]
+  delete core.B.religion // any value question can be skipped
+  assert.equal(answersSchema.safeParse(core).success, true, JSON.stringify(answersSchema.safeParse(core).error?.issues))
+  const noCore = valid()
+  delete noCore.E.e1
+  assert.equal(answersSchema.safeParse(noCore).success, false)
+  assert.equal(moreSchema.safeParse({ C: { sunday: 'a slow breakfast' } }).success, true)
+  assert.equal(moreSchema.safeParse({ C: { sunday: '  ' } }).success, false)
 });
