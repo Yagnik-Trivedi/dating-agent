@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, errMsg } from '../lib/api'
+import { getSocket } from '../lib/socket'
 import { useSocket, useSocketEvent } from './useSocket'
 
 const REPORT_STATUSES = ['compatible', 'maybe', 'incompatible', 'flagged_fake', 'handed_off', 'closed']
@@ -52,7 +53,9 @@ export function useMatch(matchId) {
     if (!same(message.matchId)) return
     setMessages((prev) => (prev.some((m) => m._id === message._id) ? prev : [...prev, message]))
     setTypingUserId((t) => (String(t) === String(message.senderId) ? null : t))
+    if (document.visibilityState === 'visible') getSocket().emit('message:read', { matchId }) // plan 30 S3.7: "Seen"
   })
+  useSocketEvent('match:read', ({ matchId: id, at }) => { if (same(id)) setMatch((m) => (m ? { ...m, otherReadAt: at } : m)) })
 
   useSocketEvent('typing', ({ matchId: id, userId }) => {
     if (!same(id)) return
@@ -81,8 +84,8 @@ export function useMatch(matchId) {
     if (same(id)) loadDetail().catch(() => {})
   })
 
-  const send = useCallback(async (text) => {
-    const { data } = await api.post(`/api/matches/${matchId}/messages`, { text })
+  const send = useCallback(async (text, image) => {
+    const { data } = await api.post(`/api/matches/${matchId}/messages`, { text, ...(image && { image }) })
     setMessages((prev) => (prev.some((m) => m._id === data.message._id) ? prev : [...prev, data.message]))
   }, [matchId])
 

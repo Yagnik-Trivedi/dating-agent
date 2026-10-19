@@ -4,11 +4,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowRight, BellRing, Check, ChevronDown, ChevronLeft, Circle, Flag, Hand, Lock, Pause, PenLine, Play, Quote, RefreshCw, WifiOff } from 'lucide-react'
+import { ArrowRight, Ban, BellRing, Check, CheckCheck, ChevronDown, ChevronLeft, Circle, Flag, Hand, Heart, Lock, MoreHorizontal, Pause, PenLine, Play, Quote, RefreshCw, UserX, WifiOff } from 'lucide-react'
 import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, LiveBadge, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
 import { InterestLine } from '../components/charts'
 import MatchRow from '../components/MatchRow'
 import { useMobile } from '../components/prelude'
+import { BlockSheet, ReportSheet } from '../components/Safety'
+import { cropToJpeg } from '../lib/photos'
 import { useAuth } from '../hooks/useAuth'
 import { useMatch, wouldntSay } from '../hooks/useMatch'
 import { useToast } from '../hooks/useToast'
@@ -60,12 +62,15 @@ function StatusStrip({ steps, step, open, onToggle }) {
   )
 }
 
-function Bubble({ m, mine, author, last, onWouldnt }) {
+const LIKED = { photo: 'Liked a photo', prompt: 'Liked a prompt', profile: 'Liked the profile' }
+function Bubble({ m, mine, author, last, seen, onWouldnt }) {
   return (
     <motion.div layout className={`msg ${mine ? 'mine' : 'theirs'}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={T.base}>
       {m.authoredBy === 'agent' && <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />Written by {author}’s agent</span>}
-      <p className="bubble" lang={DEVA.test(m.text) ? 'hi' : undefined}>{m.text}</p>
-      <span className="msg-meta">{time(m.createdAt)}{mine && m.authoredBy === 'agent' && last && <><span aria-hidden="true">·</span><button type="button" className="link" onClick={() => onWouldnt(m._id)}>I wouldn’t say that</button></>}</span>
+      {m.like?.kind && <span className="agent-tag"><Heart size={13} strokeWidth={1.9} aria-hidden="true" />{LIKED[m.like.kind]}{m.like.kind === 'prompt' && `: “${m.like.ref}”`}</span>}
+      {m.attachments?.map((a) => <img key={a.url} className="msg-photo" src={a.url} alt={`Photo from ${mine ? 'you' : author}`} width={a.w} height={a.h} />)}
+      {m.text && <p className="bubble" lang={DEVA.test(m.text) ? 'hi' : undefined}>{m.text}</p>}
+      <span className="msg-meta">{time(m.createdAt)}{seen && <><CheckCheck size={14} strokeWidth={2} aria-hidden="true" />Seen</>}{mine && m.authoredBy === 'agent' && last && <><span aria-hidden="true">·</span><button type="button" className="link" onClick={() => onWouldnt(m._id)}>I wouldn’t say that</button></>}</span>
     </motion.div>
   )
 }
@@ -120,9 +125,13 @@ export default function MatchRoom() {
   const [busy, setBusy] = useState(null)
   const [wouldnt, setWouldnt] = useState(null)
   const [fix, setFix] = useState('')
+  const [menu, setMenu] = useState(false)
+  const [safety, setSafety] = useState(null) // 'report' | 'block'
+  const photoInput = useRef(null)
   const list = useRef(null)
   useLayoutEffect(() => { if (list.current) list.current.scrollTop = list.current.scrollHeight }, [Boolean(match), messages.length, typingUserId, tab])
   const me = String(user?._id)
+  const lastMineAny = useMemo(() => messages.map((m, i) => (String(m.senderId) === me ? i : -1)).filter((i) => i >= 0).pop(), [messages, me])
   const lastMine = useMemo(() => messages.map((m, i) => (String(m.senderId) === me && m.authoredBy === 'agent' ? i : -1)).filter((i) => i >= 0).pop(), [messages, me])
 
   const act = (name, fn, done) => async () => {
@@ -133,6 +142,21 @@ export default function MatchRoom() {
     setBusy('send')
     try { await send(text); setText('') } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
   }
+  // Plan 30 S3.7: a photo in the chat, resized (max 1080 px wide, ≤ 300 KB) and checked by the server before it's sent.
+  async function sendPhoto(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy('send')
+    const src = URL.createObjectURL(file)
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('That file isn’t an image we can read.')); i.src = src })
+      const blob = await cropToJpeg(src, { x: 0, y: 0, width: img.naturalWidth, height: img.naturalHeight })
+      const jpegBase64 = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.readAsDataURL(blob) })
+      await send('', { jpegBase64, w: blob.w, h: blob.h })
+    } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { URL.revokeObjectURL(src); setBusy(null) }
+  }
+  const unmatch = act('unmatch', async () => { await api.post(`/api/matches/${id}/unmatch`); navigate('/matches', { replace: true }) }, 'Unmatched.')
   async function saveWouldnt() {
     setBusy('wouldnt')
     try { await wouldntSay(wouldnt, fix.trim() || undefined); toast('Your agent will remember', { agent: true }); setWouldnt(null); setFix('') } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
@@ -151,6 +175,15 @@ export default function MatchRoom() {
       <Avatar p={match.other} src={match.other.photo ?? undefined} size={mobile ? 40 : 44} />
       <div className="rm-who"><h2>{them}</h2><StatusChip s={chipOf(match.status)} live={match.status === 'agent_chatting'} /></div>
       {!mobile && match.other.liveChecked && <LiveBadge />}
+      <span className="menu-wrap push-r">
+        <IconBtn icon={MoreHorizontal} label="More: unmatch, block, report" aria-expanded={menu} onClick={() => setMenu(!menu)} />
+        {menu && <div className="menu-pop right" role="menu">
+          <button type="button" role="menuitem" onClick={() => { setMenu(false); navigate(`/u/${match.other.userId}`, { state: { from: 'room' } }) }}><Heart size={16} strokeWidth={1.8} aria-hidden="true" />See {them}’s profile</button>
+          <button type="button" role="menuitem" onClick={() => { setMenu(false); unmatch() }}><UserX size={16} strokeWidth={1.8} aria-hidden="true" />Unmatch</button>
+          <button type="button" role="menuitem" onClick={() => { setMenu(false); setSafety('block') }}><Ban size={16} strokeWidth={1.8} aria-hidden="true" />Block</button>
+          <button type="button" role="menuitem" className="danger" onClick={() => { setMenu(false); setSafety('report') }}><Flag size={16} strokeWidth={1.8} aria-hidden="true" />Report</button>
+        </div>}
+      </span>
     </header>
   )
 
@@ -159,25 +192,27 @@ export default function MatchRoom() {
   else if (!match) feed = <div className="rm-list loading" aria-busy="true"><p className="sys">Your agents are getting ready…</p>{[70, 50, 64].map((w, i) => <div key={i} className={`msg ${i % 2 ? 'mine' : 'theirs'}`}><Shimmer w={`${w}%`} /></div>)}</div>
   else feed = (
     <div className="rm-list" ref={list} aria-live="polite" aria-label="Messages">
-      {messages.length > 0 && <p className="sys">{messages[0].authoredBy === 'agent' ? 'Your agents broke the ice' : 'You started chatting'} · {time(messages[0].createdAt)}</p>}
+      {messages.length > 0 && <p className="sys">{messages[0].authoredBy === 'agent' ? 'Your agents broke the ice' : messages[0].like?.kind ? 'It started with a like' : 'You started chatting'} · {time(messages[0].createdAt)}</p>}
       {match.status === 'flagged_fake' && <p className="sys"><Flag size={14} strokeWidth={1.8} aria-hidden="true" /> Your agent thinks this profile is fake and stopped talking. {match.trust?.flags?.[0]}</p>}
       {messages.map((m, i) => {
         const mine = String(m.senderId) === me
-        return <Bubble key={m._id} m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt} />
+        return <Bubble key={m._id} m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt}
+          seen={mine && i === lastMineAny && Boolean(match.otherReadAt) && new Date(match.otherReadAt) >= new Date(m.createdAt)} />
       })}
       {typingUserId && (() => {
         const mine = String(typingUserId) === me
         const agent = mine ? match.agentActive : match.otherAgentActive
         return <div className={`msg ${mine ? 'mine' : 'theirs'}`}><span className="agent-tag">{agent && <PenLine size={13} strokeWidth={1.9} aria-hidden="true" />}{agent ? `${mine ? (user?.name ?? 'Your') : them}’s agent is writing` : `${them} is typing`}</span><p className="bubble typing"><Dots /></p></div>
       })()}
-      {LETTER.includes(match.status) && (
+      {LETTER.includes(match.status) && (match.status !== 'handed_off' || messages.some((m) => m.authoredBy === 'agent')) && (
         <Link to={`/matches/${match._id}/report`} className="card letter-link"><span><b>{match.status === 'handed_off' ? 'You’re chatting now' : 'Your letter is ready'}</b><em>{match.status === 'handed_off' ? 'See what your agent noticed' : 'Only you can see it'}</em></span><ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
       )}
     </div>
   )
 
   const footer = !match ? null : canType ? (
-    <div className="rm-compose"><Composer value={text} onChange={(v) => { setText(v); sendTyping?.() }} onSend={submit} placeholder={`Write to ${them}…`} disabled={busy === 'send'} /></div>
+    <div className="rm-compose"><Composer value={text} onChange={(v) => { setText(v); sendTyping?.() }} onSend={submit} onPhoto={() => photoInput.current?.click()} placeholder={`Write to ${them}…`} disabled={busy === 'send'} />
+      <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={sendPhoto} /></div>
   ) : live && match.agentActive ? (
     <div className="rm-take">
       <div className="rm-take-btns">
@@ -202,12 +237,16 @@ export default function MatchRoom() {
       {footer}
     </section>
   )
-  const sheet = (
+  const safetySheets = match && <>
+    <ReportSheet open={safety === 'report'} name={them} userId={match.other.userId} matchId={match._id} onClose={() => setSafety(null)} onDone={({ blocked }) => (blocked ? navigate('/matches', { replace: true }) : setSafety(null))} />
+    <BlockSheet open={safety === 'block'} name={them} userId={match.other.userId} onClose={() => setSafety(null)} onDone={() => navigate('/matches', { replace: true })} onReport={() => setSafety('report')} />
+  </>
+  const sheet = (<>{safetySheets}
     <Sheet open={Boolean(wouldnt)} title="I wouldn’t say that" onClose={() => setWouldnt(null)}
       footer={<><Btn kind="ghost" onClick={() => setWouldnt(null)}>Cancel</Btn><Btn onClick={saveWouldnt} loading={busy === 'wouldnt'}>Save</Btn></>}>
       <p className="small">Your agent learns from this for every chat, not just this one.</p>
       <Field label="How would you say it?" optional>{(fid) => <textarea id={fid} className="ta" rows={3} maxLength={1000} value={fix} onChange={(e) => setFix(e.target.value)} />}</Field>
-    </Sheet>
+    </Sheet></>
   )
   if (mobile) return <div className="scr app-scr room m">{chat}{sheet}</div>
   return (
