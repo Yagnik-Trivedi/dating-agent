@@ -28,7 +28,10 @@ export async function startConversation(match) {
   if (!active.length) return;
   const conv = await Conversation.findOne({ matchId: match._id, status: 'active' }, { seed: 1 }).lean();
   const r = rng(conv?.seed ?? 0);
-  scheduleReply(match._id, active[Math.floor(r() * active.length)], 0);
+  // Plan 30 S3.4: a like comment already opened the chat → the other side's agent replies to it first.
+  const last = await Message.findOne({ matchId: match._id }, { senderId: 1 }).sort({ createdAt: -1 }).lean();
+  const first = last ? active.find((u) => u !== String(last.senderId)) : active[Math.floor(r() * active.length)];
+  if (first) await scheduleReply(match._id, first, 0);
 }
 
 /** Called after EVERY saved message (human or agent). */

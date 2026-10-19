@@ -79,7 +79,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const persona = await loadPersona(me);
   const brief = match.brief?.[me] ?? {};
   const agenda = brief.agenda ?? [];
-  const history = await Message.find({ matchId: match._id }).sort({ createdAt: 1 }).lean();
+  // Plan 30 S3: a photo message reads as "(sent a photo)"; a like comment carries what it was about.
+  const history = (await Message.find({ matchId: match._id }).sort({ createdAt: 1 }).lean()).map((m) => ({
+    ...m,
+    text: (m.like?.kind === 'prompt' ? `(on the prompt "${m.like.ref}") ` : m.like?.kind === 'photo' ? '(on a photo) ' : '') + (m.text || (m.attachments?.length ? '(sent a photo)' : '')),
+  }));
   const lastMineIdx = history.map((m) => String(m.senderId)).lastIndexOf(me);
   const theirMsgs = history.slice(lastMineIdx + 1).filter((m) => String(m.senderId) !== me);
   if (history.length && !theirMsgs.length) return null; // nothing new to answer
@@ -155,7 +159,10 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const transcript = history.slice(-20).map((m) => `${String(m.senderId) === me ? 'You' : matchName}: ${m.text}`);
   const prompt = {
     firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, plan,
-    style: [persona.voice.description, persona.voice.doList?.length && `Do: ${persona.voice.doList.join('; ')}`, persona.voice.dontList?.length && `Don't: ${persona.voice.dontList.join('; ')}`, persona.voice.corrections?.length && `Corrections from ${persona.firstName}: ${persona.voice.corrections.map((c) => c.rule).join('; ')}`].filter(Boolean).join('\n'),
+    style: [persona.voice.description,
+      // Plan 30 S2: a short onboarding leaves few samples (confidence low): plain and short beats an invented style.
+      (persona.voice.sampleCount ?? 0) < KG.VOICE_CONFIDENT_SAMPLES && `Only a few examples of how ${persona.firstName} texts are known: keep replies short and plain, and don't invent quirks.`,
+      persona.voice.doList?.length && `Do: ${persona.voice.doList.join('; ')}`, persona.voice.dontList?.length && `Don't: ${persona.voice.dontList.join('; ')}`, persona.voice.corrections?.length && `Corrections from ${persona.firstName}: ${persona.voice.corrections.map((c) => c.rule).join('; ')}`].filter(Boolean).join('\n'),
     exemplars: rulesOn ? selectExemplars(persona, { incomingVec, rng }) : [], guidance: privateGuidance(persona), tone: toneRules(persona),
   };
   // What counts as said by/about them: their messages + my brief summary of their PUBLIC profile (allowed source).

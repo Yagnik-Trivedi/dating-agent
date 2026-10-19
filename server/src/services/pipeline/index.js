@@ -7,7 +7,7 @@ import { rng, newSeed } from '../../utils/rng.js';
 import { KG } from '../kg/config.js';
 import { passesGate } from '../match/gate.js';
 import { emitToUser } from '../../sockets/io.js';
-import { startConversation } from '../agent/index.js';
+import { cancelReplies, startConversation } from '../agent/index.js';
 import { addClarify } from '../brief/buildBrief.js';
 import { buildBriefs } from '../brief/index.js';
 import { enqueue } from '../jobs/queue.js';
@@ -88,6 +88,7 @@ export async function startConversationDoc(match) {
 
 /** Step 2 (plan 07): briefs (public profile + own graph), the conversation doc, then the agent chat (08). */
 export async function runBrief(match, ready = null) {
+  if (await wantsSelf(match)) return startHumanChat(match);
   await setStatus(match, 'briefing');
   const briefs = (await ready) ?? await buildBriefs(match);
   for (const u of Object.keys(briefs)) briefs[u].agenda = addClarify(briefs[u].agenda, match.trust?.[u]);
@@ -164,6 +165,20 @@ export async function gateCheck(match) {
   match.perUser.forEach((p) => { p.agentActive = false; });
   await setStatus(match, 'closed');
   return false;
+}
+
+/** Plan 30 S3.6: did either side pick "Chat myself now"? (Read fresh: the choice can change while the pipeline runs.) */
+const wantsSelf = async (match) => Boolean((await Match.findById(match._id, { perUser: 1 }).lean())?.perUser.some((p) => p.choice === 'self'));
+const BEFORE_HUMAN_CHAT = ['matched', 'trust_check', 'briefing', 'scheduled', 'agent_chatting'];
+
+/** A normal human chat: agents stop for both sides, no verdict. → the updated match, or null if it had moved on. */
+export async function startHumanChat(match) {
+  const m = await Match.findOneAndUpdate({ _id: match._id, status: { $in: BEFORE_HUMAN_CHAT } }, { $set: { status: 'handed_off', 'perUser.$[].agentActive': false } }, { new: true });
+  if (!m) return null;
+  cancelReplies(match._id);
+  await Conversation.updateOne({ matchId: match._id, status: 'active' }, { $set: { status: 'ended', endedBy: 'chat_myself', endedAt: new Date() } });
+  emitStatus(m);
+  return m;
 }
 
 /** Called after a mutual like: trust (06) → brief (07) → agent chat (08). */
