@@ -7,6 +7,7 @@ import { useReducedMotion } from 'motion/react'
 import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Quote, RefreshCw, Search, Trash2, X } from 'lucide-react'
 import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw } from '../components/r7'
 import { TextBars } from '../components/charts'
+import TeachCards from '../components/TeachCards'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -127,7 +128,8 @@ function ListView({ L, voice, onSelect }) {
             <ul className="card flush">{fs.map((f) => <li key={f.id} className="yl-row" role="button" tabIndex={0} onClick={() => onSelect(f.id)} onKeyDown={(e) => e.key === 'Enter' && onSelect(f.id)}><div><b>{f.t}</b><span className="small">{CONF_WORD(f.conf)} · {f.src}</span></div><span className={`pv pv-${f.privacy === 'if_asked' ? 'asked' : f.privacy}`}>{f.privacy === 'private' && <Lock size={12} strokeWidth={2.2} aria-hidden="true" />}{PRIV_L[f.privacy]}</span><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></li>)}</ul></section>
         )
       })}</div>
-      <aside className="yl-side card"><h2 className="h3">How I text</h2><p className="small">Learned from your replies. Your agent uses this to sound like you. Tap a “How I text” dot in the graph to correct it.</p>{voice ? <TextBars items={howIText(voice)} /> : <p className="small">Not enough replies yet.</p>}</aside>
+      <aside className="yl-side card"><h2 className="h3">How I text</h2><p className="small">Learned from your replies. Your agent uses this to sound like you. Tap a “How I text” dot in the graph to correct it.</p>{voice ? <TextBars items={howIText(voice)} /> : <p className="small">Not enough replies yet.</p>}
+        {(voice?.samples ?? 0) < 10 && <><p className="small teach-hint">Your agent has only a few of your replies, so it keeps its messages plain. Teach it more:</p><TeachCards /></>}</aside>
     </div>
   )
 }
