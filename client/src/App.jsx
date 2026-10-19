@@ -4,6 +4,7 @@ import { Loading } from './components/ui'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ToastProvider } from './hooks/useToast'
 import { lazy, Suspense } from 'react'
+import { MotionConfig } from 'motion/react'
 import Landing from './pages/Landing'
 import { Login, Signup } from './pages/Auth'
 import WakeUp from './components/WakeUp'
@@ -39,6 +40,7 @@ function PublicOnly({ children }) {
 
 export default function App() {
   return (
+    <MotionConfig reducedMotion="user">
     <WakeUp>
     <BrowserRouter>
       <AuthProvider>
@@ -69,5 +71,6 @@ export default function App() {
       </AuthProvider>
     </BrowserRouter>
     </WakeUp>
+    </MotionConfig>
   )
 }

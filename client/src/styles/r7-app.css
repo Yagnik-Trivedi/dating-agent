@@ -1,0 +1,17 @@
+/* App-only additions to the Round 7 design (plan 30 S6): links wrapping design rows, and small layout glue. */
+.mrow-link { display: contents; color: inherit; text-decoration: none; }
+.mrow:has(.mrow-link) { cursor: pointer; }
+.mrow:has(.mrow-link):hover { background: var(--cream); }
+.letter-link { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-top: 6px; color: var(--text); text-decoration: none; }
+.letter-link span { display: grid; gap: 2px; } .letter-link em { font-style: normal; font-size: 14px; color: var(--text-2); }
+.letter-link:hover { border-color: var(--clay-soft); }
+.rm-take-btns { display: flex; gap: 8px; align-items: center; }
+.rm-take-btns .btn.lg { flex: 1; }
+.rm-take > .small:only-child { display: inline-flex; gap: 6px; align-items: center; justify-content: center; width: 100%; }
+.you-review { margin: 0 64px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.you.m .you-review { margin: 0 16px 10px; flex-direction: column; align-items: flex-start; }
+.fs-edit { display: flex; gap: 8px; align-items: center; } .fs-edit .input { flex: 1; }
+.fs-fix { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; } .fs-fix .input { width: 100%; }
+.yl-row[role="button"] { cursor: pointer; } .yl-row[role="button"]:hover { background: var(--cream); }
+.y-lwrap.d { position: relative; } .yl-sheet { position: fixed; right: 24px; top: 88px; width: 400px; max-height: calc(100dvh - 112px); z-index: 10; display: flex; }
+.yl-sheet .fact-sheet { width: 100%; }

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { Btn } from '../components/prelude'
-import { ErrorBox, Modal, Segmented } from '../components/ui'
+import { ErrorBox, Modal } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
@@ -15,20 +15,10 @@ const MODES = {
   auto: ['Quietly', 'Your agent has the first conversations on its own and only brings you the matches worth your time.'],
 }
 
-function applyTheme(theme) {
-  if (theme === 'system') {
-    delete document.documentElement.dataset.theme
-    try { localStorage.removeItem('theme') } catch { /* private mode */ }
-  } else {
-    document.documentElement.dataset.theme = theme
-    try { localStorage.setItem('theme', theme) } catch { /* private mode */ }
-  }
-}
 
 export default function Settings() {
   const { user, setUser, logout, system } = useAuth()
   const toast = useToast()
-  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('theme') ?? 'system' } catch { return 'system' } })
   const [saving, setSaving] = useState(null)
   const [confirm, setConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -91,11 +81,6 @@ export default function Settings() {
           <Link className="btn secondary" to="/live-check">{user.liveCheck?.status === 'passed' ? 'Check again' : user.liveCheck?.status === 'failed' ? 'Try again' : 'Do the live check'}</Link>
         </div>
       </section>)}
-
-      <section className="card set-sec">
-        <h2 className="t-h3">Appearance</h2>
-        <Segmented label="Theme" value={theme} onChange={(t) => { setTheme(t); applyTheme(t) }} options={[{ value: 'system', label: 'Match my device' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Lamplight' }]} />
-      </section>
 
       <section className="card set-sec">
         <div className="set-row">

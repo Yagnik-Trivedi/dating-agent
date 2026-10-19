@@ -98,7 +98,6 @@
 .landing.m .l-trust { margin-top: 18px; font-size: 14px; gap: 8px; }
 
 /* ============ Match room ============ */
-.room.d { display: grid; grid-template-rows: 84px 1fr 96px; }
 .r-head { display: flex; align-items: center; gap: 14px; padding: 0 40px 0 24px; border-bottom: 1px solid var(--line); position: relative; z-index: 2; background: var(--bg); }
 .r-name { margin-right: auto; }
 .r-name p { margin: 3px 0 0; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
@@ -131,17 +130,6 @@
 .r-composer { display: flex; align-items: center; gap: 12px; margin: 0 432px 28px 368px; padding: 0 8px 0 18px; height: 60px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--e1); color: var(--ink-2); font-size: 15px; }
 .r-composer svg { color: var(--muted); }
 .r-composer .btn { margin-left: auto; }
-.room.m { display: flex; flex-direction: column; }
-.room.m .r-head { height: 72px; padding: 0 6px 0 4px; gap: 10px; flex: none; }
-.room.m .r-name .t-h2 { font-size: 22px; line-height: 26px; margin-bottom: 3px; }
-.room.m .status { height: 24px; font-size: 12.5px; padding: 0 9px; }
-.room.m .r-body { display: block; flex: 1; min-height: 0; }
-.room.m .r-col { height: 100%; padding: 18px 20px 24px; }
-.room.m .r-sys { margin: 0 0 18px; font-size: 13.5px; }
-.room.m .r-row { display: block; margin-bottom: 20px; }
-.room.m .r-row.me .r-msg { padding-left: 20px; }
-.room.m .r-line { font-size: 18px; line-height: 27px; }
-.room.m .r-meta { font-size: 13.5px; }
 .r-mbar { flex: none; padding: 10px 14px 0; border-top: 1px solid var(--line); background: var(--bg); }
 .r-mbtns { display: flex; gap: 8px; }
 .sheet-peek { width: calc(100% + 28px); margin: 10px -14px 0; padding: 8px 20px 24px !important; background: var(--surface) !important; border-radius: 16px 16px 0 0; box-shadow: 0 -1px 0 var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; text-align: left; }
@@ -190,7 +178,6 @@
 .app-tabs { display: flex; gap: 28px; font-size: 15.5px; color: var(--ink-2); height: 100%; }
 .app-tabs a { display: flex; align-items: center; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .app-tabs a.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
-.avatar { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--sunken); font: 600 14px var(--serif); color: var(--ink); }
 .you-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; padding: 22px 64px 18px; }
 .you-head p { margin: 8px 0 0; max-width: 44em; color: var(--ink-2); font-size: 16px; line-height: 24px; }
 .you-grid { display: grid; grid-template-columns: 620px 1fr; gap: 28px; padding: 0 64px; }

@@ -2,17 +2,14 @@
 // 10 px buttons (never pills), 6 px chips, the design's segmented control, calm states, no alarm red.
 import { useEffect, useId, useRef } from 'react'
 import { PenLine, X } from 'lucide-react'
+import { Btn } from './prelude'
 
 const cx = (...c) => c.filter(Boolean).join(' ')
 const KIND = { primary: 'primary', agent: 'primary', secondary: 'secondary', ghost: 'secondary', danger: 'primary danger' }
 
-export function Button({ variant = 'primary', size = 'md', loading, className, children, disabled, ...rest }) {
-  return (
-    <button className={cx('btn', KIND[variant] ?? 'primary', size === 'lg' ? 'lg' : size === 'sm' ? 'sm' : '', className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {loading && <Spinner />}
-      {children}
-    </button>
-  )
+/** Older screens' button API, mapped onto the one kit's Btn (plan 30 S6). */
+export function Button({ variant = 'primary', size = 'md', loading, children, ...rest }) {
+  return <Btn kind={KIND[variant] ?? 'primary'} size={size === 'lg' ? 'lg' : size === 'sm' ? 'sm' : ''} loading={loading} {...rest}>{loading && <Spinner />}{children}</Btn>
 }
 
 export function Card({ className, children, ...rest }) {
