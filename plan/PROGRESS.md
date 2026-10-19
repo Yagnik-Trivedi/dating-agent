@@ -3,7 +3,7 @@
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
 - **Last updated:** 2026-10-19, by Claude Code (SN natural conversation: code done, live check pending `server/.env`; next S4)
-- **Main-line branch:** `main` (S0–S3 and SN + PROJECT-GUIDE.md pushed 2026-10-19 on the owner's request; Render auto-deploy off, Vercel paused, so nothing deployed)
+- **Main-line branch:** `main` (pushed through `18c9e3d` and **deployed** 2026-10-19 by the owner. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · ⬜ Not started · ✂️ Cut · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
@@ -24,7 +24,7 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
-Pushed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md). Not deployed.
+Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
 
 ## SN results: natural conversation (2026-10-19) 🔄 code done, live check pending
 
