@@ -15,7 +15,7 @@ const ageFrom = (dob) => {
   return now.getFullYear() - y - ((now.getMonth() + 1) * 100 + now.getDate() < m * 100 + d ? 1 : 0)
 }
 const maxDob = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 18); return d.toISOString().slice(0, 10) }
-const INTEREST = { Women: ['woman'], Men: ['man'], Everyone: ['woman', 'man', 'nonbinary'] }
+export const INTEREST = { Women: ['woman'], Men: ['man'], Everyone: ['woman', 'man', 'nonbinary'] }
 
 function AuthShell({ title, sub, children, back }) {
   const mobile = useMobile()
@@ -29,7 +29,7 @@ function AuthShell({ title, sub, children, back }) {
 }
 
 /** Searchable city combobox: the 104 listed cities, or any other city typed in (it then matches by name). */
-function CityBox({ value, onChange }) {
+export function CityBox({ value, onChange }) {
   const id = useId()
   const [cities, setCities] = useState([])
   const [open, setOpen] = useState(false)
@@ -100,7 +100,7 @@ export function Signup() {
           <div className="field"><span className="lbl">I am</span><Seg label="I am" value={f.gender} onChange={set('gender')} items={[['woman', 'A woman'], ['man', 'A man'], ['nonbinary', 'Non-binary']]} /></div>
           <div className="field"><span className="lbl">Interested in</span><Chips multi items={['Women', 'Men', 'Everyone']} value={f.interested} onChange={set('interested')} label="Interested in" /></div>
         </div>
-        <div className="consent"><Check2 checked={f.consent} onChange={set('consent')} required><b>{CONSENT_TEXT}</b> Your agent writes the first messages in your words; you can read every line, pause it or take over any time.</Check2></div>
+        <div className="consent"><Check2 checked={f.consent} onChange={set('consent')} required><b>{CONSENT_TEXT}</b> Your agent writes the first messages in your words; you can read every line, pause it or take over any time. Both of you always see which messages an agent wrote.</Check2></div>
         {error && <p className="f-err" role="alert">{error}</p>}
         <Btn size="lg" block type="submit" loading={busy} disabled={!ready}>Create account</Btn>
         <p className="small center">Already have an account? <Link className="link" to="/login">Log in</Link></p>
