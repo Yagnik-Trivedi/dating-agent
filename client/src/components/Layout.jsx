@@ -14,13 +14,15 @@ export default function Layout() {
   const toast = useToast()
   const { pathname } = useLocation()
   const { user, profile, system } = useAuth()
-  const [counts, setCounts] = useState({})
+  const [counts, setCounts] = useState({ likesEnabled: true })
   const load = useCallback(() => {
     api.get('/api/inbox').then(({ data }) => setCounts((c) => ({ ...c, notifications: (data.items ?? []).filter((i) => i.status === 'open').length }))).catch(() => {})
+    api.get('/api/likes/incoming').then(({ data }) => setCounts((c) => ({ ...c, likes: data.likes.length }))).catch(() => {})
   }, [])
   useEffect(load, [load, pathname])
 
-  useSocketEvent('match:new', ({ match }) => toast(`You and ${match.other.name} liked each other. Your agents are getting ready to talk.`, { to: `/matches/${match._id}`, agent: true }))
+  useSocketEvent('match:new', ({ match }) => toast(`You and ${match.other.name} liked each other.`, { to: `/matches/${match._id}` }))
+  useSocketEvent('like:new', () => { load(); if (!pathname.startsWith('/likes')) toast('Someone liked your profile', { to: '/likes', action: 'See who' }) })
   useSocketEvent('inbox:new', () => { load(); if (!pathname.startsWith('/inbox')) toast('Your agent has a question for you', { to: '/inbox', agent: true }) })
   useSocketEvent('trust:flagged', ({ matchId }) => toast('Your agent thinks a profile is fake and stopped talking.', { to: `/matches/${matchId}`, tone: 'bad', action: 'See why' }))
   useSocketEvent('report:ready', ({ matchId }) => toast('Your agents finished talking. Your letter is ready.', { to: `/matches/${matchId}/report`, agent: true, action: 'Read it' }))

@@ -1,166 +1,91 @@
-import { useState } from 'react'
-import { Avatar, Button, Card, Chip, ErrorBox, Field } from '../components/ui'
+// Plan 30 S3.2 profile editor (design: People.jsx#Editor): a completeness meter (steps, never a percentage), photos,
+// 3 prompts, basics, and a live "how others see you" preview. Saving rebuilds the gate and re-runs the self-check.
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Eye } from 'lucide-react'
+import { Btn, Chips, Field, Input, LiveBadge, Shell, photoOf } from '../components/r7'
+import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
+import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
+import { Prompts } from './Onboarding'
 
-const AVATAR_STYLES = ['notionists', 'lorelei', 'adventurer', 'personas']
-const avatarUrl = (style, seed) => `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=f4d9cf,dbe9e4,f3e6c4`
-const PROMPT_QUESTIONS = [
-  'A perfect Sunday', 'I geek out on', 'My friends rely on me for', 'A hill I’d die on', 'The way to win me over',
-  'Two truths and a lie', 'Best travel story', 'My simple pleasures',
-]
-const INTERESTED_IN = { woman: 'Women', man: 'Men', nonbinary: 'Non-binary people' }
-const LIFESTYLE = { smoking: ['never', 'socially', 'regularly'], drinking: ['never', 'socially', 'regularly'], workout: ['rarely', 'sometimes', 'often'], diet: ['veg', 'non-veg', 'vegan', 'jain', 'eggetarian', 'no preference'] }
+const LANGS = ['english', 'hindi', 'gujarati', 'marathi', 'tamil', 'telugu', 'kannada', 'bengali', 'punjabi', 'malayalam']
+const cap = (s) => s[0].toUpperCase() + s.slice(1)
 
-function toForm(p, user) {
-  return {
-    name: p?.name ?? user.name,
-    age: p?.age ?? '',
-    city: p?.city ?? '',
-    gender: p?.gender ?? '',
-    interestedIn: p?.interestedIn ?? [],
-    photos: p?.photos ?? [],
-    bio: p?.bio ?? '',
-    prompts: [0, 1, 2].map((i) => p?.prompts?.[i] ?? { q: PROMPT_QUESTIONS[i], a: '' }),
-    interests: (p?.tags?.interests ?? []).join(', '),
-    lifestyle: { smoking: '', drinking: '', workout: '', diet: '', ...p?.tags?.lifestyle },
-    wantsKids: p?.tags?.wantsKids ?? '',
-    relationshipGoal: p?.tags?.relationshipGoal ?? '',
-    religionImportance: p?.tags?.religionImportance ?? '',
-    dealbreakers: (p?.dealbreakers ?? []).join(', '),
-  }
+function Meter({ parts, onGo }) {
+  const n = parts.filter((d) => d[1]).length
+  const next = parts.filter((d) => !d[1]).slice(0, 2)
+  return (
+    <section className="meter card" aria-label={`Profile: ${n} of ${parts.length} parts done`}>
+      <div className="mt-h"><b>Your profile: {n} of {parts.length} done</b><span className="small">Complete profiles get more thoughtful likes.</span></div>
+      <div className="mt-bar" style={{ gridTemplateColumns: `repeat(${parts.length}, 1fr)` }}>{parts.map(([k, d]) => <i key={k} className={d ? 'on' : ''} title={k} />)}</div>
+      {next.length > 0 && <p className="small">Next: {next.map(([k, , go], i) => <span key={k}>{i > 0 && ' · '}<button type="button" className="link" onClick={() => onGo(go)}>{k.toLowerCase()}</button></span>)}</p>}
+    </section>
+  )
 }
 
-const list = (s) => s.split(',').map((x) => x.trim()).filter(Boolean)
-const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== ''))
-
 export default function Profile() {
-  const { user, profile, setProfile } = useAuth()
+  const { profile, refresh } = useAuth()
+  const mobile = useMobile()
+  const navigate = useNavigate()
   const toast = useToast()
-  const [form, setForm] = useState(() => toForm(profile, user))
-  const [seed, setSeed] = useState(user.name)
+  const { photos, setPhotos } = usePhotos()
+  const [f, setF] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
-  const toggleIn = (g) => setForm((f) => ({ ...f, interestedIn: f.interestedIn.includes(g) ? f.interestedIn.filter((x) => x !== g) : [...f.interestedIn, g] }))
+  useEffect(() => {
+    if (profile && !f) setF({ job: profile.job ?? '', workplace: profile.workplace ?? '', education: profile.education ?? '', height: profile.height ?? '', languages: profile.languages ?? [], bio: profile.bio ?? '', prompts: (profile.prompts ?? []).slice(0, 3) })
+  }, [profile, f])
+  if (!f) return <Shell title="Edit profile" back />
 
-  async function save(e) {
-    e.preventDefault()
+  const ok = (photos ?? []).filter((p) => p.status === 'ok')
+  const parts = [
+    ['Photos', ok.length >= 2, 'photos'], ['Prompts', f.prompts.filter((p) => p.a.trim()).length >= 3, 'prompts'], ['Basics', Boolean(f.job.trim() && f.languages.length), 'basics'],
+    ['Live check', Boolean(profile.liveChecked), 'live'], ['Interests', (profile.tags?.interests?.length ?? 0) >= 3, 'interests'],
+  ]
+  const go = (k) => (k === 'live' ? navigate('/live-check') : k === 'interests' ? navigate('/you') : document.getElementById(`ed-${k}`)?.scrollIntoView({ behavior: 'smooth' }))
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  async function save() {
     setBusy(true)
-    setError(null)
     try {
-      const body = {
-        name: form.name,
-        ...(form.age !== '' && { age: Number(form.age) }),
-        city: form.city,
-        gender: form.gender,
-        interestedIn: form.interestedIn,
-        photos: form.photos,
-        bio: form.bio,
-        prompts: form.prompts.filter((p) => p.a.trim()),
-        tags: drop({
-          interests: list(form.interests),
-          lifestyle: drop(form.lifestyle),
-          wantsKids: form.wantsKids,
-          relationshipGoal: form.relationshipGoal,
-          religionImportance: form.religionImportance,
-        }),
-        dealbreakers: list(form.dealbreakers),
-      }
-      const { data } = await api.put('/api/profile', body)
-      setProfile(data.profile)
-      toast('Profile saved')
-    } catch (err) {
-      setError(errMsg(err))
-    } finally {
-      setBusy(false)
-    }
+      await api.put('/api/profile', { job: f.job.trim(), workplace: f.workplace.trim(), education: f.education.trim(), height: f.height.trim(), languages: f.languages, bio: f.bio.trim(), prompts: f.prompts.filter((p) => p.a.trim()).map((p) => ({ q: p.q, a: p.a.trim() })) })
+      await refresh()
+      toast('Saved. Your profile is checked again in the background.')
+    } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(false) }
   }
-
+  const prev = { ...profile, ...f, photos: ok.map((p) => p.url) }
+  const sections = (
+    <div className="ed-sections">
+      <Meter parts={parts} onGo={go} />
+      <section className="ed-sec" id="ed-photos"><div className="ed-h"><h2 className="h3">Photos</h2><span className="small">Drag to reorder</span></div>
+        {photos && <PhotoGrid photos={photos} setPhotos={setPhotos} onError={(m) => toast(m, { tone: 'bad' })} />}</section>
+      <section className="ed-sec" id="ed-prompts"><div className="ed-h"><h2 className="h3">Prompts</h2><span className="small">{f.prompts.length} of 3</span></div>
+        <Prompts value={f.prompts} onChange={(prompts) => setF({ ...f, prompts })} /></section>
+      <section className="ed-sec" id="ed-basics"><div className="ed-h"><h2 className="h3">Basics</h2></div>
+        <Field label="What do you do?">{(id) => <Input id={id} value={f.job} onChange={set('job')} maxLength={120} />}</Field>
+        <Field label="Where do you work?" optional>{(id) => <Input id={id} value={f.workplace} onChange={set('workplace')} maxLength={120} />}</Field>
+        <Field label="Education" optional>{(id) => <Input id={id} value={f.education} onChange={set('education')} maxLength={120} />}</Field>
+        <Field label="Height" optional>{(id) => <Input id={id} value={f.height} onChange={set('height')} maxLength={20} placeholder="e.g. 5′10″" />}</Field>
+        <div className="field"><span className="lbl">Languages you speak</span><Chips multi items={[...new Set([...LANGS, ...f.languages])].map((l) => [l, cap(l)])} value={f.languages} onChange={(languages) => setF({ ...f, languages })} label="Languages" /></div>
+        <Field label="About you" optional hint={`${500 - f.bio.length} characters left.`}>{(id) => <textarea id={id} className="ta" rows={3} maxLength={500} value={f.bio} onChange={set('bio')} />}</Field>
+      </section>
+      <div className="ed-save"><Btn size="lg" block={mobile} onClick={save} loading={busy}>Save changes</Btn></div>
+    </div>
+  )
+  if (mobile) return <Shell title="Edit profile" back right={<Btn kind="ghost" size="sm" icon={Eye} onClick={() => navigate(`/u/${profile.userId}`)}>Preview</Btn>}><div className="pad">{sections}</div></Shell>
   return (
-    <form onSubmit={save} className="page profile-page space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-semibold">Your profile</h1>
-        <Button type="submit" loading={busy}>Save</Button>
+    <Shell>
+      <div className="ed-wrap">
+        <div><h1 className="h1">Edit profile</h1>{sections}</div>
+        <aside className="ed-prev" aria-label="How others see you"><p className="small">How others see you</p>
+          <div className="prev-card card"><img src={photoOf(prev, 0, 'portrait')} alt="" /><div className="pc-b">
+            <b className="pc-n">{prev.name}{prev.age ? `, ${prev.age}` : ''}</b><span className="small">{[prev.job, prev.city].filter(Boolean).join(' · ')}</span>
+            {prev.liveChecked && <LiveBadge />}
+            {prev.prompts[0]?.a && <><p className="pq">{prev.prompts[0].q}</p><p className="pa sm">{prev.prompts[0].a}</p></>}
+          </div></div>
+        </aside>
       </div>
-
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Photo</h2>
-        <div className="flex items-center gap-4">
-          <Avatar src={form.photos[0]} name={form.name} className="size-20" />
-          <p className="text-sm text-muted">Demo avatars from DiceBear. Pick a style, or shuffle for a new face.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {AVATAR_STYLES.map((style) => {
-            const url = avatarUrl(style, seed)
-            return (
-              <button type="button" key={style} onClick={() => setForm((f) => ({ ...f, photos: [url] }))} aria-label={`Use ${style} avatar`} aria-pressed={form.photos[0] === url}
-                className={`rounded-full p-0.5 ring-2 ${form.photos[0] === url ? 'ring-accent' : 'ring-transparent hover:ring-line'}`}>
-                <img src={url} alt="" className="size-14 rounded-full bg-surface-2" />
-              </button>
-            )
-          })}
-          <Button type="button" variant="secondary" size="sm" onClick={() => setSeed(Math.random().toString(36).slice(2, 8))}>Shuffle</Button>
-        </div>
-      </Card>
-
-      <Card className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name" value={form.name} onChange={set('name')} required maxLength={60} />
-        <Field label="Age" type="number" min={18} max={100} value={form.age} onChange={set('age')} />
-        <Field label="City" value={form.city} onChange={set('city')} maxLength={80} />
-        <Field label="I am" as="select" value={form.gender} onChange={set('gender')}>
-          <option value="">Prefer not to say</option>
-          <option value="woman">A woman</option>
-          <option value="man">A man</option>
-          <option value="nonbinary">Non-binary</option>
-        </Field>
-        <div className="sm:col-span-2">
-          <p className="mb-1.5 text-sm font-semibold">Interested in</p>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(INTERESTED_IN).map(([g, label]) => <Chip key={g} selected={form.interestedIn.includes(g)} onClick={() => toggleIn(g)}>{label}</Chip>)}
-          </div>
-        </div>
-        <Field className="sm:col-span-2" label="Bio" as="textarea" value={form.bio} onChange={set('bio')} maxLength={500} hint={`${form.bio.length}/500`} />
-      </Card>
-
-      <Card className="space-y-4">
-        <h2 className="font-semibold">Prompts</h2>
-        {form.prompts.map((p, i) => (
-          <div key={i} className="space-y-2">
-            <Field label={`Prompt ${i + 1}`} as="select" value={p.q} onChange={(e) => setForm((f) => ({ ...f, prompts: f.prompts.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)) }))}>
-              {PROMPT_QUESTIONS.map((q) => <option key={q}>{q}</option>)}
-            </Field>
-            <Field label="Your answer" as="textarea" value={p.a} maxLength={300} onChange={(e) => setForm((f) => ({ ...f, prompts: f.prompts.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)) }))} />
-          </div>
-        ))}
-      </Card>
-
-      <Card className="grid gap-4 sm:grid-cols-2">
-        <Field className="sm:col-span-2" label="Interests" value={form.interests} onChange={set('interests')} hint="Comma separated, e.g. trekking, board games, filter coffee" />
-        {Object.entries(LIFESTYLE).map(([k, opts]) => (
-          <Field key={k} label={k[0].toUpperCase() + k.slice(1)} as="select" value={form.lifestyle[k]} onChange={(e) => setForm((f) => ({ ...f, lifestyle: { ...f.lifestyle, [k]: e.target.value } }))}>
-            <option value="">—</option>
-            {opts.map((o) => <option key={o}>{o}</option>)}
-          </Field>
-        ))}
-        <Field label="Kids someday" as="select" value={form.wantsKids} onChange={set('wantsKids')}>
-          <option value="">—</option>
-          {['yes', 'no', 'open', 'have already'].map((o) => <option key={o}>{o}</option>)}
-        </Field>
-        <Field label="Looking for" as="select" value={form.relationshipGoal} onChange={set('relationshipGoal')}>
-          <option value="">—</option>
-          {['long-term', 'open to long-term', 'short-term', 'figuring it out'].map((o) => <option key={o}>{o}</option>)}
-        </Field>
-        <Field label="Religion in my own life" as="select" value={form.religionImportance} onChange={set('religionImportance')}>
-          <option value="">Prefer not to say</option>
-          {['central', 'somewhat', 'not really'].map((o) => <option key={o}>{o}</option>)}
-        </Field>
-        <Field className="sm:col-span-2" label="Dealbreakers" value={form.dealbreakers} onChange={set('dealbreakers')} hint="Comma separated. Only your agent sees these." />
-      </Card>
-
-      {error && <ErrorBox message={error} />}
-      <Button type="submit" size="lg" className="w-full" loading={busy}>Save profile</Button>
-    </form>
+    </Shell>
   )
 }
