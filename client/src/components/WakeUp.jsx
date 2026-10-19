@@ -1,10 +1,10 @@
-// Wake-up screen (plan 12 §4, plan 30 S0): Render's free tier sleeps after 15 idle minutes and takes 50–60 s to wake.
-// If /health hasn't answered within 3 s, a calm overlay says so (the app stays mounted underneath). It keeps retrying
-// for up to 120 s, but only a timeout or a 502/503/504 counts as "asleep": a blocked request (CORS, an extension, an
-// old browser) says so straight away with the error's name, instead of looking like a sleeping server.
+// Wake-up screen (Round 7 Step 2 design, System.jsx Wake; plan 12 §4, plan 30 S0): Render's free tier sleeps after 15
+// idle minutes and takes 50–60 s to wake. If /health hasn't answered within 3 s, a calm full-screen overlay counts the
+// seconds (the app stays mounted underneath) and retries for up to 120 s. Only a timeout or a 502/503/504 counts as
+// "asleep"; a blocked request (CORS, an extension, an old browser) says so with the error's name.
 import { useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { Btn, Typing } from './prelude'
+import { Btn, Wordmark } from './r7'
 
 const HEALTH = `${import.meta.env.VITE_API_URL ?? ''}/health`
 const GIVE_UP_MS = 120_000
@@ -18,8 +18,6 @@ async function ping() {
     if (r.ok) return 'up'
     return [502, 503, 504].includes(r.status) ? 'asleep' : `blocked:HTTP ${r.status}`
   } catch (err) {
-    // An abort is our own timeout. A TypeError straight away is the browser refusing (CORS, offline, blocked), but a
-    // sleeping Render instance can also drop the connection, so it's only "blocked" if it failed fast.
     return err.name === 'AbortError' ? 'asleep' : `error:${err.name}`
   } finally {
     clearTimeout(timer)
@@ -30,44 +28,45 @@ export default function WakeUp({ children }) {
   const [state, setState] = useState('checking') // checking · waking · up · down · blocked
   const [why, setWhy] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const [secs, setSecs] = useState(0)
   useEffect(() => {
     let alive = true, fastFails = 0
     const start = Date.now()
     const slow = setTimeout(() => alive && setState((s) => (s === 'checking' ? 'waking' : s)), 3000)
+    const tick = setInterval(() => alive && setSecs(Math.round((Date.now() - start) / 1000)), 1000)
     const loop = async () => {
       const t = Date.now()
       const r = await ping()
       if (!alive) return
       if (r === 'up') return setState('up')
-      const quick = Date.now() - t < 2000
-      if (r.startsWith('blocked:') || (r.startsWith('error:') && quick && ++fastFails >= 3)) {
-        setWhy(r.split(':')[1])
-        return setState('blocked')
-      }
+      // A sleeping Render instance can also drop the connection, so it's only "blocked" if it failed fast 3 times.
+      if (r.startsWith('blocked:') || (r.startsWith('error:') && Date.now() - t < 2000 && ++fastFails >= 3)) { setWhy(r.split(':')[1]); return setState('blocked') }
       if (Date.now() - start > GIVE_UP_MS) return setState('down')
       setTimeout(loop, 3000)
     }
     loop()
-    return () => { alive = false; clearTimeout(slow) }
+    return () => { alive = false; clearTimeout(slow); clearInterval(tick) }
   }, [attempt])
 
-  const retry = () => { setState('checking'); setWhy(''); setAttempt((a) => a + 1) }
+  const retry = () => { setState('checking'); setWhy(''); setSecs(0); setAttempt((a) => a + 1) }
+  const show = state === 'waking' || state === 'down' || state === 'blocked'
   const copy = {
-    waking: ['Waking up the server…', 'Prelude runs on a free server that naps when nobody’s around. This usually takes under a minute.'],
+    waking: ['Waking up the server…', 'Prelude runs on free hosting that naps when it’s quiet. Waking can take up to 2 minutes. Thanks for your patience.'],
     down: ['We can’t reach the server right now', 'Nothing was sent or shared while it was down. Please try again in a moment.'],
-    blocked: ['Your browser blocked the connection', `The server didn’t get a chance to answer (${why}). A privacy extension or network filter can do this; try turning it off for this site, or another browser.`],
+    blocked: ['Your browser blocked the connection', `The server didn’t get a chance to answer (${why}). A privacy extension or network filter can do this; try turning it off for this site, or use another browser.`],
   }[state]
-
   return (
     <>
       {children}
-      {copy && (
-        <div className="scr state wake" role="alertdialog" aria-live="polite" aria-label="Server status">
-          <div className="st-center">
-            {state === 'waking' && <Typing label="Waking up the server" />}
-            <h1 className="t-h2">{copy[0]}</h1>
-            <p className="t-body muted">{copy[1]}</p>
-            {state !== 'waking' && <Btn kind="secondary" icon={RefreshCw} onClick={retry}>Try again</Btn>}
+      {show && (
+        <div className="scr app-scr wake app-wake" role="alertdialog" aria-live="polite" aria-label="Server status">
+          <div className="wk">
+            <Wordmark />
+            {state === 'waking' && <div className="wk-line" aria-hidden="true"><i style={{ width: `${Math.min(96, (1 - Math.exp(-secs / 40)) * 100)}%` }} /></div>}
+            <h1 className="h2">{copy[0]}</h1>
+            <p className="lead sm">{copy[1]}</p>
+            {state === 'waking' && <p className="small" aria-live="off">{secs < 60 ? `${secs} seconds so far` : `${Math.floor(secs / 60)} min ${secs % 60} s so far`} · we’ll open the app as soon as it answers</p>}
+            {(state !== 'waking' || secs > 90) && <Btn kind="secondary" size="sm" icon={RefreshCw} onClick={retry}>{state === 'waking' ? 'Taking long? Try again' : 'Try again'}</Btn>}
           </div>
         </div>
       )}
