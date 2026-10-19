@@ -18,3 +18,6 @@ Frontend-Design/
 server/scripts/live-check-samples/
 # Plan 19: MediaPipe WASM is copied from node_modules before dev/build (client/package.json predev/prebuild)
 client/public/mediapipe/wasm/
+
+# local photo stub (plan 30)
+server/uploads/

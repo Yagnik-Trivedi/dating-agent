@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -16,7 +17,9 @@ import { liveCheckRouter } from './routes/liveCheck.js';
 import { matchesRouter } from './routes/matches.js';
 import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
+import { photosRouter } from './routes/photos.js';
 import { profileRouter } from './routes/profile.js';
+import { cloudinaryOn, UPLOAD_DIR } from './services/photos.js';
 import './services/jobs/handlers.js';
 import { startPeriodic, stopPeriodic } from './services/jobs/periodic.js';
 import { startWorker, stopWorker } from './services/jobs/queue.js';
@@ -46,10 +49,11 @@ app.get('/health/deep', (req, res) => {
   res.status(state === 1 ? 200 : 503).json({ ok: state === 1, mongo: states[state] ?? 'unknown' });
 });
 
+if (!cloudinaryOn()) app.use('/uploads', express.static(fileURLToPath(UPLOAD_DIR), { maxAge: '7d' })); // local photo stub
 app.get('/api/cities', (req, res) => res.set('Cache-Control', 'public, max-age=86400').json({ cities: CITY_NAMES }));
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
-app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, liveCheckRouter);
+app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, liveCheckRouter, photosRouter);
 
 app.use(notFound);
 app.use(errorHandler);

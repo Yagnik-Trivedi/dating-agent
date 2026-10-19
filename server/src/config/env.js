@@ -39,6 +39,10 @@ const schema = z.object({
   LIVE_CHECK_MAX_PER_DAY: field(z.coerce.number().int().positive().default(5)),
   LIVE_CHECK_TTL_S: field(z.coerce.number().int().positive().default(90)),
   TAVILY_API_KEY: optional,
+  // Plan 30 photos: Cloudinary free plan, signed direct uploads. All three missing = local stub (files in server/uploads).
+  CLOUDINARY_CLOUD_NAME: optional,
+  CLOUDINARY_API_KEY: optional,
+  CLOUDINARY_API_SECRET: optional,
   // Tavily has 1,000 credits in total (dev + seeding + demo + judging). A basic search = 1 credit; counted per database.
   TAVILY_MAX_SEARCHES: field(z.coerce.number().int().nonnegative().default(30)), // all-time cap; production sets it in render.yaml
   TAVILY_SEARCHES_PER_USER_DAY: field(z.coerce.number().int().nonnegative().default(3)),
