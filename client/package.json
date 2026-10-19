@@ -7,9 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview",
-    "predev": "node -e \"require('fs').cpSync('node_modules/@mediapipe/tasks-vision/wasm','public/mediapipe/wasm',{recursive:true,filter:(s)=>!s.includes('module_internal')})\"",
-    "prebuild": "node -e \"require('fs').cpSync('node_modules/@mediapipe/tasks-vision/wasm','public/mediapipe/wasm',{recursive:true,filter:(s)=>!s.includes('module_internal')})\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "@fontsource-variable/figtree": "^5.3.0",
@@ -18,7 +16,6 @@
     "@fontsource-variable/source-code-pro": "^5.3.1",
     "@fontsource-variable/source-sans-3": "^5.3.1",
     "@fontsource-variable/source-serif-4": "^5.3.1",
-    "@mediapipe/tasks-vision": "^1.1.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "animejs": "^4.5.0",

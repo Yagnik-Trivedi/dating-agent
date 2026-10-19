@@ -6,7 +6,7 @@
 > **Dates:** S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · final push + deploy + full QA Oct 27 · **feature freeze Oct 28** · submit Oct 29. Whatever isn't done by Oct 28 is cut, not rushed.
 
 ## Owner decisions (2026-10-18)
-1. **Live check is part of onboarding** and required before you appear in Discover or your agent can chat. "Skip for now" lets you browse only. Seed and judge accounts are exempt and labelled "Demo profile"; they never get a fake `liveChecked`.
+1. ~~**Live check is part of onboarding** and required before you appear in Discover or your agent can chat.~~ **Superseded 2026-10-19: the live check was removed completely** (see SU). "Skip for now" lets you browse only. Seed and judge accounts are exempt and labelled "Demo profile"; they never get a fake `liveChecked`.
 2. **Scam self-check at onboarding:**
    - High risk → the profile is held out of Discover, with the reason shown and "fix and resubmit".
    - Medium risk → no hold; it's passed to the other side's trust check as one input.
@@ -23,6 +23,7 @@
    - Keep the product name **Prelude**; "Tandem" is only the design's working name.
 7. **No social feed or posts.** A real dating app here = photos + prompts + likes + chat.
 8. **(2026-10-19) Agent chats must flow like a real conversation.** They mustn't read as agents ticking off the points we want to check. Agenda topics come up in the flow of the chat, never forced. This replaces S1's "agenda-driven, dealbreaker topics first". See SN.
+9. **(2026-10-19) Remove the live check completely**, and fix the phone UI the owner found (see SU).
 
 ## Standing rules
 - **Secrets:** never print, echo, log or commit secrets. Confirm no `.env` is tracked before every push.
@@ -281,6 +282,13 @@ All numbers live in `kg/config.js`.
   - judge accuracy not lower (5/6), fallbacks ≤ 7%, unsupported claims not higher
   - two transcripts read by the owner as natural
 - **Trade-off:** fewer forced topics → the judges see less evidence. If accuracy drops, the fix is in the judge (e.g. "not discussed" → the report's "ask yourself"), not in forcing topics again.
+
+## SU — Live check removed + phone UI fixes (owner, 2026-10-19) ✅
+- **Live check removed:** server route / service / model / prompt / test / script, `LIVE_CHECK_*` env, the trust bonus; client page, onboarding step (6 steps now), badges, Settings row, landing claim, MediaPipe. New accounts start `active`; `activateWaiting()` activates any `browse_only` account once at boot and delivers its kept likes. `MODEL_VISION` stays for photo moderation.
+- **Last lines hidden on phones:** the old `.onb-foot { position: fixed }` (prelude-app.css) covered the onboarding content: old onboarding CSS deleted. The "agent paused" banner no longer pushes 100dvh screens off the bottom (`.app-frame`).
+- **Orange boundaries:** `--sand` is a neutral hairline (#E5E0D9), fields `--line-input` (#CDC6BD), neutral focus ring; the old double orange outline on inputs removed.
+- **Back:** log in / join have a back control (previous page, or the landing page).
+- **Onboarding Continue:** `OnbShell missing={ text, target }` says what's missing next to Continue; a tap scrolls to it and highlights it.
 
 ## S4 — Accounts and trust basics
 1. **Email via Resend** (free plan; env `RESEND_API_KEY`, `EMAIL_FROM`; the owner creates the account). If the key is missing, the features hide themselves cleanly.

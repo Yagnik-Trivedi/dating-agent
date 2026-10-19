@@ -2,7 +2,7 @@
 
 This guide is for anyone who wants to understand the project end to end: what it does, how it's built, why it's built that way, what happened so far and what's still open. It's written for someone new to the codebase. It assumes basic web-development knowledge (React, Node, MongoDB), but nothing about this project.
 
-*Written 2026-10-19. For the latest status, check [`plan/PROGRESS.md`](plan/PROGRESS.md) (the team's status board) and the Status section of [`CLAUDE.md`](CLAUDE.md).*
+*Written 2026-10-19; updated the same day after the live check was removed (§16). For the latest status, check [`plan/PROGRESS.md`](plan/PROGRESS.md) (the team's status board) and the Status section of [`CLAUDE.md`](CLAUDE.md).*
 
 ---
 
@@ -104,8 +104,7 @@ This is what a user experiences, and what happens behind the scenes at each step
    - an optional **dealbreaker** tick
 5. **5 "How would you reply?" messages:** fake messages from a match that you answer exactly as you'd text. This is how the agent learns your **voice**.
 6. **Submit:** a quick first version of your knowledge graph is built instantly. The slow AI part runs in the background while you continue.
-7. **Live check:** 2 random head moves on camera (§11). "Skip for now" = **browse only**: you can browse and like, but nobody sees you and no agent chats start.
-8. **Done:** "Teach your agent more" offers optional extras (stories, 10 more reply samples, 20 personality statements). Each one makes the agent better.
+7. **Done:** "Teach your agent more" offers optional extras (stories, 10 more reply samples, 20 personality statements). Each one makes the agent better.
 
 ### 3.3 Discover and likes
 - Discover shows profiles one at a time, first photo full-bleed. You can tap through the photos and scroll for the full profile.
@@ -146,7 +145,7 @@ Text and photos (moderated the same way as profile photos), typing indicator, "S
 - **This is you:** your knowledge graph as a map. You can edit or delete facts, change who can see each fact, resolve contradictions ("Which is right?"), and correct "How I text".
 - **Inbox ("ask my human"):** questions your agent couldn't answer about you. Your answers become new facts.
 - **Replay:** scrub through a past agent chat with its evidence moments.
-- **Settings:** agent mode (off / shadow / auto), "Learn from my chats", live check, delete my data.
+- **Settings:** agent mode (off / shadow / auto), "Learn from my chats", delete my data.
 
 ---
 
@@ -166,7 +165,7 @@ These are non-negotiable (from `CLAUDE.md`):
 - **No inference of caste, religion, ethnicity or race** from names or photos. Religion is used only if the user states it as their own preference or dealbreaker.
 - **SFW demo and seed content.** Seed people are illustrated avatars, never real photos.
 - **The other side can be a human or an agent.** The engine works the same either way; a human's messages are just transcript lines.
-- **Honesty:** a sincere "are you a bot?" always gets an honest answer. The live check is called "Live-checked", never "verified".
+- **Honesty:** a sincere "are you a bot?" always gets an honest answer.
 
 ---
 
@@ -177,7 +176,7 @@ These are non-negotiable (from `CLAUDE.md`):
 | Part | Tools |
 |---|---|
 | Server | Node 22, Express 5, Socket.IO 4, Mongoose 8, zod (validation), jsonwebtoken + bcryptjs (auth), `openai` SDK (pointed at the AI provider), `@tavily/core` (web search). Plain JavaScript, ESM modules. |
-| Client | React 19 + Vite, Tailwind CSS v4, React Router, axios, socket.io-client, Motion (animations), MediaPipe (face tracking for the live check), react-easy-crop (photo crop), three.js (the 3D graph on "This is you"). |
+| Client | React 19 + Vite, Tailwind CSS v4, React Router, axios, socket.io-client, Motion (animations), react-easy-crop (photo crop), three.js (the 3D graph on "This is you"). |
 | Auth | JWT in the `Authorization: Bearer` header (stored in localStorage). Socket.IO uses the same token. Frontend and backend are on different domains, so no cookies. |
 
 **Everything must be free.** No paid service and nothing that needs a credit card:
@@ -212,7 +211,7 @@ These are non-negotiable (from `CLAUDE.md`):
 | **smart** (`MODEL_SMART`) | Nemotron 3 Ultra (falls back to Super) | The judges only: the one decision that matters most, once per side per conversation, temperature 0. On the NVIDIA key, Ultra returns 404, so the mid tier judges for now. |
 | **fast** (`MODEL_FAST`) | Nemotron 3.5 Lightning | Short, frequent jobs: stance check, wind-down message, icebreakers, date-idea write-ups. Measured slower than Super on NVIDIA, so several jobs were moved to mid there (configurable). |
 | **embed** (`MODEL_EMBED`) | Nemotron embedding model | Matching texts to shared concepts, "did they ask about me?", leak checks, choosing example messages. |
-| **vision** (`MODEL_VISION`) | Nemotron Nano VL | Live check (pose / smile / face count / screen signs) and photo moderation. **Code** makes the final decision. |
+| **vision** (`MODEL_VISION`) | Nemotron VL | Photo moderation. **Code** makes the final decision. |
 
 **Safety rails on every call:**
 - **Reasoning models:** a generous `max_tokens` (≥ 2048), so the model's reasoning can't eat the answer. Reasoning text comes back in a separate field and never reaches a user.
@@ -234,7 +233,7 @@ These are non-negotiable (from `CLAUDE.md`):
    ▼                                ▼
  Express 5 API + Socket.IO server (one Render free service)
    │
-   ├─ routes/         auth, me, profile, photos, onboarding, kg, discover, matches, inbox, live-check, admin
+   ├─ routes/         auth, me, profile, photos, onboarding, kg, discover, matches, inbox, admin
    ├─ services/
    │   ├─ llm/          the one AI client, budgets, usage log, embedding cache
    │   ├─ kg/           knowledge graph: build, facts, concepts, voice, gate data, config.js (ALL thresholds)
@@ -246,8 +245,7 @@ These are non-negotiable (from `CLAUDE.md`):
    │   ├─ compat/       settle the verdict, hand-off, wind-down, notes compaction
    │   ├─ match/gate.js the pre-chat gate (code only)
    │   ├─ pipeline/     the match pipeline (gate → trust → brief → chat)
-   │   ├─ liveCheck/    challenges, decision in code
-   │   ├─ tavily/       date ideas
+      │   ├─ tavily/       date ideas
    │   └─ jobs/         the Mongo job queue + every job type
    └─ models/         Mongoose models (§12)
    ▼
@@ -416,11 +414,11 @@ When the pipeline reaches `briefing`, each side's agent gets:
 
 | Feature | How it works |
 |---|---|
-| **Trust check on a match** | Scam rules (contact details, "investment opportunity", "add me on telegram"…) plus an AI consistency check of the other person's public profile: contradictions with verbatim quotes, severity 0–3. A likely fake → `flagged_fake`: agents off, the match closes for the fake side, reasons only to the viewer. Results are cached per profile. A live-checked profile counts as a small positive, but never cancels a scam signal. |
+| **Trust check on a match** | Scam rules (contact details, "investment opportunity", "add me on telegram"…) plus an AI consistency check of the other person's public profile: contradictions with verbatim quotes, severity 0–3. A likely fake → `flagged_fake`: agents off, the match closes for the fake side, reasons only to the viewer. Results are cached per profile. |
 | **Scam self-check at onboarding** (S2) | The same check on **your own** profile, plus photo results. High risk → **held** (out of Discover, with the reasons and "fix and resubmit"). Medium → passed on as a note to other people's trust checks. Never an automatic ban; an admin route releases a hold. |
 | **Scam text in chat** | A scam script mid-chat ("add me on telegram, I can help you invest") flags the match and stops the agents at once. |
-| **Live check** (plan 19, a step in onboarding since S2) | 2 random moves (turn left / right, look up, smile) after a neutral pose. The browser guides you with MediaPipe face tracking and captures one still per move. The server checks the challenge (single use, in order, timing), then makes **one** Nemotron vision call. **Code** decides pass / fail. Frames are never stored, logged or kept in the usage log. The badge says "Live-checked" with the tooltip "A live camera check showed a real person made this account. It doesn't check their photos or ID." |
-| **Profile status** | `active` / `browse_only` (no live check yet: can browse and like, invisible to others, no agent chats; likes are delivered once active) / `held`. Seed and judge accounts are exempt and labelled "Demo profile"; they never get a fake Live-checked badge. |
+| **Live check** | **Removed on 2026-10-19** (owner's decision). It was plan 19: 2 random head moves on camera, one Nemotron vision call, decided in code. New accounts are now active right away. |
+| **Profile status** | `active` / `held` (the scam self-check found high risk). `browse_only` (can browse and like, invisible to others, likes delivered once active) is no longer set by anything; accounts that were waiting on the live check were activated once at server start. Seed and judge accounts are labelled "Demo profile". |
 | **Photo moderation** | One vision call per photo, decision in code. Rejects nudity, violence, mostly-text images, contact details, QR codes and social handles; photo 1 must show a person. Never estimates age, gender, race or attractiveness. If the model is down, the photo stays "pending" (only you see it) and a job retries. |
 | **Block / unmatch / report** | A block hides both people from each other everywhere and stops any agent at once. Report reasons: fake, scam, harassment, inappropriate photos, underage, other. Reports appear in an admin list. |
 | **Delete my data** | Removes profile, graph, voice and messages; your side of any match is anonymised. Messages are kept only in handed-off chats, for the other person. |
@@ -434,7 +432,7 @@ All MongoDB collections (`server/src/models/`):
 | Model | What it holds |
 |---|---|
 | `User` | Account, consent, settings (agent mode, learn from chats), onboarding answers and status, `liveCheck` result (private) |
-| `Profile` | Public profile, photos (+ private `photoUploads`), prompts, preferences, `gate`, `status` (active / browse_only / held), `liveChecked` |
+| `Profile` | Public profile, photos (+ private `photoUploads`), prompts, preferences, `gate`, `status` (active / held; browse_only unused) |
 | `KgFact` | Facts about yourself (`observerId: null`) and notes about others (`observerId: me`) |
 | `KgEdge` | Links between facts (SUPPORTS, CONTRADICTS…) |
 | `KgTombstone` | Facts you deleted, so a rebuild doesn't bring them back |
@@ -448,7 +446,6 @@ All MongoDB collections (`server/src/models/`):
 | `MatchDecision` | One judge's verdict for one side, with evidence |
 | `InboxItem` | "Ask my human" questions |
 | `ProfileCheck` | Cached trust-check results per profile version |
-| `LiveCheckChallenge` | A one-time live-check challenge (auto-deleted) |
 | `Job` | The job queue |
 | `Usage` | One row per AI call: purpose, tier, tokens, latency, cost |
 | `EmbCache`, `SearchCache` | Embedding cache and Tavily search cache (TTL) |
@@ -470,7 +467,6 @@ All routes are under `/api`, return `{ error: { code, message } }` on failure, a
 | Matches | `GET /matches`, `GET /matches/:id`, `GET/POST /matches/:id/messages`, `POST /matches/:id/choice`, `/takeover`, `/pause`, `/resume`, `/decision`, `/extend`, `/unmatch`, `GET /matches/:id/report`, `/kg`, `/date-ideas`, `GET /conversations/:id/replay`, `POST /messages/:id/wouldnt-say` |
 | Safety | `POST /users/:id/block`, `POST /users/:id/report` |
 | Inbox | `GET /inbox`, `POST /inbox/:id/answer` |
-| Live check | `GET /live-check`, `POST /live-check/start`, `POST /live-check/finish` |
 | Admin | `GET /reports`, `POST /reports/:id/close`, `POST /profiles/:id/release`, `GET /usage`, `GET /jobs` |
 | Health | `GET /health` (open to any origin; used by keep-alive and the wake-up screen) |
 
@@ -546,7 +542,7 @@ v1 worked but was expensive (~266k tokens per chat) and slow. The knowledge grap
   - the "Prelude" design
   - 38 personas
   - the 20-pair evaluation
-- **Plan 19:** the live check.
+- **Plan 19:** the live check (removed again on Oct 19).
 - **Plan 12:** deployed on **Oct 18** (Render + Vercel + Atlas).
 
 **Lessons recorded along the way:**
@@ -564,9 +560,10 @@ After the first deploy, plan 30 merged everything still open:
 | **S0** | Browser bug: the site hung on "Waking up the server…" outside Chrome. Fixed the wake-up screen (real timeouts, 120 s retry, an honest "your browser blocked the connection" message), CORS, signup in one call, ~100 cities, copy fixes, a 3-browser smoke test (`npm run smoke:browsers`) | ✅ |
 | **S1** | Speed:<br>- two-phase onboarding: app usable 92 s → **0.2 s**; full graph 92 s → **14.5 s**<br>- agent pacing and one AI call per turn: a whole chat 23 min → **~4.7 min**, 18 → 13 messages<br>- first-message target (≤ 20 s) missed because of NVIDIA 429s | ✅ |
 | **S6** | New design ("Round 7"; product name stays Prelude): tokens, components, every screen restyled | 🔄 mostly (old CSS cleanup + motion left) |
-| **S2** | New onboarding: ~5-minute core, live check as a step, scam self-check, active / browse_only / held | ✅ |
+| **S2** | New onboarding: ~5-minute core, scam self-check, active / held (the live check step it added was removed on Oct 19) | ✅ |
 | **S3** | Real dating-app core: photos + moderation, prompts, profile view and editor, likes with comments, Likes you, match choice, human chat with photos and "Seen", block / report / unmatch, agent labels for both people | ✅ |
-| **SN** | Natural conversation (added Oct 19, §16) | 🔄 code done, live check pending |
+| **SN** | Natural conversation (added Oct 19, §16) | 🔄 code done and deployed; live 6-pair test pending |
+| **UI fixes** | Live check removed; phone layout, borders, back buttons, onboarding hints (Oct 19, §16) | ✅ |
 | **S4** | Accounts: email verification + forgot password (Resend), rate limits | ⬜ next |
 | **S5** | Nice-to-haves: notifications, photo → interest suggestions, eval follow-ups | ⬜ only if time |
 | **S7** | Ship: Nebius check (Oct 26), the one push + deploy (Oct 27), QA, README / submission | ⬜ |
@@ -627,46 +624,43 @@ After trying the deployed site, the team raised three problems. This section rec
 
 ### Problem 3: "The live check shouldn't be optional; no account without it. There are UI problems"
 
-**Done in S2:**
-- the live check is now an onboarding step
-- "Skip for now" = **browse only**: you can browse and like, but you're invisible to others and no agent chats start
-- seed and judge accounts are exempt
+**First answer (S2):** the live check became an onboarding step, with "Skip for now" = browse only.
 
-This follows the owner's decision in plan 30, and is the practical version of "no usable account without the check". Removing the skip entirely is a small change, waiting on the owner's decision.
+**Final decision (owner, later on Oct 19): remove the live check completely.** Done:
+- **Server:** its route, service, model, prompt, test and script are gone, plus `LIVE_CHECK_*` env and the trust check's small bonus. New accounts start **active**. At server start, any account still waiting in `browse_only` is activated once, and its kept likes are delivered.
+- **Client:** the page, the onboarding step (onboarding is now 6 steps), the "Live-checked" badges, the Settings row, the landing-page claim, and the MediaPipe library and model files are gone.
+- `MODEL_VISION` stays: photo moderation still uses it.
 
-**UI issues still open** (in `client/src/pages/LiveCheck.jsx`):
-- A wrong-way head turn passes in the browser and fails only on the server at the end (the browser checks only how far you turned).
-- The face tracker is GPU-only, with no CPU fallback.
-- One slow step (15 s) fails the whole attempt and uses up a daily try (5 per day).
+**UI problems reported with it, and the fixes** (checked with a headless Chrome at 390 px and 1440 px):
 
-**Owner's acceptance still pending** (cut-off Oct 25):
-- run `npm run live-check:vision` on real selfies
-- pass on a laptop and a phone
-- a held-up phone must fail
+| Problem | Cause | Fix |
+|---|---|---|
+| On phones, the last lines are hidden under the box at the bottom | An old rule from the previous design, `.onb-foot { position: fixed }`, pinned the onboarding footer over the content. Also, the "agent paused" banner pushed full-height screens down, so the tab bar and last lines fell off the bottom. | Deleted the old onboarding CSS. With the banner shown, the screen takes only the height that's left. |
+| The orange boundary on all boxes | Every box, chip and input used a tan border (`--sand` #D9CBB3), and every focused field got an orange ring, twice: the new design's plus an old `outline` rule. | Neutral grey hairlines; input fields a shade darker; a neutral focus ring. Orange stays only on primary buttons and selected states. |
+| Can't go back from the sign-in page | The log in / join pages had no back control (only the logo). | A back arrow on phones and a "Back" button on desktop: to the previous page, or to the landing page on a fresh visit. |
+| Onboarding doesn't continue and doesn't say why | Continue was just greyed out; only one step showed a reason, at the very bottom. | Every step says what's missing next to Continue (e.g. "Add what you do to continue", "Pick 3 prompts (1 so far)"). Tapping Continue scrolls to that spot and highlights it. |
 
 ---
 
 ## 17. Current status and what's left
 
-**State on Oct 19:** `main` is one local commit ahead of GitHub (SN). The live site runs the version pushed earlier today, with Vercel paused and Render auto-deploy off.
+**State on Oct 19 (evening):** SN and the UI fixes above are pushed and deployed. **Auto-deploy is on** for Render and Vercel, so every push to `main` goes live.
 
 **Next steps in order:**
-1. **SN live check:** 6 test pairs, metrics, two transcripts for the owner.
+1. **SN live test:** 6 test pairs, metrics, two transcripts for the owner.
 2. **S4:** email verification + password reset, which hide themselves without a Resend key, plus rate limits.
-3. **Live check fixes:** wrong-way detection, CPU fallback, retry just the failed step. Plus the owner's decision on "Skip".
-4. **S6 leftovers:** old CSS cleanup, motion.
-5. **S5** only if time allows.
-6. **Oct 26:** switch to Nebius Token Factory (an `.env` change only) and re-measure.
-7. **Oct 27:** the one push + deploy, smoke test on 3 browsers, full QA with seed and judge accounts in every state.
-8. **Oct 28:** feature freeze; README and SUBMISSION updates. The README's evaluation paragraph still says the agent "must now ask directly" about important topics; SN changed that.
-9. **Oct 29:** submit on Devpost (the video is made by humans).
+3. **S6 leftovers:** old CSS cleanup, motion.
+4. **S5** only if time allows.
+5. **Oct 26:** switch to Nebius Token Factory (an `.env` change only) and re-measure.
+6. **Oct 27:** the one push + deploy, smoke test on 3 browsers, full QA with seed and judge accounts in every state.
+7. **Oct 28:** feature freeze; README and SUBMISSION updates. The README's evaluation paragraph still says the agent "must now ask directly" about important topics; SN changed that.
+8. **Oct 29:** submit on Devpost (the video is made by humans).
 
 **Waiting on humans:**
 - **Nebius account + credits** by Oct 26.
 - **Cloudinary** keys (photos use a local stub until then) and **Resend** keys (email features stay hidden until then).
 - `server/.env` on the dev machine, for live AI runs.
 - `CLIENT_URL` on Render at deploy: `https://dating-agent-flame.vercel.app,https://dating-agent-chandal-chowkdi.vercel.app`.
-- Owner decisions: the live check skip, the live-check acceptance tests.
 
 **Main risks:**
 - NVIDIA free-tier 429s make everything slower and flakier until the Nebius switch.
@@ -736,8 +730,7 @@ cd ../client && npm install && npm run dev           # web app on http://localho
 | **Judge** | The private evaluator per side, which lists quote-backed evidence; code decides yes / unsure / no |
 | **Reveal** | At hand-off, the note on how many messages the agents wrote |
 | **Wind-down** | The one polite closing message sent when a match is Not compatible |
-| **Live-checked** | Passed the camera check (a real person just now); never "verified" |
-| **browse_only / held / active** | Profile status: not live-checked yet / held by the scam self-check / visible |
+| **held / active** | Profile status: held by the scam self-check / visible (browse_only is no longer used) |
 | **Seed personas** | 38 synthetic demo users used for the demo and the evaluation |
 | **Token Factory** | Nebius's OpenAI-compatible AI API, required by the hackathon |
 | **Tier** | fast / mid / smart / embed / vision: which model handles a task |

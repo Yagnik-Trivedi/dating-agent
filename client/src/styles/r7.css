@@ -69,13 +69,7 @@ textarea.cm-field::placeholder { color: var(--text-2); }
 .avatar.ring { box-shadow: 0 0 0 3px var(--surface); }
 .wordmark { font: 500 26px/1 var(--serif); letter-spacing: -.02em; color: var(--text); }
 
-/* live-checked, status */
-.live { position: relative; display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--cream); color: var(--text); font-size: 13.5px; font-weight: 600; outline: none; white-space: nowrap; align-self: flex-start; }
-.live svg { color: var(--olive); }
-.live:focus-visible { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--clay); }
-.live.on-photo { background: rgb(255 255 255 / .94); }
-.live-tip { position: absolute; left: 0; top: calc(100% + 8px); width: 300px; padding: 10px 12px; border-radius: 12px; background: var(--text); color: #FBF8F3; font-size: 13.5px; font-weight: 400; line-height: 1.45; box-shadow: var(--sh); z-index: 5; white-space: normal; }
-.live-tip::before { content: ""; position: absolute; left: 18px; top: -5px; width: 10px; height: 10px; background: var(--text); transform: rotate(45deg); }
+/* status */
 .st { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .st-agents, .st-chatting { background: var(--cream); color: var(--text); }
 .st-compatible { background: var(--olive-bg); color: var(--olive); } .st-maybe { background: var(--ochre-bg); color: var(--ochre); }
@@ -419,7 +413,6 @@ textarea.cm-field::placeholder { color: var(--text-2); }
 .rp .bubble { max-width: 80%; }
 .rp .theirs-b { align-self: flex-start; } .rp .mine-b { align-self: flex-end; }
 .rp-n { align-self: center; }
-.done-badge { display: flex; align-items: center; gap: 10px; }
 .teach-h { margin-top: 12px !important; }
 .teach { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .onb.m .teach { grid-template-columns: 1fr; }
@@ -429,27 +422,6 @@ textarea.cm-field::placeholder { color: var(--text-2); }
 .onb.m .teach-c { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 10px; }
 .onb.m .teach-c svg { margin: 0; } .onb.m .teach-c span { flex-basis: 100%; }
 
-/* ================= LIVE CHECK ================= */
-.lc-points { display: flex; flex-direction: column; gap: 14px; }
-.lc-points li { display: flex; gap: 12px; font-size: 15.5px; line-height: 23px; }
-.lc-points li svg { flex: none; margin-top: 2px; color: var(--olive); }
-.cam { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.cam-view { position: relative; width: 320px; height: 380px; border-radius: 24px; background: #4A3F38; overflow: hidden; display: grid; place-items: center; }
-.onb.m .cam-view { width: 100%; height: 340px; }
-.cam-oval { width: 220px; height: 280px; }
-.cam-oval svg { width: 100%; height: 100%; overflow: visible; }
-.oval-track { fill: rgb(255 255 255 / .06); stroke: rgb(255 255 255 / .35); stroke-width: 3; }
-.oval-prog { fill: none; stroke: #E3C9A8; stroke-width: 5; stroke-linecap: round; }
-.cam-arrow { position: absolute; left: 22px; top: 50%; margin-top: -14px; color: #FFF; }
-.cam-tag { position: absolute; left: 12px; top: 12px; padding: 3px 9px; border-radius: 999px; background: rgb(0 0 0 / .45); color: #FFF; font-size: 12px; font-weight: 600; }
-.cam-steps { display: flex; gap: 10px; }
-.cam-steps li { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 6px; border-radius: 999px; background: var(--cream); font-size: 14.5px; font-weight: 600; color: var(--text-2); }
-.cam-steps li span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-size: 12px; }
-.cam-steps li.now { background: var(--text); color: #FFF; }
-.cam-steps li.now span { background: var(--clay); color: #FFF; }
-.cam-steps em { font-style: normal; font-weight: 500; font-size: 12px; color: #E3D7C6; }
-.lc-ok { display: flex; align-items: center; gap: 16px; padding-bottom: 80px; }
-.lc-ok-i { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--olive-bg); color: var(--olive); }
 .fix { max-width: 720px; margin: 0 auto; padding: 48px 32px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .scr.m .fix { padding: 20px 16px 28px; }
 .fix-i { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--ochre-bg); color: var(--ochre); }

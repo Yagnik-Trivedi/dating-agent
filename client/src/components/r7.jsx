@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useId, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'motion/react'
-import { Compass, Users, MessageCircle, Orbit, Bell, ScanFace, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
+import { Compass, Users, MessageCircle, Orbit, Bell, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
 import { illustration } from '../lib/art'
 import { useMobile } from './prelude'
 
@@ -32,16 +32,6 @@ export const photoOf = (p, i = 0, scene) => {
 export const Avatar = ({ p, src, size = 40, ring }) => <img className={`avatar ${ring ? 'ring' : ''}`} src={src ?? photoOf(p, 0, 'portrait2')} width={size} height={size} alt="" />
 export const Wordmark = ({ light }) => <span className={`wordmark ${light ? 'light' : ''}`}>Prelude</span>
 
-const LIVE_TIP = 'A live camera check showed a real person made this account. It doesn’t check their photos or ID.'
-/** Live-checked badge (never "verified"). */
-export function LiveBadge({ tip, onPhoto }) {
-  return (
-    <span className={`live ${onPhoto ? 'on-photo' : ''}`} tabIndex={0} aria-label={`Live-checked. ${LIVE_TIP}`}>
-      <ScanFace size={15} strokeWidth={1.8} aria-hidden="true" />Live-checked
-      {tip && <span role="tooltip" className="live-tip">{LIVE_TIP}</span>}
-    </span>
-  )
-}
 export const STATUS = { agents: 'Agents chatting', compatible: 'Compatible', maybe: 'Maybe', not: 'Not compatible', flagged: 'Flagged', chatting: 'You’re chatting', waiting: 'Getting ready', closed: 'Closed', paused: 'Paused' }
 /** Server match status → the design's six chips. */
 export const chipOf = (status) => ({ agent_chatting: 'agents', compatible: 'compatible', handed_off: 'chatting', maybe: 'maybe', incompatible: 'not', flagged_fake: 'flagged', closed: 'closed', evaluating: 'agents', matched: 'waiting', trust_check: 'waiting', briefing: 'waiting', scheduled: 'waiting' }[status] ?? 'waiting')

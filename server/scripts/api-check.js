@@ -70,16 +70,11 @@ r = await call('PUT', '/profile', { token: B.token, body: { age: 16 } });
 assert.equal(r.status, 400);
 ok('profile update; age < 18 rejected');
 
-// Plan 30 S2: with the live check on, a new account is browse_only (hidden from others) until it passes.
+// The live check was removed (2026-10-19): a new account is active right away.
 await mongoose.connect(process.env.MONGODB_URI);
 const db = mongoose.connection.db;
-const ids = [A, B, C].map((x) => new mongoose.Types.ObjectId(x.id));
-if ((await call('GET', '/me', { token: A.token })).body.profile.status === 'browse_only') {
-  r = await call('GET', '/discover', { token: A.token });
-  assert.ok(!r.body.profiles.some((p) => p.userId === B.id));
-  ok('new accounts are browse_only: not shown to others before the live check');
-  await db.collection('profiles').updateMany({ userId: { $in: ids } }, { $set: { status: 'active', liveChecked: true } }); // stands in for a passed live check
-}
+assert.equal((await call('GET', '/me', { token: A.token })).body.profile.status, 'active');
+ok('new accounts are active (no live check)');
 
 r = await call('GET', '/discover', { token: A.token });
 const bobCard = r.body.profiles.find((p) => p.userId === B.id);

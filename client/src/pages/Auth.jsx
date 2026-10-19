@@ -2,8 +2,8 @@
 // (18+), a searchable city (104 Indian cities, or Other), I am / interested in, and the required AI-agent consent.
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, KeyRound, Mail, MapPin, Search } from 'lucide-react'
-import { Btn, Check2, Chips, Field, IconBtn, Input, MBar, Seg, Wordmark } from '../components/r7'
+import { ArrowLeft, ChevronLeft, Eye, EyeOff, KeyRound, Mail, MapPin, Search } from 'lucide-react'
+import { Btn, Check2, Chips, Field, IconBtn, Input, Seg, Wordmark } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
@@ -17,13 +17,16 @@ const ageFrom = (dob) => {
 const maxDob = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 18); return d.toISOString().slice(0, 10) }
 export const INTEREST = { Women: ['woman'], Men: ['man'], Everyone: ['woman', 'man', 'nonbinary'] }
 
-function AuthShell({ title, sub, children, back }) {
+function AuthShell({ title, sub, children }) {
   const mobile = useMobile()
-  if (mobile) return <div className="scr app-scr m auth">{back ? <MBar title="" back={back} /> : <header className="mbar"><Link to="/" aria-label="Prelude home"><Wordmark /></Link></header>}<div className="auth-body"><h1 className="h2">{title}</h1>{sub && <p className="lead sm">{sub}</p>}{children}</div></div>
+  const navigate = useNavigate()
+  // Back to where they came from (the landing page, or log in ↔ join), or to the landing page on a fresh visit.
+  const back = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/'))
+  if (mobile) return <div className="scr app-scr m auth"><header className="mbar"><IconBtn icon={ChevronLeft} label="Back" onClick={back} /><Link to="/" aria-label="Prelude home"><Wordmark /></Link></header><div className="auth-body"><h1 className="h2">{title}</h1>{sub && <p className="lead sm">{sub}</p>}{children}</div></div>
   return (
     <div className="scr app-scr d auth">
       <aside className="auth-art"><Link to="/" aria-label="Prelude home"><Wordmark /></Link><img src={illustration('demo-meera', 'cafe')} alt="" /><p className="auth-q">“Real treks or Instagram treks?”<span>Written by Meera’s agent</span></p></aside>
-      <main className="auth-main"><div className="auth-form"><h1 className="h1">{title}</h1>{sub && <p className="lead">{sub}</p>}{children}</div></main>
+      <main className="auth-main"><Btn kind="ghost" icon={ArrowLeft} className="auth-back" onClick={back}>Back</Btn><div className="auth-form"><h1 className="h1">{title}</h1>{sub && <p className="lead">{sub}</p>}{children}</div></main>
     </div>
   )
 }

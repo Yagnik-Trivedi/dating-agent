@@ -4,8 +4,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
-import { Compass, MapPin, ScanFace, ShieldAlert, SlidersHorizontal, X } from 'lucide-react'
-import { Btn, Empty, IconBtn, LikeBtn, LiveBadge, Shell, Shimmer, T, TabBar } from '../components/r7'
+import { Compass, MapPin, ShieldAlert, SlidersHorizontal, X } from 'lucide-react'
+import { Btn, Empty, IconBtn, LikeBtn, Shell, Shimmer, T, TabBar } from '../components/r7'
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import Preferences from '../components/Preferences'
 import { useMobile } from '../components/prelude'
@@ -26,7 +26,7 @@ function DragHero({ p, photos, onDecide, onLikePhoto, busy }) {
       <LikeBtn what="photo 1" light onLike={() => onLikePhoto({ kind: 'photo', ref: '0' })} disabled={busy} />
       <motion.span className="drag-tag like" style={{ opacity: likeO }}>Like</motion.span>
       <motion.span className="drag-tag pass" style={{ opacity: passO }}>Pass</motion.span>
-      <figcaption className="ph-cap"><h1>{p.name}{p.age ? `, ${p.age}` : ''}</h1><p>{p.liveChecked && <LiveBadge onPhoto />}{p.city && <span>{p.city}</span>}</p></figcaption>
+      <figcaption className="ph-cap"><h1>{p.name}{p.age ? `, ${p.age}` : ''}</h1><p>{p.city && <span>{p.city}</span>}</p></figcaption>
     </motion.figure>
   )
 }
@@ -55,7 +55,7 @@ export default function Discover() {
   const matchSheet = <>{matchUI}{p && <LikeSheet like={liking} p={p} photos={photos} busy={busy} onClose={() => setLiking(null)} onSend={(c) => decide(true, liking, c)} />}<Preferences open={prefs} onClose={() => setPrefs(false)} onSaved={() => { setPrefs(false); setDeck(null); load() }} /></>
   const prefsBtn = <IconBtn icon={SlidersHorizontal} label="Preferences" onClick={() => setPrefs(true)} />
 
-  // Plan 30 S2: a held profile can't browse; browse_only can, but isn't shown to anyone yet.
+  // Plan 30 S2: a held profile can't browse.
   if (error?.response?.data?.error?.code === 'PROFILE_HELD') return (
     <Shell title={mobile ? 'Discover' : null}>
       <Empty icon={ShieldAlert} title="Your profile needs a fix" action={<Btn onClick={() => navigate('/profile')}>Fix my profile</Btn>}>
@@ -65,14 +65,11 @@ export default function Discover() {
       </Empty>
     </Shell>
   )
-  const browseOnly = profile?.status === 'browse_only' && (
-    <div className="nbox browse-only"><ScanFace size={18} strokeWidth={1.7} aria-hidden="true" /><span>Others can’t see you yet. <button type="button" className="link" onClick={() => navigate('/live-check')}>Do the live check</button> to show up and match; your likes are kept until then.</span></div>
-  )
 
   if (error || !deck || !p) {
     return (
       <Shell title={mobile ? 'Discover' : null}>
-        {browseOnly}{error ? <Empty icon={Compass} title="We couldn’t load Discover" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{errMsg(error)}</Empty>
+        {error ? <Empty icon={Compass} title="We couldn’t load Discover" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{errMsg(error)}</Empty>
           : !deck ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="80%" /></div>
             : <Empty icon={Compass} title="You’ve seen everyone nearby" action={<Btn kind="secondary" icon={SlidersHorizontal} onClick={() => setPrefs(true)}>Change preferences</Btn>}>New people join every day. Come back tomorrow, or check what your agent knows about you in the meantime.</Empty>}
         {matchSheet}
@@ -83,7 +80,7 @@ export default function Discover() {
   if (mobile) return (
     <div className="scr app-scr m discover">
       <div className="d-scroll">
-        {browseOnly}
+        
         <DragHero key={p.userId} p={p} photos={photos} onDecide={(liked) => decide(liked, { kind: 'profile' })} onLikePhoto={setLiking} busy={busy} />
         <div className="d-stack"><ProfileBody p={p} photos={photos} mobile onLike={setLiking} busy={busy} /></div>
       </div>
@@ -98,7 +95,7 @@ export default function Discover() {
   )
   return (
     <Shell className="discover">
-      {browseOnly}
+      
       <div className="d-sub">{prefsBtn}<span className="small">{deck.length} {deck.length === 1 ? 'person' : 'people'} near {p.city ?? 'you'} who fit what you’re looking for</span></div>
       <motion.div className="d-grid" key={p.userId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={T.slow}>
         <div className="d-left">
@@ -110,7 +107,6 @@ export default function Discover() {
         </div>
         <div className="d-right">
           <header className="d-head"><div><h1 className="h1">{p.name}{p.age ? `, ${p.age}` : ''}</h1>{p.city && <p className="d-meta"><MapPin size={16} strokeWidth={1.7} aria-hidden="true" />{p.city}</p>}</div></header>
-          {p.liveChecked && <LiveBadge tip />}
           <ProfileBody p={p} photos={photos} onLike={setLiking} busy={busy} />
         </div>
       </motion.div>

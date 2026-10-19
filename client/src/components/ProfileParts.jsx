@@ -98,7 +98,7 @@ export function MatchChoice({ open, name, defaultChoice = 'agents', onStart, onC
 export function useLikeFlow() {
   const toast = useToast()
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [matched, setMatched] = useState(null)
   const [busy, setBusy] = useState(false)
   async function send(p, { liked = true, target, comment } = {}) {
@@ -106,7 +106,7 @@ export function useLikeFlow() {
     try {
       const { data } = await api.post('/api/likes', { toUserId: p.userId, liked, ...(liked && { target: target ?? { kind: 'profile' }, comment: comment || undefined }) })
       if (data.matched) setMatched({ profile: p, matchId: data.matchId })
-      else if (liked) toast(profile?.status === 'browse_only' ? `You liked ${p.name}. Your likes are kept until your live check is done.` : `You liked ${p.name}. If they like you back, you’ll match.`)
+      else if (liked) toast(`You liked ${p.name}. If they like you back, you’ll match.`)
       return true
     } catch (err) {
       toast(errMsg(err), { tone: 'bad' })

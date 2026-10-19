@@ -3,7 +3,6 @@
 //   node scripts/seed-check.js [baseUrl] [city]
 import assert from 'node:assert/strict';
 import 'dotenv/config';
-import { activateForCheck } from './lib/activate.js';
 import { answers } from './lib/kiran.js';
 
 const BASE = process.argv[2] ?? 'http://localhost:5000';
@@ -18,7 +17,6 @@ const CITY = process.argv[3] ?? 'Mumbai';
 const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Kiran', email: `kiran-${Date.now().toString(36)}@check.test`, password: 'password123', consentAgent: true, dob: '1997-08-09', gender: 'man', interestedIn: ['woman'], city: CITY } });
 const token = signup.token;
 assert.ok(token, 'signup');
-await activateForCheck(signup.user._id);
 try {
   await call('PUT', '/profile', { token, body: { name: 'Kiran', age: 28, city: CITY, gender: 'man', interestedIn: ['woman'], bio: 'Weekend trekker, weekday coder.', tags: { interests: ['trekking', 'cooking'] } } });
   assert.equal((await call('POST', '/onboarding/submit', { token, body: { answers } })).status, 200, 'onboarding submit');

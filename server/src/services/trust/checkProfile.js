@@ -30,8 +30,6 @@ const schema = z.object({
 
 // What the LLM sees: public profile content only. Dealbreakers are private to their owner, and the result is
 // shown to the viewer, so they're left out.
-const LIVE_CHECK_BONUS = 5; // points off the risk score for a passed live check (plan 19)
-
 export const publicProfile = (p) => ({
   name: p.name, age: p.age, city: p.city, gender: p.gender, bio: p.bio ?? '',
   prompts: (p.prompts ?? []).map(({ q, a }) => ({ q, a })),
@@ -88,10 +86,6 @@ export async function checkProfileData({ profile, accountAgeMinutes, userId, mat
   for (const s of scamSignals) { points += 25; flags.push(`Scam pattern: ${s.signal}`); }
   if (llm.genericBio) { points += 8; flags.push('Bio reads like a template'); }
 
-  // Plan 19: a passed live check on their PUBLIC profile is one small positive. It never cancels a scam or off-app
-  // signal, and "not checked" is never a flag.
-  const clean = !scamSignals.length && !rules.money && !rules.contact;
-  if (profile.liveChecked && clean) points = Math.max(0, points - LIVE_CHECK_BONUS);
   const score = 100 - Math.min(100, points);
   // Strong combination: a scam pattern (or money talk) AND pushing off-app is fake regardless of score.
   const autoFake = (scamSignals.length > 0 || rules.money) && rules.contact;
@@ -103,7 +97,6 @@ export async function checkProfileData({ profile, accountAgeMinutes, userId, mat
     scamSignals,
     clarify: contradictions.filter((c) => c.severity <= 2).map((c) => `${c.topic}: profile says two different things`),
     summary: llm.summary,
-    liveChecked: Boolean(profile.liveChecked),
     checkedAt: new Date(),
   };
 }

@@ -19,13 +19,11 @@ const profileSchema = new mongoose.Schema({
   }],
   // Public basics (plan 30 S2), shown on the profile when filled in.
   job: String, workplace: String, education: String, height: String, languages: [String],
-  // Plan 30 S2 gating (private): missing or 'active' = in Discover and can match; 'browse_only' = no live check yet
-  // (can browse and like; likes are delivered once active); 'held' = the scam self-check found high risk.
+  // Plan 30 S2 gating (private): missing or 'active' = in Discover and can match; 'held' = the scam self-check found
+  // high risk. 'browse_only' (can browse and like, hidden from others, likes delivered once active) is set by nothing
+  // since the live check was removed (2026-10-19); it stays for a future gate such as email verification (S4).
   status: { type: String, enum: ['active', 'browse_only', 'held'] },
   selfCheck: { level: String, reasons: [String], at: Date, releasedVersion: String, _id: false },
-  // Plan 19: the ONLY live-check data another user (or their agent / trust check) may see. Never set true in seed data.
-  liveChecked: { type: Boolean, default: false },
-  liveCheckedAt: Date,
   bio: String,
   prompts: [{ q: String, a: String, _id: false }],
   tags: {

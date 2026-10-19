@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
-import { Btn, Chips, Field, Input, LiveBadge, Shell, photoOf } from '../components/r7'
+import { Btn, Chips, Field, Input, Shell, photoOf } from '../components/r7'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -42,9 +42,9 @@ export default function Profile() {
   const ok = (photos ?? []).filter((p) => p.status === 'ok')
   const parts = [
     ['Photos', ok.length >= 2, 'photos'], ['Prompts', f.prompts.filter((p) => p.a.trim()).length >= 3, 'prompts'], ['Basics', Boolean(f.job.trim() && f.languages.length), 'basics'],
-    ['Live check', Boolean(profile.liveChecked), 'live'], ['Interests', (profile.tags?.interests?.length ?? 0) >= 3, 'interests'],
+    ['Interests', (profile.tags?.interests?.length ?? 0) >= 3, 'interests'],
   ]
-  const go = (k) => (k === 'live' ? navigate('/live-check') : k === 'interests' ? navigate('/you') : document.getElementById(`ed-${k}`)?.scrollIntoView({ behavior: 'smooth' }))
+  const go = (k) => (k === 'interests' ? navigate('/you') : document.getElementById(`ed-${k}`)?.scrollIntoView({ behavior: 'smooth' }))
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   async function save() {
     setBusy(true)
@@ -81,7 +81,6 @@ export default function Profile() {
         <aside className="ed-prev" aria-label="How others see you"><p className="small">How others see you</p>
           <div className="prev-card card"><img src={photoOf(prev, 0, 'portrait')} alt="" /><div className="pc-b">
             <b className="pc-n">{prev.name}{prev.age ? `, ${prev.age}` : ''}</b><span className="small">{[prev.job, prev.city].filter(Boolean).join(' · ')}</span>
-            {prev.liveChecked && <LiveBadge />}
             {prev.prompts[0]?.a && <><p className="pq">{prev.prompts[0].q}</p><p className="pa sm">{prev.prompts[0].a}</p></>}
           </div></div>
         </aside>

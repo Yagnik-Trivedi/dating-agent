@@ -41,7 +41,7 @@ services:
         sync: false
       - key: MODEL_EMBED
         sync: false
-      - key: MODEL_VISION # plan 19 live check: the Nemotron VL ID from GET /v1/models
+      - key: MODEL_VISION # photo moderation: the Nemotron VL ID from GET /v1/models
         sync: false
       - key: TAVILY_API_KEY
         sync: false
@@ -66,5 +66,3 @@ services:
         value: "2"
       - key: AGENT_PACING # fast (0.8–3 s, overlapping the model work) for everyone; normal = human-like
         value: fast
-      - key: LIVE_CHECK_ENABLED # plan 19; set false if it misses its Oct 25 cut-off
-        value: "true"

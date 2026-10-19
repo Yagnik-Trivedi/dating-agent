@@ -1,9 +1,9 @@
-// Settings (Round 7 Step 2 design, System.jsx Settings): agent mode, Learn from my chats, live check, profile,
+// Settings (Round 7 Step 2 design, System.jsx Settings): agent mode, Learn from my chats, profile,
 // account and delete. Only settings that really exist are shown.
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Inbox, Lock, LogOut, Trash2 } from 'lucide-react'
-import { Btn, LiveBadge, Seg, Sheet, Shell, Toggle } from '../components/r7'
+import { Btn, Seg, Sheet, Shell, Toggle } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -15,11 +15,10 @@ const MODES = {
   shadow: 'After a mutual like, your agent has the first conversation while you read along. Pause it or take over any time.',
   auto: 'Your agent has the first conversations on its own and brings you a private letter for each one.',
 }
-const day = (d) => new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function Settings() {
   const mobile = useMobile()
-  const { user, setUser, logout, system } = useAuth()
+  const { user, setUser, logout } = useAuth()
   const toast = useToast()
   const [saving, setSaving] = useState(null)
   const [confirm, setConfirm] = useState(false)
@@ -35,7 +34,6 @@ export default function Settings() {
   }
 
   const learn = user.settings?.learnFromChats !== false
-  const live = user.liveCheck?.status
   const body = (
     <div className="settings">
       <section className="set-sec card"><h2 className="h3">Your agent</h2>
@@ -46,10 +44,6 @@ export default function Settings() {
       </section>
       <section className="set-sec card"><h2 className="h3">Privacy and trust</h2>
         <Link to="/you" className="set-row link-row"><div><b>What your agent knows</b><span className="small">Make any fact public, only-if-asked or private in “This is you”.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
-        {system.liveCheckEnabled !== false && (
-          <div className="set-row"><div><b>Live check</b><span className="small">{live === 'passed' ? `Passed on ${day(user.liveCheck.checkedAt)}. Your profile shows “Live-checked”.` : live === 'failed' ? 'Not passed yet. It’s optional.' : 'Two quick moves on camera show you’re a real person. Optional.'}</span></div>
-            {live === 'passed' ? <LiveBadge /> : <Link className="btn secondary sm" to="/live-check">{live === 'failed' ? 'Try again' : 'Do the live check'}</Link>}</div>
-        )}
       </section>
       <section className="set-sec card"><h2 className="h3">Account</h2>
         <Link to="/profile" className="set-row link-row"><div><b>Edit profile</b><span className="small">Photos, prompts and who you’d like to meet.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>

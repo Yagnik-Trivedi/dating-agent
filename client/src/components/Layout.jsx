@@ -30,8 +30,9 @@ export default function Layout() {
   const value = useMemo(() => ({ counts, user: profile ? { ...profile, userId: user?._id } : user }), [counts, user, profile])
   return (
     <ShellCtx.Provider value={value}>
-      {system.agentPaused && <div role="status" className="sys-banner">{system.agentPaused}. Your conversations are safe, and you can still chat yourself.</div>}
-      <Outlet />
+      {system.agentPaused
+        ? <div className="app-frame"><div role="status" className="sys-banner">{system.agentPaused}. Your conversations are safe, and you can still chat yourself.</div><Outlet /></div>
+        : <Outlet />}
     </ShellCtx.Provider>
   )
 }

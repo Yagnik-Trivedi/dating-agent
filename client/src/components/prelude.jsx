@@ -3,7 +3,7 @@
 // reveal. Motion: 200–450 ms ease-in-out, never a bounce; reduced motion shows everything at once.
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Globe, Lock, MessageCircleQuestion, PenLine, ScanFace, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { Globe, Lock, MessageCircleQuestion, PenLine, ShieldCheck, ShieldAlert } from 'lucide-react'
 
 const DUR = { fast: 0.2, base: 0.3, slow: 0.45 }
 const EASE = [0.45, 0, 0.55, 1]
@@ -31,16 +31,6 @@ export const Btn = ({ kind = 'primary', size, block, icon: Ic, loading, children
 )
 export const IconBtn = ({ icon: I, label, className = '', ...p }) => <button type="button" className={`ibtn ${className}`} aria-label={label} title={label} {...p}><I size={20} strokeWidth={1.6} aria-hidden="true" /></button>
 
-const LIVE_TIP = 'A live camera check showed a real person made this account. It doesn’t check their photos or ID.'
-/** "Live-checked" (plan 19), never "verified"; with `tip` the explanation shows as a tooltip on hover/focus. */
-export function LiveBadge({ tip }) {
-  return (
-    <span className="live" tabIndex={0} title={tip ? undefined : LIVE_TIP} aria-label={`Live-checked. ${LIVE_TIP}`}>
-      <ScanFace size={15} strokeWidth={1.8} aria-hidden="true" />Live-checked
-      {tip && <span role="tooltip" className="live-tip">{LIVE_TIP}</span>}
-    </span>
-  )
-}
 
 /** Match status chips (earthy, never alarm red). */
 const STATUS_TEXT = { agents: 'Agents talking', chatting: 'Chatting', compatible: 'Compatible', maybe: 'Maybe', not: 'Not compatible', flagged: 'Looks fake', waiting: 'Getting ready', paused: 'Paused', closed: 'Closed' }

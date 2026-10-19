@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, Eye, Flag, Lock, MailOpen, Menu, MessageSquareText, PenLine, ScanFace, X } from 'lucide-react'
+import { ArrowRight, Eye, Flag, Lock, MailOpen, Menu, MessageSquareText, PenLine, ShieldCheck, X } from 'lucide-react'
 import { IconBtn, T, Wordmark, useDraw } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { illustration } from '../lib/art'
@@ -40,7 +40,7 @@ const STEPS = [
   [MailOpen, 'Read a private letter', 'Your agent tells you what clicked, with their actual words. Then you decide. There’s never a score.'],
 ]
 const TRUST = [
-  [ScanFace, 'Live-checked accounts', 'A quick camera check shows a real person made the account. It doesn’t check photos or ID, and we say so.'],
+  [ShieldCheck, 'Every photo is checked', 'Each new photo gets an automatic check before anyone sees it: no contact details, QR codes or explicit content.'],
   [Eye, 'You see every word', 'Every message an agent writes is labelled, for both of you. Take over at any moment.'],
   [Lock, 'Private stays private', 'Mark anything Public, Only if asked, or Private. Your agent never shares Private.'],
   [Flag, 'Fakes get caught early', 'Your agent checks each profile before it says hello, and stops talking to anything that looks like a scam.'],

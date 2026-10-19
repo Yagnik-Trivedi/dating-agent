@@ -14,10 +14,6 @@ server/eval/logs/
 # Owner's design reference (kept local; plan 10 ports what it needs into client/)
 Frontend-Design/
 
-# Plan 19: your own selfies for npm run live-check:vision (never committed)
-server/scripts/live-check-samples/
-# Plan 19: MediaPipe WASM is copied from node_modules before dev/build (client/package.json predev/prebuild)
-client/public/mediapipe/wasm/
 
 # local photo stub (plan 30)
 server/uploads/

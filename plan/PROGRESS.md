@@ -20,11 +20,42 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ✅ | `9438cd3`…`ec3421d` | Results below. Photos (S3.1) built here because step 2 needs them. |
 | S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ✅ | `f800607`…`458820d` | Results below. **No `CLOUDINARY_*` keys in `.env`: the local stub is used** (files in `server/uploads/`, local only). |
 | SN | Natural conversation (owner, 2026-10-19): topics come up in the flow, not on a timer | 🔄 code done | (this commit) | Results below. **Left: the live 6-pair check needs `server/.env` on this machine.** |
+| SU | Live check removed + phone UI fixes (owner, 2026-10-19) | ✅ | (this commit) | Results below. Pushed + deployed with the owner's OK. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
+
+## SU results: live check removed + phone UI fixes (2026-10-19) ✅
+
+**Owner's report:**
+- remove the live check completely
+- on phones the last lines are hidden under the box at the bottom
+- the orange boundary on all boxes
+- can't go back from the sign-in page
+- onboarding won't continue and doesn't say why
+
+**Causes found:** headless Chrome at 390 px, local stack with AI off, element geometry measured.
+- An old `.onb-foot { position: fixed }` from the previous design (`styles/prelude-app.css`) pinned the new onboarding footer over the content. The content area ran 64→844 px under a footer at 755→844.
+- The "agent paused" banner sat above 100dvh screens, so the page was 63 px taller than the phone and the tab bar was pushed off.
+- Every box used the tan `--sand` (#D9CBB3), and focused inputs got two orange rings (the design's, plus an old `outline` rule winning over `.input input { outline: 0 }`).
+- The auth shell never received a `back`.
+- Onboarding steps used `nextDisabled` with no reason shown (only step 4 had one, at the bottom).
+
+**Fixes:** see plan 30 SU.
+- Live check removed end to end. `activateWaiting()` at boot activated 3 local test accounts on the first run.
+- Old onboarding CSS and live-check CSS deleted; `.app-frame` for the banner.
+- Neutral borders and focus.
+- Back on log in / join.
+- `OnbShell missing`, with per-step messages and a scroll + highlight on tap.
+
+**Checks:**
+- `npm test` 122/122 (the 6 live-check tests were deleted with it).
+- `api-check` all passed ("new accounts are active").
+- Client build green; oxlint shows no new warnings.
+- Before/after screenshots at 390 px (signup, onboarding top/bottom/after Continue, Discover, Matches, You, Settings, Profile, Inbox) and 1440 px (log in, onboarding hint): the onboarding bottom is fully visible, the tab bar shows with the banner, the hints and highlight work, the back buttons show. No console errors.
+- Not run: `smoke:browsers` (needs a seeded DB and an LLM key on this machine).
 
 ## SN results: natural conversation (2026-10-19) 🔄 code done, live check pending
 

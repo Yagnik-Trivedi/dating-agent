@@ -13,7 +13,6 @@ import { authRouter } from './routes/auth.js';
 import { discoverRouter } from './routes/discover.js';
 import { inboxRouter } from './routes/inbox.js';
 import { kgRouter } from './routes/kg.js';
-import { liveCheckRouter } from './routes/liveCheck.js';
 import { matchesRouter } from './routes/matches.js';
 import { meRouter } from './routes/me.js';
 import { onboardingRouter } from './routes/onboarding.js';
@@ -24,6 +23,7 @@ import './services/jobs/handlers.js';
 import { startPeriodic, stopPeriodic } from './services/jobs/periodic.js';
 import { startWorker, stopWorker } from './services/jobs/queue.js';
 import { refresh as loadBudget } from './services/llm/budget.js';
+import { activateWaiting } from './services/profileStatus.js';
 import { CITY_NAMES } from './services/cities.js';
 import { registerSockets } from './sockets/index.js';
 import { io } from './sockets/io.js';
@@ -53,7 +53,7 @@ if (!cloudinaryOn()) app.use('/uploads', express.static(fileURLToPath(UPLOAD_DIR
 app.get('/api/cities', (req, res) => res.set('Cache-Control', 'public, max-age=86400').json({ cities: CITY_NAMES }));
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
-app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, liveCheckRouter, photosRouter);
+app.use('/api', requireAuth, meRouter, profileRouter, onboardingRouter, kgRouter, discoverRouter, matchesRouter, inboxRouter, photosRouter);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -67,6 +67,9 @@ async function connectMongo(attempt = 1) {
     await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
     console.log('✓ MongoDB connected');
     await loadBudget({ force: true }).catch((err) => console.error(`budget load failed: ${err.message}`));
+    // The live check was removed (owner, 2026-10-19): accounts still waiting on it become active once.
+    await activateWaiting().then((n) => n && console.log(`✓ ${n} profile(s) waiting on the removed live check are now active`))
+      .catch((err) => console.error(`activating waiting profiles failed: ${err.message}`));
     // Onboarding builds, match pipelines, agent turns and evaluations are jobs: a restart resumes them (plan 17).
     if (env.JOB_WORKER) {
       startWorker();

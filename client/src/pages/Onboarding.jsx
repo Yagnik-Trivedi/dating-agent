@@ -1,5 +1,6 @@
 // Plan 30 S2 onboarding, ~5 minutes (Round 7 Step 2 design): 1 Basics · 2 Photos · 3 Prompts · 4 Lifestyle and values ·
-// 5 How you reply → submit (the graph builds while they do) 6 Live check (pages/LiveCheck) → 7 Done (Welcome).
+// 5 How you reply → submit (the graph builds in the background) → 6 Done (Welcome). The live check step was removed
+// (owner, 2026-10-19). A step that isn't complete says what's missing and jumps to it (OnbShell `missing`).
 // "Teach your agent more" (Teach) adds the optional blocks later: stories, 10 more replies, personality.
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -7,7 +8,7 @@ import { Pencil, Plus } from 'lucide-react'
 import OnbShell from '../components/OnbShell'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
 import TeachCards from '../components/TeachCards'
-import { Chips, Composer, Field, IconBtn, Importance, Input, LiveBadge, Seg, Toggle } from '../components/r7'
+import { Chips, Composer, Field, IconBtn, Importance, Input, Seg, Toggle } from '../components/r7'
 import { ErrorBox, Loading } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -33,10 +34,10 @@ function Basics({ q, value, onChange, interests, onInterests }) {
   const [other, setOther] = useState('')
   return (
     <>
-      <Field label="What do you do?">{(id) => <Input id={id} value={value.job ?? ''} onChange={set('job')} maxLength={120} placeholder="e.g. Product designer" />}</Field>
+      <Field label="What do you do?" id="onb-job">{(id) => <Input id={id} value={value.job ?? ''} onChange={set('job')} maxLength={120} placeholder="e.g. Product designer" />}</Field>
       <Field label="Where do you work?" optional>{(id) => <Input id={id} value={value.workplace ?? ''} onChange={set('workplace')} maxLength={120} placeholder="e.g. A fintech startup" />}</Field>
       <Field label="Education" optional>{(id) => <Input id={id} value={value.education ?? ''} onChange={set('education')} maxLength={120} />}</Field>
-      <div className="field"><span className="lbl">Languages you speak</span>
+      <div className="field" id="onb-languages"><span className="lbl">Languages you speak</span>
         <Chips multi items={langOpts.map((l) => [l, l[0].toUpperCase() + l.slice(1)])} value={value.languages} onChange={(languages) => onChange({ ...value, languages })} label="Languages" />
         <form className="row-add" onSubmit={(e) => { e.preventDefault(); const l = other.trim().toLowerCase(); if (l && !value.languages.includes(l)) onChange({ ...value, languages: [...value.languages, l] }); setOther('') }}>
           <Input aria-label="Another language" value={other} onChange={(e) => setOther(e.target.value)} maxLength={40} placeholder="Another language…" />
@@ -62,7 +63,7 @@ export function Prompts({ value, onChange }) {
       {[0, 1, 2].map((i) => {
         const p = value[i]
         if (open === i || (!p && i === value.length)) return (
-          <div key={i} className="pr-slot card open">
+          <div key={i} id={`pr-slot-${i}`} className="pr-slot card open">
             <p className="pq"><Plus size={16} strokeWidth={2} aria-hidden="true" />{p ? 'Choose another prompt' : `Choose your ${['first', 'second', 'third'][i]} prompt`}</p>
             <ul className="pr-list" role="listbox" aria-label="Prompts">
               {PROMPT_LIST.filter((x) => !used.includes(x) || x === p?.q).map((x) => (
@@ -74,7 +75,7 @@ export function Prompts({ value, onChange }) {
         )
         if (!p) return null
         return (
-          <div key={i} className="pr-slot card">
+          <div key={i} id={`pr-slot-${i}`} className="pr-slot card">
             <p className="pq">{p.q}</p>
             <label className="sr-only" htmlFor={`pa-${i}`}>Your answer to “{p.q}”</label>
             <textarea id={`pa-${i}`} className="pa-in" rows={2} maxLength={PROMPT_MAX} value={p.a} onChange={(e) => setA(i, e.target.value)} placeholder="Say it the way you would out loud" />
@@ -93,7 +94,7 @@ function ValueQ({ item, v, onChange }) {
   const opts = item.options.map((o) => [o.value, o.label])
   const set = (patch) => onChange({ ...v, ...patch })
   return (
-    <section className="vq card" aria-label={item.text}>
+    <section className="vq card" id={`vq-${item.id}`} aria-label={item.text}>
       <h2 className="h3">{item.text}</h2>
       <div className="vq-row"><span className="lbl">You</span><Chips items={opts} value={v?.answer ?? null} onChange={(answer) => set({ answer })} label={`${item.text}: you`} /></div>
       {v?.answer && <>
@@ -104,11 +105,11 @@ function ValueQ({ item, v, onChange }) {
     </section>
   )
 }
-const valuesHint = (B, section) => {
-  const noImp = section.items.filter((i) => B[i.id]?.answer && !B[i.id].importance).length
-  if (noImp) return `Pick how important ${noImp === 1 ? 'one answer is' : `${noImp} answers are`}`
+const valuesMissing = (B, section) => {
+  const noImp = section.items.find((i) => B[i.id]?.answer && !B[i.id].importance)
+  if (noImp) return { text: `“${noImp.text}”: pick how important it is`, target: `vq-${noImp.id}` }
   const bad = section.items.find((i) => B[i.id]?.dealbreaker && (B[i.id].accepts ?? i.options).length >= i.options.length)
-  return bad ? `“${bad.text}”: a dealbreaker needs at least one option you wouldn’t accept` : null
+  return bad ? { text: `“${bad.text}”: a dealbreaker needs at least one option you wouldn’t accept`, target: `vq-${bad.id}` } : null
 }
 
 /* 5 · How you reply: one message at a time, like a chat. Tap a reply to change it. */
@@ -123,7 +124,7 @@ function Replies({ items, value, onChange }) {
     setAt(open < 0 ? items.length : open)
   }
   return (
-    <div className="replies" aria-live="polite">
+    <div className="replies" id="onb-replies" aria-live="polite">
       {items.map((it, i) => (i <= at || value[it.id]) && (
         <div key={it.id} className="rp">
           <p className="bubble theirs-b">{it.text}</p>
@@ -147,7 +148,7 @@ function Processing({ onDone }) {
 }
 
 export default function Onboarding() {
-  const { user, profile, refresh, system } = useAuth()
+  const { user, profile, refresh } = useAuth()
   const { q, error: qError, load } = useQuestions()
   const key = `onboarding-v2:${user._id}`
   const saved = (() => { try { return JSON.parse(localStorage.getItem(key)) ?? {} } catch { return {} } })()
@@ -182,59 +183,58 @@ export default function Onboarding() {
       const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer))
       await api.post('/api/onboarding/submit', { answers: { I: answers.I, B: B2, D: answers.D, E: Object.fromEntries(core.map((i) => [i.id, answers.E[i.id]])) } })
       localStorage.removeItem(key)
-      setDest(system.liveCheckEnabled ? '/live-check' : '/welcome')
+      setDest('/welcome')
       await refresh() // status 'done' → the redirect above
     } catch (err) { setError(errMsg(err)); setBusy(false) }
   }
   const err = error && <ErrorBox message={error} />
 
   if (step === 1) return (
-    <OnbShell step={1} title="The basics" sub="Shown on your profile. You can change these any time." nextLoading={busy} nextDisabled={!answers.I.job?.trim() || !answers.I.languages.length}
+    <OnbShell step={1} title="The basics" sub="Shown on your profile. You can change these any time." nextLoading={busy}
+      missing={!answers.I.job?.trim() ? { text: 'Add what you do to continue', target: 'onb-job' } : !answers.I.languages.length ? { text: 'Pick at least one language you speak', target: 'onb-languages' } : null}
       onNext={() => next(() => api.put('/api/profile', { job: answers.I.job, workplace: answers.I.workplace ?? '', education: answers.I.education ?? '', height: answers.I.height ?? '', languages: answers.I.languages, tags: { interests: answers.D.interests.map((i) => i.name) } }))}>
       <Basics q={q} value={answers.I} onChange={set('I')} interests={answers.D.interests} onInterests={(interests) => set('D')({ interests })} />{err}
     </OnbShell>
   )
   if (step === 2) return (
     <OnbShell step={2} wide title="Add 2 to 6 photos" sub="Photos are cropped to 4:5. Drag to reorder; the first is your main photo. Each new photo gets a quick automatic check before anyone else sees it."
-      onBack={back} nextDisabled={usable < 2} onNext={() => next()}>
-      {photos ? <PhotoGrid photos={photos} setPhotos={setPhotos} onError={setError} /> : <Loading />}{err}
+      onBack={back} missing={photos && usable < 2 ? { text: `Add at least 2 photos (${usable} so far)`, target: 'onb-photos' } : null} nextDisabled={!photos} onNext={() => next()}>
+      <div id="onb-photos">{photos ? <PhotoGrid photos={photos} setPhotos={setPhotos} onError={setError} /> : <Loading />}</div>{err}
     </OnbShell>
   )
   if (step === 3) return (
     <OnbShell step={3} title="Pick 3 prompts" sub="Answer them the way you’d say it out loud. Short is fine." onBack={back} nextLoading={busy}
-      nextDisabled={prompts.length < 3 || prompts.some((p) => !p.a.trim())} onNext={() => next(() => api.put('/api/profile', { prompts: prompts.map((p) => ({ q: p.q, a: p.a.trim() })) }))}>
+      missing={prompts.length < 3 ? { text: `Pick 3 prompts (${prompts.length} so far)`, target: `pr-slot-${prompts.length}` }
+        : prompts.findIndex((p) => !p.a.trim()) >= 0 ? { text: `Answer “${prompts.find((p) => !p.a.trim()).q}”`, target: `pr-slot-${prompts.findIndex((p) => !p.a.trim())}` } : null}
+      onNext={() => next(() => api.put('/api/profile', { prompts: prompts.map((p) => ({ q: p.q, a: p.a.trim() })) }))}>
       <Prompts value={prompts} onChange={setPrompts} />{err}
     </OnbShell>
   )
   if (step === 4) {
-    const hint = valuesHint(answers.B, B)
     return (
       <OnbShell step={4} title="Lifestyle and values" sub="Nothing is pre-selected. Skip anything you’d rather not answer." onBack={back}
-        nextDisabled={Boolean(hint)} onNext={() => next()} footer>
+        missing={valuesMissing(answers.B, B)} onNext={() => next()}>
         {B.items.map((item) => <ValueQ key={item.id} item={item} v={answers.B[item.id]} onChange={(v) => set('B')({ ...answers.B, [item.id]: v })} />)}
-        {hint && <p className="small" role="status">{hint}</p>}
       </OnbShell>
     )
   }
   return (
     <OnbShell step={5} title="How would you reply?" sub="Five quick messages. Reply like you normally text: emojis, Hinglish and short replies all help your agent sound like you."
-      onBack={back} nextLoading={busy} nextDisabled={core.some((i) => !answers.E[i.id]?.trim())} onNext={submit}>
+      onBack={back} nextLoading={busy} onNext={submit}
+      missing={core.some((i) => !answers.E[i.id]?.trim()) ? { text: `Reply to all ${core.length} messages (${core.filter((i) => !answers.E[i.id]?.trim()).length} left)`, target: 'onb-replies' } : null}>
       <Replies items={core} value={answers.E} onChange={set('E')} />{err}
     </OnbShell>
   )
 }
 
-/* 7 · Done */
+/* 6 · Done */
 export function Welcome() {
   const { user, profile, refresh } = useAuth()
   const navigate = useNavigate()
-  useEffect(() => { refresh().catch(() => {}) }, [refresh]) // the live check settles the status just after it passes
+  useEffect(() => { refresh().catch(() => {}) }, [refresh]) // the background self-check may have updated the status
   const first = (profile?.name ?? user.name ?? '').split(' ')[0]
-  const sub = profile?.status === 'browse_only' ? 'You can browse and like now. Others will see you once you finish the live check; your likes are kept until then.'
-    : 'You’re visible in Discover. New photos show once their check finishes.'
   return (
-    <OnbShell step={7} title={`You’re in${first ? `, ${first}` : ''}.`} sub={sub} next="Start browsing" onNext={() => navigate('/discover')}>
-      {profile?.liveChecked && <div className="done-badge"><LiveBadge /><span className="small">Your live check passed.</span></div>}
+    <OnbShell step={6} title={`You’re in${first ? `, ${first}` : ''}.`} sub="You’re visible in Discover. New photos show once their check finishes." next="Start browsing" onNext={() => navigate('/discover')}>
       <h2 className="h3 teach-h">Teach your agent more <span className="small">· optional</span></h2>
       <TeachCards />
     </OnbShell>
@@ -265,7 +265,8 @@ export function Teach() {
   }
   const TITLE = { stories: ['Tell a story', 'Answer any you like. A few sentences in your own words is perfect.'], replies: ['10 more replies', 'Reply the way you’d really text. Skip any you want.'], personality: ['A short personality check', 'How much is each one like you? 1 = not at all, 5 = very.'] }[block]
   return (
-    <OnbShell label="Teach your agent more" title={TITLE[0]} sub={TITLE[1]} onBack={() => navigate(-1)} next="Save" nextLoading={busy} nextDisabled={!filled} onNext={save}>
+    <OnbShell label="Teach your agent more" title={TITLE[0]} sub={TITLE[1]} onBack={() => navigate(-1)} next="Save" nextLoading={busy} onNext={save}
+      missing={filled ? null : { text: block === 'personality' ? 'Rate at least one statement to save' : 'Answer at least one to save' }}>
       {block === 'personality'
         ? items.map((it) => <div key={it.id} className="vq-row"><span className="lbl">I {it.text.charAt(0).toLowerCase() + it.text.slice(1)}</span><Seg items={[1, 2, 3, 4, 5].map((n) => [n, String(n)])} value={v[it.id]} onChange={(n) => setV({ ...v, [it.id]: n })} label={it.text} /></div>)
         : items.map((it) => (

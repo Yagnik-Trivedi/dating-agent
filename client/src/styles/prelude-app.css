@@ -49,7 +49,6 @@
 .r-report svg { color: var(--accent); flex: none; }
 .composer { display: flex; gap: 8px; align-items: center; width: 100%; }
 .composer-input { flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-strong); font: inherit; font-size: 16px; color: var(--ink); }
-.composer-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .ws-form { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; flex-wrap: wrap; }
 .ws-input { height: 34px; min-width: 220px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); font: inherit; font-size: 14px; color: var(--ink); }
 .sheet-scrim { position: fixed; inset: 0; z-index: 70; background: rgb(20 12 8 / .3); display: flex; align-items: flex-end; }
@@ -73,7 +72,6 @@
 .field-l { font-size: 14px; font-weight: 600; color: var(--ink); padding: 0; }
 .input { height: 46px; width: 100%; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-strong); font: inherit; font-size: 16px; color: var(--ink); }
 textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height: 1.5; resize: vertical; }
-.input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .seg.wide { display: flex; flex-wrap: wrap; }
 .seg.wide button { height: 36px; padding: 0 14px; font-size: 14.5px; }
 .seg button[role="checkbox"].on { background: var(--surface); color: var(--ink); box-shadow: var(--e1), 0 0 0 1px var(--line); }
@@ -143,31 +141,6 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 .ui-progress > div.trust { background: var(--trust); }
 .btn.danger { background: var(--flag) !important; }
 
-/* ============ Onboarding (fluid) ============ */
-.onb-page { padding-bottom: 96px; }
-.onb-page .onb-top { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 0 clamp(16px, 4vw, 64px); gap: 20px; }
-.onb-page .onb-prog { width: min(420px, 50vw); }
-.onb-saved { white-space: nowrap; }
-.onb-body { max-width: 780px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 32px) 0; }
-.onb-intro { margin: 10px 0 26px; font-size: 18px; line-height: 28px; }
-.onb-style { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 32px; align-items: start; }
-.onb-style .onb-side { position: sticky; top: 92px; }
-.onb-reply { display: block; width: 80%; margin-left: auto; resize: none; field-sizing: content; min-height: 46px; font: inherit; font-size: 17px; line-height: 25px; border: 1px solid var(--line-strong); }
-.onb-reply:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-.onb-reply::placeholder { color: var(--muted); }
-.onb-processing { min-height: 50vh; }
-.onb-foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); }
-.onb-foot-in { max-width: 780px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 32px); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.onb-hint { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 820px) {
-  .onb-page .onb-top { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 8px; }
-  .onb-page .onb-prog { order: 3; width: 100%; }
-  .onb-saved { display: none; }
-  .onb-style { grid-template-columns: 1fr; }
-  .onb-style .onb-side { position: static; }
-  .onb-reply { width: 90%; font-size: 16px; }
-}
-
 /* ============ Settings ============ */
 .danger-row { padding-top: 14px; border-top: 1px solid var(--line); }
 .switch { position: relative; width: 48px; height: 28px; border-radius: 999px; background: var(--line-strong) !important; flex: none; transition: background var(--d1) var(--ease); }
@@ -188,6 +161,6 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; line-height
 .rounded-3xl { border-radius: 14px; }
 .profile-page { max-width: 780px; }
 
-/* ============ Live check (plan 19) ============ */
+/* ============ Top nav extras ============ */
 .nav-avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; background: var(--beige); color: var(--text); font-weight: 700; font-size: 14px; }
 .topnav-r .tb-i .count { position: absolute; right: -4px; top: -2px; }

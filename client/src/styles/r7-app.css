@@ -24,17 +24,6 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .l-menu { position: absolute; top: 64px; left: 12px; right: 12px; z-index: 5; display: flex; flex-direction: column; padding: 8px; }
 .l-menu a { padding: 12px; font-weight: 600; text-decoration: none; color: var(--text); border-radius: 10px; } .l-menu a:hover { background: var(--cream); }
 .auth .combo-l { position: absolute; left: 0; right: 0; z-index: 5; list-style: none; }
-.cam-view { display: grid; place-items: center; }
-.cam-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-.cam-oval { position: relative; z-index: 1; }
-.cam-arrow { z-index: 2; }
-.cam-arrow.n-turn_right { left: auto; right: 22px; }
-.cam-arrow.n-look_up { left: 50%; top: 22px; margin: 0 0 0 -14px; }
-.cam-arrow.n-smile { left: 50%; top: auto; bottom: 22px; margin: 0 0 0 -14px; }
-.cam-wait { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; background: rgb(43 36 32 / .35); }
-.cam-wait .dots i { background: #FFF; }
-.cam-tag { z-index: 2; }
-.cam-steps li.done span { background: var(--olive); color: #FFF; }
 
 /* Plan 30 S2 onboarding: photo slot actions, prompt answers, crop zoom, replies */
 .slot.filled { cursor: grab; touch-action: none; }
@@ -52,9 +41,6 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .pr-list li { cursor: pointer; }
 .row-add { margin-top: 8px; max-width: 280px; }
 .rp button.mine-b { text-align: left; font: inherit; color: var(--text); cursor: pointer; border: 0; }
-.browse-only { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 16px; }
-.d-scroll > .browse-only { margin: 12px 16px; }
-.browse-only svg { flex: none; margin-top: 2px; color: var(--clay); }
 .held-why { list-style: disc; text-align: left; margin: 12px auto; padding-left: 20px; max-width: 420px; }
 .yl-side .teach { grid-template-columns: 1fr; margin-top: 10px; }
 .teach-hint { margin-top: 16px; }
@@ -75,3 +61,31 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .d-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .ed-save { display: flex; justify-content: flex-end; }
 .pc-b .live { justify-self: start; }
+
+/* Owner, 2026-10-19: no orange boundaries on boxes. Hairlines are a neutral (--sand, index.css), typing fields a shade
+   darker (--line-input) so they're easy to spot, and focus is a dark neutral ring. Clay stays for primary buttons and
+   selected states. The field wrapper shows focus, so the input inside it draws no second outline. */
+.input, .ta, .composer, .search, .otp-i { border-color: var(--line-input); }
+.input:focus-within, .input.focus, .ta:focus, .composer:focus-within, .search:focus-within, .otp-i:focus, .otp-i.focus { border-color: var(--text-2); box-shadow: 0 0 0 3px rgb(43 36 32 / .08); }
+.scr .input input:focus-visible, .scr .ta:focus-visible, .scr .composer textarea:focus-visible, .scr .search input:focus-visible, .scr .otp-i:focus-visible { outline: none; }
+.scr :focus-visible, .btn.focus, .check input:focus-visible + .box { outline-color: var(--text); }
+
+/* Onboarding: what still stops a step, next to Continue; a tap on Continue scrolls to it and flashes it. */
+.onb-miss { margin: 0 0 0 auto; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--brick); text-align: right; }
+.onb.m .onb-miss { order: 3; margin: 0 0 2px; text-align: center; } /* the mobile footer is column-reverse: order 3 = top */
+.onb-miss.shake { animation: miss-shake 360ms var(--ease); }
+@keyframes miss-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.needs { animation: needs 1.6s var(--ease); }
+.field.needs { border-radius: 12px; }
+@keyframes needs { 0%, 60% { box-shadow: 0 0 0 3px rgb(142 59 44 / .28); } 100% { box-shadow: 0 0 0 3px rgb(142 59 44 / 0); } }
+@media (prefers-reduced-motion: reduce) { .onb-miss.shake, .needs { animation: none; } .needs { box-shadow: 0 0 0 3px rgb(142 59 44 / .28); } }
+
+/* Log in / Join: a way back (owner, 2026-10-19). */
+.auth-main { position: relative; }
+.auth-back { position: absolute; top: 20px; left: 24px; }
+
+/* The "agent paused" banner sits above the screen: the screen takes the height that's left instead of a full 100dvh
+   (it used to push the tab bar and the last lines below the bottom of the phone). */
+.app-frame { height: 100dvh; display: flex; flex-direction: column; }
+.app-frame > .sys-banner { flex: none; }
+.app-frame > .scr.app-scr { flex: 1; min-height: 0; height: auto; }

@@ -1,4 +1,5 @@
-// Plan 30 S2 gating: browse_only (no live check) isn't shown and can't match, its likes are delivered once active;
+// Plan 30 S2 gating: browse_only isn't shown and can't match, its likes are delivered once active (the live check that
+// set it was removed on 2026-10-19: waiting accounts are activated at boot, new ones start active);
 // the scam self-check holds a seed-fake profile and not a normal one; an admin release sticks to that profile
 // version. Plus the photo moderation decision. No LLM (the consistency check's cache is pre-filled).
 import assert from 'node:assert/strict';
@@ -11,7 +12,7 @@ import { User } from '../src/models/User.js';
 import { buildGate, discoverQuery } from '../src/services/match/gate.js';
 import { createMatch } from '../src/services/matches.js';
 import { decidePhoto } from '../src/services/photos.js';
-import { releaseProfile, settleStatus } from '../src/services/profileStatus.js';
+import { activateWaiting, initialStatus, releaseProfile, settleStatus } from '../src/services/profileStatus.js';
 import { profileVersion } from '../src/services/trust/checkProfile.js';
 import { start, stop } from '../scripts/lib/testDb.js';
 
@@ -30,7 +31,8 @@ async function person(profile) {
 }
 const normal = { bio: 'Product designer, weekend cyclist, terrible at karaoke but I keep trying.', prompts: [{ q: 'A perfect Sunday', a: 'Long ride, dosa, nap.' }] };
 
-test('browse_only: not in Discover, no match; likes are delivered when the live check passes', async () => {
+test('browse_only: not in Discover, no match; activated at boot (live check removed) and the kept likes delivered', async () => {
+  assert.equal(initialStatus(), 'active', 'new accounts start active');
   const a = await person({ name: 'Asha', gender: 'woman', interestedIn: ['man'], status: 'browse_only', ...normal });
   const b = await person({ name: 'Bilal', gender: 'man', interestedIn: ['woman'], ...normal }); // no status = active
   const deck = async (id) => (await Profile.find(discoverQuery((await Profile.findOne({ userId: id }).lean()).gate, [id])).lean()).map((p) => String(p.userId));
@@ -40,15 +42,16 @@ test('browse_only: not in Discover, no match; likes are delivered when the live 
   await Like.create([{ fromUserId: a, toUserId: b, liked: true }, { fromUserId: b, toUserId: a, liked: true }]);
   assert.equal(await createMatch(a, b), null, 'no match while browse_only');
 
-  await Profile.updateOne({ userId: a }, { $set: { liveChecked: true } });
-  assert.equal(await settleStatus(a), 'active');
+  assert.equal(await activateWaiting(), 1);
+  assert.equal((await Profile.findOne({ userId: a }).lean()).status, 'active');
+  assert.equal(await activateWaiting(), 0, 'once');
   assert.ok(await Match.exists({ users: { $all: [a, b] } }), 'the kept likes became a match');
   assert.ok((await deck(b)).includes(String(a)), 'active → shown to others');
 });
 
 test('self-check: a seed-fake profile is held, a normal one is not; a release sticks to that version', async () => {
   const fake = await person({
-    name: 'Daniel', gender: 'man', interestedIn: ['woman'], status: 'browse_only', liveChecked: true,
+    name: 'Daniel', gender: 'man', interestedIn: ['woman'], status: 'active',
     bio: 'Army doctor serving on a UN mission abroad, balancing duty with a passion for forex trading.',
     prompts: [{ q: 'I\'ll fall for you if', a: 'you value honesty. I mentor people in a forex investment opportunity with guaranteed returns. Add me on whatsapp.' }],
   });
@@ -61,7 +64,7 @@ test('self-check: a seed-fake profile is held, a normal one is not; a release st
   assert.equal(await releaseProfile(fake), 'active', 'admin release');
   assert.equal(await settleStatus(fake), 'active', 'stays released while the profile is unchanged');
 
-  const ok = await person({ name: 'Meera', gender: 'woman', interestedIn: ['man'], status: 'browse_only', liveChecked: true, ...normal });
+  const ok = await person({ name: 'Meera', gender: 'woman', interestedIn: ['man'], status: 'active', ...normal });
   assert.equal(await settleStatus(ok), 'active');
   assert.equal((await Profile.findOne({ userId: ok }).lean()).selfCheck.level, 'low');
 });

@@ -5,9 +5,10 @@
 @import "./styles/r7-app.css";
 
 /* Round 7 design tokens (Frontend-Design/07-tandem-step1, plan 30 S6): white / off-white / cream / beige, one clay accent
-   (#A2613F, AA with white text), earthy statuses. Light only: the Prelude "lamplight" dark theme was removed with it. */
+   (#A2613F, AA with white text), earthy statuses. Borders are a neutral (owner, 2026-10-19: the tan --sand #D9CBB3 read as an orange
+   outline on every box). Light only: the Prelude "lamplight" dark theme was removed with it. */
 :root {
-  --bg: #FBF8F3; --surface: #FFFFFF; --cream: #F4EDE1; --beige: #E8DCC8; --sand: #D9CBB3; --text: #2B2420; --text-2: #6B5F55;
+  --bg: #FBF8F3; --surface: #FFFFFF; --cream: #F4EDE1; --beige: #E8DCC8; --sand: #E5E0D9; --line-input: #CDC6BD; --text: #2B2420; --text-2: #6B5F55;
   --clay: #A2613F; --clay-hover: #8F5233; --clay-ink: #8A4F31; --clay-soft: #B5734F;
   --olive: #4F5A2E; --olive-bg: #E7EAD8; --ochre: #7A5410; --ochre-bg: #F3E6C8; --grey: #5E5650; --grey-bg: #ECE7E1; --brick: #8E3B2C; --brick-bg: #F5DFD8;
   --sh: 0 1px 2px rgb(43 36 32 / .05), 0 8px 24px -12px rgb(43 36 32 / .16);

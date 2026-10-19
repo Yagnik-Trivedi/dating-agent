@@ -1,10 +1,9 @@
 // Plan 30 S2: who is shown in Discover and can match. A profile's status comes from the scam self-check on its own
-// public profile (+ photo moderation) and the live check:
+// public profile (+ photo moderation):
 //   held        high risk: "Your profile needs a fix" until they fix it or an admin releases it
-//   browse_only no live check yet: can browse and like, isn't shown to others, likes are delivered once active
 //   active      everything
+// The live check (which kept new accounts 'browse_only' until it passed) was removed by the owner on 2026-10-19.
 // Profiles without a status (seeds, accounts from before plan 30) are active and never gated.
-import { env } from '../config/env.js';
 import { Like } from '../models/Like.js';
 import { Profile } from '../models/Profile.js';
 import { createMatch } from './matches.js';
@@ -12,8 +11,17 @@ import { checkProfileData, precheckProfile, profileVersion } from './trust/check
 
 const CONTACT_PHOTO = /contact|qr|handle|phone/i;
 
-/** Status for a new account: the live check is required only when it's switched on. */
-export const initialStatus = () => (env.LIVE_CHECK_ENABLED ? 'browse_only' : 'active');
+/** Status for a new account. */
+export const initialStatus = () => 'active';
+
+/** Once, at boot: accounts left waiting on the removed live check become active, and their kept likes are delivered. → count */
+export async function activateWaiting() {
+  const waiting = await Profile.find({ status: 'browse_only' }, { userId: 1 }).lean();
+  if (!waiting.length) return 0;
+  await Profile.updateMany({ _id: { $in: waiting.map((p) => p._id) }, status: 'browse_only' }, { $set: { status: 'active' } });
+  for (const { userId } of waiting) await deliverLikes(userId);
+  return waiting.length;
+}
 
 /** The scam self-check on my own public profile. → { level: low | medium | high, reasons } */
 export async function selfCheck(profile) {
@@ -36,8 +44,7 @@ export async function settleStatus(userId) {
   const { level, reasons } = await selfCheck(profile);
   const releasedVersion = profile.selfCheck?.releasedVersion;
   const released = releasedVersion && releasedVersion === profileVersion(profile);
-  const live = profile.liveChecked || !env.LIVE_CHECK_ENABLED;
-  const status = level === 'high' && !released ? 'held' : live ? 'active' : 'browse_only';
+  const status = level === 'high' && !released ? 'held' : 'active';
   await Profile.updateOne({ userId }, { $set: { status, selfCheck: { level, reasons, at: new Date(), releasedVersion } } });
   if (status === 'active' && profile.status !== 'active') await deliverLikes(userId);
   return status;
@@ -47,7 +54,8 @@ export async function settleStatus(userId) {
 export async function releaseProfile(userId) {
   const profile = await Profile.findOne({ userId }).lean();
   if (!profile) return null;
-  await Profile.updateOne({ userId }, { $set: { 'selfCheck.releasedVersion': profileVersion(profile), status: 'browse_only' } });
+  // Status stays 'held' until settleStatus moves it to 'active', which also delivers the kept likes.
+  await Profile.updateOne({ userId }, { $set: { 'selfCheck.releasedVersion': profileVersion(profile) } });
   return settleStatus(userId);
 }
 

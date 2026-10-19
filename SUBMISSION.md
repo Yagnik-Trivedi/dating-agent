@@ -23,8 +23,8 @@ reply?" prompts that capture how they actually text (Hinglish included). After t
 3. **Two independent judges**, one per side and private, list quoted evidence. **Code** turns that evidence into Compatible, Maybe or Not compatible.
 4. **You take over in one tap.** Then a reveal shows how many messages were the agents'. A Not compatible ends with a kind wind-down in your voice.
 
-You can read every line live, pause your agent, take over, or say "I wouldn't say that" to teach it. There's also an
-optional live check: two random moves on camera, judged by a Nemotron vision model, shown as "Live-checked".
+You can read every line live, pause your agent, take over, or say "I wouldn't say that" to teach it. Every new photo
+is checked by a Nemotron vision model before anyone else sees it.
 
 ## How we built it
 
@@ -34,7 +34,7 @@ optional live check: two random moves on camera, judged by a Nemotron vision mod
   - **Ultra** for the judges;
   - **Lightning** for short tasks;
   - a Nemotron **embedding** model for concepts;
-  - a Nemotron **VL** model for the live check.
+  - a Nemotron **VL** model for photo moderation.
 - **Knowledge graph:** a six-layer graph per user (public profile, gate, self graph on shared concepts, voice, notes about others, decisions) with confidence, verbatim evidence and privacy tiers. A DB-spy test proves no agent ever reads the other user's graph.
 - **Evaluation:** we built an evaluation harness: 38 synthetic personas, 20 labelled pairs, metric scripts, ablations and a scale test.
 
@@ -62,7 +62,6 @@ optional live check: two random moves on camera, judged by a Nemotron vision mod
 
 - Real-user pilots with opt-in feedback on the verdicts.
 - A judge-vs-human agreement study (the labelling set is ready).
-- Photo-to-person matching for the live check.
 - More languages.
 
 ## Testing instructions (Devpost private field: fill in at deploy)
@@ -73,7 +72,6 @@ optional live check: two random moves on camera, judged by a Nemotron vision mod
   1. **Matches** → open a finished match → **Your agent's read**. Each point quotes their words; tap a "line" link to jump to it.
   2. Open the match that's **mid-conversation**. It resumes when you open it; watch a few live turns, then press **Pause** or **Take over**.
   3. **This is you** → the knowledge map, privacy per fact, and "How you text".
-  4. Optional: **Settings → Live check** on a laptop or phone with a camera.
 - New sign-ups get 2 live agent conversations per day, to protect our credits.
 
 ## Feedback for Nebius / NVIDIA

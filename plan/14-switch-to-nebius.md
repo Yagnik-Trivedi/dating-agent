@@ -14,7 +14,7 @@
   - `MODEL_MID` = Nemotron 3 Super
   - `MODEL_SMART` = Nemotron 3 Ultra. **If Ultra isn't listed, use Super here too.**
   - `MODEL_EMBED` = an embedding model from the listing (prefer an NVIDIA/Nemotron one)
-  - `MODEL_VISION` = Nemotron Nano 2 VL from the listing (plan 19). If no Nemotron VL is listed, set `LIVE_CHECK_ENABLED=false` (runtime calls must go to Token Factory). Otherwise re-run `npm run live-check:vision`.
+  - `MODEL_VISION` = a Nemotron VL from the listing (photo moderation; the live check was removed on 2026-10-19). If no Nemotron VL is listed, photo moderation needs the code-only fallback in plan 30 S7 (pending + manual review). Re-run `npm run photo-moderation:check`.
   - Check the smoke output: the chat reply must be clean (no reasoning text), and note the embedding vector length.
   - Update the ID comments in `server/.env.example`.
 - [ ] **Prices + hard cap.** From the Token Factory pricing page, set USD per 1M tokens as `input,output`:

@@ -5,7 +5,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowRight, Ban, BellRing, Check, CheckCheck, ChevronDown, ChevronLeft, Circle, Flag, Hand, Heart, Lock, MoreHorizontal, Pause, PenLine, Play, Quote, RefreshCw, UserX, WifiOff } from 'lucide-react'
-import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, LiveBadge, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
+import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
 import { InterestLine } from '../components/charts'
 import MatchRow from '../components/MatchRow'
 import { useMobile } from '../components/prelude'
@@ -174,7 +174,6 @@ export default function MatchRoom() {
       {mobile && <IconBtn icon={ChevronLeft} label="Back to matches" onClick={() => navigate('/matches')} />}
       <Avatar p={match.other} src={match.other.photo ?? undefined} size={mobile ? 40 : 44} />
       <div className="rm-who"><h2>{them}</h2><StatusChip s={chipOf(match.status)} live={match.status === 'agent_chatting'} /></div>
-      {!mobile && match.other.liveChecked && <LiveBadge />}
       <span className="menu-wrap push-r">
         <IconBtn icon={MoreHorizontal} label="More: unmatch, block, report" aria-expanded={menu} onClick={() => setMenu(!menu)} />
         {menu && <div className="menu-pop right" role="menu">

@@ -37,7 +37,7 @@ OpenAI-compatible API. Model IDs come from `.env`, never from code, so switching
 | Judges (one per side, private) | **smart** → Nemotron 3 Ultra, falling back to Super | The one decision that matters most. It runs once per side per conversation, at temperature 0. |
 | Stance check, wind-down message, icebreakers, date-idea write-up | **fast** → Nemotron 3.5 Lightning | Short, frequent, cheap. |
 | Concept matching, "asked about me?", leak check, exemplar choice | **embed** → Nemotron embedding model | One shared vector per *concept* (not per fact), so storage stays at ~88 KB per user. |
-| Live check (optional) | **vision** → Nemotron VL | Describes pose, smile, face count and screen/print signs; **code** decides pass/fail. |
+| Photo moderation | **vision** → Nemotron VL | Describes each new photo (a person? text, contact details, QR codes, explicit content); **code** decides ok/rejected. |
 
 TODO(deploy): replace with the exact Token Factory model IDs after the switch (plan 14). Development ran on NVIDIA's API with the same Nemotron families.
 
@@ -51,7 +51,7 @@ TODO(deploy): replace with the exact Token Factory model IDs after the switch (p
 MongoDB · Express 5 · React 19 + Vite · Node 22, with Socket.IO for the live match room. A Mongo-backed job queue
 (no Redis) runs onboarding builds, agent turns, judges and nightly maintenance; a restart resumes them.
 
-- `server/src/services/`: `llm/` (client, budget), `kg/` (knowledge graph), `trust/`, `brief/`, `conversation/` (per-turn engine, judges), `agent/` (scheduling, pause, take over), `compat/` (settle, hand-off), `liveCheck/`, `tavily/` (date ideas).
+- `server/src/services/`: `llm/` (client, budget), `kg/` (knowledge graph), `trust/`, `brief/`, `conversation/` (per-turn engine, judges), `agent/` (scheduling, pause, take over), `compat/` (settle, hand-off), `tavily/` (date ideas).
 - `client/src/`: the Prelude design (light + "lamplight"), one screen per route, code-split.
 - Every message stores `authoredBy: human | agent`, for the audit trail and the reveal at hand-off.
 
@@ -107,7 +107,7 @@ to you before a chat can end. On fresh chats for those pairs, the drinking confl
 - **Honest if asked:** a sincere "are you a bot?" always gets an honest answer. At hand-off, the reveal says how many messages were the agents'.
 - **Scam and fake detection:** rules plus an LLM consistency check on the public profile; scam scripts in chat stop the agents at once.
 - **No inference of religion, caste, ethnicity or race** from names or photos. Profile photos stay blurred until both people say yes.
-- **Live check (optional):** two random moves on camera show a real person made the account. It's labelled "Live-checked"; it never claims to check photos or ID. Frames are never stored.
+- **Photo checks:** every new photo gets one automatic check before anyone else sees it. Contact details, QR codes, mostly-text images and explicit content are rejected; it never estimates age, gender, race or attractiveness.
 - **Delete my data** removes your profile, graph, voice and messages, and anonymises your side of any match.
 
 ## Honest limits
