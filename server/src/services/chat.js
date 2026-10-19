@@ -9,16 +9,15 @@ import { learnOwnMessage } from './kg/ownVoice.js';
 export const MAX_MESSAGE_LENGTH = 1000;
 
 /**
- * Message as `viewerId` may see it. authoredBy (and meta) of the OTHER side's messages stay hidden
- * until the match is handed off; your own side's are always visible.
+ * Message as `viewerId` may see it. Who wrote it (`authoredBy`) is shown to BOTH people from the first message
+ * ("Written by Meera's agent": owner decision 4, plan 30 S3.9); the other side's meta, act plan and checks stay theirs.
  */
-export function serializeMessage(msg, viewerId, matchStatus) {
+export function serializeMessage(msg, viewerId) {
   const m = typeof msg.toObject === 'function' ? msg.toObject() : { ...msg };
   if (String(m.senderId) !== String(viewerId)) {
     delete m.meta;
     delete m.actPlan; // my agent's plan and check results are mine only
     delete m.checks;
-    if (matchStatus !== 'handed_off') delete m.authoredBy;
   }
   return m;
 }
@@ -34,7 +33,7 @@ export async function sendMessage({ match, senderId, authoredBy, text, meta, ext
   const message = await Message.create({ matchId: match._id, conversationId: conversation?._id ?? null, senderId, authoredBy, text: clean, meta, ...extra });
   await Match.updateOne({ _id: match._id }, { $set: { lastMessageAt: message.createdAt } });
   for (const uid of match.users) {
-    emitToUser(uid, 'message:new', { message: serializeMessage(message, uid, match.status) });
+    emitToUser(uid, 'message:new', { message: serializeMessage(message, uid) });
   }
   onIncomingMessage(message).catch((err) => console.error(`onIncomingMessage failed: ${err.message}`));
   learnOwnMessage(message, match).catch((err) => console.error(`learnOwnMessage failed: ${err.message}`));

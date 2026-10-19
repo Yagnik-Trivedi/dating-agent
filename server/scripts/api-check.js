@@ -108,8 +108,8 @@ const [gotA, gotB] = await Promise.all([
   waitFor(sB, 'message:new', (p) => p.message._id === ack.message._id),
 ]);
 assert.equal(gotA.message.authoredBy, 'human');
-assert.equal(gotB.message.authoredBy, undefined);
-ok('message:send → message:new on both; authoredBy hidden from other side');
+assert.equal(gotB.message.authoredBy, 'human');
+ok('message:send → message:new on both; both see who wrote it (plan 30 S3.9)');
 
 sB.emit('typing', { matchId });
 assert.equal((await waitFor(sA, 'typing')).userId, B.id);
@@ -130,7 +130,7 @@ const row = r.body.matches.find((m) => m._id === matchId);
 assert.equal(row.lastMessage.text, 'Yes! Sinhagad?'); assert.equal(row.unread, 1); // only the other side's messages count
 r = await call('GET', `/matches/${matchId}/messages`, { token: A.token });
 assert.deepEqual(r.body.messages.map((m) => m.text), ['Hi Bob! Trek this weekend?', 'Yes! Sinhagad?']);
-assert.equal(r.body.messages[1].authoredBy, undefined);
+assert.equal(r.body.messages[1].authoredBy, 'human');
 r = await call('GET', '/matches', { token: A.token });
 assert.equal(r.body.matches.find((m) => m._id === matchId).unread, 0);
 ok('match list (last message, unread), history oldest-first');

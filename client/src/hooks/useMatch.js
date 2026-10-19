@@ -11,6 +11,7 @@ export function useMatch(matchId) {
   const [facts, setFacts] = useState([])
   const [events, setEvents] = useState([])
   const [interest, setInterest] = useState(null)
+  const [interestSeries, setInterestSeries] = useState([])
   const [typingUserId, setTypingUserId] = useState(null)
   const [error, setError] = useState(null)
   const typingTimer = useRef()
@@ -33,6 +34,7 @@ export function useMatch(matchId) {
     setFacts(data.facts)
     setEvents(data.events ?? [])
     setInterest(data.interest ?? null)
+    setInterestSeries(data.interestSeries ?? [])
   }, [matchId])
 
   const load = useCallback(async () => {
@@ -112,7 +114,7 @@ export function useMatch(matchId) {
     return data.match
   }, [matchId])
 
-  return { match, messages, facts, events, interest, typingUserId, error, reload: load, send, takeover, pause, resume, decide, extend, sendTyping }
+  return { match, messages, facts, events, interest, interestSeries, typingUserId, error, reload: load, send, takeover, pause, resume, decide, extend, sendTyping }
 }
 
 /** "I wouldn't say that" on my own agent's message, optionally with how I'd say it. → { rule, kind } */

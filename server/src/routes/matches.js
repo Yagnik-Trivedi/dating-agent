@@ -41,14 +41,14 @@ matchesRouter.get('/matches/:id/messages', async (req, res) => {
   const filter = { matchId: match._id, ...(before && { createdAt: { $lt: before } }) };
   const page = await Message.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
   if (!before) await Match.updateOne({ _id: match._id, 'perUser.userId': me }, { $set: { 'perUser.$.lastReadAt': new Date() } });
-  res.json({ messages: page.reverse().map((m) => serializeMessage(m, me, match.status)), reveal: await revealFor(match) });
+  res.json({ messages: page.reverse().map((m) => serializeMessage(m, me)), reveal: await revealFor(match) });
 });
 
 matchesRouter.post('/matches/:id/messages', async (req, res) => {
   const { text } = parse(z.object({ text: z.string() }), req.body);
   const match = await getMatchFor(req.params.id, req.user._id);
   const message = await sendMessage({ match, senderId: req.user._id, authoredBy: 'human', text });
-  res.status(201).json({ message: serializeMessage(message, req.user._id, match.status) });
+  res.status(201).json({ message: serializeMessage(message, req.user._id) });
 });
 
 // One tap: the requester's agent stops for this match immediately.
@@ -123,7 +123,7 @@ matchesRouter.get('/conversations/:id/replay', async (req, res) => {
   ]);
   res.json({
     conversation: { _id: conv._id, round: conv.round, status: conv.status, endedBy: conv.endedBy, startedAt: conv.startedAt, endedAt: conv.endedAt },
-    messages: messages.map((m) => serializeMessage(m, me, match.status)),
+    messages: messages.map((m) => serializeMessage(m, me)),
     events,
     report,
     result: statusFor(match, me),
@@ -135,12 +135,15 @@ matchesRouter.get('/matches/:id/kg', async (req, res) => {
   const me = req.user._id;
   const match = await getMatchFor(req.params.id, me);
   // My notes about them, MY chat moments and how interested my agent reads them (never the other side's view).
-  const [facts, events, conv] = await Promise.all([
+  const [facts, events, conv, mine] = await Promise.all([
     KgFact.find({ matchId: match._id, observerId: me, subjectId: otherUserId(match, me) }).lean(),
     ChatEvent.find({ matchId: match._id, observerId: me }).sort({ createdAt: 1 }).lean(),
     Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean(),
+    // My agent's reading of their interest after each of its turns (plan 30 S6: the room's interest line). Mine only.
+    Message.find({ matchId: match._id, senderId: me, authoredBy: 'agent', 'actPlan.interest': { $ne: null } }, { 'actPlan.interest': 1 }).sort({ createdAt: 1 }).lean(),
   ]);
-  res.json({ facts, events, interest: conv?.agentState?.[String(me)]?.interest ?? null });
+  const interestSeries = mine.map((m) => ({ messageId: m._id, interest: m.actPlan.interest }));
+  res.json({ facts, events, interest: conv?.agentState?.[String(me)]?.interest ?? null, interestSeries });
 });
 
 // Only once the agents think it's worth meeting (or both people took over).

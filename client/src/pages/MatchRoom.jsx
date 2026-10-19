@@ -1,103 +1,115 @@
-// Match room (owner's design: Frontend-Design/04-direction/source/src/screens/Room.jsx), on real data.
-// Reading room: their lines and my agent's, with my agent's notes in the margin beside the line they came from.
-// Pause, Resume and Take over are always one tap away; "I wouldn't say that" on my own agent's lines.
-import { useEffect, useMemo, useRef, useState } from 'react'
+// Match room (Round 7 Step 2 design, Frontend-Design/07-prelude-step2 Room.jsx) on real data. Every agent message is
+// labelled "Written by …'s agent" for both people; a calm status strip ticks through the agents' steps; "What my agent
+// is noticing" (only me) shows the interest line, chat moments and notes with their quotes. Take over is one tap.
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronUp, Circle, Flag, Hand, Heart, Laugh, Lock, MessageSquareText, Pause, Play, Send, ShieldCheck, X } from 'lucide-react'
-import { Btn, Drafted, ICON, Status, Stream, Thumb, TrustBadge, Typing, calm, useMobile } from '../components/prelude'
+import { AnimatePresence, motion } from 'motion/react'
+import { ArrowRight, BellRing, Check, ChevronDown, ChevronLeft, Circle, Flag, Hand, Lock, Pause, PenLine, Play, Quote, RefreshCw, WifiOff } from 'lucide-react'
+import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, LiveBadge, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
+import { InterestLine } from '../components/charts'
+import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useMatch, wouldntSay } from '../hooks/useMatch'
 import { useToast } from '../hooks/useToast'
-import { errMsg } from '../lib/api'
-import { LiveBadge } from '../components/LiveBadge'
+import { api, errMsg } from '../lib/api'
 
-const AGENT_PHASES = ['matched', 'trust_check', 'briefing', 'agent_chatting', 'evaluating']
+const LIVE = ['matched', 'trust_check', 'briefing', 'agent_chatting']
 const LOCKED = ['closed', 'flagged_fake']
-const REPORT = ['compatible', 'maybe', 'incompatible', 'handed_off']
-const INTEREST = ['Polite', 'Curious', 'Warming up', 'Into it', 'Very into it']
-const interestWord = (x) => (x == null ? null : INTEREST[Math.max(0, Math.min(4, Math.floor(x * 5)))])
-const PHASE_LINE = {
-  matched: 'You liked each other. Your agent is getting ready.',
-  trust_check: 'Your agent is checking their profile for fakes and inconsistencies.',
-  briefing: 'Your agent is reading their profile before saying hello.',
-  scheduled: 'Your agent will start this chat tomorrow. There’s a daily limit while we’re in preview.',
-  evaluating: 'The agents have stepped back. Your agent is writing its read.',
-}
+const LETTER = ['compatible', 'maybe', 'incompatible', 'handed_off']
 const time = (d) => new Date(d).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+const DEVA = /[ऀ-ॿ]/
 
-/** Margin notes for one message: my chat moments and my notes whose quote comes from it (first line: the trust check). */
-function notesFor(msg, i, { events, facts, trust }) {
-  const n = []
-  if (i === 0 && trust?.level) n.push({ kind: 'trust', label: 'Trust check', icon: ShieldCheck, text: trust.level === 'ok' ? 'Their profile reads as genuine. No red flags.' : (trust.flags?.[0] ?? 'A few things worth asking about.') })
-  for (const e of events.filter((x) => String(x.messageId) === String(msg._id))) {
-    if (e.type === 'shared_interest') n.push({ kind: 'shared', label: 'You share this', icon: Heart, text: e.label, q: e.quote })
-    else if (e.type === 'laugh') n.push({ kind: 'shared', label: 'A real laugh', icon: Laugh, text: 'You laughed at the same thing.', q: e.quote })
-    else if (['disagreement', 'interest_clash', 'dealbreaker_hint', 'question_dodged'].includes(e.type)) n.push({ kind: 'explore', label: 'Worth talking about', icon: MessageSquareText, text: e.label ?? 'Something to come back to.', q: e.quote })
-    else if (e.type === 'disagreement_resolved') n.push({ kind: 'covered', label: 'Talked it through', icon: Check, text: e.label ?? 'You disagreed, then found common ground.' })
-  }
-  for (const f of facts.filter((x) => x.evidence?.some((ev) => String(ev.messageId) === String(msg._id)))) {
-    n.push({ kind: 'note', label: 'Noted', icon: MessageSquareText, text: f.object, q: f.evidence.find((ev) => String(ev.messageId) === String(msg._id))?.quote })
-  }
-  return n
+/** The agents' steps, in the order our pipeline runs them. → [{ t, d }], index of the current one */
+function stepsFor(match, n, them) {
+  const steps = [
+    { t: `Checking ${them}’s profile for fakes`, d: match.trust?.level === 'ok' ? 'No red flags' : match.trust?.level ? 'A few things to ask about' : 'In a moment' },
+    { t: `Reading ${them}’s profile`, d: match.otherProfile ? `${match.otherProfile.photos?.length ?? 0} photos, ${match.otherProfile.prompts?.length ?? 0} prompts` : '' },
+    { t: 'Saying hello', d: n ? 'Opened from their profile' : 'Next' },
+    { t: 'Talking', d: `${n} messages so far` },
+    { t: 'Writing your letter', d: 'When they finish' },
+  ]
+  const i = { matched: 0, trust_check: 0, briefing: 1, agent_chatting: n ? 3 : 2, evaluating: 4 }[match.status] ?? 4
+  return [steps, i]
 }
 
-function Note({ n, line, open: o0 }) {
-  const [open, setOpen] = useState(o0)
-  const I = n.icon
+/** Manus-style status strip: one calm line that ticks live; expand for every step. */
+function StatusStrip({ steps, step, open, onToggle }) {
+  const cur = steps[step]
   return (
-    <motion.div className={`note k-${n.kind}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={calm}>
-      <div className="note-h"><span className="kind"><I size={14} strokeWidth={1.8} aria-hidden="true" />{n.label}</span>
-        {n.q && <button className="mini" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Hide quote' : 'Show quote'}>{open ? <ChevronUp size={15} strokeWidth={1.6} /> : <ChevronDown size={15} strokeWidth={1.6} />}</button>}</div>
-      <p>{n.text}</p>
-      {open && n.q && <blockquote>“{n.q}”<a className="lref" href={`#line-${line}`}>line {line}</a></blockquote>}
+    <div className={`strip ${open ? 'open' : ''}`}>
+      <button type="button" className="strip-1" aria-expanded={open} onClick={onToggle}>
+        <Dots small label="Working" />
+        <AnimatePresence mode="wait" initial={false}><motion.span key={step} className="strip-t" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={T.base}>{cur.t}</motion.span></AnimatePresence>
+        <span className="strip-n">Step {step + 1} of {steps.length}</span>
+        <ChevronDown size={16} strokeWidth={1.8} className="strip-c" aria-hidden="true" />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.ol className="strip-l" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={T.base}>
+            {steps.map((s, i) => (
+              <li key={s.t} className={i < step ? 'done' : i === step ? 'now' : ''}>
+                <span className="sl-i">{i < step ? <Check size={14} strokeWidth={2.4} /> : i === step ? <i className="sl-dot" /> : <Circle size={10} strokeWidth={2} />}</span>
+                <b>{s.t}</b><span>{s.d}</span>
+              </li>
+            ))}
+          </motion.ol>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function Bubble({ m, mine, author, last, onWouldnt }) {
+  return (
+    <motion.div layout className={`msg ${mine ? 'mine' : 'theirs'}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={T.base}>
+      {m.authoredBy === 'agent' && <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />Written by {author}’s agent</span>}
+      <p className="bubble" lang={DEVA.test(m.text) ? 'hi' : undefined}>{m.text}</p>
+      <span className="msg-meta">{time(m.createdAt)}{mine && m.authoredBy === 'agent' && last && <><span aria-hidden="true">·</span><button type="button" className="link" onClick={() => onWouldnt(m._id)}>I wouldn’t say that</button></>}</span>
     </motion.div>
   )
 }
 
-/** "I wouldn't say that": optional "how would you say it?", then a toast. */
-export function WouldntSay({ messageId }) {
-  const toast = useToast()
-  const [open, setOpen] = useState(false)
-  const [fix, setFix] = useState('')
-  const [busy, setBusy] = useState(false)
-  async function save(e) {
-    e.preventDefault()
-    setBusy(true)
-    try {
-      await wouldntSay(messageId, fix.trim() || undefined)
-      toast('Your agent will remember', { agent: true })
-      setOpen(false)
-    } catch (err) {
-      toast(errMsg(err), { tone: 'bad' })
-    } finally { setBusy(false) }
+const MOMENT = { shared_interest: 'shared', laugh: 'laugh', disagreement: 'disagree', interest_clash: 'disagree' }
+/** What my agent is noticing (only me): the interest line, then notes with the quote they came from. */
+function Noticing({ them, messages, me, facts, events, interestSeries }) {
+  const series = interestSeries.map((x) => Math.max(0, Math.min(3, x.interest * 3)))
+  const turnOf = (messageId) => { // my agent's turn index at or after a message
+    const at = messages.findIndex((m) => String(m._id) === String(messageId))
+    return interestSeries.findIndex((x) => messages.findIndex((m) => String(m._id) === String(x.messageId)) >= at)
   }
-  if (!open) return <button className="link-btn" onClick={() => setOpen(true)}>I wouldn’t say that</button>
+  const moments = events.filter((e) => MOMENT[e.type]).map((e) => ({ i: turnOf(e.messageId), k: MOMENT[e.type], label: e.label ? `${e.type === 'laugh' ? 'A real laugh' : e.type === 'shared_interest' ? 'Shared interest' : 'Disagreed'}: ${e.label}` : 'A real laugh' })).filter((m) => m.i >= 0)
+  const notes = facts.filter((f) => f.evidence?.[0]?.quote).slice().reverse()
   return (
-    <form className="ws-form" onSubmit={save}>
-      <label className="sr-only" htmlFor={`ws-${messageId}`}>How would you say it?</label>
-      <input id={`ws-${messageId}`} className="ws-input" value={fix} onChange={(e) => setFix(e.target.value)} placeholder="How would you say it? (optional)" maxLength={1000} autoFocus />
-      <Btn size="sm" type="submit" loading={busy}>Save</Btn>
-      <button type="button" className="icon-btn sm" aria-label="Cancel" onClick={() => setOpen(false)}><X size={16} strokeWidth={1.6} /></button>
-    </form>
+    <div className="notice">
+      <h2 className="h3">What my agent is noticing</h2>
+      <p className="small">Only you can see this.</p>
+      {series.length > 1 && <div className="interest card-in"><div className="int-h"><span>How {them} seems, turn by turn</span></div>
+        <InterestLine series={series} moments={moments} shown={series.length} label={`How ${them} seems across the conversation`} /></div>}
+      <ul className="notes">
+        <AnimatePresence initial={false}>{notes.map((n) => (
+          <motion.li layout key={n._id} className="note" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={T.base}><p>{n.object}</p><blockquote><Quote size={14} strokeWidth={1.8} aria-hidden="true" />{n.evidence[0].quote}</blockquote></motion.li>
+        ))}</AnimatePresence>
+        {!notes.length && <li className="small">Nothing yet. Notes appear as your agent reads {them}’s replies{messages.some((m) => String(m.senderId) !== me) ? '' : ', once they start'}.</li>}
+      </ul>
+    </div>
   )
 }
 
-function Side({ match, events, interest, them }) {
-  const shared = [...new Set(events.filter((e) => e.type === 'shared_interest' && e.label).map((e) => e.label))]
-  const agenda = match.brief?.agenda ?? []
-  const word = interestWord(interest)
+/** Desktop left column: my matches. */
+function MatchList({ current }) {
+  const [rows, setRows] = useState(null)
+  useLayoutEffect(() => { api.get('/api/matches').then(({ data }) => setRows(data.matches)).catch(() => setRows([])) }, [current])
   return (
-    <aside className="r-side">
-      <section><h3 className="t-label">Trust</h3>
-        <p className="side-row trust"><TrustBadge level={match.trust?.level} /></p>
-        {(match.trust?.flags ?? []).slice(0, 2).map((f) => <p key={f} className="side-row"><Flag {...ICON} />{f}</p>)}
-      </section>
-      <section><h3 className="t-label">What you share so far</h3>
-        {shared.length ? <div className="chips">{shared.map((s) => <span key={s} className="chip shared">{s}</span>)}</div> : <p className="side-muted">Nothing yet, which is normal this early.</p>}</section>
-      {word && <section><h3 className="t-label">How {them} seems</h3><p className="side-big">{word}</p><p className="side-muted">From their replies, not a score.</p></section>}
-      {agenda.length > 0 && <section><h3 className="t-label">What your agent wants to find out</h3>
-        {agenda.map((a) => <p key={a.id} className={`side-row ${a.status === 'answered' ? 'done' : ''}`}>{a.status === 'answered' ? <Check {...ICON} /> : <Circle {...ICON} />}{a.topic}</p>)}</section>}
+    <aside className="rm-matches"><h1 className="h3">Matches</h1>
+      <ul className="mlist-ul">{(rows ?? []).slice(0, 8).map((m) => (
+        <li key={m._id} className={`mrow ${String(m._id) === String(current) ? 'on' : ''}`}>
+          <Link to={`/matches/${m._id}`} className="mrow-link" aria-current={String(m._id) === String(current) ? 'page' : undefined}>
+            <span className="mav"><Avatar p={m.other} src={m.other.photo ?? undefined} size={52} />{m.status === 'agent_chatting' && <i className="live-dot" aria-label="Agents are talking now" />}</span>
+            <div className="mtx"><div className="mt-top"><b>{m.other.name}</b>{m.lastMessageAt && <span className="mtime">{time(m.lastMessageAt)}</span>}</div><StatusChip s={chipOf(m.status)} live={m.status === 'agent_chatting'} /><span className={`mlast ${m.unread ? 'strong' : ''}`}>{m.lastMessage?.text ?? 'No messages yet'}</span></div>
+            {m.unread > 0 && <span className="unread" aria-label={`${m.unread} unread`}>{m.unread}</span>}
+          </Link>
+        </li>
+      ))}</ul>
     </aside>
   )
 }
@@ -106,136 +118,114 @@ export default function MatchRoom() {
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const mobile = useMobile(1100) // notes margin + reading column + side panel need ~1100 px
-  const rm = useReducedMotion()
+  const mobile = useMobile()
   const toast = useToast()
-  const { match, messages, facts, events, interest, typingUserId, error, reload, send, takeover, pause, resume, sendTyping } = useMatch(id)
+  const { match, messages, facts, events, interestSeries, typingUserId, error, reload, send, takeover, pause, resume, sendTyping } = useMatch(id)
+  const [tab, setTab] = useState('chat')
+  const [stripOpen, setStripOpen] = useState(null)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(null)
-  const [sheet, setSheet] = useState(false)
-  const bottom = useRef(null)
-  const firstLoad = useRef(null)
-  if (firstLoad.current === null && messages.length) firstLoad.current = messages.length
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: firstLoad.current ? 'smooth' : 'auto', block: 'end' }) }, [messages.length, typingUserId])
-
+  const [wouldnt, setWouldnt] = useState(null)
+  const [fix, setFix] = useState('')
+  const list = useRef(null)
+  useLayoutEffect(() => { if (list.current) list.current.scrollTop = list.current.scrollHeight }, [Boolean(match), messages.length, typingUserId, tab])
   const me = String(user?._id)
-  const notes = useMemo(() => messages.map((m, i) => notesFor(m, i, { events, facts, trust: match?.trust })), [messages, events, facts, match?.trust])
-
-  if (error) return <div className="scr state err"><div className="st-center"><h2 className="t-h2">We couldn’t load this conversation</h2><p className="t-body muted">Sorry about that. Nothing was sent or shared while it was down.</p><Btn kind="secondary" onClick={reload}>Try again</Btn></div></div>
-  if (!match) return <div className="scr room-loading" aria-busy="true"><div className="st-body"><div className="sk sk-t" /><div className="sk sk-t2" />{[0, 1, 2].map((i) => <div key={i} className="sk-item"><div className="sk sk-l" /><div className="sk sk-s" /></div>)}</div></div>
-
-  const them = match.other.name
-  const handedOff = match.status === 'handed_off'
-  const live = AGENT_PHASES.includes(match.status) && match.status !== 'evaluating' // the agents are (about to be) talking
-  const agentOn = live && match.agentActive
-  const locked = LOCKED.includes(match.status)
-  // Type yourself after handoff, or during a live chat once your agent is off (took over, paused, or never on).
-  const canType = !locked && (handedOff || (live && !match.agentActive))
-  const state = agentOn ? 'chatting' : match.paused ? 'paused' : handedOff || (live && !match.agentActive) ? 'you' : 'done'
-  const lastNote = notes.map((n, i) => (n.some((x) => x.q) ? i : -1)).filter((i) => i >= 0).pop()
-  const noteCount = notes.reduce((s, n) => s + n.length, 0)
-  const who = (m) => (String(m.senderId) === me ? (m.authoredBy === 'agent' ? 'Your agent' : 'You') : m.authoredBy === 'agent' ? `${them}’s agent` : them)
+  const lastMine = useMemo(() => messages.map((m, i) => (String(m.senderId) === me && m.authoredBy === 'agent' ? i : -1)).filter((i) => i >= 0).pop(), [messages, me])
 
   const act = (name, fn, done) => async () => {
     setBusy(name)
     try { await fn(); if (done) toast(done) } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
   }
-  async function submit(e) {
-    e.preventDefault()
-    if (!text.trim()) return
+  async function submit() {
     setBusy('send')
     try { await send(text); setText('') } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
   }
+  async function saveWouldnt() {
+    setBusy('wouldnt')
+    try { await wouldntSay(wouldnt, fix.trim() || undefined); toast('Your agent will remember', { agent: true }); setWouldnt(null); setFix('') } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
+  }
 
-  const controls = live && (match.agentActive || match.paused) && (
-    <>
-      {match.paused
-        ? <Btn kind="secondary" icon={Play} onClick={act('resume', resume)} loading={busy === 'resume'}>{mobile ? 'Resume' : 'Resume my agent'}</Btn>
-        : <Btn kind="secondary" icon={Pause} onClick={act('pause', pause)} loading={busy === 'pause'} aria-label="Pause my agent">{mobile ? 'Pause' : 'Pause my agent'}</Btn>}
-      <Btn icon={Hand} block={mobile} onClick={act('takeover', takeover)} loading={busy === 'takeover'}>Take over</Btn>
-    </>
+  const them = match?.other.name ?? ''
+  const live = match && LIVE.includes(match.status)
+  const agentsTalking = live && (match.agentActive || match.otherAgentActive)
+  const locked = match && LOCKED.includes(match.status)
+  const canType = match && !locked && (match.status === 'handed_off' || (live && !match.agentActive))
+  const [steps, step] = match ? stepsFor(match, messages.length, them) : [[], 0]
+
+  const head = match && (
+    <header className="rm-head">
+      {mobile && <IconBtn icon={ChevronLeft} label="Back to matches" onClick={() => navigate('/matches')} />}
+      <Avatar p={match.other} src={match.other.photo ?? undefined} size={mobile ? 40 : 44} />
+      <div className="rm-who"><h2>{them}</h2><StatusChip s={chipOf(match.status)} live={match.status === 'agent_chatting'} /></div>
+      {!mobile && match.other.liveChecked && <LiveBadge />}
+    </header>
   )
 
-  return (
-    <div className={`scr room ${mobile ? 'm' : 'd'}`}>
-      <header className="r-head">
-        <button className="icon-btn" aria-label="Back to matches" onClick={() => navigate('/matches')}><ChevronLeft {...ICON} /></button>
-        <Thumb src={match.other.photo} name={them} size={mobile ? 38 : 44} clear={handedOff} />
-        <div className="r-name">
-          <h2 className="t-h2">{them}</h2>
-          {mobile ? <Status state={state} short /> : <p>{[match.other.age, match.other.city].filter(Boolean).join(' · ')}<span className="dot-sep" /><TrustBadge level={match.trust?.level} />{match.other.liveChecked && <><span className="dot-sep" /><LiveBadge /></>}</p>}
-        </div>
-        {!mobile && <Status state={state} />}
-        {!mobile && controls}
-      </header>
-
-      <div className="r-body">
-        <div className="r-col">
-          <p className="r-sys">{PHASE_LINE[match.status] ?? (messages.length ? `The first conversation started at ${time(messages[0].createdAt)}. You can read every word.` : 'No messages yet.')}</p>
-          {match.status === 'flagged_fake' && <p className="r-sys flag-line"><Flag size={15} strokeWidth={1.7} aria-hidden="true" />Your agent thinks this profile is fake and stopped talking. {match.trust?.flags?.[0]}</p>}
-          {messages.map((m, i) => {
-            const mineAgent = String(m.senderId) === me && m.authoredBy === 'agent'
-            const ns = notes[i]
-            return (
-              <div id={`line-${i + 1}`} className={`r-row ${String(m.senderId) === me ? 'me' : 'them'}`} key={m._id}>
-                {!mobile && <aside className="r-notes">{ns.map((n, k) => <Note key={k} n={n} line={i + 1} open={i === lastNote && !!n.q} />)}</aside>}
-                <motion.div className="r-msg" initial={rm || i < (firstLoad.current ?? 0) ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={calm}>
-                  <div className="r-meta"><b>{who(m)}</b><span className="t-data">{time(m.createdAt)}</span>
-                    {mobile && ns.some((n) => n.kind === 'shared') && <span className="pip shared">You share this</span>}</div>
-                  <p className="r-line"><Stream text={m.text} animate={m.authoredBy === 'agent' && i >= (firstLoad.current ?? 0)} /></p>
-                  {mineAgent && <Drafted><WouldntSay messageId={m._id} /></Drafted>}
-                </motion.div>
-              </div>
-            )
-          })}
-          {typingUserId && (
-            <div className={`r-row ${String(typingUserId) === me ? 'me' : 'them'}`}>{!mobile && <aside />}
-              <div className="r-msg"><div className="r-meta"><b>{String(typingUserId) === me ? 'Your agent' : them}</b></div><Typing label={`${String(typingUserId) === me ? 'Your agent' : them} is writing`} /></div></div>
-          )}
-          {REPORT.includes(match.status) && (
-            <Link to={`/matches/${match._id}/report`} className="r-report card"><span><b>{handedOff ? 'You’re chatting now' : 'Your agent’s read is ready'}</b><em>{handedOff ? 'See what your agent noticed' : 'Only you can see it'}</em></span><ArrowRight {...ICON} /></Link>
-          )}
-          <div ref={bottom} />
-        </div>
-        {!mobile && <Side match={match} events={events} interest={interest} them={them} />}
-      </div>
-
-      {mobile ? (
-        <div className="r-mbar">
-          {controls && <div className="r-mbtns">{controls}</div>}
-          {canType && <Composer text={text} setText={setText} submit={submit} busy={busy === 'send'} sendTyping={sendTyping} them={them} />}
-          <button className="sheet-peek" onClick={() => setSheet(true)} aria-label="What your agent noticed. Opens a sheet."><i className="grab" /><span><b>What your agent noticed</b><em>{noteCount === 1 ? '1 note' : `${noteCount} notes`}</em></span><ChevronUp {...ICON} /></button>
-        </div>
-      ) : canType ? (
-        <div className="r-composer typing-on"><Composer text={text} setText={setText} submit={submit} busy={busy === 'send'} sendTyping={sendTyping} them={them} /></div>
-      ) : (
-        <div className="r-composer"><Lock size={16} strokeWidth={1.7} aria-hidden="true" /><span>{locked ? 'This conversation is closed.' : live ? 'Your agent is writing for you. You can take over whenever you like.' : 'The agents stepped back. You can write here once you both say yes.'}</span>
-          {live && <Btn kind="secondary" icon={Hand} onClick={act('takeover', takeover)} loading={busy === 'takeover'}>Write it myself</Btn>}</div>
-      )}
-
-      {mobile && sheet && (
-        <div className="sheet-scrim" onClick={() => setSheet(false)}>
-          <motion.div className="sheet" role="dialog" aria-label="What your agent noticed" onClick={(e) => e.stopPropagation()} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={calm}>
-            <div className="sheet-h"><h3 className="t-h3">What your agent noticed</h3><button className="icon-btn" aria-label="Close" onClick={() => setSheet(false)}><X {...ICON} /></button></div>
-            <div className="sheet-body">
-              {notes.flatMap((ns, i) => ns.map((n, k) => <Note key={`${i}-${k}`} n={n} line={i + 1} open={false} />))}
-              {!noteCount && <p className="side-muted">Nothing yet. Notes appear as your agent reads their replies.</p>}
-              <Side match={match} events={events} interest={interest} them={them} />
-            </div>
-          </motion.div>
-        </div>
+  let feed
+  if (error) feed = <div className="rm-list"><Empty icon={WifiOff} title="We lost the connection" action={<Btn kind="secondary" icon={RefreshCw} onClick={reload}>Try again</Btn>}>Nothing was sent while we were offline. Your agents pick up where they left off.</Empty></div>
+  else if (!match) feed = <div className="rm-list loading" aria-busy="true"><p className="sys">Your agents are getting ready…</p>{[70, 50, 64].map((w, i) => <div key={i} className={`msg ${i % 2 ? 'mine' : 'theirs'}`}><Shimmer w={`${w}%`} /></div>)}</div>
+  else feed = (
+    <div className="rm-list" ref={list} aria-live="polite" aria-label="Messages">
+      {messages.length > 0 && <p className="sys">{messages[0].authoredBy === 'agent' ? 'Your agents broke the ice' : 'You started chatting'} · {time(messages[0].createdAt)}</p>}
+      {match.status === 'flagged_fake' && <p className="sys"><Flag size={14} strokeWidth={1.8} aria-hidden="true" /> Your agent thinks this profile is fake and stopped talking. {match.trust?.flags?.[0]}</p>}
+      {messages.map((m, i) => {
+        const mine = String(m.senderId) === me
+        return <Bubble key={m._id} m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt} />
+      })}
+      {typingUserId && (() => {
+        const mine = String(typingUserId) === me
+        const agent = mine ? match.agentActive : match.otherAgentActive
+        return <div className={`msg ${mine ? 'mine' : 'theirs'}`}><span className="agent-tag">{agent && <PenLine size={13} strokeWidth={1.9} aria-hidden="true" />}{agent ? `${mine ? (user?.name ?? 'Your') : them}’s agent is writing` : `${them} is typing`}</span><p className="bubble typing"><Dots /></p></div>
+      })()}
+      {LETTER.includes(match.status) && (
+        <Link to={`/matches/${match._id}/report`} className="card letter-link"><span><b>{match.status === 'handed_off' ? 'You’re chatting now' : 'Your letter is ready'}</b><em>{match.status === 'handed_off' ? 'See what your agent noticed' : 'Only you can see it'}</em></span><ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></Link>
       )}
     </div>
   )
-}
 
-function Composer({ text, setText, submit, busy, sendTyping, them }) {
+  const footer = !match ? null : canType ? (
+    <div className="rm-compose"><Composer value={text} onChange={(v) => { setText(v); sendTyping?.() }} onSend={submit} placeholder={`Write to ${them}…`} disabled={busy === 'send'} /></div>
+  ) : live && match.agentActive ? (
+    <div className="rm-take">
+      <div className="rm-take-btns">
+        {match.paused ? <Btn kind="secondary" icon={Play} onClick={act('resume', resume)} loading={busy === 'resume'}>Resume</Btn>
+          : <Btn kind="ghost" icon={Pause} onClick={act('pause', pause, 'Your agent is paused. Nothing will be sent.')} loading={busy === 'pause'}>Pause</Btn>}
+        <Btn size="lg" block icon={Hand} onClick={act('takeover', takeover)} loading={busy === 'takeover'}>Take over</Btn>
+      </div>
+      {!mobile && <p className="small">Your agent stops at once, and {them} sees that you’re here.</p>}
+    </div>
+  ) : (
+    <div className="rm-take"><p className="small"><Lock size={14} strokeWidth={1.8} aria-hidden="true" /> {locked ? 'This conversation is closed.' : match.status === 'evaluating' ? 'The agents stepped back. Your agent is writing your letter.' : 'You can write here once you both say yes.'}</p></div>
+  )
+
+  const noticing = match && <Noticing them={them} messages={messages} me={me} facts={facts} events={events} interestSeries={interestSeries} />
+  const chat = (
+    <section className="rm-chat" aria-label={`Conversation with ${them}`}>
+      {head}
+      {agentsTalking && <div className="banner" role="status"><BellRing size={17} strokeWidth={1.7} aria-hidden="true" /><span>Your agents are talking. Keep browsing; we’ll let you know.</span></div>}
+      {live && match && <StatusStrip steps={steps} step={step} open={stripOpen ?? !mobile} onToggle={() => setStripOpen(!(stripOpen ?? !mobile))} />}
+      {mobile && match && <div className="rm-tabs"><Tabs id="room-m" value={tab} onChange={setTab} full items={[['chat', 'Chat'], ['notice', 'Noticing', facts.filter((f) => f.evidence?.[0]?.quote).length]]} /></div>}
+      {mobile && tab === 'notice' ? <div className="rm-list">{noticing}</div> : feed}
+      {footer}
+    </section>
+  )
+  const sheet = (
+    <Sheet open={Boolean(wouldnt)} title="I wouldn’t say that" onClose={() => setWouldnt(null)}
+      footer={<><Btn kind="ghost" onClick={() => setWouldnt(null)}>Cancel</Btn><Btn onClick={saveWouldnt} loading={busy === 'wouldnt'}>Save</Btn></>}>
+      <p className="small">Your agent learns from this for every chat, not just this one.</p>
+      <Field label="How would you say it?" optional>{(fid) => <textarea id={fid} className="ta" rows={3} maxLength={1000} value={fix} onChange={(e) => setFix(e.target.value)} />}</Field>
+    </Sheet>
+  )
+  if (mobile) return <div className="scr app-scr room m">{chat}{sheet}</div>
   return (
-    <form className="composer" onSubmit={submit}>
-      <label className="sr-only" htmlFor="room-input">Message {them}</label>
-      <input id="room-input" className="composer-input" value={text} maxLength={1000} placeholder={`Write to ${them}…`} autoComplete="off"
-        onChange={(e) => { setText(e.target.value); sendTyping?.() }} />
-      <Btn type="submit" icon={Send} loading={busy} disabled={!text.trim()} aria-label="Send">Send</Btn>
-    </form>
+    <div className="scr app-scr room d">
+      <TopNav />
+      <div className="rm-grid">
+        <MatchList current={id} />
+        {chat}
+        <aside className="rm-side">{noticing}</aside>
+      </div>
+      {sheet}
+    </div>
   )
 }

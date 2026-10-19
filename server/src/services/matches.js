@@ -47,7 +47,7 @@ export async function matchListItem(match, viewerId) {
     lastMessageAt: match.lastMessageAt ?? null,
     agentActive: mine?.agentActive ?? false,
     other: summary(profile, other),
-    lastMessage: last ? serializeMessage(last, viewerId, match.status) : null,
+    lastMessage: last ? serializeMessage(last, viewerId) : null,
     unread,
   };
 }
@@ -68,6 +68,7 @@ export async function matchDetail(match, viewerId) {
     createdAt: match.createdAt,
     agentActive: mine?.agentActive ?? false,
     tookOverAt: mine?.tookOverAt ?? null,
+    otherAgentActive: side(match, other)?.agentActive ?? false, // both people see who is writing (plan 30 S3.9)
     paused: Boolean(mine?.pausedAt && !mine?.tookOverAt),
     decision: mine?.decision ?? null,
     other: summary(profile, other),
