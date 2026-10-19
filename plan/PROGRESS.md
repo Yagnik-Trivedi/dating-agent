@@ -1,8 +1,8 @@
 # Progress tracker
 
-The team's single status board. Claude Code updates it after every plan-30 step and **commits locally**. Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
+The team's single status board. Claude Code updates it after every plan-30 step. **Since 2026-10-19 nothing is committed, not even locally, until the owner asks** (the work stays in the working tree). Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-19, by Claude Code (S1 done, committed locally; S6 in progress, waiting for the owner to continue)
+- **Last updated:** 2026-10-19, by Claude Code (S2 + S3 done, uncommitted; next S4)
 - **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -16,9 +16,9 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 |---|---|---|---|---|
 | S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ✅ | (this commit) | Results below. Render `CLIENT_URL` value for S7 noted. |
 | S1 | Speed (two-phase onboarding, agent pacing) | ✅ | (this commit) | Results below; first-message target missed on 429s (explained). |
-| S6 | Design foundation (Round 7 "Tandem" in `Frontend-Design/07-tandem-step1/`; name stays Prelude) | 🔄 started | — | Tokens, one component kit, nav and the approved dependencies are in `git stash` "s6-wip" (not committed); next: the 4 designed screens on real data, then S6.6. |
-| S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ⬜ | — | |
-| S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ⬜ | — | Cloudinary stub if `CLOUDINARY_*` missing. |
+| S6 | New design (Round 7 Step 2, `Frontend-Design/07-prelude-step2/`; name stays Prelude) | 🔄 mostly done | local commits `2386bbf`…`ece864a` | Every screen ported on real data except the profile editor (comes with S3). Left: delete the old CSS/components once S3's profile screens land; S6.6 shared-element motion. |
+| S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ✅ | uncommitted | Results below. Photos (S3.1) built here because step 2 needs them. |
+| S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ✅ | uncommitted | Results below. **No `CLOUDINARY_*` keys in `.env`: the local stub is used** (files in `server/uploads/`, local only). |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
@@ -26,6 +26,52 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 Local commits since the last push (`780d210`):
 - `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
 - `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
+
+## S3 results: dating-app core (2026-10-19) ✅
+
+**Built:**
+- **Profile view** `/u/:id` (photos and prompts interleaved, Like / Pass, report / block menu; your own profile opens as a preview) and **profile editor** `/profile` (completeness meter in steps, photos, 3 prompts, basics incl. job / workplace / education / height / languages / about, live preview). Prompts: 30 to pick from, answers ≤ 150 characters.
+- **Like a photo or a prompt** with an optional comment (≤ 150). `Like.target { kind, ref }` + `comment`; a comment with contact details, another app or money talk is refused (the trust check's rules). On a match the comment becomes the first message (`Message.like`), and the other side's agent replies to it first (the engine reads it as `(on the prompt "…") …`).
+- **Likes you** `/likes` (+ nav count, live `like:new`): who liked what, their comment, Like back / Pass, tap through to the full profile. Free, no blur. Likes from people who aren't active yet aren't listed.
+- **Match choice** sheet: "Let our agents break the ice" or "Chat myself now", default from agent mode (off → self). Either side picking self → a normal human chat (`startHumanChat`: agents off, status `handed_off`, no verdict). Before the trust check finishes, the pipeline reads the choice itself, so the safety check always runs first.
+- **Preferences** sheet in Discover: age range, show me, city (the signup combobox), distance (0 = my city only). Saves the existing Profile fields; the gate is rebuilt.
+- **Human chat:** photo messages (resized in the browser, checked by the vision model before they're sent; refused with "We can't check photos right now" if the model is down), live **Seen** (`message:read` / `match:read` socket events), typing, timestamps, unread counts (already there).
+- **Safety:** unmatch, block, report (6 reasons, optional note, "also block"). A block hides both people from each other in Discover, Likes you, profiles and matches, closes the match and stops any agent at once. `GET /api/admin/reports` + close.
+- **Agent labels** for both sides were done in S6; the consent copy now says both people see which messages an agent wrote.
+
+**Checks:**
+- `npm test` 125/125 (new `datingCore.test.js`: comment → first message, the other agent opens; agent mode off → self; human chat stops both agents; block hides both ways and closes; unmatch hides for both).
+- `api-check` passes; client build clean; `smoke:browsers` chromium / firefox / webkit ✓.
+- **Agent mode Off, two real browsers** (1440 on dev, 375 on the production build): like a prompt with a comment → Likes you → Like back ("Chat myself now" preselected) → room shows "Liked a prompt" + the comment → reply → "Seen" → photo delivered (1440; at 375 NVIDIA's vision model returned 500 twice, so the photo was correctly refused) → block → 0 matches for the other side, their profile 404, gone from Discover. 0 agent messages. No console errors, no horizontal overflow.
+- **Auto, live:** a new user liked a seed's prompt with a comment; the seed liked back; the seed's agent opened by replying to the comment, 59 s after the like (incl. the seed's like-back delay and waiting for the new user's graph).
+- **Moderation** `npm run photo-moderation:check` (real vision calls, generated safe images): landscape ok; phone number on a card, mostly-text screenshot, QR-style code and a social handle all rejected. 5/5.
+
+**Deviations / not done:**
+- Photos stay two lists (`photos` + private `photoUploads`), as in S2.
+- Editing prompts or basics re-runs the self-check and the gate, but doesn't update the knowledge graph (prompts were never part of it; basics come from onboarding answers).
+- The match choice is a sheet, not the design's full-screen "It's a match" page.
+- A human chat started with "Chat myself now" still waits for the trust check (8–20 s on NVIDIA) before it becomes `handed_off`; typing works during that time.
+
+## S2 results: new onboarding (2026-10-19) ✅
+
+**Flow (7 steps, `pages/Onboarding.jsx`):** Basics (job, workplace, education, languages, height, optional interests) → Photos (2–6, crop 4:5 with react-easy-crop, 1080 px, ≤ 300 KB) → 3 prompts from 30 (≤ 150 chars) → Lifestyle and values (all 11, each skippable; importance never pre-selected; accepts; dealbreaker) → 5 replies (one at a time, like a chat) → **submit** (phase-1 graph; phase 2 runs during the live check) → Live check (step 6; "Skip for now" = browse only) → Done with "Teach your agent more" (stories, 10 more replies, 20 personality statements → `POST /api/onboarding/more`, merged, phase 2 re-runs).
+
+**Server:**
+- `Profile.status` `active | browse_only | held` (private). New accounts start `browse_only` (or `active` when `LIVE_CHECK_ENABLED=false`); profiles without a status (seeds, older accounts) are active and never gated. The discover query skips non-active profiles; `createMatch` returns null while either side isn't active; a held profile gets 403 `PROFILE_HELD` on discover and likes.
+- Likes made while browse_only are kept; when the profile turns active (live check passed, admin release), mutual likes become matches (`deliverLikes`).
+- Scam self-check (`services/profileStatus.js`) in the `profileCheck` job after submit, profile edits and photo moderation: plan 06 rules + the cached consistency check on my own public profile + photo rejections for contact details / QR codes. likely_fake → **held** (reasons in `selfCheck`); caution → medium (stored); else low. `POST /api/admin/profiles/:id/release` releases that profile version.
+- Photos: `/api/photos` (ticket, add, order, delete). Cloudinary signed direct upload with `node:crypto` (no SDK) or the local stub. One `MODEL_VISION` call per photo (`moderatePhoto` job, 8 attempts; pending until it succeeds); code decides (nudity, violence, mostly text, contact details, QR code, social handle; photo 1 must show a person). `PUT /profile` accepts only DiceBear URLs for `photos` now.
+- Voice under 10 samples: the agent prompt says to keep replies short and plain; "This is you" shows the teach cards.
+
+**Checks:** `npm test` 122/122 (new `profileStatus.test.js`: browse_only hidden + can't match + likes delivered on activation; the seed fake (seed28 text) held; a normal profile low; release sticks; photo decisions). `api-check` passes (new step: browse_only hidden). Browser e2e of the whole flow at 1440 and 375 px, dev and production build: 0 console errors, no horizontal overflow; Discover's browse_only banner and held screen checked at both widths. `smoke:browsers` on the production build: chromium, firefox, webkit ✓. Photo stub e2e: a real vision call rejected a mostly-text image.
+
+**Deviations:**
+- Photos are two lists, not subdocuments: `photos: [String]` stays the public list (only moderated-ok URLs, in order) and a private `photoUploads` holds every upload with `{ url, publicId, w, h, status, reasons, person, at }`. Every existing reader of `photos` (seeds, client, trust check) works unchanged; no migration.
+- Submit happens at the end of step 5, before the live check, so the graph builds while the user does the live check.
+- "Teach your agent more" re-runs the whole phase 2 (idempotent by fact key), not one block.
+- In the e2e, the vision model flagged "mostly text" but **not** the phone number in the same image; S3's moderation acceptance must test a phone-number photo on its own.
+- Check scripts (`seed-check`, `speed-check`, `api-check`) mark their throwaway users live-checked in the DB (`scripts/lib/activate.js`), so they need `MONGODB_URI` pointing at the server's DB.
+- **Timing (≤ 6 min acceptance):** not timed by a person yet; the scripted run takes ~23 s plus typing. The owner should time one real run.
 
 ## S1 results: speed (2026-10-18/19) ✅
 
