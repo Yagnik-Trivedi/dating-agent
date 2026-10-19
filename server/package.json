@@ -19,7 +19,8 @@
     "dev-db": "node scripts/dev-db.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "live-check:vision": "node scripts/live-check-vision.js",
-    "smoke:browsers": "node scripts/smoke-browsers.js"
+    "smoke:browsers": "node scripts/smoke-browsers.js",
+    "photo-moderation:check": "node scripts/photo-moderation-check.js"
   },
   "dependencies": {
     "@tavily/core": "^0.7.14",
