@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { ArrowRight, BellRing, Check, ChevronDown, ChevronLeft, Circle, Flag, Hand, Lock, Pause, PenLine, Play, Quote, RefreshCw, WifiOff } from 'lucide-react'
 import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, LiveBadge, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
 import { InterestLine } from '../components/charts'
+import MatchRow from '../components/MatchRow'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useMatch, wouldntSay } from '../hooks/useMatch'
@@ -101,15 +102,7 @@ function MatchList({ current }) {
   useLayoutEffect(() => { api.get('/api/matches').then(({ data }) => setRows(data.matches)).catch(() => setRows([])) }, [current])
   return (
     <aside className="rm-matches"><h1 className="h3">Matches</h1>
-      <ul className="mlist-ul">{(rows ?? []).slice(0, 8).map((m) => (
-        <li key={m._id} className={`mrow ${String(m._id) === String(current) ? 'on' : ''}`}>
-          <Link to={`/matches/${m._id}`} className="mrow-link" aria-current={String(m._id) === String(current) ? 'page' : undefined}>
-            <span className="mav"><Avatar p={m.other} src={m.other.photo ?? undefined} size={52} />{m.status === 'agent_chatting' && <i className="live-dot" aria-label="Agents are talking now" />}</span>
-            <div className="mtx"><div className="mt-top"><b>{m.other.name}</b>{m.lastMessageAt && <span className="mtime">{time(m.lastMessageAt)}</span>}</div><StatusChip s={chipOf(m.status)} live={m.status === 'agent_chatting'} /><span className={`mlast ${m.unread ? 'strong' : ''}`}>{m.lastMessage?.text ?? 'No messages yet'}</span></div>
-            {m.unread > 0 && <span className="unread" aria-label={`${m.unread} unread`}>{m.unread}</span>}
-          </Link>
-        </li>
-      ))}</ul>
+      <ul className="mlist-ul">{(rows ?? []).slice(0, 8).map((m) => <MatchRow key={m._id} m={m} on={String(m._id) === String(current)} />)}</ul>
     </aside>
   )
 }
