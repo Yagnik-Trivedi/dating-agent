@@ -10,6 +10,7 @@ function planLines(plan, firstName) {
   if (plan.end) return [`- END the conversation now: one short, kind closing line in ${firstName}'s own closing style${plan.closingStyle ? ` (e.g. "${plan.closingStyle}")` : ''}. No question.`];
   const lines = [
     `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}.`,
+    plan.opening ? null : moveLine(plan, firstName),
     plan.askBack ? '- End with exactly one question back to them.' : '- No question this time.',
     plan.emoji ? `- Use the emoji ${plan.emoji} once.` : '- No emoji.',
     plan.laugh ? `- They were funny: laugh the way ${firstName} does ("${plan.laugh}").` : null,
@@ -18,10 +19,31 @@ function planLines(plan, firstName) {
     ...plan.reactions.filter((r) => r.kind === 'unknown').map((r) => `- About "${r.text}": ${firstName} has no listed experience; be honestly curious or say it's not something you've done. Never pretend.`),
     plan.unknownTopic ? `- They asked about ${plan.unknownTopic}: nothing about ${firstName} and ${plan.unknownTopic} is listed. Say honestly you're not sure or haven't really thought about it. Never invent a preference, team, habit or opinion.` : null,
     plan.mustDisagree ? `- DISAGREE with "${plan.disagreeOn}". ${firstName} firmly holds the opposite view: keep it friendly, but do not give in or say they're right.` : null,
-    plan.topic?.kind === 'agenda' ? `- After reacting, steer toward ${topicText(plan.topic.text)}: connect it to what you're talking about or ask about it naturally (share ${firstName}'s side only if a listed fact covers it and it fits). Never announce it out of nowhere ("just so you know…").` : null,
+    plan.topic?.kind === 'agenda' ? topicLine(plan.topic, firstName, plan.askBack) : null,
     plan.topic?.kind === 'story' ? `- If it connects to what you're talking about, tell the story [${plan.topic.storyId}] briefly in your own words with a natural lead-in ("that reminds me…"); if it doesn't connect, skip it.` : null,
   ];
   return lines.filter(Boolean);
+}
+
+// Plan 30 SN: the shape of this message. Not every message is "reaction + question".
+function moveLine(plan, firstName) {
+  return {
+    answer: `- Shape: answer their question first, properly (from the listed facts, or honestly say you're not sure).${plan.askBack ? ' Then bounce it back or ask something that follows from it.' : ''}`,
+    follow_up: '- Shape: react to what they said, then ONE curious follow-up about a detail they just mentioned. Go deeper on their thread; don\'t change the subject.',
+    share: `- Shape: react, then share something of ${firstName}'s own that connects to what they said (only from the listed facts), so they have something to reply to. If no listed fact connects, just react warmly.`,
+    react: '- Shape: a short, natural reaction to what they said (laugh, tease or relate if it fits). That is the whole message.',
+    topic: null,
+    end: null,
+  }[plan.move] ?? null;
+}
+
+// An agenda topic is a suggestion that came from the chat itself (a bridge) or a natural pause (a lull), never an order.
+function topicLine(topic, firstName, askBack) {
+  const how = askBack ? `share ${firstName}'s side (only if a listed fact covers it) or ask about it the way a curious person would`
+    : `share ${firstName}'s side (only if a listed fact covers it), without a question`;
+  return topic.how === 'lull'
+    ? `- The chat has slowed down. A natural new direction: ${topicText(topic.text)}. Link it to something already said ("speaking of…", "random but…"): ${how}. If it would sound abrupt, talk about something else from the listed facts instead.`
+    : `- What they said connects to ${topicText(topic.text)}. If it flows, ease into it as part of the same thread: ${how}. If it doesn't fit, skip it and just follow their thread.`;
 }
 
 // Questionnaire topic labels → how a person would bring them up (the raw label leaked: "what does looking for long-term mean").
@@ -40,10 +62,12 @@ function finalInstruction(plan, firstName) {
     plan.unknownTopic ? `answer their question honestly: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you're not sure (no made-up preference); don't just ask it back.`
       : plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
-    plan.topic?.kind === 'agenda' && (plan.topic.ask
-      ? `react briefly, then ask them directly ${topicText(plan.topic.text)}: one clear question in ${firstName}'s own words.`
-      : `react briefly, then steer to ${topicText(plan.topic.text)} by asking about it naturally (or sharing ${firstName}'s side if a listed fact covers it).`),
-    plan.askBack && !plan.topic && 'end with one question back.',
+    plan.topic?.kind === 'agenda' && (plan.topic.how === 'lull'
+      ? `if it flows, move the chat toward ${topicText(plan.topic.text)}, linked to something already said; if it would sound abrupt, skip it.`
+      : `reply to their message, and if it flows from it, ease into ${topicText(plan.topic.text)}; if not, skip it.`),
+    !plan.topic && plan.move === 'follow_up' && 'react, then ask one follow-up about something they just said.',
+    !plan.topic && plan.move === 'share' && `no question: react and share something of ${firstName}'s that connects.`,
+    !plan.topic && plan.move === 'react' && 'no question: just a short, natural reaction.',
   ].filter(Boolean).join(' ');
 }
 
@@ -69,6 +93,14 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
         '',
         'THIS MESSAGE (hard constraints):',
         ...planLines(plan, firstName),
+        '',
+        // Plan 30 SN: the agents read like interviewers ticking off topics. This is how two people actually get talking.
+        'HOW A GOOD CHAT FEELS:',
+        '- It is a getting-to-know-you chat between two people, not an interview or a questionnaire.',
+        '- Stay on the thread they are on before changing the subject. Pick up the specific details they mention and react to those.',
+        `- Share before you ask: give something of ${firstName}'s own so it's an exchange, not a Q&A.`,
+        '- Not every message needs a question. Never fire a new question on an unrelated topic right after they answered one.',
+        "- Light humour, teasing and small reactions are good when they fit the person's style.",
         '',
         'RULES:',
         `- Don't agree, compliment or show enthusiasm unless ${firstName} genuinely would, given the facts. Being brief, bored or in disagreement is fine.`,

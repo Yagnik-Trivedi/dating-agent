@@ -1,7 +1,7 @@
 # 30 — Final sprint (Oct 18 → submit Oct 29)
 
 > **This is the only plan with open work.** It merges the old plans 21 (speed) and 22 (dating-app core) and everything found after the first deploy (Oct 18). Finished plans are in `plan/archive/`. Reference docs: `15-knowledge-graph-final.md`, `18-architecture-decisions.md`. Ops: `12` (deploy), `14` (Nebius), `13` (submission).
-> **Order:** S0 → S1 → **S6 (design foundation; the design has arrived)** → S2 → S3 → S4 → S5 → S7. New screens in S2–S5 are built directly in the new design, never in the old one. Stop for the owner's "go" only where marked **STOP**.
+> **Order:** S0 → S1 → **S6 (design foundation; the design has arrived)** → S2 → S3 → **SN (natural conversation, added 2026-10-19)** → S4 → S5 → S7. New screens in S2–S5 are built directly in the new design, never in the old one. Stop for the owner's "go" only where marked **STOP**.
 > **Git and deploys (owner, 2026-10-18):** deploy credits on the free tiers are limited. **Commit locally after each step, but never push and never deploy** until the owner says so; there's one final push + deploy in S7. Test everything locally against a production build.
 > **Dates:** S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · final push + deploy + full QA Oct 27 · **feature freeze Oct 28** · submit Oct 29. Whatever isn't done by Oct 28 is cut, not rushed.
 
@@ -22,6 +22,7 @@
    - Every other screen is derived from its tokens and components.
    - Keep the product name **Prelude**; "Tandem" is only the design's working name.
 7. **No social feed or posts.** A real dating app here = photos + prompts + likes + chat.
+8. **(2026-10-19) Agent chats must flow like a real conversation.** They mustn't read as agents ticking off the points we want to check. Agenda topics come up in the flow of the chat, never forced. This replaces S1's "agenda-driven, dealbreaker topics first". See SN.
 
 ## Standing rules
 - **Secrets:** never print, echo, log or commit secrets. Confirm no `.env` is tracked before every push.
@@ -234,6 +235,52 @@
 - [ ] With **Auto**, the match offers the agents. They open from the like comment, labels show on both sides, and the S1 time targets hold.
 - [ ] Moderation rejects a phone-number photo, a QR-code photo and a mostly-text image, and accepts normal photos. Use safe test images only; no explicit content in the repo.
 - [ ] Block and report work both ways. Blocked users never reappear.
+
+## SN — Natural conversation (owner, 2026-10-19; before S4)
+**Problem (owner):** the agent chats read like an interview. The agents tick off the points we want to check, instead of talking.
+**Causes in the code:**
+- `planAct` picks an agenda topic on a timer: every other turn after 1 warm-up turn, and every turn in the last 4 messages.
+- `openMustAsk` forces a direct question on every dealbreaker and very important answer before the chat may end, although the gate already checked the dealbreakers.
+- `ASK_BACK_FLOOR` 0.7 ends most messages with a question.
+- The final instruction is always "react briefly, then ask…".
+- The fallbacks are form questions ("do you smoke, by the way?").
+
+**Build:**
+1. **Topics in the flow:** an agenda topic comes up only when
+   - a **bridge** exists: what was just said connects to it (code word lists per attribute; topic words for interests), or
+   - at a **lull**: a short reply with no question, a thread that has run for a few turns, or low interest.
+
+   Also:
+   - Never in the first `WARMUP_TURNS`, and never closer together than `TOPIC_GAP_TURNS`.
+   - No timer, and no forced topic near the end.
+   - Each topic gets one try at a lull and at most `TOPIC_TRIES` in all.
+2. **Gate-checked dealbreakers** come up only through a bridge, never cold. `openMustAsk` is removed; a natural end needs only the settled agenda and `NATURAL_END_FROM`.
+3. **Message moves**, each with its own prompt line:
+   - answer (they asked me)
+   - follow-up (go deeper on their thread)
+   - share (something of mine that connects, from listed facts, no question)
+   - react (no question)
+   - topic (bridge or lull)
+
+   Question rate:
+   - Floor 0.45 instead of 0.7.
+   - Lower right after they answered my question, and when they asked me something.
+   - A stall guard: if neither of us asked last time and their reply is short, ask.
+4. **Prompt:** a "how a good chat feels" block (follow their thread, share before you ask, pick up details, no interview). A bridge or lull topic is a soft suggestion the model may skip if it would sound abrupt. No "ask them directly".
+5. **Fallbacks:** follow-up questions on their message only; no topic templates.
+6. **Metrics** (`scripts/eval/metrics.js`): question rate, back-to-back questions, agenda topics by how they came up (bridge / lull), cold topic jumps.
+
+All numbers live in `kg/config.js`.
+
+**Acceptance:**
+- [ ] `npm test` green, with new planAct tests: warm-up, no timer, bridge, lull, gap, gate-checked dealbreaker only via a bridge, question-rate band, stall guard.
+- [ ] `api-check` and the client build green.
+- [ ] Live, on the 6-pair set (c1 c2 i1 i2 m1 m2), vs S1:
+  - question rate ≤ 0.55 and fewer back-to-back questions
+  - no agenda topic without a bridge or a lull
+  - judge accuracy not lower (5/6), fallbacks ≤ 7%, unsupported claims not higher
+  - two transcripts read by the owner as natural
+- **Trade-off:** fewer forced topics → the judges see less evidence. If accuracy drops, the fix is in the judge (e.g. "not discussed" → the report's "ask yourself"), not in forcing topics again.
 
 ## S4 — Accounts and trust basics
 1. **Email via Resend** (free plan; env `RESEND_API_KEY`, `EMAIL_FROM`; the owner creates the account). If the key is missing, the features hide themselves cleanly.

@@ -92,6 +92,11 @@ for (const r of Object.values(raw).filter((x) => x.run === 1)) {
     lenSd: [sd(texts.map((t) => wordsOf(t).length)), sd(real.map((t) => wordsOf(t).length))],
     disagreements: events.filter((e) => e.type === 'disagreement').length, resolved: events.filter((e) => e.type === 'disagreement_resolved').length,
     steered: agent.filter((m) => m.actPlan?.topic?.kind === 'agenda').length,
+    // Plan 30 SN (naturalness): how agenda topics came up (bridge / lull; untagged = pre-SN timer steering, a cold jump)
+    // and back-to-back questions (an agent asking again in its next message, the interview pattern).
+    bridged: agent.filter((m) => m.actPlan?.topic?.how === 'bridge').length, lulls: agent.filter((m) => m.actPlan?.topic?.how === 'lull').length,
+    cold: agent.filter((m) => m.actPlan?.topic?.kind === 'agenda' && !m.actPlan.topic.how).length,
+    backToBack: agent.filter((m, i) => m.text.includes('?') && agent.slice(0, i).reverse().find((x) => String(x.senderId) === String(m.senderId))?.text.includes('?')).length,
     fallbacks: agent.filter((m) => m.checks?.fallback === 'template').length, constrained: agent.filter((m) => m.checks?.fallback === 'constrained').length,
   });
 }
@@ -110,9 +115,10 @@ const md = [
   ...voiceRows.map((v) => `| ${v.pair} | ${v.name} | ${v.n} | ${f2(v.style)} | ${f2(v.lang)} | ${f2(v.cs)} | ${v.words.map((w) => w.toFixed(1)).join(' / ')} |`), '',
   '## Conversation stats', '',
   `- **Ask-back rate**: ${f2(mean(convRows.map((c) => c.askBack)))} · **distinct-2**: ${f2(mean(convRows.map((c) => c.distinct2)))} · **disagreements**: ${sum(convRows, 'disagreements')} (${sum(convRows, 'resolved')} resolved)`,
-  `- **Fallbacks**: ${sum(convRows, 'fallbacks')} template / ${sum(convRows, 'constrained')} constrained of ${sum(convRows, 'msgs')} agent messages`, '',
-  '| pair | expected → predicted | agent msgs | stop | ask-back | distinct-2 | length sd agent / real | disagreements | steered | fallbacks |', '|---|---|---|---|---|---|---|---|---|---|',
-  ...convRows.map((c) => `| ${c.pair} | ${c.expected} → ${c.predicted} | ${c.msgs} | ${c.stop ?? '—'} | ${f2(c.askBack)} | ${f2(c.distinct2)} | ${c.lenSd.map(f2).join(' / ')} | ${c.disagreements} (${c.resolved}) | ${c.steered} | ${c.fallbacks} + ${c.constrained} constrained |`), '',
+  `- **Fallbacks**: ${sum(convRows, 'fallbacks')} template / ${sum(convRows, 'constrained')} constrained of ${sum(convRows, 'msgs')} agent messages`,
+  `- **Naturalness** (plan 30 SN): agenda topics ${sum(convRows, 'steered')} = ${sum(convRows, 'bridged')} through a bridge + ${sum(convRows, 'lulls')} at a lull + ${sum(convRows, 'cold')} cold (timer); back-to-back questions ${sum(convRows, 'backToBack')} of ${sum(convRows, 'msgs')} agent messages`, '',
+  '| pair | expected → predicted | agent msgs | stop | ask-back | back-to-back ? | distinct-2 | length sd agent / real | disagreements | steered (bridge / lull / cold) | fallbacks |', '|---|---|---|---|---|---|---|---|---|---|---|',
+  ...convRows.map((c) => `| ${c.pair} | ${c.expected} → ${c.predicted} | ${c.msgs} | ${c.stop ?? '—'} | ${f2(c.askBack)} | ${c.backToBack} | ${f2(c.distinct2)} | ${c.lenSd.map(f2).join(' / ')} | ${c.disagreements} (${c.resolved}) | ${c.steered} (${c.bridged} / ${c.lulls} / ${c.cold}) | ${c.fallbacks} + ${c.constrained} constrained |`), '',
   '## Observer accuracy (my notes about them vs their own graph)', '',
   `- **Precision**: ${sum(obsRows, 'correct')}/${sum(obsRows, 'checkable')} checkable notes match their graph (same concept + polarity, or same attribute + value) = ${f2(sum(obsRows, 'correct') / (sum(obsRows, 'checkable') || 1))}`,
   `- **Recall**: ${sum(obsRows, 'caught')}/${sum(obsRows, 'mentioned')} of their facts they mentioned in chat were noted = ${f2(sum(obsRows, 'caught') / (sum(obsRows, 'mentioned') || 1))}`, '',

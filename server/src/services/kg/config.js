@@ -29,14 +29,19 @@ export const KG = Object.freeze({
   // Plan 30 S1: 12–14 messages, agenda-driven (dealbreaker topics first). Was 16 / 24: a 4-minute chat needs fewer turns.
   MAX_TURNS: 14, NATURAL_END_FROM: 12,
   EXTEND_TURNS: 8, // "Let them talk a bit longer" on a Maybe: at most this many more messages (plan 10 backend addition)
-  TOPIC_SHIFT: 0.25, STORY_RATE: 0.2, TEMP_RANGE: [0.7, 1.0],
-  STEER_AFTER_TURNS: 1, // my turns of warm-up before every-other-turn agenda steering
-  STEER_RETRY_PRIORITY: 0.7, // agenda items at least this important are steered to again until answered…
-  STEER_TRIES: 2, // …up to this many tries (eval i2: smoking was tried once, ignored by the model, never retried)
+  STORY_RATE: 0.2, TEMP_RANGE: [0.7, 1.0],
+  // Plan 30 SN (owner, 2026-10-19): agenda topics come up in the flow (a bridge in what was just said, or a lull),
+  // never on a timer. Replaces the every-other-turn steering, the near-end forcing and the must-ask direct questions.
+  WARMUP_TURNS: 2, // my first turns: no agenda topic, just get to know them
+  TOPIC_GAP_TURNS: 2, // at least this many of my turns between two new topics (agenda or story)
+  THREAD_TURNS: 4, // a thread this many of my turns old has had its run: moving on counts as a lull
+  LULL_WORDS: 6, // their reply shorter than this (and no question) is a lull
+  LULL_AGENDA_RATE: 0.6, // at a lull, an open agenda topic rather than one of my stories
+  TOPIC_TRIES: 2, // a topic raised but not answered can come up again, through a bridge only, up to this many times
   END_BLOCK_PRIORITY: 0.7, // no natural end while an agenda item this important is unanswered (owner's tuning spec)
-  ASK_EXPLICIT_PRIORITY: 0.9, // agenda items this important (and dealbreakers) need a direct question on their exact attribute before a natural end
-  NEAR_END_MESSAGES: 4, // this close to MAX_TURNS, an open important item is the topic every turn
-  ASK_BACK_FLOOR: 0.7, // min ask-back chance when I'm not bored (half that when they just asked me something)
+  ASK_BACK_FLOOR: 0.45, // min chance to end with a question when I'm not bored (was 0.7: every message became a question)
+  ASK_AFTER_ANSWER: 0.6, // they just answered my question: share or react more often than asking again
+  ASK_WHEN_ASKED: 0.6, // they asked me something: answer it; bounce a question back less often
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
   JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)

@@ -24,19 +24,12 @@ import { startConversationDoc } from '../pipeline/index.js';
 import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
-import { MIN_MESSAGES_FOR_NATURAL_END, openMustAsk, planAct } from './planAct.js';
+import { MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest answer (consent covers AI handling).
 export const AI_QUESTION = /\b(are|r)\s+(you|u)\s+(an?\s+)?(bot|ai|robot|real|human|chatgpt|gpt)\b|talking\s+to\s+(an?\s+)?(bot|ai|robot|machine|chatgpt|real\s+person|human)\b|\b(is\s+this|this\s+is)\s+(an?\s+)?(bot|ai|chatgpt|real\s+person|human)\b|\b(bot|chatgpt|automated)\b[^.!]*\?/i;
-// When every sentence of the best draft was dropped: a short, engaged question (on my planned topic when there is one),
-// never a filler line (eval: "haha fair 😄" repeated read as low effort to both judges).
-const TOPIC_QUESTIONS = {
-  smoking: 'do you smoke, by the way?', drinking: 'how do you feel about drinking?', 'wants children': 'do you see kids in your future?',
-  'looking for': "what are you hoping to find on here?", 'living in 3-5 years': 'where do you see yourself living in a few years?',
-  'family involvement in relationship decisions': 'how involved is your family in this stuff?', 'career ambition': 'how do you balance work and everything else?',
-  'conflict style': 'how do you usually handle disagreements?', 'alone time needed': 'how much alone time do you need?', diet: 'what do you usually eat, any rules?',
-};
 /**
  * RULES=off (plan 11 B4 ablation): a plain agent. No act plan (no sampled length, emoji, steering, disagreement or
  * language choice), no stance check (mustDisagree is never set), no exemplars, no interest meter; only MAX_TURNS ends
@@ -50,14 +43,19 @@ const plainPlan = (voice, msgCount) => {
 const constrainedWarning = (problems) => `every sentence of your drafts broke a rule (${problems.join(' ') || 'nothing could be sent'}). `
   + 'Write ONE short message (under 12 words) that reacts to what they just said: either one thing about yourself backed by a listed fact (cite it) '
   + "or honestly say you're not sure, then one short question about their message. No other claims about yourself or them, no goodbye.";
+// When every sentence of the best draft was dropped: a short, engaged follow-up on their message. Never a filler line
+// (eval: "haha fair 😄" repeated read as low effort) and never a form question on a topic (plan 30 SN: "do you smoke,
+// by the way?" read as an interview).
 const OPEN_QUESTIONS = ['haha tell me more?', 'oh nice, how did that start?', 'ha fair, what got you into that?'];
-const fallbackQuestion = (topic, rng) => (topic?.kind === 'agenda'
-  ? `haha ok, ${TOPIC_QUESTIONS[topic.text] ?? `are you into ${topic.text} at all?`}`
-  : OPEN_QUESTIONS[Math.floor(rng() * OPEN_QUESTIONS.length)]);
+const fallbackQuestion = (rng) => OPEN_QUESTIONS[Math.floor(rng() * OPEN_QUESTIONS.length)];
 const turnSeed = (seed, userId, turn) => (seed + parseInt(createHash('md5').update(`${userId}:${turn}`).digest('hex').slice(0, 8), 16)) >>> 0;
 
-/** Is my agenda settled enough for a natural end? Dealbreaker topics and everything with priority ≥ END_BLOCK_PRIORITY answered. */
-const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => a.dealbreaker || a.priority >= KG.END_BLOCK_PRIORITY).every((a) => a.status === 'answered');
+/**
+ * Is my agenda settled enough for a natural end? Everything with priority ≥ END_BLOCK_PRIORITY answered. A dealbreaker
+ * on a section-B attribute is already settled by the gate (plan 30 SN: it comes up only if the chat leads there).
+ */
+const gateChecked = (a) => a.dealbreaker && agendaAttribute(a);
+const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => !gateChecked(a) && (a.dealbreaker || a.priority >= KG.END_BLOCK_PRIORITY)).every((a) => a.status === 'answered');
 
 function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering }) {
   const text = draft.messages.join(' ');
@@ -116,12 +114,12 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // still forces the stance check / the ending through the one allowed regeneration.
   const merged = !opening && env.AGENT_TURN_MODE === 'merged';
   if (!opening && !merged) await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
-  if (merged) perception = { language: tagLanguageHeuristic(theirMsgs.map((m) => m.text).join('\n')), aboutMeQuestion: Boolean(questionToMe(theirMsgs.map((m) => m.text).join('\n'))) };
+  if (merged) perception = { language: tagLanguageHeuristic(theirMsgs.map((m) => m.text).join('\n')), aboutMeQuestion: Boolean(questionToMe(theirMsgs.map((m) => m.text).join('\n'))), isQuestion: theirMsgs.some((m) => m.text.includes('?')) };
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
   const stories = storyCandidates(persona, state.toldStoryIds);
   const plan = rulesOn
     ? planAct({ state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: agendaSettled(freshAgenda),
-      maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END })
+      maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast } })
     : plainPlan(persona.voice, history.length);
   plan.closingStyle = persona.voice.closingStyle ?? null;
   plan.opening = opening;
@@ -136,7 +134,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const o = brief.openers[Math.floor(rng() * brief.openers.length)];
     const leaks = leakCheck(sentencesOf(o.text), persona.privateFacts);
     if (!leaks.length) {
-      await save({ turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns });
+      await save({ turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns, lastAsked: o.text.includes('?') });
       return { messages: [o.text], actPlan: { ...plan, fromBrief: true }, checks: { leak: [] }, end: null, unknownAboutMe: null, usedFactIds: o.usedFactIds ?? [] };
     }
   }
@@ -174,7 +172,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || (agendaSettled(freshAgenda) && !openMustAsk(freshAgenda, state).length));
+  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || agendaSettled(freshAgenda));
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     let draft;
     if (merged && i === 0) {
@@ -236,7 +234,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   let fallback = 'none';
   if (!messages.length && !plan.end && !opening) {
     fallback = 'constrained';
-    const cPlan = { ...plan, targetWords: Math.min(plan.targetWords, 12), burst: 1, topic: null, askBack: true };
+    const cPlan = { ...plan, targetWords: Math.min(plan.targetWords, 12), burst: 1, topic: null, askBack: true, move: 'follow_up' };
     const draft = await generate({ prompt: { ...prompt, plan: cPlan }, tier, temperature: 0.4, userId: me, matchId: match._id, warning: constrainedWarning(best.problems) });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
@@ -249,7 +247,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
     const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(plan.topic, rng);
+    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(rng);
     messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
   // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
@@ -263,11 +261,12 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const told = plan.topic?.kind === 'story' ? [plan.topic.id] : [];
   await save({
     turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns,
+    lastAsked: messages.join(' ').includes('?'), // planAct: once they answer my question, share or react more often
     ...(plan.topic && { lastTopicTurn: state.turn }),
     topicsTouched: [...new Set([...(state.topicsTouched ?? []), ...(plan.topic ? [plan.topic.id] : []), ...(perception.topics ?? [])])],
     ...(plan.topic?.kind === 'agenda' && { topicTries: { ...(state.topicTries ?? {}), [plan.topic.id]: (state.topicTries?.[plan.topic.id] ?? 0) + 1 } }),
     toldStoryIds: [...(state.toldStoryIds ?? []), ...told],
-    // What my agent asked directly / they stated themselves, per section-B attribute (openMustAsk).
+    // What my agent asked / they stated themselves, per section-B attribute (replay and eval).
     askedAttrs: [...new Set([...(state.askedAttrs ?? []), ...attributesIn(messages.join(' '), { questions: true })])],
     heardAttrs: [...new Set([...(state.heardAttrs ?? []), ...theirMsgs.flatMap((m) => attributesIn(m.text, { questions: false }))])],
   });

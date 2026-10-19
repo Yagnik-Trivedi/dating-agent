@@ -1,9 +1,9 @@
 # Progress tracker
 
-The team's single status board. Claude Code updates it after every plan-30 step. **Since 2026-10-19 nothing is committed, not even locally, until the owner asks** (the work stays in the working tree). Nothing is pushed or deployed until the owner says "push" (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
+The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-19, by Claude Code (S2 + S3 done, uncommitted; next S4)
-- **Main-line branch:** `main` (local commits ahead of `origin/main`; **not pushed**, owner's rule 2026-10-18)
+- **Last updated:** 2026-10-19, by Claude Code (SN natural conversation: code done, live check pending `server/.env`; next S4)
+- **Main-line branch:** `main` (S0–S3 pushed 2026-10-19 on the owner's request; SN is a local commit, **not pushed**)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · ⬜ Not started · ✂️ Cut · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
@@ -17,15 +17,57 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | S0 | Browser bug (wake-up screen, CORS) + quick fixes (one-call signup, cities, copy, `smoke:browsers`) | ✅ | (this commit) | Results below. Render `CLIENT_URL` value for S7 noted. |
 | S1 | Speed (two-phase onboarding, agent pacing) | ✅ | (this commit) | Results below; first-message target missed on 429s (explained). |
 | S6 | New design (Round 7 Step 2, `Frontend-Design/07-prelude-step2/`; name stays Prelude) | 🔄 mostly done | local commits `2386bbf`…`ece864a` | Every screen ported on real data except the profile editor (comes with S3). Left: delete the old CSS/components once S3's profile screens land; S6.6 shared-element motion. |
-| S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ✅ | uncommitted | Results below. Photos (S3.1) built here because step 2 needs them. |
-| S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ✅ | uncommitted | Results below. **No `CLOUDINARY_*` keys in `.env`: the local stub is used** (files in `server/uploads/`, local only). |
+| S2 | New onboarding (short core, live check as a step, scam self-check, gating) | ✅ | `9438cd3`…`ec3421d` | Results below. Photos (S3.1) built here because step 2 needs them. |
+| S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ✅ | `f800607`…`458820d` | Results below. **No `CLOUDINARY_*` keys in `.env`: the local stub is used** (files in `server/uploads/`, local only). |
+| SN | Natural conversation (owner, 2026-10-19): topics come up in the flow, not on a timer | 🔄 code done | (this commit) | Results below. **Left: the live 6-pair check needs `server/.env` on this machine.** |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
-Local commits since the last push (`780d210`):
-- `7c4158b` fix(plan-19): CodeRabbit fixes: camera off on error, atomic result update, hide when disabled
-- `c769457` docs(plan): merge open work into 30-final-sprint, archive finished plans
+Local commits since the last push (`27e44eb`): SN (below).
+
+## SN results: natural conversation (2026-10-19) 🔄 code done, live check pending
+
+**Owner's problem:** agent chats read like an interview, with agents ticking off the points we want to check.
+
+**Causes found:**
+- `planAct` raised an agenda topic every other turn after 1 warm-up turn, and on every one of the last 4 messages.
+- `openMustAsk` forced a direct question on each dealbreaker and very important answer, although the gate already checked the dealbreakers.
+- `ASK_BACK_FLOOR` was 0.7.
+- The final instruction was always "react briefly, then ask…", and the fallbacks were form questions ("do you smoke, by the way?").
+
+**Built (`conversation/planAct.js`, `conversation/engine.js`, `prompts/agentReply.js`, `kg/config.js`):**
+- **Topics in the flow:** an agenda topic comes up only through a **bridge** or at a **lull**.
+  - A bridge: what was just said leads to it (`BRIDGES` word lists per attribute; topic words for interests and clarify topics; `bridgesTo()`).
+  - A lull: a short reply with no question, a thread `THREAD_TURNS` old, or low interest.
+  - Never in the first `WARMUP_TURNS` (2), never closer than `TOPIC_GAP_TURNS` (2), no timer, no near-end forcing.
+  - A tried topic comes back only through a bridge, up to `TOPIC_TRIES`.
+  - The prompt presents a topic as a suggestion the model may skip if it would sound abrupt.
+- **Gate-checked dealbreakers** come up only through a bridge. `openMustAsk` is removed, and they no longer block a natural end.
+- **Message moves** (`plan.move`), each with its own prompt line: answer, follow-up on their thread, share (no question), react (no question), topic.
+- **Question rate:**
+  - Floor 0.45; ×0.6 right after they answered my question, and ×0.6 when they asked me.
+  - Stall guard: nobody asked last time and their reply is short → ask.
+  - A topic message may always ask.
+- **Prompt:** a "HOW A GOOD CHAT FEELS" block (follow their thread, share before you ask, pick up details, no interview).
+- **Fallbacks:** follow-up questions only; the topic templates are gone.
+- **Metrics:** `scripts/eval/metrics.js` now reports agenda topics by bridge / lull / cold, and back-to-back questions.
+
+**Checks:**
+- `npm test` 128/128. The new planAct tests cover warm-up, no timer, bridge, gap, lull, the gate-checked dealbreaker only via a bridge, retries, `bridgesTo`, the question-rate band, the stall guard, moves and the natural end.
+- `api-check` all passed (local dev-db, LLM off). Client build green.
+- **Act plans on the same scripted 14-message chat, 50 seeds, HEAD vs SN:**
+
+| | HEAD | SN |
+|---|---|---|
+| Messages ending in a question | 0.75 | **0.57** |
+| Agenda topics per chat | 3.5 of 6 of my messages | **2.0 of 6** |
+| Gate-checked smoking dealbreaker asked cold | yes | never |
+
+**Left (needs `server/.env` + LLM):**
+- The live 6-pair run (c1 c2 i1 i2 m1 m2) + `metrics.js` vs S1: question rate ≤ 0.55, no cold topics, judge accuracy not below 5/6, fallbacks ≤ 7%, unsupported claims not higher.
+- Two transcripts for the owner to read.
+- Not run: `smoke:browsers`. No client change in SN, and it needs a seeded DB.
 
 ## S3 results: dating-app core (2026-10-19) ✅
 
