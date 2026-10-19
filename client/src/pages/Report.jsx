@@ -1,29 +1,38 @@
-// Verdict (owner's design: screens/Verdict.jsx), from MY judge's decision only — never the other side's.
-// Compatible and Not compatible follow the design; Maybe gets its own hopeful copy (plan 10) with "Let them talk a bit
-// longer". Every point quotes their words and links to the line. Date ideas (Tavily, scarce) only after Continue.
-import { useEffect, useMemo, useState } from 'react'
+// The verdict letter (Round 7 Step 2 design, Letters.jsx), from MY judge's decision only, never the other side's.
+// Compatible: what clicked + worth exploring · Maybe: what's promising + still unclear ("Let them talk a bit longer") ·
+// Not compatible: where you differ, kindly ("Talk anyway"). Every point quotes their words and links into the replay.
+// Motion: the card rises; the headline's underline draws and "What clicked" points stagger in (anime.js, lazy).
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Eye, Lock, MessageSquareText, X } from 'lucide-react'
-import { Btn, ICON, Reveal, Thumb, useMobile } from '../components/prelude'
+import { motion, useReducedMotion } from 'motion/react'
+import { ArrowRight, Check, CircleHelp, Flag, Hourglass, Lock, MessageCircleMore, X } from 'lucide-react'
+import { Avatar, Btn, Dots, IconBtn, Shimmer, StatusChip, TopNav, useDraw } from '../components/r7'
+import { useMobile } from '../components/prelude'
+import { useAuth } from '../hooks/useAuth'
 import { useMatch } from '../hooks/useMatch'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
 
+const CHIP = { compatible: 'compatible', maybe: 'maybe', incompatible: 'not' }
+
+function Wrap({ mobile, children }) {
+  if (mobile) return <div className="scr app-scr letterscr m">{children}</div>
+  return <div className="scr app-scr letterscr d"><TopNav /><div className="lt-page">{children}</div></div>
+}
+
 function DateIdeas({ matchId, icebreakers }) {
   const [state, setState] = useState({ loading: true })
   useEffect(() => {
-    api.get(`/api/matches/${matchId}/date-ideas`)
-      .then(({ data }) => setState(data))
+    api.get(`/api/matches/${matchId}/date-ideas`).then(({ data }) => setState(data))
       .catch((err) => setState({ error: err.response?.data?.error?.code === 'DATE_IDEAS_UNAVAILABLE' ? err.response.data.error.message : errMsg(err) }))
   }, [matchId])
   const breakers = state.icebreakers?.length ? state.icebreakers : icebreakers
   return (
     <>
-      {breakers?.length > 0 && <div className="v-sec"><h3 className="t-h3">Something to open with</h3><ul className="v-list">{breakers.map((t) => <li key={t}>{t}</li>)}</ul></div>}
-      <div className="v-sec"><h3 className="t-h3">Ideas for a first date</h3>
-        {state.loading ? <div className="sk sk-l" /> : state.error ? <p className="small">{state.error}</p>
-          : <ul className="v-list">{state.ideas.map((i) => <li key={i.link}><a className="text-link" href={i.link} target="_blank" rel="noreferrer">{i.title}</a>{i.why && <span className="small"> · {i.why}</span>}</li>)}</ul>}
-      </div>
+      {breakers?.length > 0 && <><h2 className="lt-sec">Something to open with</h2><ul className="explore">{breakers.map((t) => <li key={t}>{t}</li>)}</ul></>}
+      <h2 className="lt-sec">Ideas for a first date</h2>
+      {state.loading ? <Shimmer w="70%" /> : state.error ? <p className="small">{state.error}</p>
+        : <ul className="explore">{state.ideas.map((i) => <li key={i.link}><a className="link" href={i.link} target="_blank" rel="noreferrer">{i.title}</a>{i.why && <span className="small"> · {i.why}</span>}</li>)}</ul>}
     </>
   )
 }
@@ -31,40 +40,51 @@ function DateIdeas({ matchId, icebreakers }) {
 export default function Report() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const mobile = useMobile(1100)
+  const mobile = useMobile()
+  const rm = useReducedMotion()
   const toast = useToast()
+  const { user, profile } = useAuth()
   const { match, messages, decide, extend } = useMatch(id)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(null)
+  const head = useRef(null), list = useRef(null)
 
   const load = () => { setError(null); return api.get(`/api/matches/${id}/report`).then(({ data: d }) => setData(d)).catch((err) => setError(errMsg(err))) }
-  useEffect(() => { load() }, [id, match?.status]) // eslint-disable-line react-hooks/exhaustive-deps -- a waiting read reloads when the judges finish
+  useEffect(() => { load() }, [id, match?.status]) // eslint-disable-line react-hooks/exhaustive-deps -- a waiting letter reloads when the judges finish
   const lineOf = useMemo(() => new Map(messages.map((m, i) => [String(m._id), i + 1])), [messages])
-
   const report = data?.report
-  if (error) return <div className="scr state err"><div className="st-center"><h2 className="t-h2">We couldn’t load your agent’s read</h2><p className="t-body muted">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div></div>
-  if (!data || !match) return <Loading mobile={mobile} />
-  if (['flagged_fake', 'closed'].includes(data.status) && !report) return (
-    <div className={`scr verdict ${mobile ? 'm' : 'd'}`}><Reveal className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : 620 }}>
-      <p className="v-eyebrow flag"><Eye size={15} strokeWidth={1.7} aria-hidden="true" />Your agent’s read · only you can see this</p>
-      <h1 className="t-h1">{data.status === 'flagged_fake' ? 'Your agent thinks this profile is fake.' : 'This conversation is closed.'}</h1>
-      <p className="v-sub">{data.status === 'flagged_fake' ? (match.trust?.flags ?? []).join(' · ') || 'It stopped talking and nothing more will be sent.' : 'Nothing more will be sent.'}</p>
-      <div className="v-actions"><Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Back to matches</Btn></div>
-    </div></Reveal></div>
-  )
-  if (!report) return <Loading mobile={mobile} waiting />
+  const verdict = report?.verdict
+  useDraw(head, { duration: 600, delay: 450, ease: 'outQuad', deps: [verdict] }) // hand-drawn underline
+  useEffect(() => { // "What clicked" points 60 ms apart
+    if (rm || !list.current) return
+    const items = list.current.querySelectorAll(':scope > li'); if (!items.length) return
+    let a, alive = true
+    import('animejs').then(({ animate, stagger }) => { if (alive) a = animate(items, { opacity: [0, 1], translateY: [8, 0], duration: 250, delay: stagger(60, { start: 600 }), ease: 'outQuad' }) })
+    return () => { alive = false; a?.revert?.() }
+  }, [rm, verdict])
 
+  const me = { ...(profile ?? {}), userId: user?._id }
+  const pair = match && <div className="lt-pair"><Avatar p={me} size={44} ring /><Avatar p={match.other} src={match.other.photo ?? undefined} size={44} ring /></div>
+  const close = mobile && <IconBtn icon={X} label="Close" onClick={() => navigate(`/matches/${id}`)} />
+
+  if (error) return <Wrap mobile={mobile}><article className="letter card"><div className="lt-body"><h1 className="lt-h">We couldn’t load your letter</h1><p className="lt-sub">{error}</p><Btn kind="secondary" onClick={load}>Try again</Btn></div></article></Wrap>
+  if (!data || !match || (!report && !['flagged_fake', 'closed'].includes(data.status))) return (
+    <Wrap mobile={mobile}><article className="letter card" aria-busy="true"><div className="lt-top">{pair}{close}</div>
+      <div className="lt-body"><p className="lt-writing"><Dots /> Your agent is writing your letter</p><Shimmer w="80%" /><Shimmer w="60%" /><div className="sk-gap" /><Shimmer w="90%" /><Shimmer w="70%" /><Shimmer w="85%" /><p className="small">Usually under a minute. We’ll let you know if you leave.</p></div></article></Wrap>
+  )
   const them = match.other.name
+  if (!report) return ( // flagged or closed with no letter
+    <Wrap mobile={mobile}><article className="letter card"><div className="lt-top">{pair}<StatusChip s={data.status === 'flagged_fake' ? 'flagged' : 'closed'} /><span className="private"><Lock size={14} strokeWidth={1.9} aria-hidden="true" />Private · only you see this</span>{close}</div>
+      <div className="lt-body"><h1 className="lt-h">{data.status === 'flagged_fake' ? `Your agent thinks ${them}’s profile is fake.` : 'This conversation is closed.'}</h1>
+        <p className="lt-sub">{data.status === 'flagged_fake' ? 'It stopped talking, and nothing more will be sent.' : 'Nothing more will be sent.'}</p>
+        {data.status === 'flagged_fake' && (match.trust?.flags ?? []).length > 0 && <ul className="explore">{match.trust.flags.map((f) => <li key={f}><Flag size={16} strokeWidth={1.8} aria-hidden="true" /> {f}</li>)}</ul>}
+      </div>
+      <footer className="lt-foot"><div className="lt-act"><Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Back to matches</Btn></div></footer></article></Wrap>
+  )
+
   const decided = match.decision
   const handedOff = match.status === 'handed_off'
-  const verdict = report.verdict
-  const item = (x, k) => {
-    const line = x.messageIds?.map((mid) => lineOf.get(String(mid))).find(Boolean)
-    return <div className="v-item" key={k}><p>{x.text}</p>{x.quote && <blockquote>“{x.quote}”{line && <Link className="lref" to={`/matches/${id}#line-${line}`}>line {line}</Link>}</blockquote>}</div>
-  }
-  const quoted = report.concerns.filter((c) => c.quote)
-  const unknown = report.concerns.filter((c) => !c.quote)
   const run = (name, fn, after) => async () => {
     setBusy(name)
     try { const m = await fn(); after?.(m) } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(null) }
@@ -73,78 +93,69 @@ export default function Report() {
   const pass = run('pass', () => decide('pass'), () => { toast('Passed, kindly. Your agent said goodbye for you.'); navigate('/matches') })
   const more = run('extend', extend, () => { toast('Your agents will talk a bit longer'); navigate(`/matches/${id}`) })
 
-  const head = {
-    compatible: [`You and ${them} seem to get along.`, 'Here’s why, in their own words.'],
-    maybe: [`You and ${them} might get along.`, 'Some things clicked, and a few are still unclear. That’s normal this early.'],
-    incompatible: [`You and ${them} want different things, and that’s okay.`, 'Nothing went wrong here. You were both honest, which is exactly the point.'],
+  const Ev = ({ x, tone }) => {
+    const line = x.messageIds?.map((mid) => lineOf.get(String(mid))).find(Boolean)
+    return x.quote && <figure className={`evq ${tone ?? ''}`}><blockquote>“{x.quote}”</blockquote><figcaption>{them}{line ? ` · message ${line}` : ''}<Link className="link" to={`/matches/${id}/replay`}>See in replay <ArrowRight size={14} strokeWidth={1.9} aria-hidden="true" /></Link></figcaption></figure>
+  }
+  const quoted = report.concerns.filter((c) => c.quote)
+  const unknown = report.concerns.filter((c) => !c.quote)
+  const mins = messages.length > 1 ? Math.max(1, Math.round((new Date(messages.at(-1).createdAt) - new Date(messages[0].createdAt)) / 60000)) : null
+  const H = {
+    compatible: [`You and ${them} seem compatible.`, `From your agent, after their first conversation: ${messages.length} messages${mins && mins < 120 ? ` over ${mins} minute${mins === 1 ? '' : 's'}` : ''}.`],
+    maybe: [`There’s something here with ${them}. It needs a little longer.`, 'Your agents stopped before every question that matters to you. Here’s what’s promising, and what’s still open.'],
+    incompatible: [`You and ${them} want different things, and that’s okay.`, 'Nothing went wrong. You were both honest, which is the point.'],
   }[verdict]
 
   const actions = verdict === 'incompatible' ? (
-    <>
-      <Btn size="lg" block={mobile} onClick={() => navigate('/matches')}>Okay, thank you</Btn>
-      {!decided && <Btn kind="secondary" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Talk anyway</Btn>}
-      <Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the chat</Link>
-    </>
+    <><Btn kind="secondary" size="lg" block={mobile} onClick={() => navigate('/matches')}>Okay, thank you</Btn>
+      {!decided && <Btn kind="ghost" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Talk anyway</Btn>}
+      {!mobile && <Link className="link push" to={`/matches/${id}/replay`}>View the transcript</Link>}</>
   ) : decided || handedOff ? (
-    <><Btn size="lg" block={mobile} onClick={() => navigate(`/matches/${id}`)}>{handedOff ? `Chat with ${them}` : 'Back to the chat'}</Btn><Link className={`text-link ${mobile ? 'center' : 'push'}`} to={`/matches/${id}/replay`}>Read the whole chat</Link></>
+    <><Btn size="lg" block={mobile} onClick={() => navigate(`/matches/${id}`)}>{handedOff ? `Chat with ${them}` : 'Back to the chat'}</Btn>{!mobile && <Link className="link push" to={`/matches/${id}/replay`}>Read the full conversation</Link>}</>
   ) : verdict === 'maybe' ? (
-    <>
-      <Btn size="lg" block={mobile} onClick={more} loading={busy === 'extend'}>Let them talk a bit longer</Btn>
+    <><Btn size="lg" block={mobile} icon={MessageCircleMore} onClick={more} loading={busy === 'extend'}>Let them talk a bit longer</Btn>
       <Btn kind="secondary" size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>I’ll take it from here</Btn>
-      <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn>
-    </>
+      <Btn kind="ghost" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn></>
   ) : (
-    <>
-      <Btn size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Continue as myself</Btn>
-      <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass, kindly</Btn>
-      {!mobile && <Link className="text-link push" to={`/matches/${id}/replay`}>Read the whole chat</Link>}
-    </>
+    <><Btn size="lg" block={mobile} onClick={cont} loading={busy === 'continue'}>Continue as myself</Btn>
+      <Btn kind="secondary" size="lg" block={mobile} onClick={pass} loading={busy === 'pass'}>Pass</Btn>
+      {!mobile && <Link className="link push" to={`/matches/${id}/replay`}>Read the full conversation</Link>}</>
   )
 
   return (
-    <div className={`scr verdict ${mobile ? 'm' : 'd'}`}>
-      {mobile && <header className="v-top"><button className="icon-btn" aria-label="Close" onClick={() => navigate(`/matches/${id}`)}><X {...ICON} /></button><span>Your agent’s read</span><span style={{ width: 44 }} /></header>}
-      <Reveal className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : verdict === 'incompatible' ? 620 : 920 }}>
-        <div className="v-scroll">
-          <div className="v-who"><Thumb src={match.other.photo} name={them} size={40} clear={handedOff} /><div><b>{[them, match.other.age].filter(Boolean).join(', ')}</b><span>{match.other.city}</span></div></div>
-          <Reveal i={0}><p className="v-eyebrow"><Eye size={15} strokeWidth={1.7} aria-hidden="true" />Your agent’s read · only you can see this</p>
-            <h1 className="t-h1">{head[0]}</h1><p className="v-sub">{report.summary || head[1]}</p></Reveal>
-          {verdict === 'incompatible' ? (
-            <>
-              <Reveal i={1} className="v-sec"><h3 className="t-h3">Where you differ</h3>
-                {[...quoted, ...report.dealbreakerRisk.filter((d) => d.quote && !quoted.some((c) => c.quote === d.quote)).map((d) => ({ text: `Something that matters a lot to you: ${d.attribute.replace(/_/g, ' ')}.`, quote: d.quote }))].map(item)}</Reveal>
-              <Reveal i={2}><p className="v-signoff">We won’t show you {them} again unless you ask. Your agent learned a little more about what matters to you. Thank you for being open.</p></Reveal>
-            </>
-          ) : (
-            <div className="v-cols">
-              <Reveal i={1} className="v-sec clicked"><h3 className="t-h3">{verdict === 'maybe' ? 'What’s promising' : 'What clicked'}</h3>{report.reasons.length ? report.reasons.map(item) : <p className="small">Nothing stood out yet.</p>}</Reveal>
-              <div>
-                {quoted.length > 0 && <Reveal i={2} className="v-sec explore"><h3 className="t-h3">{verdict === 'maybe' ? 'Still unclear' : 'Worth talking about'}</h3>{quoted.map(item)}</Reveal>}
-                {unknown.length > 0 && <Reveal i={3} className="v-sec"><h3 className="t-h3">Not known yet</h3><ul className="v-list">{unknown.map((u) => <li key={u.text}>{u.text}</li>)}</ul></Reveal>}
-                {(decided === 'continue' || handedOff)
-                  ? <Reveal i={4}><DateIdeas matchId={id} icebreakers={report.icebreakers} /></Reveal>
-                  : report.icebreakers?.length > 0 && <Reveal i={4} className="v-sec"><h3 className="t-h3">If you both say yes</h3><ul className="v-list">{report.icebreakers.map((t) => <li key={t}>{t}</li>)}</ul></Reveal>}
-              </div>
-            </div>
-          )}
+    <Wrap mobile={mobile}>
+      <motion.article className={`letter card lv-${CHIP[verdict]}`} aria-labelledby="lt-h" initial={rm ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.2, 0.7, 0.2, 1] }}>
+        <div className="lt-top">{pair}<StatusChip s={CHIP[verdict]} /><span className="private"><Lock size={14} strokeWidth={1.9} aria-hidden="true" />Private · only you see this</span>{close}</div>
+        <div className="lt-body">
+          <div className="lt-hw" ref={head}>
+            <h1 className="lt-h" id="lt-h">{H[0]}</h1>
+            {verdict === 'compatible' && <svg className="lt-ul" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path data-draw d="M3 9 C 60 3, 120 12, 180 6 S 270 4, 297 8" /></svg>}
+          </div>
+          <p className="lt-sub">{report.summary || H[1]}</p>
+          {verdict === 'compatible' && <>
+            <h2 className="lt-sec">What clicked</h2>
+            <ol className="clicked" ref={list}>{report.reasons.map((c, k) => <li key={k}><p className="ck-t"><Check size={18} strokeWidth={2} aria-hidden="true" />{c.text}</p><Ev x={c} /></li>)}</ol>
+            {quoted.length > 0 && <><h2 className="lt-sec">Worth exploring</h2><ul className="explore">{quoted.map((c, k) => <li key={k}>{c.text}</li>)}</ul></>}
+          </>}
+          {verdict === 'maybe' && <>
+            <h2 className="lt-sec">What’s promising</h2>
+            {report.reasons.length ? <ol className="clicked" ref={list}>{report.reasons.map((c, k) => <li key={k}><p className="ck-t"><Check size={18} strokeWidth={2} aria-hidden="true" />{c.text}</p><Ev x={c} tone="ochre" /></li>)}</ol> : <p className="small">Nothing stood out yet, which is normal this early.</p>}
+            {(quoted.length > 0 || unknown.length > 0) && <><h2 className="lt-sec">Still unclear</h2><ul className="explore q">{[...quoted, ...unknown].map((x, k) => <li key={k}><CircleHelp size={17} strokeWidth={1.8} aria-hidden="true" />{x.text}</li>)}</ul></>}
+            <p className="why-stop"><Hourglass size={16} strokeWidth={1.8} aria-hidden="true" />Your agent needs a few more answers before it can say more.</p>
+          </>}
+          {verdict === 'incompatible' && <>
+            <h2 className="lt-sec">Where you differ</h2>
+            <ol className="clicked" ref={list}>{[...quoted, ...report.dealbreakerRisk.filter((d) => d.quote && !quoted.some((c) => c.quote === d.quote)).map((d) => ({ text: `Something that matters a lot to you: ${d.attribute.replace(/_/g, ' ')}.`, quote: d.quote }))].map((c, k) => <li key={k}><p className="ck-t plain">{c.text}</p><Ev x={c} tone="grey" /></li>)}</ol>
+            <p className="kind">We won’t show you {them} again unless you ask. Your agent learned a little more about what matters to you.</p>
+          </>}
+          {verdict !== 'incompatible' && ((decided === 'continue' || handedOff) ? <DateIdeas matchId={id} icebreakers={report.icebreakers} />
+            : report.icebreakers?.length > 0 && <><h2 className="lt-sec">If you both say yes</h2><ul className="explore">{report.icebreakers.map((t) => <li key={t}>{t}</li>)}</ul></>)}
         </div>
-        {mobile && verdict !== 'incompatible' && !handedOff && <p className="v-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />{them}’s agent decides for {them} separately. Nothing is shared until you both say yes.</p>}
-        <Reveal i={5} className="v-actions">{actions}</Reveal>
-        {!mobile && verdict !== 'incompatible' && !handedOff && <p className="v-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />{them}’s agent decides for {them} separately. Nothing is shared until you both say yes.</p>}
-      </div></Reveal>
-    </div>
-  )
-}
-
-/** The design's loading state: a soft skeleton while the read is written. */
-function Loading({ mobile, waiting }) {
-  return (
-    <div className={`scr verdict ${mobile ? 'm' : 'd'} state`}>
-      <div className="v-card"><div className="v-inner" style={{ width: mobile ? 'auto' : 620 }}><div className="st-body" aria-busy="true">
-        <p className="small muted"><MessageSquareText size={14} strokeWidth={1.7} aria-hidden="true" /> {waiting ? 'Your agent is writing its read. This usually takes under a minute.' : 'Loading…'}</p>
-        <div className="sk sk-t" /><div className="sk sk-t2" />
-        {[0, 1, 2].map((i) => <div key={i} className="sk-item"><div className="sk sk-l" /><div className="sk sk-s" /></div>)}
-      </div></div></div>
-    </div>
+        <footer className="lt-foot">
+          <div className="lt-act">{actions}</div>
+          {!handedOff && <p className="lt-note small">{verdict === 'maybe' ? 'Up to 6 more messages, only about the open questions. ' : ''}{them} gets their own letter. Nothing changes unless you both choose to continue.</p>}
+        </footer>
+      </motion.article>
+    </Wrap>
   )
 }
