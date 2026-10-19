@@ -19,11 +19,15 @@ const matchSchema = new mongoose.Schema({
     pausedAt: Date, // Pause (owner, plan 10): agent off for now, Resume turns it back on; Take over is for good
     decision: { type: String, enum: ['continue', 'pass', null], default: null },
     lastReadAt: Date,
+    // Plan 30 S3.6: 'agents' = let the agents break the ice, 'self' = chat myself now. Default from agent mode (off → self).
+    // Either side picking 'self' makes it a normal human chat.
+    choice: { type: String, enum: ['agents', 'self'] },
     _id: false,
   }],
   trust: Mixed, // { [userId]: { score, level, flags[] } } (plan 06)
   brief: Mixed, // { [userId]: { summary, agenda[], openers[], watchouts[] } } (plan 07): nothing about the other user is stored as facts
-  closedReason: { type: String, enum: ['gate', null], default: null }, // 'gate': failed the match-time dealbreaker re-check (no detail)
+  // 'gate': failed the match-time dealbreaker re-check (no detail); 'unmatched' / 'blocked' (plan 30 S3.8): hidden from both
+  closedReason: { type: String, enum: ['gate', 'unmatched', 'blocked', null], default: null },
   agentState: Mixed, // { turnCount, lastAgentAt, stopReason, runningLock } (plan 08); startsAt when 'scheduled' (plan 12 credit guard); frozen: judge demo match paused until opened
   lastMessageAt: Date,
 }, { timestamps: true, versionKey: false });
