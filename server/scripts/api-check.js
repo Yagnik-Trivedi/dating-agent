@@ -70,6 +70,17 @@ r = await call('PUT', '/profile', { token: B.token, body: { age: 16 } });
 assert.equal(r.status, 400);
 ok('profile update; age < 18 rejected');
 
+// Plan 30 S2: with the live check on, a new account is browse_only (hidden from others) until it passes.
+await mongoose.connect(process.env.MONGODB_URI);
+const db = mongoose.connection.db;
+const ids = [A, B, C].map((x) => new mongoose.Types.ObjectId(x.id));
+if ((await call('GET', '/me', { token: A.token })).body.profile.status === 'browse_only') {
+  r = await call('GET', '/discover', { token: A.token });
+  assert.ok(!r.body.profiles.some((p) => p.userId === B.id));
+  ok('new accounts are browse_only: not shown to others before the live check');
+  await db.collection('profiles').updateMany({ userId: { $in: ids } }, { $set: { status: 'active', liveChecked: true } }); // stands in for a passed live check
+}
+
 r = await call('GET', '/discover', { token: A.token });
 const bobCard = r.body.profiles.find((p) => p.userId === B.id);
 assert.ok(bobCard); assert.ok(!r.body.profiles.some((p) => p.userId === A.id));
@@ -189,8 +200,6 @@ await waitFor(sA, 'match:status', (p) => p.status === 'closed');
 r = await call('GET', '/me', { token: B.token });
 assert.equal(r.status, 401);
 
-await mongoose.connect(process.env.MONGODB_URI);
-const db = mongoose.connection.db;
 const learned = await db.collection('voicesamples').find({ userId: new mongoose.Types.ObjectId(A.id), source: 'own_chat' }).toArray();
 assert.deepEqual(learned.map((x) => x.text), ['haha that sounds fun, sunday works for me'], 'one own_chat sample; none once turned off');
 assert.equal(learned[0].incoming, null, "the other person's message is never stored in my voice data");

@@ -3,6 +3,8 @@
 // (the seed likes back), then the agents chat to a verdict (match → first agent message, whole chat).
 //   node scripts/speed-check.js [baseUrl] [city]   → prints the timings + the user/match ids for speed-report.js
 // The test user is kept so speed-report.js can read its Usage; it's a throwaway @check.test account on the local DB.
+import 'dotenv/config';
+import { activateForCheck } from './lib/activate.js';
 import { answers } from './lib/kiran.js';
 
 const BASE = process.argv[2] ?? 'http://localhost:5000';
@@ -18,6 +20,7 @@ const until = async (fn, { every = 1000, max = 15 * 60_000 } = {}) => { const t 
 const { body: signup } = await call('POST', '/auth/signup', { body: { name: 'Kiran', email: `kiran-speed-${Date.now().toString(36)}@check.test`, password: 'password123', consentAgent: true, dob: '1997-08-09', gender: 'man', interestedIn: ['woman'], city: CITY } });
 const token = signup.token;
 if (!token) throw new Error(`signup failed: ${JSON.stringify(signup)}`);
+await activateForCheck(signup.user._id);
 await call('PUT', '/profile', { token, body: { bio: 'Weekend trekker, weekday coder.', tags: { interests: ['trekking', 'cooking'] } } });
 
 const t0 = Date.now();
