@@ -1,111 +1,68 @@
-// Settings (Prelude design language): agent mode, Learn from my chats, appearance (light / lamplight), profile, delete.
+// Settings (Round 7 Step 2 design, System.jsx Settings): agent mode, Learn from my chats, live check, profile,
+// account and delete. Only settings that really exist are shown.
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Lock } from 'lucide-react'
-import { Btn } from '../components/prelude'
-import { ErrorBox, Modal } from '../components/ui'
+import { ChevronRight, Inbox, Lock, LogOut, Trash2 } from 'lucide-react'
+import { Btn, LiveBadge, Seg, Sheet, Shell, Toggle } from '../components/r7'
+import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
 import { disconnectSocket } from '../lib/socket'
 
 const MODES = {
-  off: ['Off', 'You handle every conversation yourself. Your agent never sends a message.'],
-  shadow: ['Watch along', 'Your agent has the first conversation while you can read every line, pause it, or take over in one tap.'],
-  auto: ['Quietly', 'Your agent has the first conversations on its own and only brings you the matches worth your time.'],
+  off: 'Your agent never talks to anyone. You chat yourself, always.',
+  shadow: 'After a mutual like, your agent has the first conversation while you read along. Pause it or take over any time.',
+  auto: 'Your agent has the first conversations on its own and brings you a private letter for each one.',
 }
-
+const day = (d) => new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function Settings() {
+  const mobile = useMobile()
   const { user, setUser, logout, system } = useAuth()
   const toast = useToast()
   const [saving, setSaving] = useState(null)
   const [confirm, setConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
 
   async function save(patch, done) {
     setSaving(Object.keys(patch)[0])
-    try {
-      const { data } = await api.put('/api/me/settings', patch)
-      setUser(data.user)
-      toast(done)
-    } catch (err) {
-      toast(errMsg(err), { tone: 'bad' })
-    } finally {
-      setSaving(null)
-    }
+    try { const { data } = await api.put('/api/me/settings', patch); setUser(data.user); toast(done) } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setSaving(null) }
   }
-
   async function deleteAccount() {
     setDeleting(true)
-    setDeleteError(null)
-    try {
-      await api.delete('/api/me')
-      disconnectSocket()
-      logout()
-    } catch (err) {
-      setDeleteError(errMsg(err))
-      setDeleting(false)
-    }
+    try { await api.delete('/api/me'); disconnectSocket(); logout() } catch (err) { toast(errMsg(err), { tone: 'bad' }); setDeleting(false) }
   }
 
   const learn = user.settings?.learnFromChats !== false
-  return (
-    <div className="page settings">
-      <header className="page-head"><div><h1 className="t-h1">Settings</h1><p>How your agent works for you. You can change any of this at any time.</p></div></header>
-
-      <section className="card set-sec">
-        <h2 className="t-h3">Your agent</h2>
-        <div className="set-modes" role="radiogroup" aria-label="Agent mode">
-          {Object.entries(MODES).map(([mode, [label, help]]) => (
-            <button key={mode} role="radio" aria-checked={user.agentMode === mode} className={`opt ${user.agentMode === mode ? 'on' : ''}`} onClick={() => save({ agentMode: mode }, `Your agent: ${label.toLowerCase()}`)} disabled={Boolean(saving)}>
-              <span><b>{label}</b><em>{help}</em></span>
-            </button>
-          ))}
-        </div>
+  const live = user.liveCheck?.status
+  const body = (
+    <div className="settings">
+      <section className="set-sec card"><h2 className="h3">Your agent</h2>
+        <div className="set-row col"><b>Agent mode</b><Seg label="Agent mode" value={user.agentMode} onChange={(m) => m !== user.agentMode && !saving && save({ agentMode: m }, m === 'off' ? 'Your agent is off. You’ll chat yourself.' : 'Saved. Your agent will handle the first conversations.')} items={[['off', 'Off'], ['shadow', 'Shadow'], ['auto', 'Auto']]} /><p className="small">{MODES[user.agentMode]}</p></div>
+        <div className="set-row"><div><b>Learn from my chats</b><span className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</span></div>
+          <Toggle on={learn} label="Learn from my chats" disabled={Boolean(saving)} onChange={(v) => save({ learnFromChats: v }, v ? 'Your agent will learn from your chats' : 'Your agent won’t learn from your chats')} /></div>
+        <Link to="/inbox" className="set-row link-row"><div><b>Ask my human</b><span className="small">Questions your agent asked instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
       </section>
-
-      <section className="card set-sec">
-        <div className="set-row">
-          <div><h2 className="t-h3">Learn from my chats</h2><p className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</p></div>
-          <button role="switch" aria-checked={learn} className={`switch ${learn ? 'on' : ''}`} onClick={() => save({ learnFromChats: !learn }, learn ? 'Your agent won’t learn from your chats' : 'Your agent will learn from your chats')} disabled={Boolean(saving)}>
-            <span className="sr-only">Learn from my chats</span><i aria-hidden="true" />
-          </button>
-        </div>
+      <section className="set-sec card"><h2 className="h3">Privacy and trust</h2>
+        <Link to="/you" className="set-row link-row"><div><b>What your agent knows</b><span className="small">Make any fact public, only-if-asked or private in “This is you”.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
+        {system.liveCheckEnabled !== false && (
+          <div className="set-row"><div><b>Live check</b><span className="small">{live === 'passed' ? `Passed on ${day(user.liveCheck.checkedAt)}. Your profile shows “Live-checked”.` : live === 'failed' ? 'Not passed yet. It’s optional.' : 'Two quick moves on camera show you’re a real person. Optional.'}</span></div>
+            {live === 'passed' ? <LiveBadge /> : <Link className="btn secondary sm" to="/live-check">{live === 'failed' ? 'Try again' : 'Do the live check'}</Link>}</div>
+        )}
       </section>
-
-      {system.liveCheckEnabled !== false && (<section className="card set-sec">
-        <div className="set-row">
-          <div><h2 className="t-h3">Live check</h2><p className="small">{user.liveCheck?.status === 'passed' ? `Passed on ${new Date(user.liveCheck.checkedAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}. Your profile shows “Live-checked”.` : user.liveCheck?.status === 'failed' ? 'Not passed yet. It’s optional.' : 'Not done. Two quick moves on camera show you’re a real person. Optional.'}</p></div>
-          <Link className="btn secondary" to="/live-check">{user.liveCheck?.status === 'passed' ? 'Check again' : user.liveCheck?.status === 'failed' ? 'Try again' : 'Do the live check'}</Link>
-        </div>
-      </section>)}
-
-      <section className="card set-sec">
-        <div className="set-row">
-          <div><h2 className="t-h3">Your profile</h2><p className="small">Photos, bio, prompts and who you’d like to meet. What your agent knows about you lives in <Link className="text-link" to="/you">This is you</Link>.</p></div>
-          <Link className="btn secondary" to="/profile">Edit profile</Link>
-        </div>
+      <section className="set-sec card"><h2 className="h3">Account</h2>
+        <Link to="/profile" className="set-row link-row"><div><b>Edit profile</b><span className="small">Photos, prompts and who you’d like to meet.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
+        <div className="set-row"><div><b>Signed in</b><span className="small">{user.email}</span></div><Btn kind="secondary" size="sm" icon={LogOut} onClick={() => { disconnectSocket(); logout() }}>Log out</Btn></div>
+        <div className="set-row"><div><b>Delete account</b><span className="small">Removes your profile, photos, chats and everything your agent knows. This can’t be undone.</span></div><Btn kind="danger" size="sm" icon={Trash2} onClick={() => setConfirm(true)}>Delete</Btn></div>
       </section>
-
-      <section className="card set-sec">
-        <div className="set-row">
-          <div><h2 className="t-h3">Account</h2><p className="small">Signed in as {user.email}.</p></div>
-          <Btn kind="secondary" onClick={() => { disconnectSocket(); logout() }}>Log out</Btn>
-        </div>
-        <div className="set-row danger-row">
-          <div><h3 className="t-h3">Delete my account</h3><p className="small">Removes your profile, everything your agent knows about you, and your messages. It can’t be undone.</p></div>
-          <Btn kind="secondary" onClick={() => setConfirm(true)}>Delete…</Btn>
-        </div>
-      </section>
-      <p className="privacy-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" />Early conversations with your matches may be handled by AI agents, including yours. You agreed to this when you signed up.</p>
-
-      <Modal open={confirm} onClose={() => setConfirm(false)} title="Delete your account?">
-        <p className="t-body">Your profile, everything your agent knows about you and your messages will be removed. Chats you already continued yourself stay with the other person. This can’t be undone.</p>
-        {deleteError && <ErrorBox message={deleteError} />}
-        <div className="v-actions" style={{ borderTop: 0, paddingTop: 4 }}><Btn kind="secondary" onClick={() => setConfirm(false)}>Keep my account</Btn><button className="btn primary danger" onClick={deleteAccount} disabled={deleting}>Delete forever</button></div>
-      </Modal>
+      <p className="small set-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" /> Early conversations with your matches may be handled by AI agents, including yours. You agreed to this when you signed up.</p>
+      <Sheet open={confirm} title="Delete your account?" onClose={() => setConfirm(false)}
+        footer={<><Btn kind="secondary" onClick={() => setConfirm(false)}>Keep my account</Btn><Btn kind="danger" icon={Trash2} loading={deleting} onClick={deleteAccount}>Delete forever</Btn></>}>
+        <p className="small">Your profile, everything your agent knows about you and your messages will be removed. Chats you already continued yourself stay with the other person. This can’t be undone.</p>
+      </Sheet>
     </div>
   )
+  if (mobile) return <Shell title="Settings" back><div className="pad">{body}</div></Shell>
+  return <Shell><div className="page narrow"><h1 className="h1">Settings</h1>{body}</div></Shell>
 }
