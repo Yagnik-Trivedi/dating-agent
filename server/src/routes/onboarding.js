@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { answersSchema } from '../services/kg/answers.js';
+import { answersSchema, moreSchema } from '../services/kg/answers.js';
 import { buildUserGraph, startUserGraphBuild } from '../services/kg/buildUserGraph.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
+import { KG } from '../services/kg/config.js';
 import { QUESTIONS } from '../services/kg/questions.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const onboardingRouter = Router();
 
-onboardingRouter.get('/onboarding/questions', (req, res) => res.json(QUESTIONS));
+onboardingRouter.get('/onboarding/questions', (req, res) => res.json({ ...QUESTIONS, coreReplyIds: KG.CORE_REPLY_IDS }));
 
 onboardingRouter.post('/onboarding/submit', async (req, res) => {
   const { answers } = parse(z.object({ answers: answersSchema }), req.body);
@@ -22,6 +23,21 @@ onboardingRouter.post('/onboarding/submit', async (req, res) => {
   res.json({ status: quick ? 'done' : 'processing' });
 });
 
-onboardingRouter.get('/onboarding/status', (req, res) => {
+// Plan 30 S2 "Teach your agent more": stories, more replies or the personality statements, merged into my answers.
+// ponytail: re-runs the whole phase 2 (idempotent by fact key); a per-block build if story re-extraction costs too much.
+onboardingRouter.post('/onboarding/more', async (req, res) => {
+  const more = parse(moreSchema, req.body);
+  const saved = req.user.onboarding?.answers;
+  if (!saved || req.user.onboarding.status === 'processing') throw httpError(409, 'NOT_READY', 'Finish the first part of onboarding first');
+  const answers = { ...saved };
+  for (const [k, v] of Object.entries(more)) if (v) answers[k] = { ...saved[k], ...v };
+  req.user.onboarding.answers = answers;
+  req.user.markModified('onboarding.answers');
+  await req.user.save();
+  await startUserGraphBuild(req.user._id);
+  res.json({ status: 'building' });
+});
+
+onboardingRouter.get('/onboarding/status',(req, res) => {
   res.json({ status: req.user.onboarding?.status ?? 'not_started' });
 });
