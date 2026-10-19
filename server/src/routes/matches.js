@@ -5,20 +5,23 @@ import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
 import { cancelReplies, pauseAgent, resumeAgent, thaw } from '../services/agent/index.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
-import { getMatchFor, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
+import { getMatchFor, HIDDEN, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
 import { ChatEvent } from '../models/ChatEvent.js';
 import { Conversation } from '../models/Conversation.js';
 import mongoose from 'mongoose';
-import { emitStatus, statusFor } from '../services/pipeline/index.js';
+import { emitStatus, startHumanChat, statusFor } from '../services/pipeline/index.js';
 import { dateIdeasFor } from '../services/tavily/dateIdeas.js';
 import { wouldntSay } from '../services/kg/ownVoice.js';
-import { httpError, parse } from '../utils/http.js';
+import { REPORT_REASONS } from '../models/Report.js';
+import { checkedChatImage } from '../services/photos.js';
+import { block, report, unmatch } from '../services/safety.js';
+import { httpError, objectId, parse } from '../utils/http.js';
 
 export const matchesRouter = Router();
 
 matchesRouter.get('/matches', async (req, res) => {
-  const matches = await Match.find({ users: req.user._id }).sort({ lastMessageAt: -1, createdAt: -1 });
+  const matches = await Match.find({ users: req.user._id, closedReason: { $nin: HIDDEN } }).sort({ lastMessageAt: -1, createdAt: -1 });
   // ponytail: 3 queries per match; fine for tens of matches, aggregate if lists get long.
   res.json({ matches: await Promise.all(matches.map((m) => matchListItem(m, req.user._id))) });
 });
@@ -44,11 +47,49 @@ matchesRouter.get('/matches/:id/messages', async (req, res) => {
   res.json({ messages: page.reverse().map((m) => serializeMessage(m, me)), reveal: await revealFor(match) });
 });
 
+// Text, or a photo (plan 30 S3.7: stored like a profile photo, checked by the vision model before it is sent).
+const imageBody = z.union([
+  z.object({ url: z.url().max(500), publicId: z.string().max(200), w: z.number().int().positive(), h: z.number().int().positive() }),
+  z.object({ jpegBase64: z.string().max(450_000).regex(/^[A-Za-z0-9+/=]+$/), w: z.number().int().positive(), h: z.number().int().positive() }),
+]);
 matchesRouter.post('/matches/:id/messages', async (req, res) => {
-  const { text } = parse(z.object({ text: z.string() }), req.body);
+  const { text, image } = parse(z.object({ text: z.string().default(''), image: imageBody.optional() }), req.body);
   const match = await getMatchFor(req.params.id, req.user._id);
-  const message = await sendMessage({ match, senderId: req.user._id, authoredBy: 'human', text });
+  if (['closed', 'flagged_fake'].includes(match.status)) throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
+  const attachments = image ? [await checkedChatImage(image, `${req.protocol}://${req.get('host')}`, req.user._id)] : undefined;
+  const message = await sendMessage({ match, senderId: req.user._id, authoredBy: 'human', text, extra: attachments ? { attachments } : {} });
   res.status(201).json({ message: serializeMessage(message, req.user._id) });
+});
+
+// Plan 30 S3.6: "Let our agents break the ice" or "Chat myself now". Either side picking self → a normal human chat.
+matchesRouter.post('/matches/:id/choice', async (req, res) => {
+  const { choice } = parse(z.object({ choice: z.enum(['agents', 'self']) }), req.body);
+  const me = req.user._id;
+  const { _id } = await getMatchFor(req.params.id, me);
+  let match = await Match.findOneAndUpdate({ _id, 'perUser.userId': me }, { $set: { 'perUser.$.choice': choice } }, { new: true });
+  // Before the trust check finishes, the pipeline reads the choice itself (safety first).
+  if (choice === 'self' && ['briefing', 'scheduled', 'agent_chatting'].includes(match.status)) match = (await startHumanChat(match)) ?? match;
+  res.json({ match: await matchDetail(match, me) });
+});
+
+// Plan 30 S3.8: unmatch, block, report. Each hides the match for both people.
+matchesRouter.post('/matches/:id/unmatch', async (req, res) => {
+  const match = await getMatchFor(req.params.id, req.user._id);
+  await unmatch(req.user._id, otherUserId(match, req.user._id));
+  res.status(204).end();
+});
+matchesRouter.post('/users/:id/block', async (req, res) => {
+  const other = parse(objectId, req.params.id);
+  if (other === String(req.user._id)) throw httpError(400, 'VALIDATION', 'You can’t block yourself');
+  await block(req.user._id, other);
+  res.status(204).end();
+});
+matchesRouter.post('/users/:id/report', async (req, res) => {
+  const other = parse(objectId, req.params.id);
+  if (other === String(req.user._id)) throw httpError(400, 'VALIDATION', 'You can’t report yourself');
+  const body = parse(z.object({ reason: z.enum(REPORT_REASONS), note: z.string().trim().max(500).optional(), matchId: objectId.optional(), block: z.boolean().default(false) }), req.body);
+  await report(req.user._id, other, { reason: body.reason, note: body.note, matchId: body.matchId, alsoBlock: body.block });
+  res.status(201).json({ ok: true });
 });
 
 // One tap: the requester's agent stops for this match immediately.

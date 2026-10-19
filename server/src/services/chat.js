@@ -25,7 +25,7 @@ export function serializeMessage(msg, viewerId) {
 /** Save a message (human or agent), push it to both users, then fire the agent hook. */
 export async function sendMessage({ match, senderId, authoredBy, text, meta, extra = {} }) {
   const clean = String(text ?? '').trim();
-  if (!clean) throw httpError(400, 'VALIDATION', 'Message is empty');
+  if (!clean && !extra.attachments?.length) throw httpError(400, 'VALIDATION', 'Message is empty');
   if (clean.length > MAX_MESSAGE_LENGTH) throw httpError(400, 'VALIDATION', `Message exceeds ${MAX_MESSAGE_LENGTH} characters`);
   if (['closed', 'flagged_fake'].includes(match.status)) throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
 

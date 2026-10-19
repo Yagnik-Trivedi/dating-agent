@@ -51,7 +51,7 @@ export async function wouldntSay({ message, userId, fix }) {
 
 /** After handoff, with settings.learnFromChats on: my own typed message → VoiceSample(own_chat). */
 export async function learnOwnMessage(message, match) {
-  if (message.authoredBy !== 'human' || match.status !== 'handed_off') return false;
+  if (message.authoredBy !== 'human' || match.status !== 'handed_off' || !message.text?.trim()) return false; // a photo isn't a voice sample
   const user = await User.findById(message.senderId, { settings: 1 }).lean();
   if (user?.settings?.learnFromChats === false) return false;
   await VoiceSample.create({ userId: message.senderId, text: message.text, source: 'own_chat', mood: 'casual', lang: tagLanguageHeuristic(message.text) });

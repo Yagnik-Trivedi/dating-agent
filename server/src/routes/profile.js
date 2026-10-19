@@ -14,9 +14,11 @@ const profileBody = z.object({
   city: text(80),
   gender: text(30),
   interestedIn: z.array(text(30)).max(5),
-  photos: z.array(z.url().max(500)).max(6),
+  // Real photos go through /photos (moderation); only generated DiceBear avatars may be set directly.
+  photos: z.array(z.url().max(500).refine((u) => u.startsWith('https://api.dicebear.com/'), 'Upload photos through the photo step')).max(6),
+  job: text(120), workplace: text(120), education: text(120), height: text(20), languages: z.array(text(40)).max(12),
   bio: text(500),
-  prompts: z.array(z.object({ q: text(150).min(1), a: text(300).min(1) })).max(5),
+  prompts: z.array(z.object({ q: text(150).min(1), a: text(150).min(1) })).max(3), // plan 30 S3.2
   tags: z.object({
     interests: z.array(text(40)).max(20),
     lifestyle: z.object({ smoking: text(30), drinking: text(30), workout: text(30), diet: text(30) }).partial(),
@@ -27,7 +29,7 @@ const profileBody = z.object({
   dealbreakers: z.array(text(100)).max(10),
   ageMin: z.number().int().min(18).max(100),
   ageMax: z.number().int().min(18).max(100),
-  radiusKm: z.number().positive().max(500),
+  radiusKm: z.number().min(0).max(500), // 0 = my city only
 }).partial().strict().refine((p) => !(p.ageMin && p.ageMax) || p.ageMin <= p.ageMax, { message: 'ageMin must be ≤ ageMax' });
 
 export const profileRouter = Router();

@@ -1,4 +1,5 @@
 import { verifyToken } from '../middleware/auth.js';
+import { Match } from '../models/Match.js';
 import { User } from '../models/User.js';
 import { sendMessage, serializeMessage } from '../services/chat.js';
 import { getMatchFor } from '../services/matches.js';
@@ -42,6 +43,15 @@ export function registerSockets(io) {
       const match = await getMatchFor(matchId, userId);
       const message = await sendMessage({ match, senderId: userId, authoredBy: 'human', text });
       return { message: serializeMessage(message, userId) };
+    }));
+
+    // Plan 30 S3.7 read receipts: I've read up to now → the other side shows "Seen".
+    socket.on('message:read', handle(async ({ matchId }) => {
+      const match = await getMatchFor(matchId, userId);
+      const at = new Date();
+      await Match.updateOne({ _id: match._id, 'perUser.userId': userId }, { $set: { 'perUser.$.lastReadAt': at } });
+      socket.to(`match:${matchId}`).emit('match:read', { matchId, userId, at });
+      return {};
     }));
 
     socket.on('typing', ({ matchId } = {}) => {
