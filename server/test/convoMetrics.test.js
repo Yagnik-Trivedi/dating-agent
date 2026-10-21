@@ -10,6 +10,8 @@ const interview = chat([
   ['R', 'im also looking for long term yeah. kids?'],
   ['A', 'yeah kids someday, hope that is cool. do you smoke?'],
   ['R', 'nah i never smoke haha how about you?'],
+  ['A', 'never, and i only drink socially'],
+  ['R', 'nice. so you do want kids?'],
 ]);
 const casual = chat([
   ['B', 'heyy how is your day going'],
@@ -24,8 +26,8 @@ test('the interview chat: matching questions, re-asks and back-to-back questions
   const i = convoMetrics(interview, { settled: ['smoking'] });
   assert.ok(i.matching >= 4, `matching ${i.matching}`);
   assert.equal(i.matchingAboutSettled, 2, 'smoking was settled by the gate ("do you smoke?" and "never smoke… how about you?")');
-  assert.ok(i.matchingReasked >= 1, '"kids?" after he said kids someday');
-  assert.equal(i.questions, 5);
+  assert.equal(i.matchingReasked, 1, '"so you do want kids?" after he said "yeah kids someday"');
+  assert.equal(i.questions, 6);
   const c = convoMetrics(casual, { settled: [] });
   assert.deepEqual([c.matching, c.matchingAboutSettled, c.backToBack, c.topicChangesWhileTelling], [0, 0, 0, 0]);
   assert.ok(c.questions <= 2);
