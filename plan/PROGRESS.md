@@ -28,6 +28,30 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Da
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
 
+## SH results: human conversation, phase H1 (2026-10-21) 🔄 H1 code done, ⏸ live 6-pair check waits for the owner's "go"
+
+**Plan:** `plan/31-human-conversation.md` (Arya). The agent's job is to see if two people get along, not to fill in a form. `CONVO_MODE=human|sn` (default human); `sn` replays plan 30 SN exactly.
+
+**Built (one local commit per step):**
+- **Step 0, audit bugs** (`BUG_BY_GEMINI.md` §2): judge accounts skip the daily chat cap; merged mode detects their question with the shared `isQuestion` over the whole turn; a bare question left after its lead-in was dropped counts as nothing left (constrained regeneration); `heardAttrs` is computed before `planAct`; used facts, told stories and topic tries count only what was sent.
+- **Step 1, profile basics** (owner's defaults, 2026-10-21): `buildGate` fills looking for, kids, smoking, drinking and diet on the public profile from the user's own B answers; religion is hidden by default. A hidden basic is removed from `Profile.tags`, so no public read, prompt or other user sees it; the gate still uses it. Hand-set basics (`tagsEdited`) are never overwritten; `PUT /profile` updates `tags` field by field. **Existing users: run `node scripts/backfill-basics.js` (no LLM); seeds: `npm run seed`.** Not run against Atlas.
+- **Step 2, `needToAsk`** (brief, human mode): gate-checked → known (gate); shown on their profile → known (profile, with `differs`); below "very important" → removed; humans-only, leave-for-me, private, hidden or an unshown basic → for you; the rest → ask once. Seed personas: **35 of 38 end with 0 ask-once items, 2 with 1, 1 with 2.**
+- **Step 3, the read:** mood (plan 31 list, old values as aliases), energy, doing (telling / venting / sharing news / winding down); an ask-once item they state becomes known (chat); a dealbreaker hint reopens a gate-settled item for one follow-up.
+- **Step 4, `planAct` human:** moves reply / react / ask_theirs / share / stay / close; mood from the read + code heuristics + last read; length pulled toward theirs; no question floor; never my second question in a row unless they asked; the one matching question only when warm, chatting and near it; no lull topics; stories only after they told one.
+- **Step 5, prompt:** "HOW THIS CHAT GOES" block, mood and move lines, a plain ask-once line; known / for-you items never reach a model. SN prompts byte-identical on 200 plans.
+- **Step 6, engine:** new draft problems (unplanned matching question, new topic or my story while they tell or vent, unprompted story, two questions in a row, too long at low energy) share the one regeneration, and their sentences are dropped if it fails; fallbacks are short reactions.
+- **Step 7, judge:** gate- and profile-settled items are never "undiscussed"; a profile basic that differs on something very important is a friction "from their profile"; never-discussed ask-once items go to `MatchDecision.worthAsking` + the summary, never into the verdict.
+- **Step 8, metrics:** `scripts/eval/lib/convoMetrics.js` (A10 + `unbridgedQuestionRate`), `scripts/eval/convo-metrics.js` (saved transcripts), `metrics.js` (live runs, with the agenda and act plans).
+
+**Baseline from saved transcripts** (`eval/results/convo-metrics.md`; S1 runs, before SN; no saved SN transcripts exist yet):
+
+| run | matching ?s per chat (max) | question rate | back-to-back | unbridged (lexical) |
+|---|---|---|---|---|
+| s1-merged-lean (5 chats) | 3.6 (5) | 0.58 | 7 | 0.36 |
+| full B5 (17 chats) | 2.3 (8) | 0.58 | 36 | 0.33 |
+
+**Checks:** `npm test` **158/158** (122 before; the new tests are in `auditFixes`, `basics`, `needToAsk`, `perceive`, `humanPlan`, `humanPrompt`, `humanEngine`, `judgeHuman`, `convoMetrics`, `creditGuard`). `api-check` all passed (local dev-db, AI off). Client build green. Simulated chat: see below. Not run: `smoke:browsers` and 375 / 1440 px (the only client change is three profile labels).
+
 ## SU results: live check removed + phone UI fixes (2026-10-19) ✅
 
 **Owner's report:**
@@ -272,6 +296,7 @@ Full report: `server/eval/results/speed-before.md`, from `node scripts/speed-rep
 
 ## Blocked / needs a human
 
+- **(2026-10-21) The NVIDIA key in `server/.env` gets `404 Function … Not found for account` on `MODEL_MID` (`nvidia/nemotron-3-super-120b-a12b`)**, though `/v1/models` lists it. Fast (Lightning) and smart (Ultra) answer. Mid writes every agent reply, the brief, the read and graph builds, so with this key agents can't talk. If the deployed site uses the same account, check it. The plan 31 simulation used `MODEL_MID=nvidia/nemotron-3-ultra-550b-a55b` for that run only (shell override; `.env` unchanged).
 - **Cloudinary** (`CLOUDINARY_*`) and **Resend** (`RESEND_API_KEY`, `EMAIL_FROM`): not in `.env` yet → S3/S4 build against local stubs and hide in production.
 - **Nebius account + credits** by Oct 26 (S7 / plan 14). Until then: NVIDIA free API.
 - **Production seed:** a teammate runs `seed.js` + `seed.js --judges` against Atlas (see `DEPLOY-HANDOFF.md`).

@@ -36,14 +36,14 @@ async function runOnce(a, b) {
   for (const [i, x] of full.entries()) {
     const p = x.actPlan;
     const plan = !p ? '' : p.honestAI ? 'honest-AI' : p.fromBrief ? 'brief opener'
-      : `~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
+      : `${p.move ?? ''}${p.read ? ` (${p.read.mood}, ${p.read.energy}${p.read.doing && p.read.doing !== 'chatting' ? `, ${p.read.doing}` : ''})` : ''} ~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
     const c = x.checks;
     const chk = !c ? '' : [c.regenerated && 'regen', c.dropped?.length && `dropped ${c.dropped.length}`, c.leak?.length && 'LEAK', c.stance?.length && 'conceded'].filter(Boolean).join(', ');
     console.log(`${String(i + 1).padStart(2)}. ${names[x.senderId]}: ${x.text}${plan ? `\n      [${plan}${chk ? ` · ${chk}` : ''}]` : ''}`);
   }
   for (const u of [a, b]) {
     console.log(`\n${u.name}'s agenda:`);
-    for (const x of m.brief?.[String(u._id)]?.agenda ?? []) console.log(`  ${x.status.padEnd(9)} p=${x.priority.toFixed(2)}  ${x.topic}${x.dealbreaker ? ' (dealbreaker)' : ''}`);
+    for (const x of m.brief?.[String(u._id)]?.agenda ?? []) console.log(`  ${x.status.padEnd(9)} p=${x.priority.toFixed(2)}  ${x.topic}${x.dealbreaker ? ' (dealbreaker)' : ''}${x.settledBy ? ` [settled: ${x.settledBy}${x.profileValue ? ` = ${x.profileValue}` : ''}]` : ''}${x.askOnce ? ' [ask once]' : ''}${x.kind ? ` [${x.kind}]` : ''}`);
     const notes = await KgFact.find({ matchId: m._id, observerId: u._id, source: 'agent_observed' }).lean();
     console.log(`  notes about the other (verbatim-quoted): ${notes.length}${notes.length ? ` e.g. ${notes.slice(0, 4).map((f) => `${f.predicate}: ${f.object}`).join(' | ')}` : ''}`);
     const events = await ChatEvent.find({ matchId: m._id, observerId: u._id }).lean();
