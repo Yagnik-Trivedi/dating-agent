@@ -13,7 +13,8 @@ const matchDecisionSchema = new mongoose.Schema({
   decision: { type: String, enum: ['yes', 'no', 'unsure'], required: true },
   confidence: { type: Number, default: 0 },
   positives: [quoted],
-  frictions: [{ ...quoted, severity: { type: Number, default: 1 }, attribute: String }], // attribute: an undiscussed dealbreaker (added in code)
+  frictions: [{ ...quoted, severity: { type: Number, default: 1 }, attribute: String, source: String }], // attribute: an undiscussed dealbreaker; source: 'their profile' (plan 31), both added in code
+  worthAsking: [String], // plan 31: important things that never came up (askOnce items): for the user to ask, never against the match
   dealbreakerRisk: [{ attribute: String, quote: String, value: String, _id: false }], // value: what THEY stated
   noFrictionJustification: { type: String, default: null },
   summaryForUser: { type: String, default: '' },

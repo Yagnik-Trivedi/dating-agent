@@ -55,7 +55,7 @@ const TOPIC_HINTS = {
   'conflict style': 'how they handle disagreements', 'alone time needed': 'how much alone time they like', diet: 'what they like to eat',
   'religion in own life': 'how much religion matters to them',
 };
-const topicText = (t) => TOPIC_HINTS[t] ?? t;
+export const topicText = (t) => TOPIC_HINTS[t] ?? t;
 
 // --- Plan 31 (CONVO_MODE=human): a simple, casual chat that matches their mood. No topics to tick off.
 // The one matching question, asked plainly (no setup, no story, no hint first).

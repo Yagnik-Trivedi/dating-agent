@@ -21,6 +21,7 @@ import { chatJSON, modelId } from '../llm/client.js';
 import { nameOf, otherUserId } from '../matches.js';
 import * as icebreakersPrompt from '../prompts/icebreakers.js';
 import * as judgePrompt from '../prompts/judge.js';
+import { topicText } from '../prompts/agentReply.js';
 import { debug } from '../../utils/log.js';
 
 // The LLM lists evidence only; judgeDecision.js decides (owner's judge fix). factId: which of MY facts (F1…) it bears on.
@@ -125,6 +126,29 @@ const traitWords = (t) => [
   t.openness > 0.7 && 'curious, idea-rich',
 ].filter(Boolean).join('; ');
 
+/**
+ * What my agenda tells the judge (code only). → { undiscussed, profileFrictions, worthAsking }
+ * SN agendas: every dealbreaker the chat didn't settle is "undiscussed" (a severity-2 friction).
+ * Plan 31 agendas (built with needToAsk): gate- and profile-settled items are known, never undiscussed; only a
+ * dealbreaker reopened by a hint and still open is. A basic on their profile that differs from mine on something that
+ * matters a lot (not a dealbreaker: the gate handles those) is a friction from their profile. askOnce items that never
+ * came up are "worth asking yourself", never against the match.
+ */
+export function fromAgenda(agenda = [], dealbreakers = {}) {
+  const human = agenda.some((a) => a.settledBy || a.askOnce || a.kind || a.status === 'for_you');
+  const settledAttrs = new Set(agenda.filter((a) => a.status === 'answered').map(agendaAttribute));
+  if (!human) return { undiscussed: Object.keys(dealbreakers).filter((a) => !settledAttrs.has(a)), profileFrictions: [], worthAsking: [] };
+  const reopened = new Set(agenda.filter((a) => a.reopened && a.status !== 'answered').map(agendaAttribute));
+  return {
+    undiscussed: Object.keys(dealbreakers).filter((a) => reopened.has(a)),
+    profileFrictions: agenda.filter((a) => a.settledBy === 'profile' && a.differs && !a.dealbreaker && a.priority >= KG.JUDGE_NO_IMPORTANCE).map((a) => ({
+      quote: '', messageId: null, severity: 2, source: 'their profile',
+      why: `From their profile: ${a.topic} is "${String(a.profileValue).replace(/_/g, ' ')}", and yours is "${String(a.value ?? '?').replace(/_/g, ' ')}". That matters a lot to you.`,
+    })),
+    worthAsking: agenda.filter((a) => a.askOnce && a.status !== 'answered').map((a) => topicText(a.topic)),
+  };
+}
+
 /** The judge for one side. Idempotent: an existing decision is reused. → the MatchDecision */
 export async function judgeSide({ conversationId, userId }) {
   const me = String(userId);
@@ -155,9 +179,8 @@ export async function judgeSide({ conversationId, userId }) {
     const dealbreakers = Object.fromEntries((gate.dealbreakers ?? []).map((a) => [a, gate.accepts?.[a] ?? []]));
     const shown = facts.filter((f) => !['trait', 'style'].includes(f.predicate)).sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, 60);
     const factById = new Map(shown.map((f, i) => [`F${i + 1}`, f]));
-    // My dealbreakers the chat never settled (agenda item not answered): a severity-2 friction, not a pass.
-    const settledAttrs = new Set((match.brief?.[me]?.agenda ?? []).filter((a) => a.status === 'answered').map(agendaAttribute));
-    const undiscussed = Object.keys(dealbreakers).filter((a) => !settledAttrs.has(a));
+    // My dealbreakers the chat never settled: a severity-2 friction, not a pass (plan 31: the gate and their profile settle some).
+    const { undiscussed, profileFrictions, worthAsking } = fromAgenda(match.brief?.[me]?.agenda ?? [], dealbreakers);
 
     let value;
     let judgeModel = null;
@@ -173,7 +196,7 @@ export async function judgeSide({ conversationId, userId }) {
         traits: traitWords(traits),
         notes: notes.map((n) => `${n.predicate}: ${n.object}${n.evidence?.[0]?.quote ? ` ("${n.evidence[0].quote}")` : ''}`),
         events: events.map((e) => `${e.type}${e.label ? ` (${e.label})` : ''}, ${Math.round((e.weight ?? 0.5) * 100) / 100}${e.quote ? `: "${e.quote}"` : ''}`),
-        agenda: (match.brief?.[me]?.agenda ?? []).map((a) => `${a.topic}${a.dealbreaker ? ' [dealbreaker]' : ''}: ${a.status}`),
+        agenda: (match.brief?.[me]?.agenda ?? []).map((a) => `${a.topic}${a.dealbreaker ? ' [dealbreaker]' : ''}: ${a.status}${a.settledBy ? ` (${a.settledBy === 'gate' ? 'settled before you matched' : a.settledBy === 'profile' ? `their profile: ${a.profileValue}` : 'in the chat'})` : ''}`),
         endedBy: conv.endedBy,
         transcript: transcript.map((m) => `[${m.id}] ${m.mine ? userName : matchName}${m.agent ? ' (agent)' : ''}${m.filler ? ' [system filler, not their words]' : ''}: ${m.text}`),
       };
@@ -197,14 +220,15 @@ export async function judgeSide({ conversationId, userId }) {
       validation.dropped = checked.dropped;
       // Still no dealbreakerRisk after the re-ask: the recorded hint events are the evidence.
       if (hints.length && !value.dealbreakerRisk.length) value.dealbreakerRisk = hints.map((h) => ({ attribute: h.label?.split(':')[0] ?? 'dealbreaker', quote: h.quote ?? '', value: null }));
-      const decided = judgeDecision({ positives: value.positives, frictions: value.frictions, dealbreakerRisk: value.dealbreakerRisk, facts: factById, dealbreakers, undiscussed });
+      const decided = judgeDecision({ positives: value.positives, frictions: [...value.frictions, ...profileFrictions], dealbreakerRisk: value.dealbreakerRisk, facts: factById, dealbreakers, undiscussed });
       const ask = decided.frictions.filter((x) => x.attribute && !x.quote).map((x) => x.attribute.replace(/_/g, ' '));
       value = { ...value, decision: decided.decision, confidence: decided.confidence, frictions: decided.frictions,
-        summaryForUser: [value.summaryForUser, ask.length && `You never found out where they stand on ${ask.join(' and ')}, so it's worth asking.`].filter(Boolean).join(' ') };
+        summaryForUser: [value.summaryForUser, ask.length && `You never found out where they stand on ${ask.join(' and ')}, so it's worth asking.`,
+          worthAsking.length && `Worth asking yourself: ${worthAsking.join('; ')}.`].filter(Boolean).join(' ') };
       validation.reason = decided.reason;
     }
     const icebreakers = value.decision === 'no' ? [] : await writeIcebreakers({ userId: me, matchId: match._id, matchName, events, notes });
-    const doc = { ...base, ...value, icebreakers, judgeModel, validation };
+    const doc = { ...base, ...value, icebreakers, judgeModel, validation, worthAsking };
     await MatchDecision.updateOne({ conversationId, userId: me }, { $setOnInsert: doc }, { upsert: true });
     console.log(`judge ${match._id}/${me}: ${value.decision} (${value.confidence}) by ${judgeModel ?? 'code'}; ${value.positives.length} positives, ${value.frictions.length} frictions`);
     return MatchDecision.findOne({ conversationId, userId: me }).lean();
