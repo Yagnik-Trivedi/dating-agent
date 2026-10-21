@@ -55,6 +55,10 @@ export function pickLanguage(language = {}, incoming = [], rng, mood = null) {
   return { primary, secondary: codeSwitch ? pickWeighted(Object.fromEntries(others.map((l) => [l, mix[l]])), rng) : null, codeSwitch };
 }
 
+// Voice samples (and so switchTriggers) use the onboarding moods; the read uses plan 31's list.
+const VOICE_MOOD = { playful: 'tease', flirty: 'tease', chill: 'casual', serious: 'opinion', tired: 'closing' };
+const voiceMood = (mood) => VOICE_MOOD[mood] ?? mood;
+
 const reactionOf = (own) => {
   if (!own) return 'unknown';
   if (own.polarity === -1) return 'dislike';
@@ -67,9 +71,15 @@ const reactionOf = (own) => {
  * state: agentState[me]; voice: my VoiceProfile; perception: { concepts: [{ text, own }], conflicts: [{ text, ownStrength }],
  * humor, language: { languages }, mood, dealbreakerHit, isQuestion, aboutMeQuestion }; agenda: my agenda items;
  * stories: my untold story facts; thread: { theirs, mine } = their latest message(s) and my last message.
+ * mode: 'sn' (plan 30 SN, unchanged) | 'human' (plan 31: planHuman).
  * → { targetWords, burst, move, askBack, emoji, laugh, reactions, mustDisagree, disagreeOn, topic, language, end }
  */
-export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], stories = [], msgCount = 0, opening = false, agendaSettled = false,
+export function planAct(args) {
+  if (args.mode === 'human') return planHuman(args);
+  return planSN(args);
+}
+
+function planSN({ state, voice = {}, perception = {}, rng, agenda = [], stories = [], msgCount = 0, opening = false, agendaSettled = false,
   maxMessages = KG.MAX_TURNS, naturalEndFrom = MIN_MESSAGES_FOR_NATURAL_END, thread = {} }) {
   const interest = state.interest ?? 0.5;
   const counts = voice.wordCounts?.length ? voice.wordCounts : [10];
@@ -120,7 +130,7 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
     else if (stories.length && rng() < KG.STORY_RATE) topic = story();
   }
 
-  const language = pickLanguage(voice.language, perception.language?.languages ?? [], rng, perception.mood);
+  const language = pickLanguage(voice.language, perception.language?.languages ?? [], rng, voiceMood(perception.mood));
   let end = null;
   if (perception.dealbreakerHit) end = 'dealbreaker_hint';
   else if ((state.lowInterestTurns ?? 0) >= KG.END_AFTER_LOW_TURNS) end = 'interest';
@@ -133,4 +143,111 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   // An agenda topic may always be raised with a question: a curious "oh are you a beer person?" is how a bridge sounds
   // natural, and whoever moves a slowed-down chat on usually asks. Topics are rare (warm-up, gap), so the rate stays low.
   return { targetWords, burst, move, answerFirst, askBack: end ? false : askBack || topic?.kind === 'agenda', emoji, laugh, reactions, mustDisagree, disagreeOn: hold?.text ?? null, topic: end ? null : topic, language, end };
+}
+
+// --- Plan 31 (CONVO_MODE=human): simple, mood-matched talk. The agent sees whether two people get along; it doesn't
+// fill in a form. Most messages are a reply or a reaction; questions are rare and about what they just said; at most
+// one plain matching question per chat (an askOnce item), only when the chat is warm and already near it.
+const wordCount = (s) => String(s ?? '').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+const TIRED = /\b(ugh+|so tired|exhausted|long day|sleepy|dead tired|i'?m dead|drained)\b/i;
+const DOWN = /\b(worst|yelled|sad|upset|crying|cried|stressed|annoyed|frustrat\w*|rough day|bad day|hate (this|my|it))\b/i;
+const NEWS = /\b(got (in|into|the|selected|promoted)|passed|cleared|promotion|finally (did|got)|guess what|i did it)\b/i;
+const TELLING = /\b(so basically|long story|you won'?t believe|so (yesterday|today|this morning|last night)|and then)\b/i;
+const BUSY = /\b(busy|swamped|in a meeting|at work rn|gtg|got to go|gotta go)\b/i;
+const CLOSING = /\b(should sleep|going to sleep|off to bed|good ?night|gn|talk (later|tomorrow)|ttyl|catch you later)\b/i;
+const ACRONYMS = /\b(OK|LOL|OMG|IPL|BTW|TBH|IMO|IDK|LMAO|ROFL)\b/g;
+
+/** What code can tell about their latest message on its own (plan 31 B3). → { mood?, energy?, doing? } (only what it saw) */
+export function readHeuristics(text = '') {
+  const t = String(text);
+  const n = wordCount(t);
+  const caps = /\b[A-Z]{3,}\b/.test(t.replace(ACRONYMS, ''));
+  const out = {};
+  if (CLOSING.test(t)) Object.assign(out, { mood: 'tired', energy: 'low', doing: 'winding_down' });
+  else if (BUSY.test(t)) Object.assign(out, { mood: 'busy', energy: 'low', doing: 'winding_down' });
+  else if (DOWN.test(t)) Object.assign(out, { mood: 'down', doing: 'venting' });
+  else if (TIRED.test(t)) Object.assign(out, { mood: 'tired', energy: 'low' });
+  else if (/!!/.test(t) || caps) Object.assign(out, { mood: 'excited', energy: 'high', ...(NEWS.test(t) && { doing: 'sharing_news' }) });
+  if (!out.doing && (TELLING.test(t) || (n >= 25 && !t.includes('?')))) out.doing = 'telling';
+  if (!out.energy && n > 0 && n < 4) out.energy = 'low';
+  return out;
+}
+
+const LOW_MOODS = new Set(['tired', 'busy', 'down', 'bored']);
+
+function planHuman({ state, voice = {}, perception = {}, rng, agenda = [], stories = [], msgCount = 0, opening = false, agendaSettled = false,
+  maxMessages = KG.MAX_TURNS, naturalEndFrom = MIN_MESSAGES_FOR_NATURAL_END, thread = {} }) {
+  const interest = state.interest ?? 0.5;
+  const theirs = String(thread.theirs ?? '');
+  const theirWords = wordCount(theirs);
+  // Their mood: this turn's read when there is one (split mode), else code heuristics on this turn, else last turn's read.
+  const h = readHeuristics(theirs);
+  const theyAsked = Boolean(perception.isQuestion || perception.aboutMeQuestion || theirs.includes('?'));
+  const last = state.lastRead ?? {};
+  const mood = perception.doing ? perception.mood : h.mood ?? perception.mood ?? last.mood ?? 'chill';
+  const energy = perception.energy ?? h.energy ?? (mood === 'excited' ? 'high' : 'medium');
+  const stillTelling = ['telling', 'venting'].includes(last.doing) && theirWords >= 8;
+  const doing = perception.doing ?? h.doing ?? (stillTelling ? last.doing : theyAsked ? 'asking' : 'chatting');
+  const low = energy === 'low' || LOW_MOODS.has(mood);
+  const theyAreTelling = doing === 'telling' || doing === 'venting';
+
+  // Length: my own sampled length pulled toward theirs (a 4-word message gets a short reply, not a paragraph).
+  const counts = voice.wordCounts?.length ? voice.wordCounts : [10];
+  const sampled = pick(counts, rng) * (0.5 + interest);
+  const targetWords = Math.max(2, Math.round(opening || !theirWords ? sampled : sampled + KG.LENGTH_PULL * (theirWords - sampled)));
+  const burst = !low && rng() < (voice.burstiness ?? 0) ? 2 : 1;
+
+  // Questions: no floor. Fewer when they're low or telling; none right after my own question unless they asked me.
+  let pAsk = interest < KG.LOW_INTEREST ? 0 : Math.min(KG.ASK_HUMAN_MAX, (voice.questionBackRate ?? 0.3) * (0.5 + interest));
+  if (low) pAsk *= KG.ASK_LOW_ENERGY;
+  if (theyAreTelling) pAsk *= KG.ASK_WHEN_TOLD;
+  if (theyAsked) pAsk *= KG.ASK_WHEN_ASKED;
+  if ((state.lastAsked && !theyAsked) || doing === 'winding_down') pAsk = 0;
+  const askBack = opening || rng() < pAsk;
+  const emoji = rng() < Math.min(1, voice.emojiPerMessage ?? 0) && voice.topEmojis?.length ? pick(voice.topEmojis, rng) : null;
+  const laugh = (perception.humor || mood === 'playful') && !theyAreTelling && rng() < (voice.laughRate ?? 0) ? pickWeighted(voice.laughForms, rng) : null;
+  const reactions = (perception.concepts ?? []).map((c) => ({ text: c.text, kind: reactionOf(c.own) }));
+  const conflicts = perception.conflicts ?? [];
+  const hold = conflicts.find((c) => c.ownStrength >= KG.STANCE_HOLD) ?? conflicts.find((c) => c.ownStrength >= KG.STANCE_BEND && rng() < 0.5);
+
+  // The one matching question (plan 31 A6): an askOnce item still open, the chat warm, they're just chatting, what was
+  // just said is near it, no matching question yet (a reopened dealbreaker may be followed up once), and it wouldn't be
+  // my second question in a row.
+  let topic = null;
+  const warm = Boolean(state.warm || perception.humor || theyAsked) && interest >= KG.LOW_INTEREST;
+  const heard = (a) => !a.reopened && (state.heardAttrs ?? []).includes(agendaAttribute(a));
+  const said = [theirs, thread.mine ?? ''].join('\n');
+  const askedOne = (state.matchingQuestions ?? 0) >= KG.MAX_MATCHING_QUESTIONS;
+  if (!opening && warm && doing === 'chatting' && !(state.lastAsked && !theyAsked)) {
+    const item = agenda.filter((a) => a.askOnce && a.status !== 'answered' && !heard(a) && !(state.topicTries?.[a.id] >= 1) && (!askedOne || a.reopened))
+      .sort((a, b) => b.priority - a.priority).find((a) => bridgesTo(a, said));
+    if (item) topic = { kind: 'agenda', id: item.id, text: item.topic, how: 'ask_once' };
+  }
+  // A short thing of mine only after they told a story (or asked me) and one of my stories connects.
+  if (!topic && stories.length && !theyAreTelling && (state.theyTold || perception.aboutMeQuestion)) {
+    const s = stories.find((x) => bridgesTo({ topic: x.object }, theirs));
+    if (s) topic = { kind: 'story', id: String(s._id), text: s.object };
+  }
+
+  const language = pickLanguage(voice.language, perception.language?.languages ?? [], rng, voiceMood(mood));
+  let end = null;
+  if (perception.dealbreakerHit) end = 'dealbreaker_hint';
+  else if ((state.lowInterestTurns ?? 0) >= KG.END_AFTER_LOW_TURNS) end = 'interest';
+  else if (msgCount + 1 >= maxMessages) end = 'max_turns';
+  // A natural end after the minimum, on a good moment or when they're tired or bored; never mid-story or with their question open.
+  else if (agendaSettled && msgCount >= naturalEndFrom && !theyAreTelling && (low || doing === 'winding_down' || !theyAsked)) end = 'natural';
+  const answerFirst = Boolean(perception.aboutMeQuestion);
+  const stall = !opening && !theyAsked && !state.lastAsked && theirWords < KG.LULL_WORDS;
+  const move = end ? 'close'
+    : theyAreTelling ? 'stay'
+      : answerFirst ? 'reply'
+        : topic?.kind === 'story' ? 'share'
+          : topic ? 'react'
+            : askBack ? 'ask_theirs'
+              : stall || rng() < 0.35 ? 'share' : 'react';
+  return {
+    mode: 'human', targetWords, burst, move, answerFirst, askBack: end ? false : askBack || topic?.kind === 'agenda',
+    emoji, laugh, reactions, mustDisagree: Boolean(hold), disagreeOn: hold?.text ?? null, topic: end ? null : topic, language, end,
+    read: { mood, energy, doing },
+  };
 }
