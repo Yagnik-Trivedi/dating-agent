@@ -1,9 +1,13 @@
 // Tier mid, reasoning off, temperature 0. perceive + observe in ONE call (plan 08 §2.1): read the other person's
 // latest message(s) for my agent. Every note and agenda hit must quote their words exactly.
 // Output: { concepts, claims, isQuestion, aboutMe, lowEffort, humor, warmth, acknowledgesDifference, answeredMyQuestion,
-//           dealbreakerHint, language, mood, notes, agendaHits }
+//           dealbreakerHint, language, mood, energy, doing, notes, agendaHits }
 
 export const NOTE_PREDICATES = ['likes', 'dislikes', 'values', 'goal', 'lifestyle', 'background', 'opinion', 'humor'];
+// Plan 31 A4: the mood, energy and what they're doing, so the reply can match them.
+export const MOODS = ['chill', 'playful', 'excited', 'tired', 'busy', 'down', 'serious', 'flirty', 'curious', 'bored'];
+export const ENERGY = ['low', 'medium', 'high'];
+export const DOING = ['chatting', 'asking', 'telling', 'venting', 'sharing_news', 'winding_down'];
 
 export function build({ myName, theirName, latest, context, myLast, agenda, attributes }) {
   return [
@@ -21,7 +25,8 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         `- "answeredMyQuestion": ${myName}'s last message asked a question and they answered it (true), ignored it (false), or there was no question (null).`,
         `- "dealbreakerHint": the attribute their message reveals about THEMSELVES (from the list), if any, else null. A question they ask ("do you smoke?", "do you want kids someday?") reveals nothing about them: null, and no claim.`,
         '- "language": languages used (ISO 639-1; add "_latn" for romanised Hindi/Gujarati/…: "hi_latn"), script, codeSwitch.',
-        '- "mood": one of greeting, curious, opinion, excited, disagree, plan, apologetic, tease, closing, long_reply, casual.',
+        `- "mood": their mood, one of ${MOODS.join(', ')}. "energy": ${ENERGY.join(', ')} (one-word replies are low).`,
+        `- "doing": what they're doing, one of ${DOING.join(', ')}: telling = in the middle of telling something; venting = a bad day or a complaint; sharing_news = good news; winding_down = tired, short, closing.`,
         `- "notes": facts about ${theirName} learned from these messages. "quote" must be copied EXACTLY from their message.`,
         `  predicate one of ${NOTE_PREDICATES.join(', ')}; "object" a short neutral label; "strength" 0–1 how much they like/mean it.`,
         `- "agendaHits": topics from ${myName}'s list below that their message answers, each with an exact quote. Only a clear position counts ("long-term", "I don't smoke", "want kids someday"); a vague or polite non-answer ("someone kind and real") is not a hit.`,
@@ -30,7 +35,7 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         'Output JSON: {"concepts": [{"text": "...", "type": "activity", "polarity": 1}], "claims": [{"text": "...", "conceptText": "...",',
         '"attribute": null, "value": null, "polarity": 1}], "isQuestion": false, "aboutMe": false, "lowEffort": false, "humor": false,',
         '"warmth": false, "acknowledgesDifference": false, "answeredMyQuestion": null, "dealbreakerHint": null,',
-        '"language": {"languages": ["en"], "script": "latin", "codeSwitch": false}, "mood": "casual",',
+        '"language": {"languages": ["en"], "script": "latin", "codeSwitch": false}, "mood": "chill", "energy": "medium", "doing": "chatting",',
         '"notes": [{"predicate": "likes", "object": "...", "attribute": null, "value": null, "polarity": 1, "strength": 0.6, "quote": "..."}],',
         '"agendaHits": [{"id": "a1", "quote": "..."}]}',
       ].join('\n'),

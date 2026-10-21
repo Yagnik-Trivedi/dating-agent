@@ -22,6 +22,10 @@ const ATTRIBUTE_IDS = B.map((i) => i.id);
 const pol = z.coerce.number().transform((p) => (p < 0 ? -1 : 1)).catch(1);
 const attr = z.string().nullable().catch(null).transform((a) => (ATTRIBUTE_IDS.includes(a) ? a : null));
 const bool = z.preprocess((v) => v === true || v === 'true', z.boolean());
+// Plan 31 A4: the old mood values (and close words) as aliases of the new list; anything else → chill.
+const MOOD_ALIAS = { casual: 'chill', greeting: 'chill', tease: 'playful', teasing: 'playful', funny: 'playful', opinion: 'serious', disagree: 'serious', plan: 'chill', apologetic: 'serious', closing: 'tired', long_reply: 'chill', sad: 'down', upset: 'down', happy: 'excited', annoyed: 'down', sleepy: 'tired' };
+export const moodOf = (m) => { const v = String(m ?? '').trim().toLowerCase(); return perceivePrompt.MOODS.includes(v) ? v : MOOD_ALIAS[v] ?? 'chill'; };
+const oneOf = (list, fallback) => z.string().catch(fallback).transform((v) => (list.includes(String(v).toLowerCase()) ? String(v).toLowerCase() : fallback));
 
 export const perceiveSchema = z.object({
   concepts: items(z.object({ text: z.string().trim().min(1).max(60), type: z.string().catch('other'), polarity: pol })),
@@ -30,7 +34,9 @@ export const perceiveSchema = z.object({
   answeredMyQuestion: z.boolean().nullable().catch(null),
   dealbreakerHint: attr,
   language: z.object({ languages: z.array(z.string()).min(1).catch(['en']), script: z.string().catch('latin'), codeSwitch: z.boolean().catch(false) }).catch({ languages: ['en'], script: 'latin', codeSwitch: false }),
-  mood: z.string().catch('casual'),
+  mood: z.string().catch('chill').transform(moodOf),
+  energy: oneOf(perceivePrompt.ENERGY, 'medium'),
+  doing: oneOf(perceivePrompt.DOING, 'chatting'),
   notes: items(z.object({ predicate: z.enum(perceivePrompt.NOTE_PREDICATES), object: z.string().trim().min(1).max(100), attribute: attr, value: z.string().nullable().catch(null), polarity: pol, strength: z.coerce.number().min(0).max(1).catch(0.5), quote: z.string().trim().min(1).max(300) })),
   agendaHits: items(z.object({ id: z.string(), quote: z.string().trim().min(1).max(300) })),
 });
@@ -129,7 +135,9 @@ export async function observe(out, { match, conv, persona, otherId, theirMsgs, m
   const hits = new Set(out.agendaHits.filter((h) => quoteMsg(h.quote)).map((h) => h.id));
   const reopen = dbClaim && !confirmed ? agenda.find((a) => a.topic === TOPICS[dbClaim.attribute]) : null;
   if (hits.size || reopen) {
-    updated = agenda.map((a) => (a === reopen ? { ...a, status: 'open', reopened: true } : hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6 } : a));
+    // A reopened item is no longer settled (plan 31: a gate-settled dealbreaker hinted at in chat may be followed up once).
+    const reopened = (a) => { const { settledBy, ...rest } = a; return { ...rest, status: 'open', reopened: true, ...(settledBy && { askOnce: true }) }; };
+    updated = agenda.map((a) => (a === reopen ? reopened(a) : hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6, ...(a.askOnce && { settledBy: 'chat' }) } : a));
     await Match.updateOne({ _id: match._id }, { $set: { [`brief.${viewer}.agenda`]: updated } });
     if (reopen) await Conversation.updateOne({ _id: conv._id }, { $unset: { [`agentState.${viewer}.topicTries.${reopen.id}`]: 1 } });
   }
@@ -140,7 +148,7 @@ export async function observe(out, { match, conv, persona, otherId, theirMsgs, m
   return {
     perception: {
       concepts, conflicts, humor: out.humor, lowEffort: out.lowEffort, aboutMeQuestion: out.isQuestion && out.aboutMe, isQuestion: out.isQuestion,
-      language: out.language, mood: out.mood, dealbreakerHit: confirmed,
+      language: out.language, mood: out.mood, energy: out.energy, doing: out.doing, dealbreakerHit: confirmed,
       likes: concepts.filter((c) => c.own && c.own.polarity === 1 && c.polarity === 1).map((c) => c.own.strength),
       dislikes: concepts.filter((c) => c.own && c.own.polarity !== c.polarity).map((c) => c.own.strength),
       topics: concepts.map((c) => String(c.conceptId)),
