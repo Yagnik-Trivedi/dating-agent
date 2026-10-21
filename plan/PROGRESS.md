@@ -50,7 +50,9 @@ Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md),
 | s1-merged-lean (5 chats) | 3.6 (5) | 0.58 | 7 | 0.36 |
 | full B5 (17 chats) | 2.3 (8) | 0.58 | 36 | 0.33 |
 
-**Checks:** `npm test` **158/158** (122 before; the new tests are in `auditFixes`, `basics`, `needToAsk`, `perceive`, `humanPlan`, `humanPrompt`, `humanEngine`, `judgeHuman`, `convoMetrics`, `creditGuard`). `api-check` all passed (local dev-db, AI off). Client build green. Simulated chat: see below. Not run: `smoke:browsers` and 375 / 1440 px (the only client change is three profile labels).
+**Checks:** `npm test` **158/158** (122 before; the new tests are in `auditFixes`, `basics`, `needToAsk`, `perceive`, `humanPlan`, `humanPrompt`, `humanEngine`, `judgeHuman`, `convoMetrics`, `creditGuard`). `api-check` all passed (local dev-db, AI off). Client build green.
+
+**Simulated chat** (local dev-db, Meera × Ishaan = eval c1, CONVO_MODE=human, **MODEL_MID overridden to Ultra** because Super 404s for this key): 14 messages, stop max_turns, judges yes / yes → Compatible, **62.5k tokens** (S1: ~63k per pair). 0 matching questions (looking for + smoking settled by the gate; kids, drinking, diet by the profile), 5 of 14 messages with a question, none back-to-back, moves reply / react / ask_theirs / share / close, moods read chill → playful. Seen and fixed after the run: "honestly no idea" ×3 copied from the prompt's example phrase (now: say it in your own words, never reuse a phrase). Also seen: odd emoji from the voice sample (😞, 🍍), 3 ask-my-human items on small questions (which temple?), and the chat ran to max_turns instead of closing on a good moment. Not run: `smoke:browsers` and 375 / 1440 px (the only client change is three profile labels).
 
 ## SU results: live check removed + phone UI fixes (2026-10-19) ✅
 

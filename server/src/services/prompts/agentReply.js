@@ -75,7 +75,7 @@ const MOOD_MATCH = {
   bored: "don't push questions: one easy thing, or close nicely",
 };
 const humanMoveLine = (plan, firstName) => ({
-  reply: `- Move: reply to their question simply (from the listed facts, or say honestly you don't know: "honestly no idea lol").${plan.askBack ? ' You may ask it back.' : ''}`,
+  reply: `- Move: reply to their question simply (from the listed facts, or, if nothing listed covers it, say in your own words that you don't know; don't reuse a phrase you already used).${plan.askBack ? ' You may ask it back.' : ''}`,
   react: '- Move: a short, natural reaction to what they said ("haha no way", "ugh that\'s the worst", "oh nice"). That can be the whole message.',
   ask_theirs: '- Move: react, then one short question about what they just said ("wait what happened?"). Not a new topic.',
   share: `- Move: share a little of ${firstName}'s own that connects to what they said ("same, I just got home too"); from the listed facts only when it's about ${firstName}. No question.`,
@@ -114,7 +114,7 @@ const HUMAN_BLOCK = (firstName) => [
 function finalHuman(plan, firstName) {
   return [
     plan.unknownTopic ? `answer simply: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you don't know (no made-up preference).`
-      : plan.answerFirst && `answer their question about ${firstName} simply (listed facts, or "honestly no idea").`,
+      : plan.answerFirst && `answer their question about ${firstName} simply (listed facts, or say in your own words that you don't know).`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
     plan.move === 'stay' && 'stay with what they are telling you; no new topic.',
     plan.topic?.kind === 'agenda' && `if it fits, ask plainly: "${askOnceText(plan.topic.text)}"; if not, skip it.`,
