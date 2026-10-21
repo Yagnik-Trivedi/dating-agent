@@ -80,9 +80,68 @@ export function sentRecord({ messages, claims = [], facts, plan }) {
   };
 }
 
+// --- Plan 31 (CONVO_MODE=human). Section-B attributes whose question reads as a form question (a question about their
+// family or work is small talk too, so those don't count).
+export const FORM_ATTRS = ['kids', 'looking_for', 'smoking', 'drinking', 'religion', 'diet', 'location'];
+const SMALL = new Set(['what', 'when', 'where', 'which', 'wait', 'that', 'this', 'there', 'with', 'have', 'does', 'your', 'about', 'really', 'then', 'okay', 'sounds', 'happened', 'mean', 'think', 'feel', 'doing', 'going', 'said', 'like', 'just', 'kind', 'were', 'they', 'them', 'would', 'could', 'some', 'much', 'more']);
+const topicWordsOf = (s) => new Set(norm(s).filter((w) => w.length >= 4 && !SMALL.has(w)));
+const HUMAN_CONSTRAINED = 'every sentence of your drafts broke a rule. Write ONE short reaction (under 10 words) to what they just said, '
+  + "in your own style: no claims about yourself or them, no new topic, no goodbye. A question only if it's about what they said.";
+/** Human-mode last resort: a simple reaction that fits their mood, never a question on a topic. */
+const fallbackReaction = (voice, read = {}) => {
+  const laugh = Object.entries(voice.laughForms ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'haha';
+  if (['down', 'tired', 'busy'].includes(read.mood) || read.doing === 'venting') return 'ugh, that sounds rough';
+  if (read.mood === 'excited' || read.doing === 'sharing_news') return "wait that's amazing!";
+  return read.mood === 'playful' ? `${laugh} fair` : 'oh nice';
+};
+
+/**
+ * Plan 31 B3, the new draft problems (they share the one regeneration). read: this turn's read (or the plan's own);
+ * theirText: their latest message(s); facts: the F/S ids shown to the model; state: agentState before this turn.
+ * → { problems, drop }: drop = the offending sentences, cut before sending if the regeneration doesn't fix them.
+ */
+export function humanProblems({ text, draft, plan, read = {}, state = {}, theyAsked = false, theirText = '', facts = new Map() }) {
+  const problems = [];
+  const drop = new Set();
+  const sentences = draft.messages.flatMap((m) => sentencesOf(m));
+  const questions = sentences.filter((s) => s.includes('?'));
+  const planned = plan.topic?.kind === 'agenda' ? agendaAttribute({ topic: plan.topic.text }) : null;
+  // A matching question the plan didn't call for: something known, for the humans, not important enough, or a second one.
+  const unplannedIn = (s) => attributesIn(s, { questions: true }).filter((a) => FORM_ATTRS.includes(a) && a !== planned);
+  const unplanned = [...new Set(questions.flatMap(unplannedIn))];
+  if (unplanned.length) {
+    problems.push(`you asked about ${unplanned.join(' and ').replace(/_/g, ' ')}, which you don't need to ask: reply to what they said instead.`);
+    questions.filter((q) => unplannedIn(q).length).forEach((q) => drop.add(q));
+  }
+  const storyClaims = (draft.claims ?? []).filter((c) => (c.factIds ?? []).some((id) => facts.get(id)?.predicate === 'story'));
+  const storySentences = sentences.filter((s) => storyClaims.some((c) => covers(c.text, s)));
+  const telling = read.doing === 'telling' || read.doing === 'venting';
+  if (telling) {
+    // A new topic while they tell something: any matching question, my story, or a question about my things, not theirs.
+    const theirWords = topicWordsOf(theirText);
+    const mine = new Set([...facts.values()].flatMap((f) => [...topicWordsOf(`${f.object ?? ''} ${f.conceptLabel ?? ''}`)]));
+    const off = questions.filter((q) => attributesIn(q, { questions: true }).length || [...topicWordsOf(q)].some((w) => mine.has(w) && !theirWords.has(w)));
+    if (off.length || storyClaims.length) {
+      problems.push("they're telling you something: stay on THEIR thing, no new topic and no story of yours.");
+      [...off, ...storySentences].forEach((s) => drop.add(s));
+    }
+  } else if (storyClaims.length && !(state.theyTold || plan.answerFirst)) {
+    problems.push("don't tell a story of yours now: they haven't told one or asked; just reply simply.");
+    storySentences.forEach((s) => drop.add(s));
+  }
+  if (state.lastAsked && !theyAsked && draft.messages.some((m) => m.trim().endsWith('?'))) {
+    problems.push("you asked a question last time and they didn't ask you anything: no question now, just reply.");
+    questions.forEach((q) => drop.add(q));
+  }
+  const theirs = words(theirText).length;
+  if (read.energy === 'low' && theirs > 0 && words(text).length > KG.MAX_LENGTH_RATIO * theirs + KG.LENGTH_SLACK) problems.push(`they're low energy: keep it about as short as their message (under ${KG.MAX_LENGTH_RATIO * theirs + KG.LENGTH_SLACK} words).`);
+  return { problems, drop: [...drop] };
+}
+
 /**
  * Is my agenda settled enough for a natural end? Everything with priority ≥ END_BLOCK_PRIORITY answered. A dealbreaker
  * on a section-B attribute is already settled by the gate (plan 30 SN: it comes up only if the chat leads there).
+ * Human mode never calls this: known, for-you and askOnce items never block the end after NATURAL_END_FROM.
  */
 const gateChecked = (a) => a.dealbreaker && agendaAttribute(a);
 const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => !gateChecked(a) && (a.dealbreaker || a.priority >= KG.END_BLOCK_PRIORITY)).every((a) => a.status === 'answered');
@@ -130,6 +189,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
 
   const opening = history.length === 0;
   const rulesOn = env.RULES !== 'off';
+  const human = rulesOn && env.CONVO_MODE === 'human'; // plan 31; sn = plan 30 SN exactly
   let perception = {};
   const myLast = lastMineIdx >= 0 ? history[lastMineIdx].text : null;
   const context = { theirName: matchName, lines: history.slice(Math.max(0, lastMineIdx - 6), lastMineIdx + 1).map((m) => `${String(m.senderId) === me ? persona.firstName : matchName}: ${m.text}`) };
@@ -149,7 +209,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
   const stories = storyCandidates(persona, state.toldStoryIds);
   const plan = rulesOn
-    ? planAct({ state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: agendaSettled(freshAgenda),
+    ? planAct({ mode: human ? 'human' : 'sn', state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: human || agendaSettled(freshAgenda),
       maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast } })
     : plainPlan(persona.voice, history.length);
   plan.closingStyle = persona.voice.closingStyle ?? null;
@@ -203,7 +263,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || agendaSettled(freshAgenda));
+  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || human || agendaSettled(freshAgenda));
+  const readNow = () => (perception.doing ? perception : plan.read ?? {}); // this turn's read once the merged call ran
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     let draft;
     if (merged && i === 0) {
@@ -229,7 +290,12 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     if (topicFacts.length && hedgeSentences(c.text).length) c.problems.push(`you DO know your answer about ${asked.label}: say it from the listed facts instead of sounding unsure.`);
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
-    if (draft.end && !plan.end && !mayEnd) c.problems.push("you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");
+    if (human && !plan.end) {
+      const hp = humanProblems({ text: c.text, draft, plan, read: readNow(), state, theyAsked: Boolean(perception.isQuestion || perception.aboutMeQuestion), theirText: latest, facts });
+      c.problems.push(...hp.problems);
+      c.humanDrop = hp.drop;
+    }
+    if (draft.end && !plan.end && !mayEnd) c.problems.push(human ? "you wrapped up the chat too early: don't say goodbye yet, just reply." : "you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");
     if (plan.end === 'dealbreaker_hint' && !draft.end) c.problems.push('end the conversation now: one short, kind closing line, no question.');
     attempts.push({ draft, ...c });
     if (!c.problems.length) break;
@@ -244,7 +310,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   }
   // A clean draft wins; otherwise the one that keeps the most words once failing sentences are dropped (eval: picking
   // by fewest problems often left nothing, and the fixed fallback read as low effort to the judges).
-  const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !echoOf(s, recent)).join(' ')).length;
+  const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !(a.humanDrop ?? []).includes(s) && !echoOf(s, recent)).join(' ')).length;
   let best = attempts.find((a) => !a.problems.length)
     ?? attempts.reduce((a, b) => (kept(b) > kept(a) || (kept(b) === kept(a) && b.problems.length < a.problems.length) ? b : a));
   // Only failing sentences are dropped: grounding failures, leaks (keywords + embeddings vs my private facts, on every
@@ -254,7 +320,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const sentences = attempt.draft.messages.flatMap((m) => sentencesOf(m));
     const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
     const leaks = leakCheck(sentences, persona.privateFacts, sentVecs);
-    const drop = new Set([...attempt.grounding.drop, ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
+    const drop = new Set([...attempt.grounding.drop, ...(attempt.humanDrop ?? []), ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
     // A sentence I already sent is dropped too (tuning it2: "undhiyu chhe?" ×3), and a scrap of under 3 words counts as
     // nothing surviving, so the constrained regeneration writes a real message instead.
     for (const s of sentences) if (mySent.has(norm(s).join(' '))) drop.add(s);
@@ -268,11 +334,14 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   let fallback = 'none';
   if (!messages.length && !plan.end && !opening) {
     fallback = 'constrained';
-    const cPlan = { ...plan, targetWords: Math.min(plan.targetWords, 12), burst: 1, topic: null, askBack: true, move: 'follow_up' };
-    const draft = await generate({ prompt: { ...prompt, plan: cPlan }, tier, temperature: 0.4, userId: me, matchId: match._id, warning: constrainedWarning(best.problems) });
+    // Human mode: a short reaction on their message, no question (plan 31: fallbacks are simple reactions).
+    const cPlan = human ? { ...plan, targetWords: Math.min(plan.targetWords, 10), burst: 1, topic: null, askBack: false, move: 'react' }
+      : { ...plan, targetWords: Math.min(plan.targetWords, 12), burst: 1, topic: null, askBack: true, move: 'follow_up' };
+    const draft = await generate({ prompt: { ...prompt, plan: cPlan }, tier, temperature: 0.4, userId: me, matchId: match._id, warning: human ? HUMAN_CONSTRAINED : constrainedWarning(best.problems) });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
     const c = draftProblems({ draft, plan: cPlan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
+    if (human) c.humanDrop = humanProblems({ text: c.text, draft, plan: cPlan, read: readNow(), state, theyAsked: Boolean(perception.isQuestion || perception.aboutMeQuestion), theirText: latest, facts }).drop;
     const constrained = { draft, ...c };
     ({ leaks, drop, messages } = await survivors(constrained));
     if (messages.length) { attempts.push(constrained); best = constrained; }
@@ -281,7 +350,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
     const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : fallbackQuestion(rng);
+    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
     messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
   // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
@@ -304,11 +373,20 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // What my agent asked / they stated themselves, per section-B attribute (replay and eval).
     askedAttrs: [...new Set([...(state.askedAttrs ?? []), ...attributesIn(messages.join(' '), { questions: true })])],
     heardAttrs: state.heardAttrs,
+    // Plan 31: the matching questions actually sent, whether the chat got warm, whether they told a story, and their
+    // last read (the next turn's plan starts from it: in merged mode this turn's read arrives after the plan).
+    ...(human && {
+      matchingQuestions: (state.matchingQuestions ?? 0) + (attributesIn(messages.join(' '), { questions: true }).some((a) => FORM_ATTRS.includes(a)) ? 1 : 0),
+      warm: Boolean(state.warm || perception.humor || perception.isQuestion || perception.aboutMeQuestion),
+      theyTold: Boolean(state.theyTold || readNow().doing === 'telling'),
+      lastRead: { mood: readNow().mood ?? 'chill', energy: readNow().energy ?? 'medium', doing: readNow().doing ?? 'chatting' },
+    }),
   });
   const end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
   return {
     messages, end, unknownAboutMe, inbox, usedFactIds: used,
-    actPlan: { ...plan, interest: state.interest },
+    // Human mode: the mood the reply was matched to, refined by this turn's read once it arrived (replay and eval labels).
+    actPlan: { ...plan, interest: state.interest, ...(human && { read: { mood: readNow().mood, energy: readNow().energy, doing: readNow().doing } }) },
     checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop], fallback },
   };
 });
