@@ -106,12 +106,13 @@ const utcDay = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUT
 
 /**
  * Credit guard (plan 12 §7): a non-seed user starts at most JUDGE_LIVE_CHATS_PER_DAY agent conversations per UTC day.
- * Only when an agent would run; humans chatting cost nothing.
+ * Only when an agent would run; humans chatting cost nothing. Pre-made judge accounts (isJudge) are exempt like seeds
+ * (audit fix 1: their 3rd match of the day became "your agent will start this chat tomorrow").
  */
 export async function overDailyChats(match) {
   if (!match.perUser.some((p) => p.agentActive)) return false;
   const since = utcDay();
-  for (const u of await User.find({ _id: { $in: match.users }, isSeed: { $ne: true } }, { _id: 1 }).lean()) {
+  for (const u of await User.find({ _id: { $in: match.users }, isSeed: { $ne: true }, isJudge: { $ne: true } }, { _id: 1 }).lean()) {
     // ponytail: lists the user's matches each time; fine for tens of matches a day.
     const ids = (await Match.find({ users: u._id, _id: { $ne: match._id } }, { _id: 1 }).lean()).map((m) => m._id);
     if (await Conversation.countDocuments({ matchId: { $in: ids }, round: 1, startedAt: { $gte: since } }) >= env.JUDGE_LIVE_CHATS_PER_DAY) return true;

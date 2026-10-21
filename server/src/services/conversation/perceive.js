@@ -129,7 +129,7 @@ export async function observe(out, { match, conv, persona, otherId, theirMsgs, m
   const hits = new Set(out.agendaHits.filter((h) => quoteMsg(h.quote)).map((h) => h.id));
   const reopen = dbClaim && !confirmed ? agenda.find((a) => a.topic === TOPICS[dbClaim.attribute]) : null;
   if (hits.size || reopen) {
-    updated = agenda.map((a) => (a === reopen ? { ...a, status: 'open' } : hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6 } : a));
+    updated = agenda.map((a) => (a === reopen ? { ...a, status: 'open', reopened: true } : hits.has(a.id) ? { ...a, status: 'answered', confidence: 0.6 } : a));
     await Match.updateOne({ _id: match._id }, { $set: { [`brief.${viewer}.agenda`]: updated } });
     if (reopen) await Conversation.updateOne({ _id: conv._id }, { $unset: { [`agentState.${viewer}.topicTries.${reopen.id}`]: 1 } });
   }

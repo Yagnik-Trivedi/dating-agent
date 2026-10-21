@@ -17,14 +17,14 @@ import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
 import { tagLanguageHeuristic } from '../kg/language.js';
 import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
-import { groundingCheck, hedgeSentences, leakCheck, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
-import { privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
+import { covers, groundingCheck, hedgeSentences, leakCheck, orphaned, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
+import { isQuestion, privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
 import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
-import { MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
 
@@ -49,6 +49,36 @@ const constrainedWarning = (problems) => `every sentence of your drafts broke a 
 const OPEN_QUESTIONS = ['haha tell me more?', 'oh nice, how did that start?', 'ha fair, what got you into that?'];
 const fallbackQuestion = (rng) => OPEN_QUESTIONS[Math.floor(rng() * OPEN_QUESTIONS.length)];
 const turnSeed = (seed, userId, turn) => (seed + parseInt(createHash('md5').update(`${userId}:${turn}`).digest('hex').slice(0, 8), 16)) >>> 0;
+
+/**
+ * What code can read from their turn on its own (merged mode, before the one model call). Audit fix 2b: the shared
+ * question detector over every message of their turn (bursts, "…? 😄"), not only a "?" check.
+ */
+export function quickRead(texts) {
+  const all = texts.join('\n');
+  return { language: tagLanguageHeuristic(all), aboutMeQuestion: Boolean(questionToMe(all)), isQuestion: isQuestion(all) };
+}
+
+/** Audit fix 3: section-B attributes they stated themselves, up to and including the turn being answered. */
+export const heardIn = (before = [], texts = []) => [...new Set([...before, ...texts.flatMap((t) => attributesIn(t, { questions: false }))])];
+
+/** Did my sent text raise this planned agenda topic? An attribute by its words; another topic by its own words. */
+const raisedIn = (topic, text) => { const attr = agendaAttribute({ topic: topic.text }); return attr ? attributesIn(text).includes(attr) : bridgesTo({ topic: topic.text }, text); };
+
+/**
+ * Audit fix 4: count only what was actually sent. Claims covered by a sent sentence → used facts; a story fact among
+ * them → told; a planned agenda topic → tried only if the sent text raised it.
+ * → { used: [fact _id], told: [story _id], raised: bool }
+ */
+export function sentRecord({ messages, claims = [], facts, plan }) {
+  const sent = messages.flatMap((m) => sentencesOf(m));
+  const cited = [...new Set(claims.filter((c) => sent.some((s) => covers(c.text, s))).flatMap((c) => c.factIds ?? []))].map((id) => facts.get(id)).filter(Boolean);
+  return {
+    used: cited.map((f) => f._id).filter(Boolean),
+    told: cited.filter((f) => f.predicate === 'story').map((f) => String(f._id)),
+    raised: plan.topic?.kind === 'agenda' && raisedIn(plan.topic, messages.join(' ')),
+  };
+}
 
 /**
  * Is my agenda settled enough for a natural end? Everything with priority ≥ END_BLOCK_PRIORITY answered. A dealbreaker
@@ -114,7 +144,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // still forces the stance check / the ending through the one allowed regeneration.
   const merged = !opening && env.AGENT_TURN_MODE === 'merged';
   if (!opening && !merged) await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
-  if (merged) perception = { language: tagLanguageHeuristic(theirMsgs.map((m) => m.text).join('\n')), aboutMeQuestion: Boolean(questionToMe(theirMsgs.map((m) => m.text).join('\n'))), isQuestion: theirMsgs.some((m) => m.text.includes('?')) };
+  if (merged) perception = quickRead(theirMsgs.map((m) => m.text));
+  state.heardAttrs = heardIn(state.heardAttrs, theirMsgs.map((m) => m.text));
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
   const stories = storyCandidates(persona, state.toldStoryIds);
   const plan = rulesOn
@@ -205,7 +236,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // AGENT_REGEN=lean (plan 30 S1): when every problem is a grounding one, the failing sentences are dropped before
     // sending anyway, so keep the rest instead of paying a second model call, if at least 3 words survive.
     const onlyGrounding = c.problems.length === c.grounding.problems.length && c.grounding.drop.length;
-    if (env.AGENT_REGEN === 'lean' && onlyGrounding && words(draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !c.grounding.drop.includes(s) && !echoOf(s, recent)).join(' ')).length >= 3) break;
+    // Audit fix 2c: only questions left after the drops counts as nothing left (a bare "do you smoke?" read as cold).
+    const keptHere = draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !c.grounding.drop.includes(s) && !echoOf(s, recent));
+    if (env.AGENT_REGEN === 'lean' && onlyGrounding && words(keptHere.join(' ')).length >= 3 && !orphaned(keptHere, c.grounding.drop)) break;
     warning = c.problems.join(' ');
     debug(`agent ${match._id}: draft rejected: ${warning}`);
   }
@@ -226,7 +259,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // nothing surviving, so the constrained regeneration writes a real message instead.
     for (const s of sentences) if (mySent.has(norm(s).join(' '))) drop.add(s);
     const messages = attempt.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean);
-    return { leaks, drop, messages: words(messages.join(' ')).length >= 3 ? messages : [] };
+    const enough = words(messages.join(' ')).length >= 3 && !orphaned(sentences.filter((s) => !drop.has(s)), [...drop]);
+    return { leaks, drop, messages: enough ? messages : [] };
   }
   let { leaks, drop, messages } = await survivors(best);
   // Nothing survived: ONE constrained regeneration (owner's tuning spec): short, in-voice, on their last message, a
@@ -257,18 +291,19 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const inbox = decision && { ...decision, askedBy: matchName };
   const unknownAboutMe = inbox?.question ?? null;
 
-  const used = [...new Set(best.draft.claims.flatMap((c) => c.factIds))].map((id) => facts.get(id)?._id).filter(Boolean);
-  const told = plan.topic?.kind === 'story' ? [plan.topic.id] : [];
+  // Audit fix 4: what was actually sent (a dropped sentence or a fallback line tells no story and raises no topic).
+  const { used, told, raised } = sentRecord({ messages, claims: best.draft.claims, facts, plan });
+  const touched = plan.topic && (plan.topic.kind === 'agenda' ? raised : plan.topic.kind === 'story' ? told.includes(plan.topic.id) : true);
   await save({
     turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns,
     lastAsked: messages.join(' ').includes('?'), // planAct: once they answer my question, share or react more often
     ...(plan.topic && { lastTopicTurn: state.turn }),
-    topicsTouched: [...new Set([...(state.topicsTouched ?? []), ...(plan.topic ? [plan.topic.id] : []), ...(perception.topics ?? [])])],
-    ...(plan.topic?.kind === 'agenda' && { topicTries: { ...(state.topicTries ?? {}), [plan.topic.id]: (state.topicTries?.[plan.topic.id] ?? 0) + 1 } }),
-    toldStoryIds: [...(state.toldStoryIds ?? []), ...told],
+    topicsTouched: [...new Set([...(state.topicsTouched ?? []), ...(touched ? [plan.topic.id] : []), ...(perception.topics ?? [])])],
+    ...(raised && { topicTries: { ...(state.topicTries ?? {}), [plan.topic.id]: (state.topicTries?.[plan.topic.id] ?? 0) + 1 } }),
+    toldStoryIds: [...new Set([...(state.toldStoryIds ?? []), ...told])],
     // What my agent asked / they stated themselves, per section-B attribute (replay and eval).
     askedAttrs: [...new Set([...(state.askedAttrs ?? []), ...attributesIn(messages.join(' '), { questions: true })])],
-    heardAttrs: [...new Set([...(state.heardAttrs ?? []), ...theirMsgs.flatMap((m) => attributesIn(m.text, { questions: false }))])],
+    heardAttrs: state.heardAttrs,
   });
   const end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
   return {

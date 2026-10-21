@@ -34,9 +34,15 @@ const STOP = new Set(['about', 'their', 'there', 'these', 'those', 'which', 'wou
 
 const clausesOf = (s) => s.split(/\s*[—–;]\s*|,\s+(?=(?:and |but |so |though )?(?:i|i'm|i've|my|me)\b)/i).map((c) => c?.trim()).filter((c) => c && /[\p{L}]/u.test(c));
 const jaccard = (a, b) => { const A = new Set(norm(a)), B = new Set(norm(b)); const inter = [...A].filter((x) => B.has(x)).length; return inter / (new Set([...A, ...B]).size || 1); };
-const covers = (claimText, sentence) => { const c = norm(claimText).join(' '), s = norm(sentence).join(' '); return (c && (s.includes(c) || c.includes(s))) || jaccard(claimText, sentence) >= 0.5; };
+export const covers = (claimText, sentence) => { const c = norm(claimText).join(' '), s = norm(sentence).join(' '); return (c && (s.includes(c) || c.includes(s))) || jaccard(claimText, sentence) >= 0.5; };
 const FILLER = new Set(['haha', 'hahaha', 'lol', 'yeah', 'yes', 'okay', 'the', 'and', 'for', 'but', 'too', 'also', 'with', 'just', 'that', 'this', 'so', 'omg', 'wow']);
 const contentWords = (s) => tokensOf(s).filter((w) => w.length >= 5 && !STOP.has(w));
+
+const isQuestionSentence = (s) => s.trim().endsWith('?') || INTERROGATIVE.test(ascii(s));
+/** A sentence that says something (not a question, ≥ 2 real words): "ugh same, just got home" yes; "haha nice" no. */
+export const substantive = (s) => !isQuestionSentence(s) && tokensOf(s).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2;
+/** Audit fix 2c: sentences were dropped and only questions are left ("do you smoke?" after its lead-in was cut). */
+export const orphaned = (kept, dropped) => dropped.length > 0 && kept.length > 0 && !kept.some(substantive);
 
 /**
  * Style vs the act plan and my voice → hard problems that justify the one regeneration. Cosmetic drift (a bit long,

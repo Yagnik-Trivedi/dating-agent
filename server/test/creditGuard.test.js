@@ -40,6 +40,12 @@ test('a real user over JUDGE_LIVE_CHATS_PER_DAY waits for the next day; seeds ne
   assert.equal(await Conversation.countDocuments({ matchId: third._id }), 1);
 });
 
+test('audit fix 1: a judge account (isJudge) starts a 3rd agent chat the same day', async () => {
+  const [judge, s1, s2, s3] = await Promise.all([user('jj@t.local', { isJudge: true }), user('js1@t.local', { isSeed: true }), user('js2@t.local', { isSeed: true }), user('js3@t.local', { isSeed: true })]);
+  for (const s of [s1, s2]) await Conversation.create({ matchId: (await matchOf(judge, s))._id, seed: 1 });
+  assert.equal(await overDailyChats(await matchOf(judge, s3)), false);
+});
+
 test('seed accounts skip the per-user LLM cap; real users hit it', async () => {
   const saved = { LLM_ENABLED: env.LLM_ENABLED, LLM_DAILY_CALLS_PER_USER: env.LLM_DAILY_CALLS_PER_USER };
   Object.assign(env, { LLM_ENABLED: true, LLM_DAILY_CALLS_PER_USER: 1 });

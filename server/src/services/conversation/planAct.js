@@ -105,7 +105,9 @@ export function planAct({ state, voice = {}, perception = {}, rng, agenda = [], 
   const sinceTopic = turn - (state.lastTopicTurn ?? -1);
   if (!opening && turn >= KG.WARMUP_TURNS && sinceTopic >= KG.TOPIC_GAP_TURNS) {
     const tries = (a) => state.topicTries?.[a.id] ?? ((state.topicsTouched ?? []).includes(a.id) ? 1 : 0);
-    const open = agenda.filter((a) => a.status !== 'answered' && tries(a) < KG.TOPIC_TRIES).sort((a, b) => b.priority - a.priority);
+    // Audit fix 3: never what they already stated, this turn included (a dealbreaker_hint reopen may still follow up).
+    const heard = (a) => !a.reopened && (state.heardAttrs ?? []).includes(agendaAttribute(a));
+    const open = agenda.filter((a) => a.status !== 'answered' && tries(a) < KG.TOPIC_TRIES && !heard(a)).sort((a, b) => b.priority - a.priority);
     const said = [theirs, thread.mine ?? ''].join('\n');
     const bridged = open.find((a) => bridgesTo(a, said));
     const lull = (shortReply && !theyAsked) || sinceTopic >= KG.THREAD_TURNS || interest < KG.LOW_INTEREST;
