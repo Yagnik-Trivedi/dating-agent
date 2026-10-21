@@ -65,7 +65,8 @@ export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs
 /** The perceive prompt's inputs (also used by the merged turn call, plan 30 S1). */
 export const perceiveArgs = ({ persona, theirMsgs, context, myLast, agenda }) => ({
   myName: persona.firstName, theirName: context.theirName, latest: theirMsgs.map((m) => m.text).join('\n'), context: context.lines, myLast,
-  agenda: agenda.filter((a) => a.status !== 'answered'), attributes: ATTRIBUTES,
+  // Plan 31: known and for-you items never reach a model (removed ones aren't in the agenda at all).
+  agenda: agenda.filter((a) => a.status !== 'answered' && a.status !== 'for_you'), attributes: ATTRIBUTES,
 });
 
 /** Code after the read: notes (verbatim quotes only), chat moments and agenda progress, compared with MY graph. */

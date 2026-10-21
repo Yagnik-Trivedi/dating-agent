@@ -8,6 +8,7 @@ const langName = (l) => LANG[l] ?? l;
 function planLines(plan, firstName) {
   if (plan.plain) return ['- Reply naturally, the way ' + firstName + ' would.']; // RULES=off ablation: no act plan
   if (plan.end) return [`- END the conversation now: one short, kind closing line in ${firstName}'s own closing style${plan.closingStyle ? ` (e.g. "${plan.closingStyle}")` : ''}. No question.`];
+  if (plan.mode === 'human') return humanLines(plan, firstName);
   const lines = [
     `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}.`,
     plan.opening ? null : moveLine(plan, firstName),
@@ -56,8 +57,77 @@ const TOPIC_HINTS = {
 };
 const topicText = (t) => TOPIC_HINTS[t] ?? t;
 
+// --- Plan 31 (CONVO_MODE=human): a simple, casual chat that matches their mood. No topics to tick off.
+// The one matching question, asked plainly (no setup, no story, no hint first).
+const ASK_ONCE = {
+  'living in 3-5 years': 'where do you see yourself living in a few years?', 'family involvement in relationship decisions': 'how involved is your family in stuff like this?',
+  'career ambition': 'how do you balance work with everything else?', 'conflict style': 'how are you when you disagree with someone, talk it out or need space?',
+  'alone_time needed': 'how much alone time do you need?', 'alone time needed': 'how much alone time do you need?', smoking: 'do you smoke?', drinking: 'do you drink?',
+  diet: 'what do you usually eat, veg or non-veg?', 'religion in own life': 'how much does religion matter to you?',
+};
+const askOnceText = (t) => ASK_ONCE[t] ?? `${topicText(t)}?`;
+// Plan 31 A5: how to answer each mood.
+const MOOD_MATCH = {
+  chill: 'keep it short and easy', playful: "play along, tease a little if that's how {name} texts", excited: 'be happy for them and ask one thing about it',
+  tired: 'very short and warm, no new topics; fine to wrap up', busy: 'very short and warm, no new topics; fine to wrap up',
+  down: 'stay on it and be kind: no jokes, no change of subject', serious: 'answer properly, no jokes',
+  flirty: "light and warm, only as far as {name}'s own style goes", curious: 'answer what they want to know, simply',
+  bored: "don't push questions: one easy thing, or close nicely",
+};
+const humanMoveLine = (plan, firstName) => ({
+  reply: `- Move: reply to their question simply (from the listed facts, or say honestly you don't know: "honestly no idea lol").${plan.askBack ? ' You may ask it back.' : ''}`,
+  react: '- Move: a short, natural reaction to what they said ("haha no way", "ugh that\'s the worst", "oh nice"). That can be the whole message.',
+  ask_theirs: '- Move: react, then one short question about what they just said ("wait what happened?"). Not a new topic.',
+  share: `- Move: share a little of ${firstName}'s own that connects to what they said ("same, I just got home too"); from the listed facts only when it's about ${firstName}. No question.`,
+  stay: "- Move: they're telling you something or having a rough time: stay with them. React or ask about THEIR thing. No new topic, no story of yours, no jokes if they're down.",
+  close: null,
+}[plan.move] ?? null);
+
+function humanLines(plan, firstName) {
+  const r = plan.read ?? {};
+  return [
+    `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}. About as long as their message.`,
+    plan.opening ? null : `- They seem ${r.mood ?? 'chill'} (${r.energy ?? 'medium'} energy${r.doing && r.doing !== 'chatting' ? `, ${r.doing.replace(/_/g, ' ')}` : ''}): ${(MOOD_MATCH[r.mood] ?? MOOD_MATCH.chill).replace(/\{name\}/g, firstName)}.`,
+    plan.opening ? null : humanMoveLine(plan, firstName),
+    plan.askBack && plan.topic?.kind !== 'agenda' ? '- At most one question, about what they said.' : plan.topic?.kind === 'agenda' ? null : '- No question this time.',
+    plan.emoji ? `- Use the emoji ${plan.emoji} once.` : '- No emoji.',
+    plan.laugh ? `- Laugh the way ${firstName} does ("${plan.laugh}").` : null,
+    `- Language: ${langName(plan.language.primary)}${plan.language.codeSwitch && plan.language.secondary ? `, mixing in some ${langName(plan.language.secondary)} the way ${firstName} does` : ' only'}.`,
+    ...plan.reactions.filter((x) => x.kind !== 'unknown').map((x) => `- About "${x.text}": ${firstName} is ${{ excited: 'genuinely excited about it', positive: 'into it', lukewarm: 'only mildly into it', dislike: 'NOT into it; say so kindly' }[x.kind]}.`),
+    plan.unknownTopic ? `- They asked about ${plan.unknownTopic}: nothing about ${firstName} and ${plan.unknownTopic} is listed. Say simply you don't know or haven't thought about it. Never invent a preference, team, habit or opinion.` : null,
+    plan.mustDisagree ? `- DISAGREE with "${plan.disagreeOn}". ${firstName} firmly holds the opposite view: keep it friendly, but do not give in.` : null,
+    plan.topic?.kind === 'agenda' ? `- If it fits right now, ask this plainly in one short casual line: "${askOnceText(plan.topic.text)}" No setup, no story, no hint first. If it doesn't fit, don't ask it.` : null,
+    plan.topic?.kind === 'story' ? `- They told you a story: if [${plan.topic.storyId}] truly connects, share it in one or two sentences. Otherwise skip it.` : null,
+  ].filter(Boolean);
+}
+
+const HUMAN_BLOCK = (firstName) => [
+  'HOW THIS CHAT GOES:',
+  '- This is a simple, casual chat. Most messages are a short reply or reaction.',
+  "- Match their mood and energy. If they're short, be short. If they're tired, be gentle and brief. If they're playful, play along.",
+  "- Small talk is good. You don't need a fact to react, agree, or talk about the day, the weekend, food or what they said.",
+  "- Don't tell stories unless they told one first. Don't set up questions with stories or hints.",
+  '- Not every message needs a question.',
+  `- Anything about ${firstName} still comes only from the listed facts.`,
+];
+
+function finalHuman(plan, firstName) {
+  return [
+    plan.unknownTopic ? `answer simply: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you don't know (no made-up preference).`
+      : plan.answerFirst && `answer their question about ${firstName} simply (listed facts, or "honestly no idea").`,
+    plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
+    plan.move === 'stay' && 'stay with what they are telling you; no new topic.',
+    plan.topic?.kind === 'agenda' && `if it fits, ask plainly: "${askOnceText(plan.topic.text)}"; if not, skip it.`,
+    !plan.topic && plan.move === 'react' && 'just a short reaction, no question.',
+    !plan.topic && plan.move === 'share' && `share a little of ${firstName}'s that connects, no question.`,
+    !plan.topic && plan.move === 'ask_theirs' && 'react, then one short question about what they just said.',
+    `about ${plan.targetWords} words.`,
+  ].filter(Boolean).join(' ');
+}
+
 function finalInstruction(plan, firstName) {
   if (plan.end) return 'end the conversation kindly in one short line (no question).';
+  if (plan.mode === 'human') return finalHuman(plan, firstName);
   return [
     plan.unknownTopic ? `answer their question honestly: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you're not sure (no made-up preference); don't just ask it back.`
       : plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
@@ -95,12 +165,14 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
         ...planLines(plan, firstName),
         '',
         // Plan 30 SN: the agents read like interviewers ticking off topics. This is how two people actually get talking.
-        'HOW A GOOD CHAT FEELS:',
-        '- It is a getting-to-know-you chat between two people, not an interview or a questionnaire.',
-        '- Stay on the thread they are on before changing the subject. Pick up the specific details they mention and react to those.',
-        `- Share before you ask: give something of ${firstName}'s own so it's an exchange, not a Q&A.`,
-        '- Not every message needs a question. Never fire a new question on an unrelated topic right after they answered one.',
-        "- Light humour, teasing and small reactions are good when they fit the person's style.",
+        ...(plan.mode === 'human' ? HUMAN_BLOCK(firstName) : [
+          'HOW A GOOD CHAT FEELS:',
+          '- It is a getting-to-know-you chat between two people, not an interview or a questionnaire.',
+          '- Stay on the thread they are on before changing the subject. Pick up the specific details they mention and react to those.',
+          `- Share before you ask: give something of ${firstName}'s own so it's an exchange, not a Q&A.`,
+          '- Not every message needs a question. Never fire a new question on an unrelated topic right after they answered one.',
+          "- Light humour, teasing and small reactions are good when they fit the person's style.",
+        ]),
         '',
         'RULES:',
         `- Don't agree, compliment or show enthusiasm unless ${firstName} genuinely would, given the facts. Being brief, bored or in disagreement is fine.`,
