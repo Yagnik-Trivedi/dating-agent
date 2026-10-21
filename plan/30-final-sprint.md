@@ -1,7 +1,7 @@
 # 30 — Final sprint (Oct 18 → submit Oct 29)
 
 > **This is the only plan with open work.** It merges the old plans 21 (speed) and 22 (dating-app core) and everything found after the first deploy (Oct 18). Finished plans are in `plan/archive/`. Reference docs: `15-knowledge-graph-final.md`, `18-architecture-decisions.md`. Ops: `12` (deploy), `14` (Nebius), `13` (submission).
-> **Order:** S0 → S1 → **S6 (design foundation; the design has arrived)** → S2 → S3 → **SN (natural conversation, added 2026-10-19)** → S4 → S5 → S7. New screens in S2–S5 are built directly in the new design, never in the old one. Stop for the owner's "go" only where marked **STOP**.
+> **Order:** S0 → S1 → **S6 (design foundation; the design has arrived)** → S2 → S3 → **SN (natural conversation, added 2026-10-19)** → **SH (human conversation, `plan/31-human-conversation.md`, added 2026-10-21)** → S4 → S5 → S7. New screens in S2–S5 are built directly in the new design, never in the old one. Stop for the owner's "go" only where marked **STOP**.
 > **Git and deploys (owner, 2026-10-18):** deploy credits on the free tiers are limited. **Commit locally after each step, but never push and never deploy** until the owner says so; there's one final push + deploy in S7. Test everything locally against a production build.
 > **Dates:** S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · final push + deploy + full QA Oct 27 · **feature freeze Oct 28** · submit Oct 29. Whatever isn't done by Oct 28 is cut, not rushed.
 
@@ -282,6 +282,9 @@ All numbers live in `kg/config.js`.
   - judge accuracy not lower (5/6), fallbacks ≤ 7%, unsupported claims not higher
   - two transcripts read by the owner as natural
 - **Trade-off:** fewer forced topics → the judges see less evidence. If accuracy drops, the fix is in the judge (e.g. "not discussed" → the report's "ask yourself"), not in forcing topics again.
+
+## SH — Human conversation (Arya, 2026-10-21; after SN, before S4)
+The agent's job in the chat is to see if two people get along, not to fill in a form. Full design, repo mapping and prompts: **`plan/31-human-conversation.md`** (phases H1 → H1-live → H2; `CONVO_MODE=human|sn`, so the demo can fall back to SN in one env line). If H1 isn't green by Oct 24 evening, ship `CONVO_MODE=sn`.
 
 ## SU — Live check removed + phone UI fixes (owner, 2026-10-19) ✅
 - **Live check removed:** server route / service / model / prompt / test / script, `LIVE_CHECK_*` env, the trust bonus; client page, onboarding step (6 steps now), badges, Settings row, landing claim, MediaPipe. New accounts start `active`; `activateWaiting()` activates any `browse_only` account once at boot and delivers its kept likes. `MODEL_VISION` stays for photo moderation.

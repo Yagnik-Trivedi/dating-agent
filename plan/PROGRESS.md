@@ -10,7 +10,7 @@ Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · 
 
 ## Plan 30: final sprint (the only plan with open work)
 
-Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
+Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
 
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
@@ -21,6 +21,7 @@ Order: **S0 → S1 → S6 → S2 → S3 → S4 → S5 → S7**. Dates: S0–S1 b
 | S3 | Dating-app core (photos + moderation, prompts, likes with comments, Likes you, human chat, safety, agent labels) | ✅ | `f800607`…`458820d` | Results below. **No `CLOUDINARY_*` keys in `.env`: the local stub is used** (files in `server/uploads/`, local only). |
 | SN | Natural conversation (owner, 2026-10-19): topics come up in the flow, not on a timer | 🔄 code done | (this commit) | Results below. **Left: the live 6-pair check needs `server/.env` on this machine.** |
 | SU | Live check removed + phone UI fixes (owner, 2026-10-19) | ✅ | (this commit) | Results below. Pushed + deployed with the owner's OK. |
+| SH | Human conversation (Arya, 2026-10-21; `plan/31-human-conversation.md`): no needless matching questions, mood-matched simple talk, profile basics | 🔄 H1 | — | H1 → H1-live (STOP before the live 6-pair run) → H2. Fallback: `CONVO_MODE=sn`. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
