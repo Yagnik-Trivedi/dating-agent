@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
 import { cityGeo } from '../services/cities.js';
-import { buildGate } from '../services/match/gate.js';
+import { BASICS, buildGate } from '../services/match/gate.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
 import { parse } from '../utils/http.js';
 
@@ -26,6 +26,7 @@ const profileBody = z.object({
     relationshipGoal: text(60),
     religionImportance: text(30),
   }).partial(),
+  tagsHidden: z.array(z.enum(Object.keys(BASICS))).max(Object.keys(BASICS).length), // plan 31 A2: basics kept off my profile
   dealbreakers: z.array(text(100)).max(10),
   ageMin: z.number().int().min(18).max(100),
   ageMax: z.number().int().min(18).max(100),
@@ -38,15 +39,28 @@ profileRouter.get('/profile', async (req, res) => {
   res.json({ profile: await Profile.findOne({ userId: req.user._id }).lean() });
 });
 
-profileRouter.put('/profile', async (req, res) => {
-  const fields = parse(profileBody, req.body);
+// tags { interests, lifestyle: { smoking } } → { 'tags.interests', 'tags.lifestyle.smoking' }: a partial update (the
+// onboarding sends only interests) no longer wipes the basics.
+const flatTags = (tags = {}, prefix = 'tags') => Object.fromEntries(Object.entries(tags).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.entries(flatTags(v, `${prefix}.${k}`)) : [[`${prefix}.${k}`, v]])));
+
+/** Save my profile fields, then rebuild the gate and my public basics. → the saved profile */
+export async function saveProfile(userId, body) {
+  const { tags, ...fields } = parse(profileBody, body);
   const geo = 'city' in fields ? cityGeo(fields.city) : undefined; // a listed city gets coordinates; "Other" matches by name
-  const profile = await Profile.findOneAndUpdate(
-    { userId: req.user._id },
-    { $set: { ...fields, ...(geo && { geo }) }, ...('city' in fields && !geo && { $unset: { geo: 1 } }) },
-    { new: true, upsert: true, runValidators: true },
-  ).lean();
-  await buildGate(req.user._id);
+  const tagSet = flatTags(tags);
+  // A basic set by hand is mine: never overwritten from my B answers (plan 31 A2).
+  const edited = Object.entries(BASICS).filter(([, path]) => `tags.${path}` in tagSet).map(([attr]) => attr);
+  await Profile.updateOne(
+    { userId },
+    { $set: { ...fields, ...tagSet, ...(geo && { geo }) }, ...(edited.length && { $addToSet: { tagsEdited: { $each: edited } } }), ...('city' in fields && !geo && { $unset: { geo: 1 } }) },
+    { upsert: true, runValidators: true },
+  );
+  await buildGate(userId); // also fills my public basics and removes hidden ones
+  return Profile.findOne({ userId }).lean();
+}
+
+profileRouter.put('/profile', async (req, res) => {
+  const profile = await saveProfile(req.user._id, req.body);
   queueProfileCheck(req.user._id); // public content changed → the trust check's cached part follows (plan 30 S1)
   res.json({ profile });
 });

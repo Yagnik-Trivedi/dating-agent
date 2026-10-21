@@ -33,6 +33,10 @@ const profileSchema = new mongoose.Schema({
     relationshipGoal: String,
     religionImportance: String,
   },
+  // Plan 31 A2: which basics (B attribute ids) stay off my public profile. Missing = the defaults (gate.js
+  // BASICS_HIDDEN_DEFAULT). tagsEdited: basics I set by hand, never overwritten from my B answers. Both private.
+  tagsHidden: { type: [String], default: undefined },
+  tagsEdited: { type: [String], default: undefined },
   dealbreakers: [String],
   ageMin: { type: Number, default: 18 }, // wanted age range (plan 17)
   ageMax: { type: Number, default: 99 },
@@ -58,7 +62,7 @@ profileSchema.index({ geo: '2dsphere' }, { sparse: true });
 export const Profile = mongoose.model('Profile', profileSchema);
 
 // What anyone else (a human or their agent) may see of a profile: never the gate, dealbreakers, age range or geo.
-export const PUBLIC_PROFILE = '-dealbreakers -gate -geo -ageMin -ageMax -radiusKm -photoUploads -status -selfCheck';
+export const PUBLIC_PROFILE = '-dealbreakers -gate -geo -ageMin -ageMax -radiusKm -photoUploads -status -selfCheck -tagsHidden -tagsEdited';
 /** Statuses that keep a profile out of Discover and matching (missing = active). */
 export const NOT_ACTIVE = ['browse_only', 'held'];
 export const PUBLIC_PROJECTION = Object.fromEntries(PUBLIC_PROFILE.split(' ').map((f) => [f.slice(1), 0]));

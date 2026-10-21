@@ -29,12 +29,38 @@ export function gateFrom(profile = {}, answersB = {}) {
   };
 }
 
-/** Rebuild one user's Profile.gate (after onboarding, a profile edit or a B change). */
+/**
+ * Plan 31 A2: the public profile "basics", filled from my OWN section-B answers (Hinge-style). B option value → the
+ * Profile.tags path; values are kept as is (the client labels them). Owner's defaults (2026-10-21): religion hidden.
+ */
+export const BASICS = { looking_for: 'relationshipGoal', kids: 'wantsKids', smoking: 'lifestyle.smoking', drinking: 'lifestyle.drinking', diet: 'lifestyle.diet', religion: 'religionImportance' };
+export const BASICS_HIDDEN_DEFAULT = ['religion'];
+export const hiddenBasics = (profile) => profile?.tagsHidden ?? BASICS_HIDDEN_DEFAULT;
+
+/**
+ * The tags update for my basics. A hidden basic is removed from tags, so it never reaches any public read, prompt or
+ * the other user (the gate still has it). A basic I set by hand (tagsEdited) is kept. No B answer → left as it is.
+ * → { $set, $unset } (dotted paths)
+ */
+export function basicsUpdate(profile = {}, answersB = {}) {
+  const hidden = hiddenBasics(profile);
+  const edited = profile.tagsEdited ?? [];
+  const $set = {}, $unset = {};
+  for (const [attr, path] of Object.entries(BASICS)) {
+    if (hidden.includes(attr)) $unset[`tags.${path}`] = 1;
+    else if (!edited.includes(attr) && answersB[attr]?.answer) $set[`tags.${path}`] = answersB[attr].answer;
+  }
+  return { $set, $unset };
+}
+
+/** Rebuild one user's Profile.gate and public basics (after onboarding, a profile edit or a B change). */
 export async function buildGate(userId) {
   const [profile, user] = await Promise.all([Profile.findOne({ userId }).lean(), User.findById(userId, { 'onboarding.answers.B': 1 }).lean()]);
   if (!profile) return null;
-  const gate = gateFrom(profile, user?.onboarding?.answers?.B);
-  await Profile.updateOne({ userId }, { $set: { gate } });
+  const answersB = user?.onboarding?.answers?.B ?? {};
+  const gate = gateFrom(profile, answersB);
+  const basics = basicsUpdate(profile, answersB);
+  await Profile.updateOne({ userId }, { $set: { gate, ...basics.$set }, ...(Object.keys(basics.$unset).length && { $unset: basics.$unset }) });
   return gate;
 }
 

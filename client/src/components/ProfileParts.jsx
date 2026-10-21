@@ -5,13 +5,16 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
-import { Baby, Briefcase, Cigarette, GraduationCap, Languages, MapPin, MessageCircle, PenLine, Ruler, Target, Wine } from 'lucide-react'
+import { Baby, Briefcase, Cigarette, GraduationCap, Languages, MapPin, MessageCircle, PenLine, Ruler, Target, Utensils, Wine } from 'lucide-react'
 import { Btn, Field, LikeBtn, Sheet, photoOf } from './r7'
 
 const SCENES = ['portrait', 'trek', 'sketch', 'cafe', 'city']
 const DRINK = { never: 'Doesn’t drink', socially: 'Drinks socially', regularly: 'Drinks regularly' }
 const SMOKE = { never: 'Doesn’t smoke', socially: 'Smokes socially', regularly: 'Smokes', trying_to_quit: 'Trying to quit smoking' }
-const KIDS = { yes: 'Wants kids', no: 'Doesn’t want kids', open: 'Open to kids', unsure: 'Not sure about kids' }
+const KIDS = { yes: 'Wants kids', no: 'Doesn’t want kids', open: 'Open to kids', unsure: 'Not sure about kids', have_already: 'Has kids' }
+// Plan 31 A2: basics filled from section-B answers (values as stored in the gate).
+const GOAL = { long_term: 'Looking for long-term', open_to_long_term: 'Open to long-term', short_term: 'Looking for something short-term', figuring_it_out: 'Figuring out what they want' }
+const DIET = { veg: 'Vegetarian', non_veg: 'Eats non-veg', vegan: 'Vegan', jain: 'Jain food', eggetarian: 'Eggetarian' }
 const label = (t) => String(t ?? '').replace(/_/g, ' ')
 export const COMMENT_MAX = 150
 
@@ -38,7 +41,7 @@ export function Basics({ p }) {
   const rows = [
     [Briefcase, [p.job, p.workplace].filter(Boolean).join(' · ')], [GraduationCap, p.education], [MapPin, p.city], [Ruler, p.height],
     [Languages, p.languages?.length && p.languages.map((x) => x[0].toUpperCase() + x.slice(1)).join(', ')],
-    [Target, p.tags?.relationshipGoal && `Looking for ${label(p.tags.relationshipGoal)}`], [Wine, DRINK[l.drinking]], [Cigarette, SMOKE[l.smoking]], [Baby, KIDS[p.tags?.wantsKids]],
+    [Target, p.tags?.relationshipGoal && (GOAL[p.tags.relationshipGoal] ?? `Looking for ${label(p.tags.relationshipGoal)}`)], [Wine, DRINK[l.drinking]], [Cigarette, SMOKE[l.smoking]], [Baby, KIDS[p.tags?.wantsKids]], [Utensils, DIET[l.diet]],
   ].filter(([, t]) => t)
   return (
     <section className="basics card" aria-label="Basics">
