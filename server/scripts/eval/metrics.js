@@ -16,6 +16,8 @@ import { Message } from '../../src/models/Message.js';
 import { User } from '../../src/models/User.js';
 import { tagLanguageHeuristic } from '../../src/services/kg/language.js';
 import { measure } from '../seed/lib/measure.js';
+import { agendaAttribute } from '../../src/services/kg/questionnaireFacts.js';
+import { convoMetrics, summarise } from './lib/convoMetrics.js';
 
 const ROOT = new URL('../../', import.meta.url);
 const rawTag = process.argv.includes('--tag') ? process.argv[process.argv.indexOf('--tag') + 1] : null; // rules-off → eval/raw-rules-off.json
@@ -39,7 +41,7 @@ const mixL1 = (a, b) => [...new Set([...Object.keys(a), ...Object.keys(b)])].red
 const hasDevanagari = (texts) => texts.some((t) => /\p{Script=Devanagari}/u.test(t));
 
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
-const voiceRows = [], convRows = [], obsRows = [];
+const voiceRows = [], convRows = [], obsRows = [], plan31 = [];
 const samples = []; // { name, real: [...], agent: [...] } for the human "which is real?" export
 for (const r of Object.values(raw).filter((x) => x.run === 1)) {
   const pair = pairs.find((p) => p.id === r.id);
@@ -81,6 +83,18 @@ for (const r of Object.values(raw).filter((x) => x.run === 1)) {
     obsRows.push({ pair: r.id, name: u.name, notes: notes.length, checkable: checkable.length, correct: correct.length, mentioned: mentioned.length, caught: caught.length });
   }
 
+  // Plan 31 A10: per side, matching questions about what the gate or their profile settled (from that side's agenda),
+  // stories told without them telling one first (a story fact behind the message), moves and moods.
+  const storyIds = new Set((await KgFact.find({ _id: { $in: agent.flatMap((m) => m.meta?.usedFactIds ?? []) }, predicate: 'story' }, { _id: 1 }).lean()).map((f) => String(f._id)));
+  const settled = [...new Set(users.flatMap((u) => (match.brief?.[u._id]?.agenda ?? []).filter((a) => a.settledBy === 'gate' || a.settledBy === 'profile').map(agendaAttribute)))];
+  const lines = messages.map((m, i) => {
+    const story = m.authoredBy === 'agent' && (m.meta?.usedFactIds ?? []).some((id) => storyIds.has(String(id)));
+    const prev = messages.slice(0, i).reverse().find((x) => String(x.senderId) !== String(m.senderId));
+    const theyToldFirst = prev && (prev.text.split(/\s+/).length >= 25 || /\b(so basically|long story|and then)\b/i.test(prev.text));
+    return { speaker: String(m.senderId), text: m.text, agent: m.authoredBy === 'agent', story: m.authoredBy === 'agent' ? story && !theyToldFirst : null };
+  });
+  plan31.push({ pair: r.id, ...convoMetrics(lines, { settled }), moves: agent.map((m) => m.actPlan?.move).filter(Boolean), moods: agent.map((m) => m.actPlan?.read?.mood).filter(Boolean) });
+
   // Conversation stats.
   const texts = agent.map((m) => m.text);
   const bigrams = texts.flatMap((t) => { const w = wordsOf(t.toLowerCase()); return w.slice(1).map((x, i) => `${w[i]} ${x}`); });
@@ -119,6 +133,13 @@ const md = [
   `- **Naturalness** (plan 30 SN): agenda topics ${sum(convRows, 'steered')} = ${sum(convRows, 'bridged')} through a bridge + ${sum(convRows, 'lulls')} at a lull + ${sum(convRows, 'cold')} cold (timer); back-to-back questions ${sum(convRows, 'backToBack')} of ${sum(convRows, 'msgs')} agent messages`, '',
   '| pair | expected → predicted | agent msgs | stop | ask-back | back-to-back ? | distinct-2 | length sd agent / real | disagreements | steered (bridge / lull / cold) | fallbacks |', '|---|---|---|---|---|---|---|---|---|---|---|',
   ...convRows.map((c) => `| ${c.pair} | ${c.expected} → ${c.predicted} | ${c.msgs} | ${c.stop ?? '—'} | ${f2(c.askBack)} | ${c.backToBack} | ${f2(c.distinct2)} | ${c.lenSd.map(f2).join(' / ')} | ${c.disagreements} (${c.resolved}) | ${c.steered} (${c.bridged} / ${c.lulls} / ${c.cold}) | ${c.fallbacks} + ${c.constrained} constrained |`), '',
+  ...((s) => [
+    '## Plan 31: human conversation (A10; targets in brackets)', '',
+    `- **Matching questions per chat** [0–1]: ${plan31.map((c) => c.matching).join(', ') || '—'} (max ${s.matchingMax}) · **about something the gate or their profile settled** [0]: ${s.matchingAboutSettled ?? '—'} · **re-asked after they said it**: ${s.matchingReasked} · **with a setup** [0]: ${s.matchingWithSetup}`,
+    `- **Question rate** [≤ 0.35]: ${f2(s.questionRate)} · **back-to-back without being asked** [0]: ${s.backToBack} · **unbridgedQuestionRate** [falls vs SN]: ${f2(s.unbridgedQuestionRate)}`,
+    `- **Unprompted agent stories** [0]: ${s.stories ?? '—'} · **topic changes while they tell or vent** [0]: ${s.topicChangesWhileTelling} · **length ratio** (agent / theirs, median): ${f2(s.lengthRatio)}`,
+    `- **Moves**: ${Object.entries(plan31.flatMap((c) => c.moves).reduce((o, m) => ({ ...o, [m]: (o[m] ?? 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') || '— (SN run)'} · **moods read**: ${Object.entries(plan31.flatMap((c) => c.moods).reduce((o, m) => ({ ...o, [m]: (o[m] ?? 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') || '—'}`, '',
+  ])(summarise(plan31)),
   '## Observer accuracy (my notes about them vs their own graph)', '',
   `- **Precision**: ${sum(obsRows, 'correct')}/${sum(obsRows, 'checkable')} checkable notes match their graph (same concept + polarity, or same attribute + value) = ${f2(sum(obsRows, 'correct') / (sum(obsRows, 'checkable') || 1))}`,
   `- **Recall**: ${sum(obsRows, 'caught')}/${sum(obsRows, 'mentioned')} of their facts they mentioned in chat were noted = ${f2(sum(obsRows, 'caught') / (sum(obsRows, 'mentioned') || 1))}`, '',
