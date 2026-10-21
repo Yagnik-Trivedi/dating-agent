@@ -42,6 +42,18 @@ export const KG = Object.freeze({
   ASK_BACK_FLOOR: 0.45, // min chance to end with a question when I'm not bored (was 0.7: every message became a question)
   ASK_AFTER_ANSWER: 0.6, // they just answered my question: share or react more often than asking again
   ASK_WHEN_ASKED: 0.6, // they asked me something: answer it; bounce a question back less often
+  // Plan 31 (Arya, 2026-10-21; CONVO_MODE=human): the agent checks whether two people get along, it doesn't fill in a
+  // form. Before the chat, code removes every matching question the gate, their public profile or low importance makes
+  // needless; at most MAX_MATCHING_QUESTIONS plain question per chat, only when it fits.
+  ASK_MIN_IMPORTANCE: 0.9, // a non-dealbreaker B answer below this never becomes a question ("high" = 0.9)
+  MAX_MATCHING_QUESTIONS: 1,
+  LENGTH_PULL: 0.6, // target length pulled this far from my sampled length toward their last message's
+  MAX_LENGTH_RATIO: 2, // low energy: a draft longer than this × theirs (+ LENGTH_SLACK words) is regenerated
+  LENGTH_SLACK: 4,
+  // Topics for the two humans, after the handoff: B attributes and topic words (agenda topics, "leave for me" choices).
+  HUMANS_ONLY: Object.freeze({ attributes: ['looking_for', 'kids'], topics: ['past relationships', 'exes', 'money', 'salary', 'health', 'family plans'] }),
+  // Human mode: the chance of a question per message (no floor), × these when their read says so.
+  ASK_HUMAN_MAX: 0.5, ASK_LOW_ENERGY: 0.3, ASK_WHEN_TOLD: 0.2,
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
   // judge (plan 09)
   JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)

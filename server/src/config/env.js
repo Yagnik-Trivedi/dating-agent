@@ -83,6 +83,8 @@ const schema = z.object({
   // full = regenerate on any problem (one regeneration max); lean = skip it when only ungrounded sentences failed (dropped in code)
   AGENT_REGEN: field(z.enum(['full', 'lean']).default('lean')),
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
+  // Plan 31: human = simple mood-matched talk, at most one plain matching question; sn = plan 30 SN exactly (the fallback).
+  CONVO_MODE: field(z.enum(['human', 'sn']).default('human')),
   KEEPALIVE_SELF_PING: bool(false), // Render: ping our own RENDER_EXTERNAL_URL/health so the free tier doesn't sleep (plan 12)
   KEEPALIVE_INTERVAL_MIN: field(z.coerce.number().positive().default(10)),
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker
