@@ -188,6 +188,25 @@ r = await call('GET', `/matches/${matchId}/date-ideas`, { token: A.token });
 assert.ok(r.status === 200 ? r.body.ideas.length > 0 : r.body.error.code === 'DATE_IDEAS_UNAVAILABLE', `date-ideas: ${r.status}`);
 ok(`settings, onboarding stub, kg/me, inbox, date-ideas (${r.status === 200 ? 'ideas' : '503 without TAVILY_API_KEY'})`);
 
+// --- plan 32 KP1/KP2: "How do you usually text?" and one source of truth for profile basics
+r = await call('GET', '/onboarding/questions', { token: A.token });
+assert.deepEqual(r.body.textingStyle.map((q) => q.id), ['emoji', 'bursts', 'length', 'caps', 'stickers']);
+r = await call('PUT', '/onboarding/texting-style', { token: A.token, body: { emoji: 'tons' } });
+assert.equal(r.status, 400, 'only the listed answers');
+r = await call('PUT', '/onboarding/texting-style', { token: A.token, body: { emoji: 'a_lot', bursts: 'several' } });
+assert.deepEqual([r.status, r.body.textingStyle.emoji, r.body.textingStyle.bursts], [200, 'a_lot', 'several']);
+r = await call('GET', '/kg/me', { token: A.token });
+assert.deepEqual(r.body.textingStyle.value, { emoji: 'a_lot', bursts: 'several' }, 'the "How I text" chips');
+r = await call('GET', '/profile/basics', { token: A.token });
+assert.deepEqual(r.body.basics.map((b) => [b.attr, b.shown]).find(([a]) => a === 'religion'), ['religion', false], 'religion hidden by default');
+r = await call('PUT', '/profile/basics', { token: A.token, body: { answers: { smoking: 'sometimes' } } });
+assert.equal(r.status, 400, 'only the listed answers');
+r = await call('PUT', '/profile/basics', { token: A.token, body: { answers: { smoking: 'never', kids: 'open' }, hidden: ['religion', 'kids'] } });
+assert.equal(r.status, 200);
+assert.deepEqual([r.body.profile.gate.values.smoking, r.body.profile.tags.lifestyle.smoking, r.body.profile.gate.values.kids, r.body.profile.tags.wantsKids], ['never', 'never', 'open', undefined]);
+assert.deepEqual(r.body.basics.filter((b) => ['smoking', 'kids'].includes(b.attr)).map((b) => [b.answer, b.shown]), [['open', false], ['never', true]]);
+ok('texting card saved + shown as chips; a basic edit moves the answer, gate and tag together; hiding keeps the answer');
+
 // --- DELETE /me
 r = await call('DELETE', '/me', { token: B.token });
 assert.equal(r.status, 204);

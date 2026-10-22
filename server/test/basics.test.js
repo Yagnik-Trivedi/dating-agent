@@ -70,3 +70,30 @@ test('plan 32 KP2: editing a basic on my profile changes my answer, my fact, the
   const hidden = await Profile.findOne({ userId: id }).lean();
   assert.deepEqual([hidden.tags.lifestyle.drinking, hidden.gate.values.drinking], [undefined, 'never']);
 });
+
+test('plan 32 KP2: an existing fact is updated in place (same id), a deleted one stays deleted, free text stays a tag', async () => {
+  const { editBasics, myBasics } = await import('../src/services/kg/basicsEdit.js');
+  const { KgTombstone } = await import('../src/models/KgTombstone.js');
+  const { factKey } = await import('../src/services/kg/factKey.js');
+  const id = await person();
+  await buildGate(id);
+  const smoking = await KgFact.create({ subjectId: id, observerId: null, predicate: 'lifestyle', object: 'smoking: never', attribute: 'smoking', value: 'never', source: 'questionnaire_choice', importance: 0.9, disclosure: 'public' });
+  // I deleted my diet fact earlier: an edit must not bring it back (it still changes the answer and the gate).
+  await KgTombstone.create({ subjectId: id, key: factKey({ predicate: 'lifestyle', attribute: 'diet', object: 'diet: vegan' }) });
+  assert.deepEqual((await editBasics(id, { smoking: 'socially', diet: 'vegan', kids: 'not_an_answer' })).sort(), ['diet', 'smoking']);
+  const after = await KgFact.findById(smoking._id).lean();
+  assert.deepEqual([after.value, after.object, after.disclosure], ['socially', 'smoking: socially', 'public']);
+  assert.equal(after.evidence.at(-1).sourceRef.id, 'B.smoking');
+  assert.equal(await KgFact.countDocuments({ subjectId: id, attribute: 'diet' }), 0);
+  const p = await Profile.findOne({ userId: id }).lean();
+  assert.deepEqual([p.gate.values.smoking, p.gate.values.diet, p.tags.lifestyle.smoking, p.tags.lifestyle.diet], ['socially', 'vegan', 'socially', 'vegan']);
+  assert.ok((await User.findById(id).lean()).graphVersion >= 1, 'the persona cache reloads');
+  // Free text that isn't an answer: a display tag set by hand, the answer untouched.
+  await saveProfile(id, { tags: { lifestyle: { smoking: 'trying_to_quit' } } });
+  const free = await Profile.findOne({ userId: id }).lean();
+  assert.deepEqual([free.tags.lifestyle.smoking, free.gate.values.smoking, free.tagsEdited], ['trying_to_quit', 'socially', ['smoking']]);
+  // The editor's view: religion hidden by default, answers as stored.
+  const basics = await myBasics(id);
+  assert.deepEqual(basics.find((b) => b.attr === 'religion'), { ...basics.find((b) => b.attr === 'religion'), answer: 'central', shown: false });
+  assert.equal(basics.find((b) => b.attr === 'smoking').answer, 'socially');
+});

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { after, before, beforeEach, test } from 'node:test';
 import mongoose from 'mongoose';
 import { InboxItem } from '../src/models/InboxItem.js';
-import { fileQuestion } from '../src/services/agent/askMyHuman.js';
+import { fileQuestion, inboxWorth } from '../src/services/agent/askMyHuman.js';
 import { createConcept, lookupConcept, resetConceptCache } from '../src/services/kg/canonicalize.js';
 import { inboxDecision, knowsTopic, questionToMe, topicOf } from '../src/services/persona/askedAboutMe.js';
 import { groundingCheck, hedgeSentences } from '../src/services/persona/checks.js';
@@ -86,4 +86,35 @@ test('at most 3 new items per conversation', async () => {
 
 test('"what are you hoping to find on here?" asks about looking_for', async () => {
   assert.equal((await topicOf('what are you hoping to find on here?', lookup))?.key, 'looking_for');
+});
+
+// Plan 32 KP3 (A6.6): not every unknown is worth asking my human.
+test('KP3: "which temple?" is held, never listed; it is filed once it comes up in a second chat', async () => {
+  assert.equal(inboxWorth({ question: 'which temple do you go to?' }), 'hold');
+  assert.equal(inboxWorth({ question: 'what was the cafe called?', topicKey: 'concept:c-cafe' }), 'hold');
+  const user = new mongoose.Types.ObjectId(), m1 = new mongoose.Types.ObjectId(), m2 = new mongoose.Types.ObjectId();
+  const item = { question: 'which temple do you go to?', topicKey: null, topicLabel: null };
+  const emitted = [];
+  const emit = (...a) => emitted.push(a);
+  assert.equal((await fileQuestion(user, m1, item, { askedBy: 'Rohan', emit })).action, 'held');
+  assert.equal((await fileQuestion(user, m1, item, { askedBy: 'Rohan', emit })).action, 'held', 'the same chat again does not count');
+  assert.equal(emitted.length, 0);
+  assert.equal(await InboxItem.countDocuments({ userId: user, status: { $ne: 'held' } }), 0);
+  const again = await fileQuestion(user, m2, { ...item, question: 'Which temple do you go to??' }, { askedBy: 'Dev', emit });
+  assert.equal(again.action, 'created');
+  assert.equal(again.item.status, 'open');
+  assert.equal(emitted.length, 1);
+});
+
+test('KP3: "do you want to live abroad?" (unknown, a life goal) is filed at once; held items do not count toward the cap', async () => {
+  const q = 'do you want to live abroad someday?';
+  const topic = await topicOf(q, lookup);
+  assert.deepEqual([topic?.kind, topic?.key], ['attribute', 'location']);
+  const d = inboxDecision({ question: q, topic, known: knowsTopic(topic, meera) });
+  assert.equal(inboxWorth(d), 'file');
+  const user = new mongoose.Types.ObjectId(), m = new mongoose.Types.ObjectId();
+  for (const k of ['a', 'b', 'c']) await fileQuestion(user, m, { question: `which ${k} one?`, topicKey: null }, { emit: noEmit });
+  assert.equal((await fileQuestion(user, m, d, { emit: noEmit })).action, 'created');
+  assert.equal(inboxWorth({ question: 'what music are you into lately?' }), 'file', 'an interest as a whole');
+  assert.equal(inboxWorth({ question: 'did you watch it yesterday?' }), 'hold', 'unresolved and not a big part of a life');
 });

@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-22, by Claude Code (plan 32 KP1–KP3 code done, local commits, not pushed; nothing run, by the owner's instruction)
+- **Last updated:** 2026-10-22, by Claude Code (plan 32 KP1–KP3 done and code-tested, local commits, not pushed; persona chats are the team's)
 - **Main-line branch:** `main` (pushed through `18c9e3d` and **deployed** 2026-10-19 by the owner. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -22,16 +22,27 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Da
 | SN | Natural conversation (owner, 2026-10-19): topics come up in the flow, not on a timer | 🔄 code done | (this commit) | Results below. **Left: the live 6-pair check needs `server/.env` on this machine.** |
 | SU | Live check removed + phone UI fixes (owner, 2026-10-19) | ✅ | (this commit) | Results below. Pushed + deployed with the owner's OK. |
 | SH | Human conversation (Arya, 2026-10-21; `plan/31-human-conversation.md`): no needless matching questions, mood-matched simple talk, profile basics | 🔄 H1 | — | H1 → H1-live (STOP before the live 6-pair run) → H2. Fallback: `CONVO_MODE=sn`. |
-| KP | Plan 32 before the hackathon (`plan/32-knowledge-graph-v3-2.md` B5): KP1 how you text, KP2 one source of truth for basics, KP3 small inbox questions | 🔄 code done | `a479b6c`, `32fb8e2`, `3d25447` | Results below. **Not run** (owner, 2026-10-22: the team tests it in the real app). K0–K5 are after the hackathon. |
+| KP | Plan 32 before the hackathon (`plan/32-knowledge-graph-v3-2.md` B5): KP1 how you text, KP2 one source of truth for basics, KP3 small inbox questions | ✅ code + tests | `a479b6c`, `32fb8e2`, `3d25447` + tests | Results below. Simulated persona chats are left to the team (owner, 2026-10-22). K0–K5 are after the hackathon. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
 
-## KP results: plan 32 before the hackathon (2026-10-22) 🔄 code done, not run
+## KP results: plan 32 before the hackathon (2026-10-22) ✅ code tested; persona chats by the team
 
-Owner's instruction for this step: build it, but **no testing and no dummy accounts**; the team tests it in the real app. So none of `npm test`, `api-check`, simulations or browser checks were run. Only syntax checks (`node --check`) and a client build into a temp folder.
+Owner's instructions: test the code; the team makes the personas and runs the simulated chats themselves. So no simulation or eval was run, and nothing touched Atlas (`server/.env` points at it). Every check below ran on the local dev replica set (`npm run dev-db`), with `MONGODB_URI` overridden.
+
+**Checks:**
+- `npm test`: **169/169** (158 before KP). New tests:
+  - `textingStyle.test.js` (8): desktop-only user who reports "a lot" of emoji and "several short messages"; phone vs desktop weights; line breaks are not bursts; echoed, thing and sad emoji; planAct sad-emoji gating; a seeded run where burst=2 lands within 0.08 of the user's burstiness; `splitBurst`; own-chat burst flag.
+  - `basics.test.js` (+2): answer → fact → gate → tag agree; hiding keeps the answer; fact updated in place; a tombstoned fact stays deleted; free text stays a tag.
+  - `askMyHuman.test.js` (+2): "which temple?" held, then filed in a second chat; "do you want to live abroad?" filed at once; held items don't count toward the cap.
+- `api-check`: all passed, with a new step for the texting card, the `/kg/me` chips and `GET/PUT /profile/basics` (AI off; local API).
+- Client production build: green.
+- `smoke:browsers` on the local production build: chromium, firefox and webkit all pass (awake, logged in, Discover). This needed the Playwright 1.64 browsers installed, `CLIENT_URL` to include `:4173`, and the local `seed01` password set to `SEED_PASSWORD` (local DB only).
+- 375 px and 1440 px (Playwright): onboarding step 5 with the card, `/teach/texting`, Edit profile → Lifestyle basics and This is you → List ("How I text" + chips) all render with 0 px horizontal overflow and no console errors. The one exception is below.
+- **Existing bug, not from KP:** on This is you, switching Graph → List throws `removeChild … not a child of this node` from the 3D graph's drei `<Html>` labels unmounting. The commit before KP (`0d67cc8`) does the same; the list still renders. It doesn't happen with reduced motion (no 3D). Possible fix: keep the canvas mounted (hidden) in list view, or unmount the labels first.
 
 - **KP1, how you text (A6.9):**
   - A "How do you usually text?" card: emoji, several short messages vs one, length, capitals, stickers/GIFs. Taps only, every row skippable. It shows in onboarding's reply step (saved before submit, so the first build uses it), in Teach your agent more (`/teach/texting`) and as chips in This is you (list view, "How I text"). It's stored on `User.textingStyle` (`PUT /api/onboarding/texting-style`), so rebuilds keep it.
@@ -45,9 +56,9 @@ Owner's instruction for this step: build it, but **no testing and no dummy accou
 
 **Deviations:**
 - KP2 runs in the request as one transaction, not as a job: it makes no model calls.
-- `basics.test.js` was updated, because a hand-set valid basic now becomes the answer. The new tests listed in prompt KP were not written. The test update was not run.
+- One existing `basics.test.js` case changed on purpose: a hand-set valid basic now becomes the answer.
 
-**For the team to run:** `npm test`, `api-check`, client build, 375 px and 1440 px, `smoke:browsers`, and one seeded simulated chat with a "several short messages" user to see the separate bubbles.
+**For the team:** a simulated chat with your personas and a "several short messages" texting style, to see the separate bubbles live.
 
 **Existing users:** their voice profiles keep the old line-break burstiness and the old top emojis until the profile is rebuilt. Saving the texting card, re-onboarding or 20 new samples all trigger a rebuild. A one-off `rebuildVoice` per user (code only) would refresh everyone. It was not run: real users' data, so ask first.
 
