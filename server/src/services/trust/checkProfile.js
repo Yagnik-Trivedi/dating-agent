@@ -2,6 +2,7 @@
 // "Inconsistent" is not "fake": mild contradictions become gentle "clarify" topics for the brief (plan 07).
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
+import { env } from '../../config/env.js';
 import { items } from '../../utils/zodItems.js';
 import { Profile, PUBLIC_PROFILE } from '../../models/Profile.js';
 import { ProfileCheck } from '../../models/ProfileCheck.js';
@@ -73,7 +74,7 @@ const levelFor = (score, autoFake) => (autoFake || score < 40 ? 'likely_fake' : 
  * If the LLM part fails (budget, bad JSON, provider down) the rule result still stands.
  */
 export async function checkProfileData({ profile, accountAgeMinutes, userId, matchId }) {
-  const rules = ruleChecks(profile, { accountAgeMinutes });
+  const rules = ruleChecks(profile, { accountAgeMinutes, photosRequired: env.PHOTOS_REQUIRED });
   const text = profileText(profile);
   let points = rules.points;
   const flags = [...rules.flags];

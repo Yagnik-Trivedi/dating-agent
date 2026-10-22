@@ -36,6 +36,9 @@ const schema = z.object({
   // Photo moderation (plan 30 S3): a Nemotron VL model (on Token Factory, copy its ID from GET /v1/models; plan 14 checklist).
   MODEL_VISION: field(z.string().trim().default('nvidia/nemotron-3.5-super-vl-120b-a12b')), // NVIDIA lists this Nemotron VL; nano-12b-v2-vl isn't on our account
   TAVILY_API_KEY: optional,
+  // Owner, 2026-10-22: photos are optional while the team tests conversations (Render has no Cloudinary yet, so uploads
+  // vanish on every deploy). false = no "No photos" trust flag and the onboarding photo step can be skipped. true restores both.
+  PHOTOS_REQUIRED: bool(false),
   // Plan 30 photos: Cloudinary free plan, signed direct uploads. All three missing = local stub (files in server/uploads).
   CLOUDINARY_CLOUD_NAME: optional,
   CLOUDINARY_API_KEY: optional,

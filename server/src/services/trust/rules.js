@@ -42,13 +42,13 @@ export const profileText = (p) => [p.bio, ...(p.prompts ?? []).flatMap((x) => [x
  * Rule checks on a profile. accountAgeMinutes comes from the user's createdAt (or crafted test metadata).
  * → { points, flags: string[], contact: bool, money: bool }
  */
-export function ruleChecks(profile, { accountAgeMinutes = Infinity } = {}) {
+export function ruleChecks(profile, { accountAgeMinutes = Infinity, photosRequired = true } = {}) {
   const text = profileText(profile);
   const flags = [];
   let points = 0;
   const add = (pts, flag) => { points += pts; flags.push(flag); };
 
-  if (!profile.photos?.length) add(25, FLAG.noPhotos);
+  if (photosRequired && !profile.photos?.length) add(25, FLAG.noPhotos);
   if ((profile.bio ?? '').trim().length < 15 || !profile.prompts?.length) add(10, FLAG.thin);
   const contact = hit(CONTACT, text);
   if (contact) add(30, FLAG.contact);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { env } from '../config/env.js';
 import { answersSchema, moreSchema } from '../services/kg/answers.js';
 import { buildUserGraph, startUserGraphBuild } from '../services/kg/buildUserGraph.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
@@ -11,7 +12,7 @@ import { httpError, parse } from '../utils/http.js';
 
 export const onboardingRouter = Router();
 
-onboardingRouter.get('/onboarding/questions', (req, res) => res.json({ ...QUESTIONS, coreReplyIds: KG.CORE_REPLY_IDS, textingStyle: TEXTING_STYLE }));
+onboardingRouter.get('/onboarding/questions', (req, res) => res.json({ ...QUESTIONS, coreReplyIds: KG.CORE_REPLY_IDS, textingStyle: TEXTING_STYLE, photosRequired: env.PHOTOS_REQUIRED }));
 
 // Plan 32 KP1 "How do you usually text?": taps only, any subset. Saved on the user (a graph rebuild keeps it); the
 // voice profile is re-blended right away (code only) when there are samples, else the onboarding build picks it up.
