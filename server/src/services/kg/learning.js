@@ -52,12 +52,13 @@ function keepSet(samples) {
 }
 
 export async function rebuildVoice({ userId }) {
-  const samples = await VoiceSample.find({ userId }).lean();
+  const [samples, user] = await Promise.all([VoiceSample.find({ userId }).lean(), User.findById(userId, { textingStyle: 1 }).lean()]);
+  if (!samples.length) return { samples: 0, dropped: 0 }; // nothing to build from yet (the self-report waits for onboarding)
   const keep = keepSet(samples);
   const drop = samples.filter((s) => !keep.includes(s)).map((s) => s._id);
   if (drop.length) await VoiceSample.deleteMany({ _id: { $in: drop } });
   const now = Date.now();
-  const voice = computeVoiceProfile(keep.map((s) => ({ ...s, weight: 0.5 ** ((now - s.createdAt) / (90 * 86_400_000)) })));
+  const voice = computeVoiceProfile(keep.map((s) => ({ ...s, weight: 0.5 ** ((now - s.createdAt) / (90 * 86_400_000)) })), { selfReport: user?.textingStyle });
   const kept = await VoiceProfile.findOne({ userId }, { description: 1, doList: 1, dontList: 1, corrections: 1, neverSay: 1 }).lean();
   await VoiceProfile.updateOne({ userId }, { $set: applyCorrections({ ...voice, ...kept, _id: undefined, userId }) }, { upsert: true });
   await User.updateOne({ _id: userId }, { $inc: { graphVersion: 1 } });

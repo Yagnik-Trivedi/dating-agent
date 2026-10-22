@@ -2,10 +2,13 @@
 import { z } from 'zod';
 import { KG } from './config.js';
 import { QUESTIONS } from './questions.js';
+import { DEVICES } from './textingStyle.js';
 
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
 const text = (max) => z.string().trim().max(max);
 const B = section('B');
+// Plan 32 KP1: which device each reply was typed on (from the browser), so desktop replies count less for emoji/length.
+const devices = () => z.partialRecord(z.enum(section('E').items.map((i) => i.id)), z.enum(DEVICES));
 
 const bItem = (item) => {
   const values = item.options.map((o) => o.value);
@@ -40,6 +43,7 @@ export const answersSchema = z.object({
     (e) => KG.CORE_REPLY_IDS.every((id) => e[id]?.trim()),
     { message: `Reply to all ${KG.CORE_REPLY_IDS.length} messages` },
   ),
+  Edevice: devices().default({}),
 });
 
 /** "Teach your agent more" blocks (plan 30 S2): any subset of A, C and E, merged into the saved answers. */
@@ -47,4 +51,5 @@ export const moreSchema = z.object({
   A: z.object(Object.fromEntries(section('A').items.map((i) => [i.id, z.number().int().min(1).max(5)]))).partial().optional(),
   C: z.partialRecord(z.enum(section('C').items.map((i) => i.id)), text(600)).optional(),
   E: z.partialRecord(z.enum(section('E').items.map((i) => i.id)), text(400)).optional(),
-}).refine((m) => Object.values(m).some((x) => x && Object.values(x).some((v) => String(v).trim())), { message: 'Answer at least one question' });
+  Edevice: devices().optional(),
+}).refine((m) => ['A', 'C', 'E'].some((k) => m[k] && Object.values(m[k]).some((v) => String(v).trim())), { message: 'Answer at least one question' });

@@ -13,6 +13,22 @@ export const KG = Object.freeze({
   CORE_REPLY_IDS: ['e1', 'e2', 'e3', 'e6', 'e10'], VOICE_CONFIDENT_SAMPLES: 10,
   MAX_REGENERATIONS: 1, // Checkpoint A: one regeneration per message, max
   MAX_INBOX_PER_CONVERSATION: 3, // new "ask my human" items per match; repeats of an open topic merge instead
+  // Plan 32 KP3 (A6.6): a small unknown ("which temple?") is filed only once it has come up in this many different chats.
+  INBOX_REPEAT_CHATS: 2,
+  // Plan 32 KP1 (A6.9, how you text): onboarding typed on a laptop reads as "rarely uses emoji, one message at a time".
+  // The tap self-report sets the prior; desktop samples count less for emoji, length and bursts (fully for wording,
+  // language and humour); the user's own chats after a handoff slowly override both.
+  SELF_REPORT_WEIGHT: 4, // the self-report counts as this many samples
+  DESKTOP_STYLE_WEIGHT: 0.35, // a desktop sample's weight for emoji, length and bursts
+  SELF_REPORT_PRIORS: Object.freeze({
+    emoji: Object.freeze({ a_lot: 1.2, some: 0.5, rarely: 0.05 }), // emoji per message
+    bursts: Object.freeze({ several: 0.55, one: 0.08 }), // chance a reply goes out as 2 messages
+    length: Object.freeze({ short: 6, medium: 12, long: 24 }), // words per reply
+    caps: Object.freeze({ lowercase: 0.9, normal: 0.1 }), // share of messages starting lowercase
+  }),
+  BURST_PRIOR: 0.1, // no self-report and no own chats yet
+  BURST_GAP_MS: 60_000, // my next message this soon, with nothing from them in between, continues a burst
+  DEFAULT_EMOJIS: Object.freeze(['😂', '😄', '🙂']), // the user reports using emoji but none of their own is usable yet
   STYLE_REBUILD_EVERY: 20, REFLECT_EVERY: 10,
   // caps & retention
   MAX_SELF_FACTS: 150, MAX_VOICE_SAMPLES: 200, NOTES_RETENTION_DAYS: 30,

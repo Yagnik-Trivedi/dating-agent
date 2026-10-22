@@ -13,6 +13,7 @@ const voiceProfileSchema = new mongoose.Schema({
   questionBackRate: Number,
   emojiPerMessage: Number,
   topEmojis: [String],
+  sadEmojis: [String], // plan 32 KP1: used only when they're down or tired
   emojiPlacement: { end: Number, inline: Number, _id: false },
   laughForms: Mixed, // { haha, hahaha, lol, lmao, hehe, other } shares
   laughRate: Number,
@@ -25,6 +26,8 @@ const voiceProfileSchema = new mongoose.Schema({
   endings: Mixed, // { none, '.', '!', '?', '..', emoji } shares
   petPhrases: [String],
   closingStyle: String,
+  selfReport: Mixed, // plan 32 KP1: the User.textingStyle the metrics were blended with (for "How I text")
+  devices: Mixed, // { mobile, desktop, unknown } sample counts
   language: {
     mix: Mixed, // { en: 0.6, hi_latn: 0.35, gu_latn: 0.05 }
     codeSwitchRate: Number,

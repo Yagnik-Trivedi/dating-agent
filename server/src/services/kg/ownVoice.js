@@ -4,11 +4,13 @@
 // (the transcript is the only cross-user path, and their words must not outlive their account or the match).
 import { z } from 'zod';
 import { KgFact } from '../../models/KgFact.js';
+import { Message } from '../../models/Message.js';
 import { User } from '../../models/User.js';
 import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { VoiceSample } from '../../models/VoiceSample.js';
 import { chatJSON } from '../llm/client.js';
 import * as voiceCorrection from '../prompts/voiceCorrection.js';
+import { KG } from './config.js';
 import { tagLanguageHeuristic } from './language.js';
 import { noteSelfFacts, noteVoiceSample } from './learning.js';
 
@@ -54,7 +56,10 @@ export async function learnOwnMessage(message, match) {
   if (message.authoredBy !== 'human' || match.status !== 'handed_off' || !message.text?.trim()) return false; // a photo isn't a voice sample
   const user = await User.findById(message.senderId, { settings: 1 }).lean();
   if (user?.settings?.learnFromChats === false) return false;
-  await VoiceSample.create({ userId: message.senderId, text: message.text, source: 'own_chat', mood: 'casual', lang: tagLanguageHeuristic(message.text) });
+  // Plan 32 KP1: my previous message in this chat came just before, with nothing from them in between → a burst.
+  const prev = await Message.findOne({ matchId: message.matchId ?? match._id, _id: { $ne: message._id }, createdAt: { $lte: message.createdAt ?? new Date() } }, { senderId: 1, createdAt: 1 }).sort({ createdAt: -1 }).lean();
+  const burst = Boolean(prev && String(prev.senderId) === String(message.senderId) && (message.createdAt ?? new Date()) - prev.createdAt <= KG.BURST_GAP_MS);
+  await VoiceSample.create({ userId: message.senderId, text: message.text, source: 'own_chat', mood: 'casual', lang: tagLanguageHeuristic(message.text), burst });
   await noteVoiceSample(message.senderId);
   return true;
 }

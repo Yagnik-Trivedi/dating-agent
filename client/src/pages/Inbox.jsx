@@ -8,6 +8,7 @@ import { useMobile } from '../components/prelude'
 import { useSocketEvent } from '../hooks/useSocket'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
+import { typingDevice } from '../lib/device'
 
 function AskCard({ item, onAnswered }) {
   const toast = useToast()
@@ -17,7 +18,7 @@ function AskCard({ item, onAnswered }) {
     e.preventDefault()
     setBusy(true)
     try {
-      await api.post(`/api/inbox/${item._id}/answer`, { answer })
+      await api.post(`/api/inbox/${item._id}/answer`, { answer, device: typingDevice() })
       toast('Your agent learned something new', { agent: true, to: '/you', action: 'See it' })
       onAnswered(item._id)
     } catch (err) {

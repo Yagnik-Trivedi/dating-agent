@@ -4,12 +4,24 @@ import { answersSchema, moreSchema } from '../services/kg/answers.js';
 import { buildUserGraph, startUserGraphBuild } from '../services/kg/buildUserGraph.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
 import { KG } from '../services/kg/config.js';
+import { rebuildVoice } from '../services/kg/learning.js';
 import { QUESTIONS } from '../services/kg/questions.js';
+import { TEXTING_STYLE, textingStyleSchema } from '../services/kg/textingStyle.js';
 import { httpError, parse } from '../utils/http.js';
 
 export const onboardingRouter = Router();
 
-onboardingRouter.get('/onboarding/questions', (req, res) => res.json({ ...QUESTIONS, coreReplyIds: KG.CORE_REPLY_IDS }));
+onboardingRouter.get('/onboarding/questions', (req, res) => res.json({ ...QUESTIONS, coreReplyIds: KG.CORE_REPLY_IDS, textingStyle: TEXTING_STYLE }));
+
+// Plan 32 KP1 "How do you usually text?": taps only, any subset. Saved on the user (a graph rebuild keeps it); the
+// voice profile is re-blended right away (code only) when there are samples, else the onboarding build picks it up.
+onboardingRouter.put('/onboarding/texting-style', async (req, res) => {
+  const style = parse(textingStyleSchema, req.body);
+  req.user.textingStyle = { ...style, at: new Date() };
+  await req.user.save();
+  await rebuildVoice({ userId: req.user._id });
+  res.json({ textingStyle: req.user.textingStyle });
+});
 
 onboardingRouter.post('/onboarding/submit', async (req, res) => {
   const { answers } = parse(z.object({ answers: answersSchema }), req.body);

@@ -14,6 +14,10 @@ const voiceSampleSchema = new mongoose.Schema({
     codeSwitch: Boolean,
     _id: false,
   },
+  // Plan 32 KP1: where it was typed (touch screen + width, from the browser). Desktop samples count less for emoji,
+  // length and bursts. Unknown (own chats, older samples) counts fully.
+  device: { type: String, enum: ['mobile', 'desktop'] },
+  burst: Boolean, // own_chat: this message continued my previous one (no reply from them in between)
   embedding: { type: Buffer, select: false, set: (v) => toBinary(v) }, // of `incoming`
   embeddingModel: String,
 }, { timestamps: { createdAt: true, updatedAt: false }, versionKey: false });

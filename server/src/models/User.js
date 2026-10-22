@@ -21,6 +21,16 @@ const userSchema = new mongoose.Schema({
   graphStatus: { type: String, enum: ['building', 'ready', 'failed'] },
   graphReadyAt: Date,
   settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
+  // Plan 32 KP1: "How do you usually text?" (services/kg/textingStyle.js). The voice profile's prior; survives rebuilds.
+  textingStyle: {
+    emoji: { type: String, enum: ['a_lot', 'some', 'rarely'] },
+    bursts: { type: String, enum: ['several', 'one'] },
+    length: { type: String, enum: ['short', 'medium', 'long'] },
+    caps: { type: String, enum: ['lowercase', 'normal'] },
+    stickers: { type: String, enum: ['often', 'sometimes', 'never'] },
+    at: Date,
+    _id: false,
+  },
   isSeed: { type: Boolean, default: false },
   isJudge: { type: Boolean, default: false }, // pre-baked hackathon judge account (seed.js --judges, plan 12 §5)
   seedHash: { type: String, default: null }, // scripts/seed.js: hash of the persona the graph was built from

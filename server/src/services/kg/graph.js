@@ -4,6 +4,7 @@ import { Concept } from '../../models/Concept.js';
 import { KgFact } from '../../models/KgFact.js';
 import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { KG } from './config.js';
+import { TEXTING_STYLE } from './textingStyle.js';
 
 export const HUBS = [
   { key: 'who', label: 'Who I am' }, { key: 'likes', label: 'Likes' }, { key: 'dislikes', label: 'Dislikes' },
@@ -35,6 +36,7 @@ export function voiceNodes(v) {
   const median = words[Math.floor(words.length / 2)] ?? 0;
   add('length', `${median < 10 ? 'Short' : median < 20 ? 'Medium-length' : 'Long'} replies (~${median} words)`);
   if (v.lowercaseStartRatio >= 0.7) add('lowercase', 'Starts messages in lowercase');
+  if (v.burstiness >= 0.3) add('bursts', 'Often sends a few short messages in a row'); // plan 32 KP1
   if (v.petPhrases?.[0]) add('phrase', `Says '${v.petPhrases[0]}' a lot`);
   if (v.closingStyle) add('closing', `Ends chats with '${v.closingStyle.slice(0, 40)}'`);
   return out;
@@ -71,7 +73,9 @@ export async function userGraph(user) {
     nodes.push({ id: `hub:${h.key}`, label: h.label, type: 'hub', group: h.key, hubNode: true, size: 0.9, weight: 0.9 });
     links.push({ source: 'me', target: `hub:${h.key}`, label: 'hub' });
   }
-  return { nodes, links, voice: voiceStats(voice) };
+  // Plan 32 KP1: "How I text" chips — the self-report the user can correct right here.
+  const { at, ...style } = (user.toObject ? user.toObject() : user).textingStyle ?? {};
+  return { nodes, links, voice: voiceStats(voice), textingStyle: { questions: TEXTING_STYLE, value: style } };
 }
 
 /** Plain numbers for the "How I text" bars (my own voice; plan 30 S6). 0–1 positions on each bar's scale. */
@@ -81,5 +85,8 @@ export function voiceStats(v) {
   const median = words[Math.floor(words.length / 2)] ?? 0;
   const nonEn = Object.entries(v.language?.mix ?? {}).filter(([l]) => l !== 'en').reduce((s, [, x]) => s + x, 0);
   const laugh = Object.entries(v.laughForms ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-  return { medianWords: median, emojiPerMessage: v.emojiPerMessage ?? 0, nonEnglishShare: Math.round(nonEn * 100) / 100, laughRate: v.laughRate ?? 0, laugh, samples: v.sampleCount };
+  return {
+    medianWords: median, emojiPerMessage: v.emojiPerMessage ?? 0, nonEnglishShare: Math.round(nonEn * 100) / 100, laughRate: v.laughRate ?? 0, laugh, samples: v.sampleCount,
+    burstiness: v.burstiness ?? 0, devices: v.devices ?? null, // plan 32 KP1
+  };
 }

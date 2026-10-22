@@ -8,6 +8,7 @@ import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Q
 import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw } from '../components/r7'
 import { TextBars } from '../components/charts'
 import TeachCards from '../components/TeachCards'
+import TextingStyle, { styleBody } from '../components/TextingStyle'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -115,10 +116,30 @@ function howIText(v) {
     { k: 'Emoji use', v: v.emojiPerMessage >= 0.15 ? `Often · ${Math.round(v.emojiPerMessage * 10)} in 10 messages` : 'Rarely', you: Math.min(1, v.emojiPerMessage), scale: ['Rarely', 'Often'] },
     { k: 'Language mix', v: v.nonEnglishShare >= 0.1 ? `About ${Math.round(v.nonEnglishShare * 100)}% not in English` : 'Mostly English', you: v.nonEnglishShare, scale: ['English', 'Mixed'] },
     { k: 'Laugh style', v: v.laugh ? `“${v.laugh}”` : 'Rarely laughs in text', you: Math.min(1, v.laughRate * 2), scale: ['Rarely', 'A lot'] },
+    { k: 'Messages in a row', v: (v.burstiness ?? 0) >= 0.3 ? 'Often a few short ones' : 'Usually one', you: Math.min(1, (v.burstiness ?? 0) * 1.6), scale: ['One', 'Several'] },
   ]
 }
 
-function ListView({ L, voice, onSelect }) {
+/** Plan 32 KP1: the "How do you usually text?" answers as chips; a tap saves and re-blends the voice profile. */
+function HowITextChips({ style, onChanged }) {
+  const toast = useToast()
+  const { refresh } = useAuth()
+  const [v, setV] = useState(style?.value ?? {})
+  if (!style?.questions?.length) return null
+  const change = async (next) => {
+    const prev = v
+    setV(next)
+    try { await api.put('/api/onboarding/texting-style', styleBody(next)); await refresh(); onChanged() } catch (err) { setV(prev); toast(errMsg(err), { tone: 'bad' }) }
+  }
+  return (
+    <div className="tstyle-you">
+      <p className="small">How you say you text on your phone. Your agent leans on this more than replies typed on a computer.</p>
+      <TextingStyle compact questions={style.questions} value={v} onChange={change} />
+    </div>
+  )
+}
+
+function ListView({ L, voice, style, onSelect, onChanged }) {
   return (
     <div className="y-list">
       <div className="yl-facts">{L.hubs.filter((h) => h.id !== 'voice').map((h) => {
@@ -129,6 +150,7 @@ function ListView({ L, voice, onSelect }) {
         )
       })}</div>
       <aside className="yl-side card"><h2 className="h3">How I text</h2><p className="small">Learned from your replies. Your agent uses this to sound like you. Tap a “How I text” dot in the graph to correct it.</p>{voice ? <TextBars items={howIText(voice)} /> : <p className="small">Not enough replies yet.</p>}
+        <HowITextChips style={style} onChanged={onChanged} />
         {(voice?.samples ?? 0) < 10 && <><p className="small teach-hint">Your agent has only a few of your replies, so it keeps its messages plain. Teach it more:</p><TeachCards /></>}</aside>
     </div>
   )
@@ -182,7 +204,7 @@ export default function You({ review = false }) {
   )
   const reviewBar = review && <div className="nbox ok you-review"><span><b>This is what your agent learned from your answers.</b> Fix anything that’s off, mark things private, or delete them.</span><Link className="btn primary sm" to="/discover">Looks right<ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link></div>
   const sheet = f && hub && <FactSheet f={f} hub={hub} mobile={mobile} conflict={conflict} onClose={() => setSel(null)} onChanged={load} />
-  const list = L && <ListView L={L} voice={data.graph.voice} onSelect={setSel} />
+  const list = L && <ListView L={L} voice={data.graph.voice} style={data.graph.textingStyle} onSelect={setSel} onChanged={load} />
 
   if (mobile) return (
     <div className="scr app-scr you m">

@@ -19,7 +19,7 @@ import { tagLanguageHeuristic } from '../kg/language.js';
 import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
 import { covers, groundingCheck, hedgeSentences, leakCheck, orphaned, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
 import { isQuestion, privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
-import { echoOf, norm, oneQuestion, sentencesOf, words } from '../persona/text.js';
+import { echoOf, norm, oneQuestion, ownEmojiOnly, sentencesOf, splitBurst, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
 import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
@@ -346,6 +346,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     ({ leaks, drop, messages } = await survivors(constrained));
     if (messages.length) { attempts.push(constrained); best = constrained; }
   }
+  // Plan 32 KP1: only my own emoji (an emoji from an example's context, like 🍍 or 😞, read oddly in the H1 run).
+  const myEmoji = new Set([...(persona.voice.topEmojis ?? []), plan.emoji].filter(Boolean));
+  messages = messages.map((m) => ownEmojiOnly(m, myEmoji)).filter((m) => words(m).length);
   if (!messages.length) {
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
@@ -353,6 +356,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
     messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
+  // Plan 32 KP1: a burst is sent as separate bubbles (the scheduler sends each message on its own).
+  if (!opening) messages = splitBurst(messages, plan.burst);
   // A resolved topic with no fact → inbox even if the reply sounds confident ("cheering for rcb!" in agent-check);
   // a topic I have a fact on → none. Unresolved → the draft's own unknown, an unsupported claim, or a hedge (fallback).
   const hedged = messages.some((m) => hedgeSentences(m).length);

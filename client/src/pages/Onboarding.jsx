@@ -1,18 +1,21 @@
 // Plan 30 S2 onboarding, ~5 minutes (Round 7 Step 2 design): 1 Basics · 2 Photos · 3 Prompts · 4 Lifestyle and values ·
 // 5 How you reply → submit (the graph builds in the background) → 6 Done (Welcome). The live check step was removed
 // (owner, 2026-10-19). A step that isn't complete says what's missing and jumps to it (OnbShell `missing`).
-// "Teach your agent more" (Teach) adds the optional blocks later: stories, 10 more replies, personality.
+// "Teach your agent more" (Teach) adds the optional blocks later: stories, 10 more replies, personality, how you text.
+// Plan 32 KP1: step 5 also asks "How do you usually text?" (taps, skippable) and records the device each reply is typed on.
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Plus } from 'lucide-react'
 import OnbShell from '../components/OnbShell'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
 import TeachCards from '../components/TeachCards'
+import TextingStyle, { styleBody } from '../components/TextingStyle'
 import { Chips, Composer, Field, IconBtn, Importance, Input, Seg, Toggle } from '../components/r7'
 import { ErrorBox, Loading } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
+import { emojiShortcut, typingDevice } from '../lib/device'
 import { PROMPT_LIST, PROMPT_MAX } from '../lib/prompts'
 
 const EMPTY = { I: { languages: [] }, B: {}, D: { interests: [] }, E: {} }
@@ -138,6 +141,12 @@ function Replies({ items, value, onChange }) {
   )
 }
 
+/** Plan 32 KP1: on a computer keyboard people type plainer than on their phone. */
+const DesktopHint = () => typingDevice() === 'desktop' && (
+  <p className="small tstyle-hint">Type like you do on your phone. Emoji picker: <kbd>{emojiShortcut()}</kbd></p>
+)
+const devicesFor = (ids) => { const d = typingDevice(); return Object.fromEntries(ids.map((id) => [id, d])) }
+
 /** The quick build didn't finish in the submit request: wait for the job (it rarely takes long). */
 function Processing({ onDone }) {
   useEffect(() => {
@@ -155,12 +164,13 @@ export default function Onboarding() {
   const [step, setStep] = useState(saved.step ?? 1)
   const [answers, setAnswers] = useState({ ...EMPTY, ...saved.answers })
   const [prompts, setPrompts] = useState(saved.prompts ?? profile?.prompts?.slice(0, 3) ?? [])
+  const [style, setStyle] = useState(saved.style ?? {})
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [dest, setDest] = useState(null)
   const { photos, setPhotos } = usePhotos()
 
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify({ step, answers, prompts })) } catch { /* private mode */ } }, [key, step, answers, prompts])
+  useEffect(() => { try { localStorage.setItem(key, JSON.stringify({ step, answers, prompts, style })) } catch { /* private mode */ } }, [key, step, answers, prompts, style])
   useEffect(() => { window.scrollTo({ top: 0 }); setError(null) }, [step])
 
   if (user.onboarding?.status === 'done') return <Navigate to={dest ?? '/discover'} replace state={{ onb: Boolean(dest) }} />
@@ -181,7 +191,9 @@ export default function Onboarding() {
     setBusy(true); setError(null)
     try {
       const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer))
-      await api.post('/api/onboarding/submit', { answers: { I: answers.I, B: B2, D: answers.D, E: Object.fromEntries(core.map((i) => [i.id, answers.E[i.id]])) } })
+      // The self-report first, so the build that starts on submit already blends it in.
+      if (Object.keys(styleBody(style)).length) await api.put('/api/onboarding/texting-style', styleBody(style))
+      await api.post('/api/onboarding/submit', { answers: { I: answers.I, B: B2, D: answers.D, E: Object.fromEntries(core.map((i) => [i.id, answers.E[i.id]])), Edevice: devicesFor(core.map((i) => i.id)) } })
       localStorage.removeItem(key)
       setDest('/welcome')
       await refresh() // status 'done' → the redirect above
@@ -222,6 +234,12 @@ export default function Onboarding() {
     <OnbShell step={5} title="How would you reply?" sub="Five quick messages. Reply like you normally text: emojis, Hinglish and short replies all help your agent sound like you."
       onBack={back} nextLoading={busy} onNext={submit}
       missing={core.some((i) => !answers.E[i.id]?.trim()) ? { text: `Reply to all ${core.length} messages (${core.filter((i) => !answers.E[i.id]?.trim()).length} left)`, target: 'onb-replies' } : null}>
+      <section className="card tstyle-card" aria-label="How do you usually text?">
+        <h2 className="h3">How do you usually text? <span className="small">· optional</span></h2>
+        <p className="small">On your phone, with the people you talk to most. A few taps.</p>
+        <TextingStyle questions={q.textingStyle} value={style} onChange={setStyle} />
+      </section>
+      <DesktopHint />
       <Replies items={core} value={answers.E} onChange={set('E')} />{err}
     </OnbShell>
   )
@@ -250,15 +268,16 @@ export function Teach() {
   const [v, setV] = useState({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-  if (!['stories', 'replies', 'personality'].includes(block)) return <Navigate to="/you" replace />
+  if (!['stories', 'replies', 'personality', 'texting'].includes(block)) return <Navigate to="/you" replace />
   if (!q) return qError ? <div className="st-center"><ErrorBox message={qError} onRetry={load} /></div> : <Loading />
+  if (block === 'texting') return <TeachTexting q={q} />
   const sec = sectionOf(q, { stories: 'C', replies: 'E', personality: 'A' }[block])
   const items = block === 'replies' ? sec.items.filter((i) => !q.coreReplyIds.includes(i.id)) : sec.items
   const filled = Object.values(v).filter((x) => String(x).trim()).length
   async function save() {
     setBusy(true); setError(null)
     try {
-      await api.post('/api/onboarding/more', { [sec.id]: v })
+      await api.post('/api/onboarding/more', { [sec.id]: v, ...(block === 'replies' && { Edevice: devicesFor(Object.keys(v).filter((k) => String(v[k]).trim())) }) })
       toast('Saved. Your agent is learning from it now.')
       navigate('/you')
     } catch (err) { setError(errMsg(err)); setBusy(false) }
@@ -267,11 +286,39 @@ export function Teach() {
   return (
     <OnbShell label="Teach your agent more" title={TITLE[0]} sub={TITLE[1]} onBack={() => navigate(-1)} next="Save" nextLoading={busy} onNext={save}
       missing={filled ? null : { text: block === 'personality' ? 'Rate at least one statement to save' : 'Answer at least one to save' }}>
+      {block === 'replies' && <DesktopHint />}
       {block === 'personality'
         ? items.map((it) => <div key={it.id} className="vq-row"><span className="lbl">I {it.text.charAt(0).toLowerCase() + it.text.slice(1)}</span><Seg items={[1, 2, 3, 4, 5].map((n) => [n, String(n)])} value={v[it.id]} onChange={(n) => setV({ ...v, [it.id]: n })} label={it.text} /></div>)
         : items.map((it) => (
           <Field key={it.id} label={it.text} optional>{(id) => <textarea id={id} className="ta" rows={block === 'stories' ? 4 : 2} maxLength={block === 'stories' ? 600 : 400} value={v[it.id] ?? ''} placeholder={it.placeholder ?? 'Type it the way you would…'} onChange={(e) => setV({ ...v, [it.id]: e.target.value })} />}</Field>
         ))}
+      {error && <ErrorBox message={error} />}
+    </OnbShell>
+  )
+}
+
+/* Teach your agent more · how you text (plan 32 KP1): the same taps as onboarding, saved on their own. */
+function TeachTexting({ q }) {
+  const { user, refresh } = useAuth()
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [v, setV] = useState(user.textingStyle ?? {})
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  async function save() {
+    setBusy(true); setError(null)
+    try {
+      await api.put('/api/onboarding/texting-style', styleBody(v))
+      await refresh()
+      toast('Saved. Your agent will text more like you do on your phone.')
+      navigate('/you')
+    } catch (err) { setError(errMsg(err)); setBusy(false) }
+  }
+  return (
+    <OnbShell label="Teach your agent more" title="How do you usually text?" sub="On your phone, with the people you talk to most. Skip anything you like."
+      onBack={() => navigate(-1)} next="Save" nextLoading={busy} onNext={save}
+      missing={Object.keys(styleBody(v)).length ? null : { text: 'Pick at least one to save' }}>
+      <TextingStyle questions={q.textingStyle} value={v} onChange={setV} />
       {error && <ErrorBox message={error} />}
     </OnbShell>
   )

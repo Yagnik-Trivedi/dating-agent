@@ -27,3 +27,26 @@ export function echoOf(text, recentTexts = [], n = 5) {
   const seen = new Set(recentTexts.flatMap((t) => [...grams(norm(t))]));
   return [...grams(norm(text))].find((g) => seen.has(g)) ?? null;
 }
+
+const EMOJI_CHAR = /\p{Extended_Pictographic}\uFE0F?/gu;
+/** Plan 32 KP1: drop emoji that aren't the user's own (the model copies them from examples or their message). */
+export function ownEmojiOnly(text, allowed) {
+  return String(text).replace(EMOJI_CHAR, (e) => (allowed.has(e.replace(/\uFE0F/g, '')) ? e : ''))
+    .replace(/\s+([.!?,])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
+/**
+ * Plan 32 KP1: the plan asked for 2 bubbles but the draft is one message → split it between sentences (the first half
+ * of them, then the rest). A piece with no words (a trailing emoji) stays with the sentence before it.
+ */
+export function splitBurst(messages, burst = 1) {
+  if (burst < 2 || messages.length !== 1) return messages;
+  const pieces = [];
+  for (const p of String(messages[0]).match(/[^.!?…]+[.!?…]*\s*/g) ?? []) {
+    if (/[\p{L}\p{N}]/u.test(p) || !pieces.length) pieces.push(p);
+    else pieces[pieces.length - 1] += p;
+  }
+  if (pieces.length < 2) return messages;
+  const k = Math.floor(pieces.length / 2);
+  return [pieces.slice(0, k).join('').trim(), pieces.slice(k).join('').trim()].filter(Boolean);
+}

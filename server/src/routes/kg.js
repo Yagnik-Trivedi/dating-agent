@@ -105,7 +105,7 @@ kgRouter.post('/kg/voice/corrections', async (req, res) => {
   if (!node) throw httpError(404, 'NOT_FOUND', 'Unknown style node');
   const at = new Date();
   if (node.field === 'emoji' && (!text || /never|don.?t|no emoji|hardly/i.test(text))) {
-    Object.assign(profile, { emojiPerMessage: 0, topEmojis: [] });
+    Object.assign(profile, { emojiPerMessage: 0, topEmojis: [], sadEmojis: [] });
     profile.corrections.push({ rule: 'never use emoji', kind: 'never_say', from: 'graph_edit', at });
     if (!profile.neverSay.includes('emoji')) profile.neverSay.push('emoji');
   } else {

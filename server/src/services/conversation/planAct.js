@@ -2,6 +2,7 @@
 // conversation's seeded rng, so the same seed + perceptions replay identically. Stored on the message.
 import { KG } from '../kg/config.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
+import { SAD_EMOJI } from '../kg/voiceProfile.js';
 
 // Plan 30 SN: what in a chat naturally leads to each section-B attribute. Broader than askedAboutMe's ATTRIBUTE_WORDS
 // (which detect the attribute itself): a bar story leads to drinking, a nephew to kids, a job offer abroad to location.
@@ -204,7 +205,9 @@ function planHuman({ state, voice = {}, perception = {}, rng, agenda = [], stori
   if (theyAsked) pAsk *= KG.ASK_WHEN_ASKED;
   if ((state.lastAsked && !theyAsked) || doing === 'winding_down') pAsk = 0;
   const askBack = opening || rng() < pAsk;
-  const emoji = rng() < Math.min(1, voice.emojiPerMessage ?? 0) && voice.topEmojis?.length ? pick(voice.topEmojis, rng) : null;
+  // Plan 32 KP1: only my own usable emoji (voiceProfile.js), and a sad one only when they're down or tired.
+  const emojis = [...(voice.topEmojis ?? []), ...(['down', 'tired'].includes(mood) ? voice.sadEmojis ?? [] : [])].filter((e) => !SAD_EMOJI.test(e) || ['down', 'tired'].includes(mood));
+  const emoji = rng() < Math.min(1, voice.emojiPerMessage ?? 0) && emojis.length ? pick(emojis, rng) : null;
   const laugh = (perception.humor || mood === 'playful') && !theyAreTelling && rng() < (voice.laughRate ?? 0) ? pickWeighted(voice.laughForms, rng) : null;
   const reactions = (perception.concepts ?? []).map((c) => ({ text: c.text, kind: reactionOf(c.own) }));
   const conflicts = perception.conflicts ?? [];

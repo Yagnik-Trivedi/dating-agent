@@ -56,6 +56,7 @@ async function onboardingSamples(answers, userId, { llm = true } = {}) {
     const t = tags.find((x) => x.i === i + 1);
     return {
       userId, incoming: q.prompt ? null : q.text, text: texts[i], source: 'onboarding', mood: q.mood,
+      ...(answers.Edevice?.[q.id] && { device: answers.Edevice[q.id] }), // plan 32 KP1: typed on a phone or a computer
       lang: t ? { languages: t.languages, script: t.script, codeSwitch: t.codeSwitch } : tagLanguageHeuristic(texts[i]),
       // No per-user vector: the 15 onboarding prompts are the same for everyone, so the agent embeds them once
       // (EmbCache) instead of storing 15 identical 8 KB vectors per user. Inbox/own-chat samples store theirs.
@@ -97,7 +98,7 @@ export async function buildUserGraph(userId, { quick = false, failBeforeCommit =
   const voiceP = onboardingSamples(answers, userId, { llm: !quick }).then(async (samples) => {
     const now = Date.now();
     const recency = (s) => 0.5 ** ((now - new Date(s.createdAt ?? now)) / (90 * 86_400_000)); // 90-day half-life
-    const voice = computeVoiceProfile([...samples, ...await othersP].map((s) => ({ ...s, weight: recency(s) })));
+    const voice = computeVoiceProfile([...samples, ...await othersP].map((s) => ({ ...s, weight: recency(s) })), { selfReport: user?.textingStyle });
     const style = quick ? NO_STYLE : await chatJSON({ tier: 'mid', reasoning: false, schema: styleSchema, purpose: 'onboarding-style', userId,
       messages: describeStyle.build({ samples: samples.map((s) => ({ incoming: s.incoming ?? '(they start a new message)', reply: s.text })), metrics: { wordCounts: voice.wordCounts, emojiPerMessage: voice.emojiPerMessage, laughForms: voice.laughForms, language: voice.language } }),
     }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return NO_STYLE; });
