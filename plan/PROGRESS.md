@@ -3,7 +3,7 @@
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
 - **Last updated:** 2026-10-22, by Claude Code (plan 32 KP1–KP3 done and code-tested, local commits, not pushed; persona chats are the team's)
-- **Main-line branch:** `main` (pushed through `18c9e3d` and **deployed** 2026-10-19 by the owner. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
+- **Main-line branch:** `main` (pushed through `4670cd3` and **deployed** 2026-10-22 on the owner's "push and deploy" (plan 32 KP; live on Render + Vercel, `smoke:browsers` 3/3 on the live site). Before: `18c9e3d` on 2026-10-19. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
 Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · ⬜ Not started · ✂️ Cut · 🚫 Not for Claude Code · 📦 Archived · 📖 Reference
