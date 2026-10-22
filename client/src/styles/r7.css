@@ -427,6 +427,8 @@ textarea.cm-field::placeholder { color: var(--text-2); }
 .tstyle-card .h3 .small { font-weight: 400; }
 .tstyle-hint { align-self: center; text-align: center; color: var(--text-2); }
 .tstyle-hint kbd, .yl-side kbd { font: inherit; font-size: 13px; padding: 1px 6px; border: 1px solid var(--sand); border-radius: 6px; background: var(--cream); white-space: nowrap; }
+.ed-basic { padding: 12px 0; border-top: 1px solid var(--sand); }
+.ed-show { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--text-2); }
 .tstyle-you { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--sand); display: flex; flex-direction: column; gap: 12px; }
 
 .fix { max-width: 720px; margin: 0 auto; padding: 48px 32px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }

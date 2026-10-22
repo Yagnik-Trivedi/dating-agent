@@ -1,9 +1,10 @@
 // Plan 30 S3.2 profile editor (design: People.jsx#Editor): a completeness meter (steps, never a percentage), photos,
 // 3 prompts, basics, and a live "how others see you" preview. Saving rebuilds the gate and re-runs the self-check.
+// Plan 32 KP2: lifestyle basics are my section-B answers (one source of truth); the switch only hides them.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
-import { Btn, Chips, Field, Input, Shell, photoOf } from '../components/r7'
+import { Btn, Chips, Field, Input, Shell, Toggle, photoOf } from '../components/r7'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -34,6 +35,9 @@ export default function Profile() {
   const { photos, setPhotos } = usePhotos()
   const [f, setF] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [basics, setBasics] = useState(null) // [{ attr, text, options, answer, shown }]
+  const [basics0, setBasics0] = useState(null)
+  useEffect(() => { api.get('/api/profile/basics').then((r) => { setBasics(r.data.basics); setBasics0(r.data.basics) }).catch(() => {}) }, [])
   useEffect(() => {
     if (profile && !f) setF({ job: profile.job ?? '', workplace: profile.workplace ?? '', education: profile.education ?? '', height: profile.height ?? '', languages: profile.languages ?? [], bio: profile.bio ?? '', prompts: (profile.prompts ?? []).slice(0, 3) })
   }, [profile, f])
@@ -50,6 +54,11 @@ export default function Profile() {
     setBusy(true)
     try {
       await api.put('/api/profile', { job: f.job.trim(), workplace: f.workplace.trim(), education: f.education.trim(), height: f.height.trim(), languages: f.languages, bio: f.bio.trim(), prompts: f.prompts.filter((p) => p.a.trim()).map((p) => ({ q: p.q, a: p.a.trim() })) })
+      if (basics && JSON.stringify(basics) !== JSON.stringify(basics0)) {
+        const answers = Object.fromEntries(basics.filter((b, i) => b.answer && b.answer !== basics0[i].answer).map((b) => [b.attr, b.answer]))
+        const { data } = await api.put('/api/profile/basics', { answers, hidden: basics.filter((b) => !b.shown).map((b) => b.attr) })
+        setBasics(data.basics); setBasics0(data.basics)
+      }
       await refresh()
       toast('Saved. Your profile is checked again in the background.')
     } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(false) }
@@ -70,6 +79,16 @@ export default function Profile() {
         <div className="field"><span className="lbl">Languages you speak</span><Chips multi items={[...new Set([...LANGS, ...f.languages])].map((l) => [l, cap(l)])} value={f.languages} onChange={(languages) => setF({ ...f, languages })} label="Languages" /></div>
         <Field label="About you" optional hint={`${500 - f.bio.length} characters left.`}>{(id) => <textarea id={id} className="ta" rows={3} maxLength={500} value={f.bio} onChange={set('bio')} />}</Field>
       </section>
+      {basics && <section className="ed-sec" id="ed-lifestyle"><div className="ed-h"><h2 className="h3">Lifestyle basics</h2></div>
+        <p className="small">These are your answers from onboarding. Changing one here changes it everywhere: your profile, your agent and who you’re shown to.</p>
+        {basics.map((b, i) => (
+          <div key={b.attr} className="vq-row ed-basic">
+            <span className="lbl">{b.text}</span>
+            <Chips items={b.options.map((o) => [o.value, o.label])} value={b.answer} label={b.text} onChange={(answer) => setBasics(basics.map((x, k) => (k === i ? { ...x, answer } : x)))} />
+            <label className="ed-show"><Toggle on={b.shown} onChange={(shown) => setBasics(basics.map((x, k) => (k === i ? { ...x, shown } : x)))} label={`Show on my profile: ${b.text}`} /><span>Show on my profile</span></label>
+          </div>
+        ))}
+      </section>}
       <div className="ed-save"><Btn size="lg" block={mobile} onClick={save} loading={busy}>Save changes</Btn></div>
     </div>
   )

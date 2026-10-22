@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
 import { cityGeo } from '../services/cities.js';
+import { editBasics, isBasicAnswer, myBasics } from '../services/kg/basicsEdit.js';
 import { BASICS, buildGate } from '../services/match/gate.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
 import { parse } from '../utils/http.js';
@@ -48,16 +49,40 @@ export async function saveProfile(userId, body) {
   const { tags, ...fields } = parse(profileBody, body);
   const geo = 'city' in fields ? cityGeo(fields.city) : undefined; // a listed city gets coordinates; "Other" matches by name
   const tagSet = flatTags(tags);
-  // A basic set by hand is mine: never overwritten from my B answers (plan 31 A2).
+  // Plan 32 KP2: a basic set to one of its answers is an answer edit (answer → fact → gate → tag). Free text that isn't
+  // an answer stays a display-only tag set by hand, never overwritten from my B answers (plan 31 A2).
+  const answerEdits = {};
+  for (const [attr, path] of Object.entries(BASICS)) {
+    const v = tagSet[`tags.${path}`];
+    if (isBasicAnswer(attr, v)) { answerEdits[attr] = v; delete tagSet[`tags.${path}`]; }
+  }
   const edited = Object.entries(BASICS).filter(([, path]) => `tags.${path}` in tagSet).map(([attr]) => attr);
   await Profile.updateOne(
     { userId },
     { $set: { ...fields, ...tagSet, ...(geo && { geo }) }, ...(edited.length && { $addToSet: { tagsEdited: { $each: edited } } }), ...('city' in fields && !geo && { $unset: { geo: 1 } }) },
     { upsert: true, runValidators: true },
   );
-  await buildGate(userId); // also fills my public basics and removes hidden ones
+  // Also fills my public basics and removes hidden ones (editBasics rebuilds the gate itself).
+  if (!(await editBasics(userId, answerEdits)).length) await buildGate(userId);
   return Profile.findOne({ userId }).lean();
 }
+
+// Plan 32 KP2: my basics with their answers (the profile editor). PUT changes answers and/or what shows on my profile.
+profileRouter.get('/profile/basics', async (req, res) => res.json({ basics: await myBasics(req.user._id) }));
+
+const basicsBody = z.object({
+  answers: z.partialRecord(z.enum(Object.keys(BASICS)), z.string().trim().max(40)).refine((a) => Object.entries(a).every(([k, v]) => isBasicAnswer(k, v)), { message: 'Pick one of the listed answers' }),
+  hidden: z.array(z.enum(Object.keys(BASICS))).max(Object.keys(BASICS).length),
+}).partial().strict();
+
+profileRouter.put('/profile/basics', async (req, res) => {
+  const { answers = {}, hidden } = parse(basicsBody, req.body);
+  // "Show on my profile" only changes visibility; the answer, the fact and the gate stay as they are.
+  if (hidden) await Profile.updateOne({ userId: req.user._id }, { $set: { tagsHidden: hidden } });
+  if (!(await editBasics(req.user._id, answers)).length && hidden) await buildGate(req.user._id);
+  queueProfileCheck(req.user._id);
+  res.json({ basics: await myBasics(req.user._id), profile: await Profile.findOne({ userId: req.user._id }).lean() });
+});
 
 profileRouter.put('/profile', async (req, res) => {
   const profile = await saveProfile(req.user._id, req.body);

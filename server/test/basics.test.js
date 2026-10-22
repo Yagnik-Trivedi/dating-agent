@@ -2,6 +2,7 @@
 // never reaches the public profile, the brief's view of it or the other user; hand edits are kept; the gate is unchanged.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
+import { KgFact } from '../src/models/KgFact.js';
 import { Profile, PUBLIC_PROFILE } from '../src/models/Profile.js';
 import { User } from '../src/models/User.js';
 import { saveProfile } from '../src/routes/profile.js';
@@ -51,14 +52,21 @@ test('a hidden basic (religion by default) never appears in the public profile o
   assert.equal((await Profile.findOne({ userId: id }).lean()).tags.religionImportance, 'central');
 });
 
-test('a basic set by hand is not overwritten by my B answer; a partial tags update keeps the other basics', async () => {
+test('plan 32 KP2: editing a basic on my profile changes my answer, my fact, the gate and the tag together', async () => {
   const id = await person();
   await buildGate(id);
   await saveProfile(id, { tags: { lifestyle: { drinking: 'never' } } });
   await saveProfile(id, { tags: { interests: ['dosa'] } }); // the onboarding sends only interests
   await buildGate(id);
   const p = await Profile.findOne({ userId: id }).lean();
-  assert.equal(p.tags.lifestyle.drinking, 'never', 'hand edit kept (B says socially)');
+  const answer = (await User.findById(id).lean()).onboarding.answers.B.drinking;
+  const fact = await KgFact.findOne({ subjectId: id, observerId: null, attribute: 'drinking' }).lean();
+  assert.deepEqual([answer.answer, answer.importance], ['never', 'low'], 'the answer follows the edit, its importance is kept');
+  assert.deepEqual([p.tags.lifestyle.drinking, p.gate.values.drinking, fact?.value], ['never', 'never', 'never']);
   assert.deepEqual([p.tags.lifestyle.smoking, p.tags.wantsKids, p.tags.interests], ['never', 'yes', ['dosa']]);
-  assert.deepEqual(p.tagsEdited, ['drinking']);
+  assert.ok(!(p.tagsEdited ?? []).includes('drinking'));
+  // Hiding it only changes visibility: the answer and the gate keep it.
+  await saveProfile(id, { tagsHidden: ['religion', 'drinking'] });
+  const hidden = await Profile.findOne({ userId: id }).lean();
+  assert.deepEqual([hidden.tags.lifestyle.drinking, hidden.gate.values.drinking], [undefined, 'never']);
 });

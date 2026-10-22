@@ -53,14 +53,17 @@ export function basicsUpdate(profile = {}, answersB = {}) {
   return { $set, $unset };
 }
 
-/** Rebuild one user's Profile.gate and public basics (after onboarding, a profile edit or a B change). */
-export async function buildGate(userId) {
-  const [profile, user] = await Promise.all([Profile.findOne({ userId }).lean(), User.findById(userId, { 'onboarding.answers.B': 1 }).lean()]);
+/** Rebuild one user's Profile.gate and public basics (after onboarding, a profile edit or a B change). session: optional. */
+export async function buildGate(userId, { session = null } = {}) {
+  const [profile, user] = await Promise.all([
+    Profile.findOne({ userId }).session(session).lean(),
+    User.findById(userId, { 'onboarding.answers.B': 1 }).session(session).lean(),
+  ]);
   if (!profile) return null;
   const answersB = user?.onboarding?.answers?.B ?? {};
   const gate = gateFrom(profile, answersB);
   const basics = basicsUpdate(profile, answersB);
-  await Profile.updateOne({ userId }, { $set: { gate, ...basics.$set }, ...(Object.keys(basics.$unset).length && { $unset: basics.$unset }) });
+  await Profile.updateOne({ userId }, { $set: { gate, ...basics.$set }, ...(Object.keys(basics.$unset).length && { $unset: basics.$unset }) }, { session });
   return gate;
 }
 
