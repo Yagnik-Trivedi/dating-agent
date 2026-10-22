@@ -3,7 +3,7 @@
 import { taskConfig } from './tasks.js';
 import OpenAI from 'openai';
 import { env } from '../../config/env.js';
-import { checkBudget, recordUsage } from './budget.js';
+import { checkBudget, markAuthFailure, markAuthOk, recordUsage } from './budget.js';
 import { getCached, hashText, putCached } from './embedCache.js';
 
 export { BudgetExceededError } from './budget.js';
@@ -132,10 +132,12 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
       });
     } catch (err) {
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
+      if (err.status === 401 || err.status === 403) markAuthFailure();
       console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${scrub(err.message)}`);
       throw err;
     }
     const latencyMs = Date.now() - started;
+    markAuthOk();
     const choice = res.choices?.[0];
     // `reasoning_content` / `reasoning` fields are ignored; inline <think> blocks are stripped.
     const text = stripReasoning(choice?.message?.content);
@@ -212,8 +214,10 @@ export async function embed(texts, { purpose = 'embed', userId, inputType = 'pas
       });
     } catch (err) {
       recordUsage({ purpose, tier: 'embed', model, userId, latencyMs: Date.now() - started, ok: false });
+      if (err.status === 401 || err.status === 403) markAuthFailure();
       throw err;
     }
+    markAuthOk();
     recordUsage({ purpose, tier: 'embed', model, userId, latencyMs: Date.now() - started, ok: true, promptTokens: res.usage?.prompt_tokens ?? 0 });
     const entries = res.data
       .sort((a, b) => a.index - b.index)

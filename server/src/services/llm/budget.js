@@ -21,6 +21,12 @@ const fresh = () => ({ day: today(), refreshedAt: 0, tokens: 0, smartCalls: 0, p
 let state = fresh();
 // All-time spend. `loaded` = we have read the total from Mongo at least once in this process.
 const spend = { usd: 0, loaded: false };
+// The provider rejected our API key (401/403). Every call fails until the key is fixed, so pause instead of failing
+// silently: the UI banner says why, and only one probe call per AUTH_PROBE_MS checks whether the key works again.
+const AUTH_PROBE_MS = 5 * 60_000;
+const auth = { failedAt: 0 };
+export const markAuthFailure = () => { auth.failedAt = Date.now(); };
+export const markAuthOk = () => { auth.failedAt = 0; };
 const pending = new Set();
 
 /** USD per 1M tokens for a tier's model, from LLM_PRICE_<TIER>. */
@@ -69,6 +75,7 @@ export function pauseReason() {
   if (!env.LLM_ENABLED) return { code: 'LLM_DISABLED', message: 'Agent paused — AI is switched off' };
   if (spend.usd >= env.LLM_HARD_CAP_USD) return { code: 'SPEND_CAP', message: 'Agent paused — spending cap reached' };
   if (state.tokens >= env.LLM_DAILY_TOKENS_GLOBAL) return { code: 'BUDGET_EXCEEDED', message: 'Agent paused — daily limit reached' };
+  if (auth.failedAt) return { code: 'PROVIDER_AUTH', message: 'Agent paused — the AI provider rejected our API key' };
   return null;
 }
 
@@ -80,7 +87,9 @@ export async function checkBudget({ tier, userId }) {
   // Fail closed: with real prices we must know the all-time spend before spending more.
   if (pricesActive() && !spend.loaded) throw new BudgetExceededError('Agent paused — spend tracking unavailable', 'SPEND_UNKNOWN');
   const paused = pauseReason();
-  if (paused) throw new BudgetExceededError(paused.message, paused.code);
+  // A rejected key: let one probe through every AUTH_PROBE_MS (it clears the pause if the key works again).
+  if (paused?.code === 'PROVIDER_AUTH' && Date.now() - auth.failedAt >= AUTH_PROBE_MS) auth.failedAt = Date.now();
+  else if (paused) throw new BudgetExceededError(paused.message, paused.code);
   if (tier === 'smart' && state.smartCalls >= env.LLM_SMART_DAILY_CALLS) throw new BudgetExceededError('Agent paused — daily limit reached (verdicts)');
   if (userId && !state.exempt.has(String(userId)) && (state.perUser.get(String(userId)) ?? 0) >= env.LLM_DAILY_CALLS_PER_USER) {
     throw new BudgetExceededError('Agent paused — daily limit reached');
