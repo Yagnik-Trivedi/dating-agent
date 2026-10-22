@@ -15,7 +15,7 @@ const ATTRIBUTE_WORDS = {
   kids: /\b(kids|children|child|bacche|bachche|babies)\b/i,
   religion: /\b(religion|religious|pray|praying|spiritual)\b/i,
   diet: /\b(vegetarian|veg|non-veg|nonveg|vegan|meat|eggetarian)\b/i,
-  location: /\b(settle|settling|relocate|relocating|see yourself living|move abroad|stay in (this|the) city)\b/i,
+  location: /\b(settle|settling|relocate|relocating|see yourself living|(move|moving|live|living) abroad|stay in (this|the) city)\b/i,
   looking_for: /\b(looking for|long[- ]term|something serious|casual dating|hoping to find|brings you here|here for)\b/i,
   family: /\b(family|parents|fam)\b/i,
   career: /\b(career|ambition|ambitious|work[- ]life)\b/i,

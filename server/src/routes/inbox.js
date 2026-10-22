@@ -17,7 +17,7 @@ export const inboxRouter = Router();
 
 inboxRouter.get('/inbox', async (req, res) => {
   const { status } = parse(z.object({ status: z.enum(['open', 'answered', 'dismissed', 'all']).default('open') }), req.query);
-  const filter = { userId: req.user._id, ...(status !== 'all' && { status }) };
+  const filter = { userId: req.user._id, status: status === 'all' ? { $ne: 'held' } : status }; // held: plan 32 KP3
   res.json({ items: await InboxItem.find(filter).sort({ createdAt: -1 }).limit(100).lean() });
 });
 
