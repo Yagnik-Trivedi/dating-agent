@@ -10,6 +10,7 @@ export const MATCH_STATUSES = [
 const matchSchema = new mongoose.Schema({
   users: { type: [{ type: ObjectId, ref: 'User' }], index: true }, // sorted
   pairKey: { type: String, required: true, unique: true }, // `${users[0]}_${users[1]}`, prevents duplicate matches
+  admin: { type: Boolean, default: undefined }, // made by the owner for testing (scripts/admin-matches.js): no gate re-check, no daily chat cap
   status: { type: String, enum: MATCH_STATUSES, default: 'matched' },
   perUser: [{
     userId: { type: ObjectId, ref: 'User' },

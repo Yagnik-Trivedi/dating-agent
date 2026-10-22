@@ -21,3 +21,6 @@ server/uploads/
 # Local reference docs (not part of the submission)
 KG.md
 DA.md
+
+# Owner test-run backups (scripts/admin-matches.js): real users' data, never committed
+server/backups/

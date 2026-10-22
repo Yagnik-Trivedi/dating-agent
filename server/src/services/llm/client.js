@@ -42,6 +42,13 @@ function modelFor(tier) {
   return env[key];
 }
 
+// A model the provider doesn't serve to this account (404, e.g. nemotron-3-super for the NVIDIA key, 2026-10-22) is
+// skipped for the rest of the process: the tier's calls go to the next chat model instead of failing every time.
+const deadModels = new Set();
+const FALLBACK = { fast: ['fast', 'mid', 'smart'], mid: ['mid', 'smart', 'fast'], smart: ['smart', 'mid', 'fast'] };
+const liveModel = (tier) => (FALLBACK[tier] ?? [tier]).map((t) => env[MODEL_ENV[t]]).find((m) => m && !deadModels.has(m)) ?? modelFor(tier);
+const modelGone = (err) => err.status === 404 && /not found|does not exist|unknown model/i.test(String(err.message));
+
 /** The model new embeddings are made with; store it next to every vector. */
 export const embeddingModel = () => modelFor('embed');
 /** The model ID a tier runs on (to record which model made a decision). */
@@ -111,7 +118,7 @@ const thinkingOff = (tier, reasoning) => sendThinkingSwitch && (reasoning ?? env
 export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0.7, purpose, userId, matchId, reasoning, model: modelOverride, retries }) {
   const task = taskConfig(purpose, tier);
   if (task.tier !== tier) { reasoning ??= env[REASONING_ENV[tier]]; tier = task.tier; } // a moved task keeps its reasoning default
-  const model = modelOverride ?? modelFor(tier);
+  let model = modelOverride ?? liveModel(tier);
   await checkBudget({ tier, userId });
   let max = maxTokens ?? task.maxTokens ?? DEFAULT_MAX_TOKENS[tier];
   retries ??= task.retries;
@@ -134,6 +141,11 @@ export async function chat({ tier = 'fast', messages, maxTokens, temperature = 0
       recordUsage({ purpose, tier, model, userId, matchId, latencyMs: Date.now() - started, ok: false });
       if (err.status === 401 || err.status === 403) markAuthFailure();
       console.error(`llm ${purpose} (${model}) failed: ${err.status ?? ''} ${scrub(err.message)}`);
+      if (!modelOverride && modelGone(err) && FALLBACK[tier]) {
+        deadModels.add(model);
+        const next = liveModel(tier);
+        if (next !== model) { console.warn(`llm: ${model} isn't available to this account; ${tier} calls use ${next} from now on`); model = next; continue; }
+      }
       throw err;
     }
     const latencyMs = Date.now() - started;

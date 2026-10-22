@@ -110,7 +110,7 @@ const utcDay = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUT
  * (audit fix 1: their 3rd match of the day became "your agent will start this chat tomorrow").
  */
 export async function overDailyChats(match) {
-  if (!match.perUser.some((p) => p.agentActive)) return false;
+  if (match.admin || !match.perUser.some((p) => p.agentActive)) return false; // an owner's test match starts at once
   const since = utcDay();
   for (const u of await User.find({ _id: { $in: match.users }, isSeed: { $ne: true }, isJudge: { $ne: true } }, { _id: 1 }).lean()) {
     // ponytail: lists the user's matches each time; fine for tens of matches a day.
@@ -158,6 +158,7 @@ export async function runAwaitGraph({ matchId }) {
 
 /** Gate re-check at match creation (plan 07 §2): answers may have changed since discover. Boolean only, no LLM. */
 export async function gateCheck(match) {
+  if (match.admin) return true; // the owner matched these two on purpose (scripts/admin-matches.js)
   const gates = await Profile.find({ userId: { $in: match.users } }, { userId: 1, gate: 1 }).lean();
   const [a, b] = match.users.map((u) => gates.find((g) => String(g.userId) === String(u))?.gate);
   if (passesGate(a, b)) return true;
