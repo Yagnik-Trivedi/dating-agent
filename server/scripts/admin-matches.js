@@ -43,8 +43,16 @@ if (WIPE) {
 const users = await User.find({ isSeed: { $ne: true }, 'onboarding.status': 'done' }, { name: 1, graphStatus: 1 }).lean();
 const profiles = new Map((await Profile.find({ userId: { $in: users.map((u) => u._id) } }, { userId: 1, gender: 1, interestedIn: 1 }).lean()).map((p) => [String(p.userId), p]));
 const wants = (a, b) => { const pa = profiles.get(String(a._id)), pb = profiles.get(String(b._id)); return !pa?.interestedIn?.length || pa.interestedIn.includes(pb?.gender); };
+// --with <email>: a watcher account matched with every onboarded real account, any gender (its agent talks to every agent).
+const WITH = process.argv.includes('--with') ? process.argv[process.argv.indexOf('--with') + 1]?.toLowerCase() : null;
 const pairs = [];
-for (let i = 0; i < users.length; i++) for (let j = i + 1; j < users.length; j++) if (wants(users[i], users[j]) && wants(users[j], users[i])) pairs.push([users[i], users[j]]);
+if (WITH) {
+  const watcher = await User.findOne({ email: WITH }, { name: 1, graphStatus: 1 }).lean();
+  if (!watcher) throw new Error(`no account ${WITH}`);
+  for (const u of users) if (String(u._id) !== String(watcher._id)) pairs.push([watcher, u]);
+} else {
+  for (let i = 0; i < users.length; i++) for (let j = i + 1; j < users.length; j++) if (wants(users[i], users[j]) && wants(users[j], users[i])) pairs.push([users[i], users[j]]);
+}
 const skipped = await User.find({ isSeed: { $ne: true }, 'onboarding.status': { $ne: 'done' } }, { name: 1 }).lean();
 console.log(`\n${pairs.length} pairs (both sides interested in the other's gender; city and age ignored):`);
 for (const [a, b] of pairs) console.log(`  ${a.name} × ${b.name}`);
