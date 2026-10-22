@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-19, by Claude Code (SN natural conversation: code done, live check pending `server/.env`; next S4)
+- **Last updated:** 2026-10-22, by Claude Code (plan 32 KP1–KP3 code done, local commits, not pushed; nothing run, by the owner's instruction)
 - **Main-line branch:** `main` (pushed through `18c9e3d` and **deployed** 2026-10-19 by the owner. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -22,11 +22,36 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Da
 | SN | Natural conversation (owner, 2026-10-19): topics come up in the flow, not on a timer | 🔄 code done | (this commit) | Results below. **Left: the live 6-pair check needs `server/.env` on this machine.** |
 | SU | Live check removed + phone UI fixes (owner, 2026-10-19) | ✅ | (this commit) | Results below. Pushed + deployed with the owner's OK. |
 | SH | Human conversation (Arya, 2026-10-21; `plan/31-human-conversation.md`): no needless matching questions, mood-matched simple talk, profile basics | 🔄 H1 | — | H1 → H1-live (STOP before the live 6-pair run) → H2. Fallback: `CONVO_MODE=sn`. |
+| KP | Plan 32 before the hackathon (`plan/32-knowledge-graph-v3-2.md` B5): KP1 how you text, KP2 one source of truth for basics, KP3 small inbox questions | 🔄 code done | `a479b6c`, `32fb8e2`, `3d25447` | Results below. **Not run** (owner, 2026-10-22: the team tests it in the real app). K0–K5 are after the hackathon. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
+
+## KP results: plan 32 before the hackathon (2026-10-22) 🔄 code done, not run
+
+Owner's instruction for this step: build it, but **no testing and no dummy accounts**; the team tests it in the real app. So none of `npm test`, `api-check`, simulations or browser checks were run. Only syntax checks (`node --check`) and a client build into a temp folder.
+
+- **KP1, how you text (A6.9):**
+  - A "How do you usually text?" card: emoji, several short messages vs one, length, capitals, stickers/GIFs. Taps only, every row skippable. It shows in onboarding's reply step (saved before submit, so the first build uses it), in Teach your agent more (`/teach/texting`) and as chips in This is you (list view, "How I text"). It's stored on `User.textingStyle` (`PUT /api/onboarding/texting-style`), so rebuilds keep it.
+  - `VoiceSample.device` (mobile | desktop, from touch + screen size) on onboarding replies (`answers.Edevice`) and inbox answers. On a computer, the reply steps show "Type like you do on your phone" with the emoji picker shortcut.
+  - `computeVoiceProfile`: the self-report is the prior (`SELF_REPORT_WEIGHT` 4 samples) for emoji, length, bursts and lowercase. Desktop samples count `DESKTOP_STYLE_WEIGHT` 0.35 for emoji, length and bursts, and fully for wording, language and humour.
+  - Burstiness comes from the self-report plus real own-chat bursts (`VoiceSample.burst`: my next message within 60 s with nothing from them in between), never from line breaks.
+  - Emoji: never one echoed from the incoming text; a thing emoji (🍍) only if it's in 2+ samples; sad ones (😞) are kept in `sadEmojis` and used only when they're down or tired. The engine strips any emoji in a draft that isn't the user's own. Reported "a lot/some" with no usable emoji of their own → `DEFAULT_EMOJIS`.
+  - `plan.burst` 2 → two messages: the draft is split between sentences when the model wrote one. The scheduler already sends each as its own bubble.
+- **KP2, profile basics (A6.10):** editing a basic (on Edit profile → Lifestyle basics, `PUT /api/profile/basics`, or a valid answer through `PUT /api/profile` tags) updates the section-B answer, then the self fact (updated in place, evidence `answer B.<attr>`), then the gate and the public tag, in one transaction. "Show on my profile" changes visibility only. Free text that isn't one of the answers stays a hand-set display tag, as before.
+- **KP3, small inbox questions (A6.6):** `inboxWorth()` in `agent/askMyHuman.js`. These file an item: a section-B topic, a broad question on a dictionary concept, or an unresolved question about a big part of a life. A small detail ("which…", a name, a time, a count) is held (`InboxItem.status: 'held'`, never listed or counted toward the cap). It becomes a normal item once it has come up in `INBOX_REPEAT_CHATS` (2) different chats. "live/living abroad" now resolves to the location attribute.
+
+**Deviations:**
+- KP2 runs in the request as one transaction, not as a job: it makes no model calls.
+- `basics.test.js` was updated, because a hand-set valid basic now becomes the answer. The new tests listed in prompt KP were not written. The test update was not run.
+
+**For the team to run:** `npm test`, `api-check`, client build, 375 px and 1440 px, `smoke:browsers`, and one seeded simulated chat with a "several short messages" user to see the separate bubbles.
+
+**Existing users:** their voice profiles keep the old line-break burstiness and the old top emojis until the profile is rebuilt. Saving the texting card, re-onboarding or 20 new samples all trigger a rebuild. A one-off `rebuildVoice` per user (code only) would refresh everyone. It was not run: real users' data, so ask first.
+
+**Live check:** already removed in `71a3578` (2026-10-19, SU). Two stale mentions were fixed (`ProfileCheck.js` comment, `DEPLOY-HANDOFF.md` smoke step). Old `liveCheck` data in the production database was not touched.
 
 ## SH results: human conversation, phase H1 (2026-10-21) 🔄 H1 code done, ⏸ live 6-pair check waits for the owner's "go"
 

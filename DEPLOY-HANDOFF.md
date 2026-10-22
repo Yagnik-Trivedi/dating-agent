@@ -37,7 +37,7 @@ MONGODB_URI='<atlas uri>' node scripts/seed.js --judges
 ## 6. Smoke test on the live URL
 1. Sign up a new user, then finish onboarding.
 2. Log in as `judge1@demo.local`, open Matches, and open a finished match and the mid-chat one. Test Pause and Take over.
-3. Settings → Live check, on a phone and on a laptop.
+3. Onboarding (incl. "How do you usually text?") and Edit profile → Lifestyle basics, on a phone and on a laptop.
 4. Send us anything that breaks: the screen, the time, and the Render log lines.
 
 ## After deploy (left to do)
