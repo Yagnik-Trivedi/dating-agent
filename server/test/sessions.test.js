@@ -42,7 +42,7 @@ test('unlocked tier per session, and the room indicator', () => {
   assert.deepEqual([1, 2, 3, 5].map(unlockedTier), ['surface', 'personal', 'deep', 'deep']);
   assert.equal(sessionInfo({ depth: 'short' }), null);
   const at = new Date();
-  assert.deepEqual(sessionInfo({ depth: 'full', sessionIndex: 2, phase: 'gap', nextSessionAt: at }), { depth: 'full', n: 2, of: 5, phase: 'gap', nextSessionAt: at });
+  assert.deepEqual(sessionInfo({ depth: 'full', sessionIndex: 2, phase: 'gap', nextSessionAt: at, sessions: [{ n: 1, startCount: 0 }, { n: 2, startCount: 18 }] }), { depth: 'full', n: 2, of: 5, phase: 'gap', nextSessionAt: at, starts: [18] });
 });
 
 test('session plan: their "talk tomorrow?" → my goodbye; any end but a dealbreaker closes the session; a later session opens with a callback', async () => {

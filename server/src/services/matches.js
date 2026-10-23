@@ -65,7 +65,7 @@ export async function matchDetail(match, viewerId) {
   const [profile, report, conv] = await Promise.all([
     Profile.findOne({ userId: other }).select(PUBLIC_PROFILE).lean(),
     reportFor(match._id, viewerId),
-    Conversation.findOne({ matchId: match._id }, { depth: 1, sessionIndex: 1, phase: 1, nextSessionAt: 1, extraSessions: 1 }).sort({ round: -1 }).lean(),
+    Conversation.findOne({ matchId: match._id }, { depth: 1, sessionIndex: 1, phase: 1, nextSessionAt: 1, extraSessions: 1, 'sessions.n': 1, 'sessions.startCount': 1 }).sort({ round: -1 }).lean(),
   ]);
   const key = String(viewerId);
   return {

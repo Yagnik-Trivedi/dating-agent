@@ -56,7 +56,10 @@ export const hardCap = (conv) => sessionsMax(conv) * depthCfg(depthOf(conv)).ses
 /** What the match room shows: "Session 2 of up to 5" and, between sessions, when they pick it up. */
 export function sessionInfo(conv) {
   if (!inSessions(conv)) return null;
-  return { depth: depthOf(conv), n: conv.sessionIndex ?? 1, of: sessionsMax(conv), phase: conv.phase ?? 'chatting', nextSessionAt: conv.phase === 'gap' ? conv.nextSessionAt ?? null : null };
+  return {
+    depth: depthOf(conv), n: conv.sessionIndex ?? 1, of: sessionsMax(conv), phase: conv.phase ?? 'chatting', nextSessionAt: conv.phase === 'gap' ? conv.nextSessionAt ?? null : null,
+    starts: (conv.sessions ?? []).filter((s) => s.n > 1).map((s) => s.startCount), // where the room draws "Session 2"
+  };
 }
 
 /** The thread about them the last session left open ("the exam on Friday"), for the next session's callback. */

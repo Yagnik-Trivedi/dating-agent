@@ -1,7 +1,7 @@
 // Match room (Round 7 Step 2 design, Frontend-Design/07-prelude-step2 Room.jsx) on real data. Every agent message is
 // labelled "Written by …'s agent" for both people; a calm status strip ticks through the agents' steps; "What my agent
 // is noticing" (only me) shows the interest line, chat moments and notes with their quotes. Take over is one tap.
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowRight, Ban, BellRing, Check, CheckCheck, ChevronDown, ChevronLeft, Circle, Flag, Hand, Heart, Lock, MoreHorizontal, Pause, PenLine, Play, Quote, RefreshCw, UserX, WifiOff } from 'lucide-react'
@@ -28,11 +28,18 @@ function stepsFor(match, n, them) {
     { t: `Checking ${them}’s profile for fakes`, d: match.trust?.level === 'ok' ? 'No red flags' : match.trust?.level ? 'A few things to ask about' : 'In a moment' },
     { t: `Reading ${them}’s profile`, d: match.otherProfile ? `${match.otherProfile.photos?.length ?? 0} photos, ${match.otherProfile.prompts?.length ?? 0} prompts` : '' },
     { t: 'Saying hello', d: n ? 'Opened from their profile' : 'Next' },
-    { t: 'Talking', d: `${n} messages so far` },
+    { t: match.session ? `Talking: session ${match.session.n} of up to ${match.session.of}` : 'Talking', d: match.session?.phase === 'gap' ? `Taking a break · ${n} messages so far` : `${n} messages so far` },
     { t: 'Writing your letter', d: 'When they finish' },
   ]
   const i = { matched: 0, trust_check: 0, briefing: 1, agent_chatting: n ? 3 : 2, evaluating: 4 }[match.status] ?? 4
   return [steps, i]
+}
+
+/** Plan 33: when the agents pick the chat up again ("in about 3 hours"), honestly. */
+function resumesIn(at) {
+  const min = Math.round((new Date(at) - Date.now()) / 60000)
+  if (!at || min <= 1) return 'in a minute or so'
+  return min < 60 ? `in about ${min} minutes` : `in about ${Math.round(min / 60)} hour${Math.round(min / 60) === 1 ? '' : 's'}`
 }
 
 /** Manus-style status strip: one calm line that ticks live; expand for every step. */
@@ -195,8 +202,9 @@ export default function MatchRoom() {
       {match.status === 'flagged_fake' && <p className="sys"><Flag size={14} strokeWidth={1.8} aria-hidden="true" /> Your agent thinks this profile is fake and stopped talking. {match.trust?.flags?.[0]}</p>}
       {messages.map((m, i) => {
         const mine = String(m.senderId) === me
-        return <Bubble key={m._id} m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt}
-          seen={mine && i === lastMineAny && Boolean(match.otherReadAt) && new Date(match.otherReadAt) >= new Date(m.createdAt)} />
+        const sessionStart = match.session?.starts?.indexOf(i) ?? -1
+        return <Fragment key={m._id}>{sessionStart >= 0 && <p className="sys">Session {sessionStart + 2} · they picked it up again · {time(m.createdAt)}</p>}<Bubble m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt}
+          seen={mine && i === lastMineAny && Boolean(match.otherReadAt) && new Date(match.otherReadAt) >= new Date(m.createdAt)} /></Fragment>
       })}
       {typingUserId && (() => {
         const mine = String(typingUserId) === me
@@ -229,7 +237,11 @@ export default function MatchRoom() {
   const chat = (
     <section className="rm-chat" aria-label={`Conversation with ${them}`}>
       {head}
-      {agentsTalking && <div className="banner" role="status"><BellRing size={17} strokeWidth={1.7} aria-hidden="true" /><span>Your agents are talking. Keep browsing; we’ll let you know.</span></div>}
+      {agentsTalking && <div className="banner" role="status"><BellRing size={17} strokeWidth={1.7} aria-hidden="true" />
+        <span>{match.session?.phase === 'gap'
+          ? `Your agents stopped for now, like people texting over a few days. They’ll pick it up ${resumesIn(match.session.nextSessionAt)} (session ${match.session.n + 1} of up to ${match.session.of}).`
+          : match.session ? `Your agents are still getting to know each other: session ${match.session.n} of up to ${match.session.of}. Keep browsing; we’ll let you know.`
+            : 'Your agents are talking. Keep browsing; we’ll let you know.'}</span></div>}
       {live && match && <StatusStrip steps={steps} step={step} open={stripOpen ?? !mobile} onToggle={() => setStripOpen(!(stripOpen ?? !mobile))} />}
       {mobile && match && <div className="rm-tabs"><Tabs id="room-m" value={tab} onChange={setTab} full items={[['chat', 'Chat'], ['notice', 'Noticing', facts.filter((f) => f.evidence?.[0]?.quote).length]]} /></div>}
       {mobile && tab === 'notice' ? <div className="rm-list">{noticing}</div> : feed}

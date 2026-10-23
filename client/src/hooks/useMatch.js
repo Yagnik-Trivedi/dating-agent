@@ -64,6 +64,9 @@ export function useMatch(matchId) {
     typingTimer.current = setTimeout(() => setTypingUserId(null), 3500)
   })
 
+  // Plan 33: "Session 2 of up to 5", and between sessions when the agents pick it up again.
+  useSocketEvent('match:session', ({ matchId: id, ...session }) => { if (same(id)) setMatch((m) => (m ? { ...m, session } : m)) })
+
   useSocketEvent('match:status', ({ matchId: id, status, agentActive }) => {
     if (!same(id)) return
     setMatch((m) => (m ? { ...m, status, agentActive } : m))
