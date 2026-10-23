@@ -88,6 +88,9 @@ const schema = z.object({
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
   // Plan 31: human = simple mood-matched talk, at most one plain matching question; sn = plan 30 SN exactly (the fallback).
   CONVO_MODE: field(z.enum(['human', 'sn']).default('human')),
+  // Plan 33 C1: full = up to 5 sessions over hours/days + the high bar; demo = 3 short sessions a minute apart; short =
+  // today's single 14-message chat and judge rule. Unset: demo when a seed or judge account is in the match, else full.
+  CHAT_DEPTH: field(z.enum(['full', 'demo', 'short']).optional()),
   KEEPALIVE_SELF_PING: bool(false), // Render: ping our own RENDER_EXTERNAL_URL/health so the free tier doesn't sleep (plan 12)
   KEEPALIVE_INTERVAL_MIN: field(z.coerce.number().positive().default(10)),
   JOB_WORKER: bool(true), // false: this process only enqueues (scripts); the web process runs the worker

@@ -71,6 +71,32 @@ export const KG = Object.freeze({
   // Human mode: the chance of a question per message (no floor), × these when their read says so.
   ASK_HUMAN_MAX: 0.5, ASK_LOW_ENERGY: 0.3, ASK_WHEN_TOLD: 0.2,
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
+  // Plan 33 C1 (Arya, 2026-10-23): long chats in sessions, like texting over a few days, each sitting a bit deeper, and a
+  // much higher bar for a match. CHAT_DEPTH (env) picks one; 'short' = today's one chat of MAX_TURNS and today's judge.
+  // sessionMessages: a session's length is sampled in this range (both agents' messages, the close + goodbye included);
+  // a natural close is allowed from the low end. gapMs: the wait before the next session, sampled in this range.
+  CHAT_DEPTHS: Object.freeze({
+    full: Object.freeze({ sessions: 5, sessionMessages: [16, 24], gapMs: [3 * 3_600_000, 12 * 3_600_000], minSessionsForYes: 3, minMessagesForYes: 50 }),
+    demo: Object.freeze({ sessions: 3, sessionMessages: [16, 16], gapMs: [45_000, 75_000], minSessionsForYes: 3, minMessagesForYes: 40 }),
+  }),
+  // What each session may draw on (A5): session 1 small talk (surface), 2 adds stories and people (personal), 3+ deep.
+  SESSION_TIERS: Object.freeze(['surface', 'personal', 'deep']),
+  SESSION_RAW_MESSAGES: 20, // the transcript the agent sees raw; earlier sessions reach it as summaries + threads
+  SESSION_CLOSING_STALE_MS: 120_000, // a session close nobody answered ends the session anyway (resume sweep)
+  // The A7 bar (full and demo). A positive is THEIR words on one of MY facts (verified, as in short); its tier and branch
+  // come from that fact (judge/evidenceTier.js). Surface likes count at most SURFACE_MAX in total; extra deep positives
+  // may stand in for personal ones.
+  SESSION_BAR: Object.freeze({
+    YES_POSITIVES: 8, MIN_BRANCHES: 5, MIN_PERSONAL: 3, MIN_DEEP: 2, SURFACE_MAX: 3, MAX_NOTABLE: 2, YES_MIN: 0.8,
+    LOW_INTEREST: 0.35, LOW_INTEREST_SESSIONS: 2, // my agent's interest below this at the end of 2 sessions in a row → no
+  }),
+  // Chemistry in the chat itself, measured in code (A7.5), from my side's point of view.
+  CHEMISTRY: Object.freeze({ MIN_QUESTIONS: 3, MIN_LAUGHS: 2, SHRINK_MIN: 0.7, MIN_INTEREST: 0.6, INTEREST_SESSIONS: 2 }),
+  SESSION_CONF: Object.freeze({ YES_BASE: 0.8, YES_PER_EXTRA_POSITIVE: 0.02, YES_PER_EXTRA_DEEP: 0.03, YES_PER_NOTABLE_FRICTION: 0.05, YES_MAX: 0.95, NO_LOW_INTEREST: 0.75 }),
+  // Texture (A6): the user's own fillers at about their own rate; weak or uncertain facts said with a hedge.
+  HEDGE_STRENGTH: 0.5, // a like or opinion held below this is said with a hedge ("i think", "kinda")
+  FILLER_MAX_RATE: 0.6, // at most this chance of a filler per message, whatever the samples say
+  THINK_RATE: 0.5, // answering me on something I hold loosely: × my hedge rate, the chance of thinking out loud first
   // judge (plan 09)
   JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)
   // The decision is made in code from the judge's verified evidence (owner's judge fix, 2026-10-18; judgeDecision.js).

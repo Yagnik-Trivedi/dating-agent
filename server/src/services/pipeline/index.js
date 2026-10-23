@@ -1,5 +1,6 @@
 import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
+import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
 import { env } from '../../config/env.js';
@@ -12,6 +13,7 @@ import { addClarify } from '../brief/buildBrief.js';
 import { buildBriefs } from '../brief/index.js';
 import { enqueue } from '../jobs/queue.js';
 import { checkProfile } from '../trust/checkProfile.js';
+import { chatDepth, newSession } from '../conversation/sessions.js';
 
 /**
  * The status a viewer sees. A flagged_fake match reads as "closed" for the side that was flagged,
@@ -83,7 +85,14 @@ export async function startConversationDoc(match) {
   const [lo, hi] = KG.TEMP_RANGE;
   const agentState = Object.fromEntries(match.users.map((u) => [String(u), { interest: null, lowInterestTurns: 0, turn: 0, toldStoryIds: [], topicsTouched: [], temperature: Math.round((lo + r() * (hi - lo)) * 100) / 100, model: KG.AGENT_MODEL_BY_SIDE?.[String(u)] ?? null }]));
   const existing = await Conversation.findOne({ matchId: match._id, status: 'active' }).lean();
-  return existing ?? Conversation.create({ matchId: match._id, round: 1 + await Conversation.countDocuments({ matchId: match._id }), seed, agentState });
+  if (existing) return existing;
+  // Plan 33 C1: full / demo chats run in sessions; short is today's single chat.
+  const depth = chatDepth(await User.find({ _id: { $in: match.users } }, { isSeed: 1, isJudge: 1 }).lean());
+  const startCount = depth === 'short' ? 0 : await Message.countDocuments({ matchId: match._id });
+  return Conversation.create({
+    matchId: match._id, round: 1 + await Conversation.countDocuments({ matchId: match._id }), seed, agentState, depth,
+    ...(depth !== 'short' && { sessionIndex: 1, phase: 'chatting', sessions: [newSession({ seed, depth, n: 1, startCount })] }),
+  });
 }
 
 /** Step 2 (plan 07): briefs (public profile + own graph), the conversation doc, then the agent chat (08). */
