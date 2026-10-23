@@ -1,6 +1,6 @@
 # Project context for Claude Code
 
-Read this file first in every session. **All open work is in `plan/30-final-sprint.md`** (steps S0–S7, in its stated order; stop where it says STOP). Finished build plans are in `plan/archive/`; `plan/PROGRESS.md` is the status board. **Commit locally after each step; never push or deploy until the owner says "push"** (free-tier deploy credits; one push + deploy in S7).
+Read this file first in every session. **All open work is in `plan/30-final-sprint.md`; plan 33 continues from `plan/33.1-handoff.md`** (steps S0–S7, in its stated order; stop where it says STOP). Finished build plans are in `plan/archive/`; `plan/PROGRESS.md` is the status board. **Commit locally after each step; never push or deploy until the owner says "push"** (free-tier deploy credits; one push + deploy in S7).
 
 ## What we're building
 
