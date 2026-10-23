@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-22, by Claude Code (plan 32 KP1–KP3 done and code-tested, local commits, not pushed; persona chats are the team's)
+- **Last updated:** 2026-10-23, by Claude Code (plan 33 C1 code done and tested, local commits, not pushed; no simulated chats: the team tests with real accounts)
 - **Main-line branch:** `main` (pushed through `4670cd3` and **deployed** 2026-10-22 on the owner's "push and deploy" (plan 32 KP; live on Render + Vercel, `smoke:browsers` 3/3 on the live site). Before: `18c9e3d` on 2026-10-19. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -10,7 +10,7 @@ Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · 
 
 ## Plan 30: final sprint (the only plan with open work)
 
-Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
+Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → KP → S33 → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
 
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
@@ -23,11 +23,77 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → S4 → S5 → S7**. Da
 | SU | Live check removed + phone UI fixes (owner, 2026-10-19) | ✅ | (this commit) | Results below. Pushed + deployed with the owner's OK. |
 | SH | Human conversation (Arya, 2026-10-21; `plan/31-human-conversation.md`): no needless matching questions, mood-matched simple talk, profile basics | 🔄 H1 | — | H1 → H1-live (STOP before the live 6-pair run) → H2. Fallback: `CONVO_MODE=sn`. |
 | KP | Plan 32 before the hackathon (`plan/32-knowledge-graph-v3-2.md` B5): KP1 how you text, KP2 one source of truth for basics, KP3 small inbox questions | ✅ code + tests | `a479b6c`, `32fb8e2`, `3d25447` + tests | Results below. Simulated persona chats are left to the team (owner, 2026-10-22). K0–K5 are after the hackathon. |
+| S33 | Plan 33 (Arya, 2026-10-23; `plan/33-questions-brain-long-chats.md`): long chats in sessions, the high bar, natural texture (C1) → question bank + brain map (Q1) → screens (Q2) → personas (P) | 🔄 C1 code done | `9614471`…`3921cde` | Results below. ⏸ STOP after C1. Owner (2026-10-23): no demo chats, the team tests with real accounts; demo accounts to be deleted. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
+
+## S33 C1 results: long chats, the high bar, natural texture (2026-10-23) 🔄 code done, ⏸ STOP
+
+**Owner (2026-10-23):** "do not do demo chats, we will do the irl test; only complete the code properly and delete all the demo accounts, only keep the real accounts". The one simulated pair was stopped after 10 messages of session 1 (no session end reached); no live pairs were run.
+
+**Built (one local commit per step):**
+- **1. Sessions + config** (`9614471`): `Conversation.depth | sessionIndex | phase (chatting / closing / gap) | nextSessionAt | sessions[] | ledger`. `CHAT_DEPTH=full|demo|short`; unset → demo when a seed or judge account is in the match, else full; `RULES=off` → short. Numbers live in `kg/config.js` (`CHAT_DEPTHS`, `SESSION_BAR`, `CHEMISTRY`, `SESSION_CONF`, texture). Conversations from before plan 33 have no depth and run as `short`.
+- **2. Engine + flow** (`ee33957`, `agent/sessionFlow.js`, `conversation/sessions.js`):
+  - A session is 16–24 messages (demo: 16), and planAct gets that session's limits.
+  - Any end but a dealbreaker becomes "talk tomorrow?" (`end: 'session'`, marked `closing` before it's sent). The other agent sends a short goodbye (`session_ack`).
+  - Then `endSession` queues the `sessionEnd` job: summary, evidence passes, decision. The chat either ends or continues with a `nextSession` job after the gap (full 3–12 h, demo 45–75 s).
+  - The next session opens with a callback on an open thread about them.
+  - A human's message during the gap waits for the next session's first reply.
+  - The sweep starts a session whose gap job was lost, and ends a session whose close went unanswered for 2 min.
+  - `extend` on a Maybe adds one more session on the same bar.
+- **3. Memory** (`4fc0f16`, `conversation/memory.js`, `prompts/sessionSummary.js`):
+  - ONE summary call per session, on the transcript only: summary, open threads per person, topics covered.
+  - The prompt gets the last 20 messages raw, with a marker where each session started, plus earlier sittings as summaries, threads and topics.
+  - A question I already asked in an earlier session is a draft problem: regenerated, else dropped.
+- **4. Texture** (`01287e1`, `persona/texture.js`):
+  - `VoiceProfile.fillers` (form → share of my replies) and `hedgeRate`, computed from the samples for older profiles too.
+  - One planned filler at about my rate, from its own seeded rng so act plans replay unchanged. A filler or laugh I never use is stripped in code.
+  - Likes and opinions below strength 0.5 are marked `[not sure]` and said with a hedge.
+  - Two new moves: `think` (answering on something I hold loosely) and `not_sure` (nothing listed).
+  - A soft over-use check is recorded in `checks.texture`.
+- **5. Judge** (`d71b1bc`, `conversation/sessionJudge.js`, `judgeDecision.js#decideFor`, `conversation/evidence.js`):
+  - One evidence pass per side per session (mid, reasoning off) adds to the ledger. Each positive and friction carries MY fact's `_id`, tier and branch.
+  - Tiers: B kids / looking_for / location / family / religion / career / conflict / alone_time are deep; smoking / drinking / diet, stories, background and humour are personal; likes and opinions are surface. A story's branch comes from its C question.
+  - The A7 bar runs in code. The final verdict is built from the ledger, with no extra call.
+  - `short` runs today's `judgeDecision`, unchanged.
+- **6. Match room** (`8781c06`): "Talking: session N of up to M"; an honest gap banner ("They'll pick it up in about 3 hours"); a "Session 2 · they picked it up again" marker; socket `match:session`.
+- **7. Metrics** (`64ecba6`): `scripts/eval/lib/sessionMetrics.js` + `scripts/eval/session-metrics.js <matchId> | --latest N`, and a plan-33 section in `metrics.js`.
+- **Account cleanup** (`3921cde`):
+  - `services/account.js`: DELETE /me and the script share it. A match nobody is left in is now removed with its conversations, and queued jobs for the user go too.
+  - `scripts/delete-demo-accounts.js`: dry run by default; `--yes` deletes seed, judge and `@demo.local` accounts.
+
+**Which test covers each A7 item** (`test/judgeBar.test.js` unless noted):
+1. 3 sessions + 50 messages: "a yes is impossible before 3 sessions and 50 messages…".
+2. 8 positives from 5 branches: "8 positives on only 2 branches…" and the yes case.
+3. 3 personal + 2 deep: "…or without 2 deep ones, are not a yes".
+4. Surface capped at 3 (coffee alone is never a match): "two shared likes (coffee + films) are never a yes…".
+5. Chemistry: "…or without chemistry"; measured from a real transcript in `sessionJudge.test.js` (the yes case asserts `chemistry.ok`).
+6. No serious friction, ≤ 2 notable, each talked about: "frictions: a serious one blocks yes…".
+7. Consistency: "…or with something that does not add up". The pass keeps an inconsistency only when both quotes are verbatim in their messages.
+8. Confidence ≥ 0.8: the yes case asserts `≥ SESSION_BAR.YES_MIN`; one notable friction pulls 8 bare positives under it.
+- No stays quick (dealbreaker, serious friction on something core, 2 low-interest sessions): "no stays quick…" + `sessionJudge.test.js`.
+- `short` = today's decision on every existing judge fixture: "CHAT_DEPTH=short reproduces today's judgeDecision exactly".
+- End to end on a test DB (`sessionJudge.test.js`): a yes from both after the last session → `judge_yes` → MatchDecision from the ledger with no model call → Compatible. The DB spy shows the judge never reads the other user.
+
+**Checks:**
+- `npm test` **197/197** (171 before C1). New suites: `sessions`, `sessionFlow`, `memory`, `texture`, `judgeBar`, `sessionJudge`, `sessionMetrics`, `account`.
+- `api-check`: all passed (local dev-db, AI off), twice.
+- Client build: green.
+- Match room at 375 / 1440 px: 0 px overflow, no console errors.
+- `smoke:browsers` on the local production build: chromium, firefox, webkit ✓.
+
+**Not measured** (no live chats, owner's decision): tokens and minutes per pair, the A9 rows and transcripts. `node scripts/eval/session-metrics.js --latest 5` reports them from the team's real chats.
+
+**Deviations / things to watch in the real test:**
+- Extra deep positives may stand in for personal ones (8 = 3 surface + 3 personal + 2 deep, but 4 deep + 2 personal also passes).
+- A notable friction nobody talked about blocks a yes, including plan 31's "from their profile" frictions (A7.6 read strictly).
+- Low interest is a no per side (A7), not "both sides" (A5).
+- The interest meter drifts back toward ~0.5 every turn, so "≥ 0.6 at the end of the last 2 sessions" may block most yeses. If real chats all end Maybe, look here first.
+- The evidence passes run on mid; on this NVIDIA key mid falls back to Ultra (Super 404s), at ~23 s per agent turn.
+- Full chats take hours to days (3–12 h gaps). Two brand-new accounts get `full`; set `CHAT_DEPTH=demo` on Render for a same-day test.
 
 ## KP results: plan 32 before the hackathon (2026-10-22) ✅ code tested; persona chats by the team
 
