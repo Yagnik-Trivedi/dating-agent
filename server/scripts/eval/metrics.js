@@ -18,6 +18,10 @@ import { tagLanguageHeuristic } from '../../src/services/kg/language.js';
 import { measure } from '../seed/lib/measure.js';
 import { agendaAttribute } from '../../src/services/kg/questionnaireFacts.js';
 import { convoMetrics, summarise } from './lib/convoMetrics.js';
+import { sessionMetrics } from './lib/sessionMetrics.js';
+import { Conversation } from '../../src/models/Conversation.js';
+import { MatchDecision } from '../../src/models/MatchDecision.js';
+import { VoiceProfile } from '../../src/models/VoiceProfile.js';
 
 const ROOT = new URL('../../', import.meta.url);
 const rawTag = process.argv.includes('--tag') ? process.argv[process.argv.indexOf('--tag') + 1] : null; // rules-off → eval/raw-rules-off.json
@@ -41,7 +45,7 @@ const mixL1 = (a, b) => [...new Set([...Object.keys(a), ...Object.keys(b)])].red
 const hasDevanagari = (texts) => texts.some((t) => /\p{Script=Devanagari}/u.test(t));
 
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
-const voiceRows = [], convRows = [], obsRows = [], plan31 = [];
+const voiceRows = [], convRows = [], obsRows = [], plan31 = [], plan33 = [];
 const samples = []; // { name, real: [...], agent: [...] } for the human "which is real?" export
 for (const r of Object.values(raw).filter((x) => x.run === 1)) {
   const pair = pairs.find((p) => p.id === r.id);
@@ -94,6 +98,12 @@ for (const r of Object.values(raw).filter((x) => x.run === 1)) {
     return { speaker: String(m.senderId), text: m.text, agent: m.authoredBy === 'agent', story: m.authoredBy === 'agent' ? story && !theyToldFirst : null };
   });
   plan31.push({ pair: r.id, ...convoMetrics(lines, { settled }), moves: agent.map((m) => m.actPlan?.move).filter(Boolean), moods: agent.map((m) => m.actPlan?.read?.mood).filter(Boolean) });
+  // Plan 33 A9: sessions, the high bar's yes decisions, repeats, fillers and hedges (session-mode chats only).
+  const conv = await Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean();
+  if (conv?.depth && conv.depth !== 'short') {
+    const voices = Object.fromEntries((await VoiceProfile.find({ userId: { $in: users.map((u) => u._id) } }, { userId: 1, fillers: 1 }).lean()).map((v) => [String(v.userId), v]));
+    plan33.push({ pair: r.id, expected: r.expected, predicted: r.predicted, depth: conv.depth, ...sessionMetrics({ messages, conv, decisions: await MatchDecision.find({ conversationId: conv._id }).lean(), voices }) });
+  }
 
   // Conversation stats.
   const texts = agent.map((m) => m.text);
@@ -140,6 +150,13 @@ const md = [
     `- **Unprompted agent stories** [0]: ${s.stories ?? '—'} · **topic changes while they tell or vent** [0]: ${s.topicChangesWhileTelling} · **length ratio** (agent / theirs, median): ${f2(s.lengthRatio)}`,
     `- **Moves**: ${Object.entries(plan31.flatMap((c) => c.moves).reduce((o, m) => ({ ...o, [m]: (o[m] ?? 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') || '— (SN run)'} · **moods read**: ${Object.entries(plan31.flatMap((c) => c.moods).reduce((o, m) => ({ ...o, [m]: (o[m] ?? 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') || '—'}`, '',
   ])(summarise(plan31)),
+  ...(plan33.length ? [
+    '## Plan 33: long chats and the high bar (A9; targets in brackets)', '',
+    `- **Messages per chat** [median ≥ 50 on compatible pairs]: ${plan33.map((c) => c.messages).join(', ')} · **sessions**: ${plan33.map((c) => c.sessions).join(', ')}`,
+    `- **Yes with a surface-only reason** [0]: ${sum(plan33, 'yesSurfaceOnly')} · **yes with ≥ 2 deep positives** [all]: ${sum(plan33, 'yesDeep2')}/${sum(plan33, 'yes')} · **same question in two sessions** [≤ 1 per chat]: ${plan33.map((c) => c.repeats).join(', ')}`,
+    `- **Hedged statements on loose facts** [≥ 0.8]: ${sum(plan33.map((c) => c.hedge), 'hedged')}/${sum(plan33.map((c) => c.hedge), 'loose')} · **filler ratio vs own rate** [0.5–1.5]: ${plan33.flatMap((c) => Object.values(c.fillers).map((f) => f.ratio ?? '—')).join(', ')}`,
+    `- **Question rate per session** [≤ 0.35]: ${plan33.map((c) => c.perSession.map((s) => s.questionRate).join('/')).join(' · ')} · **tokens per pair**: ${plan33.map((c) => c.tokens).join(', ')}`, '',
+  ] : []),
   '## Observer accuracy (my notes about them vs their own graph)', '',
   `- **Precision**: ${sum(obsRows, 'correct')}/${sum(obsRows, 'checkable')} checkable notes match their graph (same concept + polarity, or same attribute + value) = ${f2(sum(obsRows, 'correct') / (sum(obsRows, 'checkable') || 1))}`,
   `- **Recall**: ${sum(obsRows, 'caught')}/${sum(obsRows, 'mentioned')} of their facts they mentioned in chat were noted = ${f2(sum(obsRows, 'caught') / (sum(obsRows, 'mentioned') || 1))}`, '',
