@@ -30,16 +30,30 @@ async function runOnce(a, b) {
   console.log(`\nStop reason: ${m.agentState?.stopReason ?? '(none: still ' + m.status + ')'}${m.agentState?.stopDetail ? ` — ${m.agentState.stopDetail.why}` : ''}`);
   console.log(`Messages: ${messages.length} in ${seconds} s`);
   const conv = await Conversation.findOne({ matchId: m._id }).sort({ round: -1 }).lean();
-  console.log(`Conversation ended by: ${conv?.endedBy ?? '—'} (seed ${conv?.seed})`);
+  console.log(`Conversation ended by: ${conv?.endedBy ?? '—'} (seed ${conv?.seed}, depth ${conv?.depth ?? 'short'}${conv?.sessions?.length ? `, ${conv.sessions.length} sessions` : ''})`);
   const full = await Message.find({ matchId: m._id }).sort({ createdAt: 1 }).lean();
-  console.log('\nTranscript [act plan · checks]:');
+  // Plan 33: each line labelled by session, move and the fillers it used (planned filler in brackets, stripped ones struck).
+  const starts = new Map((conv?.sessions ?? []).map((s) => [s.startCount, s.n]));
+  console.log('\nTranscript [session · act plan · fillers · checks]:');
+  let session = conv?.sessions?.length ? 1 : null;
   for (const [i, x] of full.entries()) {
+    if (starts.has(i) && i > 0) { session = starts.get(i); console.log(`   --- session ${session} ---`); }
     const p = x.actPlan;
     const plan = !p ? '' : p.honestAI ? 'honest-AI' : p.fromBrief ? 'brief opener'
-      : `${p.move ?? ''}${p.read ? ` (${p.read.mood}, ${p.read.energy}${p.read.doing && p.read.doing !== 'chatting' ? `, ${p.read.doing}` : ''})` : ''} ~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
+      : `${p.move ?? ''}${p.read ? ` (${p.read.mood}, ${p.read.energy}${p.read.doing && p.read.doing !== 'chatting' ? `, ${p.read.doing}` : ''})` : ''} ~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.callback ? ` ↺"${p.callback}"` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
+    const t = x.checks?.texture;
+    const fill = !t ? '' : `fillers: ${t.used.join(', ') || 'none'}${t.filler ? ` (planned "${t.filler}")` : ''}${t.stripped?.length ? ` stripped: ${t.stripped.join(', ')}` : ''}${t.hedge?.loose ? ` hedged ${t.hedge.hedged}/${t.hedge.loose}` : ''}`;
     const c = x.checks;
     const chk = !c ? '' : [c.regenerated && 'regen', c.dropped?.length && `dropped ${c.dropped.length}`, c.leak?.length && 'LEAK', c.stance?.length && 'conceded'].filter(Boolean).join(', ');
-    console.log(`${String(i + 1).padStart(2)}. ${names[x.senderId]}: ${x.text}${plan ? `\n      [${plan}${chk ? ` · ${chk}` : ''}]` : ''}`);
+    const label = [session && `S${session}`, plan, fill, chk].filter(Boolean).join(' · ');
+    console.log(`${String(i + 1).padStart(2)}. ${names[x.senderId]}: ${x.text}${label ? `\n      [${label}]` : ''}`);
+  }
+  if (conv?.sessions?.length) {
+    console.log(`\nSessions (${conv.depth}):`);
+    for (const s of conv.sessions) {
+      const d = Object.entries(s.decisions ?? {}).map(([u, x]) => `${names[u]}: ${x.decision}`).join(', ');
+      console.log(`  ${s.n}. messages ${s.startCount + 1}–${s.endedAt ? (conv.sessions[s.n]?.startCount ?? full.length) : '…'} · ${s.tokens ?? '—'} tokens · decisions ${d || '—'}${s.summary ? `\n     summary: ${s.summary}` : ''}${s.threads?.length ? `\n     threads: ${s.threads.map((x) => `${names[x.about]}: ${x.text}`).join(' | ')}` : ''}`);
+    }
   }
   for (const u of [a, b]) {
     console.log(`\n${u.name}'s agenda:`);

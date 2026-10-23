@@ -1,22 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { ChatEvent } from '../models/ChatEvent.js';
-import { InboxItem } from '../models/InboxItem.js';
-import { KgFact } from '../models/KgFact.js';
-import { KgEdge } from '../models/KgEdge.js';
-import { KgTombstone } from '../models/KgTombstone.js';
-import { VoiceProfile } from '../models/VoiceProfile.js';
-import { VoiceSample } from '../models/VoiceSample.js';
-import { Like } from '../models/Like.js';
-import { Match } from '../models/Match.js';
-import { MatchDecision } from '../models/MatchDecision.js';
-import { Message } from '../models/Message.js';
 import { Profile } from '../models/Profile.js';
-import { ProfileCheck } from '../models/ProfileCheck.js';
-import { User } from '../models/User.js';
+import { deleteAccount } from '../services/account.js';
 import { pauseReason } from '../services/llm/budget.js';
-import { emitStatus, setStatus } from '../services/pipeline/index.js';
-import { io } from '../sockets/io.js';
 import { parse } from '../utils/http.js';
 
 export const meRouter = Router();
@@ -38,47 +24,8 @@ meRouter.put('/me/settings', async (req, res) => {
   res.json({ user: req.user });
 });
 
-// Delete everything about the user; their side of each match is anonymised ("Deleted user") and the match closed.
-// Their messages stay only in handed-off matches, where they are the other person's real chat history (plan 09 §5).
+// Delete everything about the user (services/account.js).
 meRouter.delete('/me', async (req, res) => {
-  const me = req.user._id;
-  const key = String(me);
-  const matches = await Match.find({ users: me });
-  const keepHistory = matches.filter((m) => m.status === 'handed_off').map((m) => m._id);
-  // Matches whose other side already deleted their account: nobody needs that history any more.
-  const others = matches.map((m) => m.users.find((u) => String(u) !== key)).filter(Boolean);
-  const alive = new Set((await User.find({ _id: { $in: others } }, { _id: 1 }).lean()).map((u) => String(u._id)));
-  const orphaned = matches.filter((m) => !m.users.some((u) => String(u) !== key && alive.has(String(u)))).map((m) => m._id);
-
-  await Promise.all([
-    Profile.deleteOne({ userId: me }),
-    KgFact.deleteMany({ $or: [{ subjectId: me }, { observerId: me }] }), // my graph, my notes, and notes about me
-    KgEdge.deleteMany({ $or: [{ subjectId: me }, { observerId: me }] }),
-    KgTombstone.deleteMany({ subjectId: me }),
-    VoiceSample.deleteMany({ userId: me }),
-    VoiceProfile.deleteOne({ userId: me }),
-    Like.deleteMany({ $or: [{ fromUserId: me }, { toUserId: me }] }),
-    Message.deleteMany({ $or: [{ senderId: me, matchId: { $nin: keepHistory } }, { matchId: { $in: orphaned } }] }),
-    ChatEvent.deleteMany({ observerId: me }),
-    MatchDecision.deleteMany({ userId: me }),
-    InboxItem.deleteMany({ userId: me }),
-    ProfileCheck.deleteMany({ userId: me }),
-    Match.updateMany(
-      { users: me },
-      {
-        $set: { 'perUser.$[mine].agentActive': false, 'perUser.$[mine].name': 'Deleted user' },
-        $unset: { [`trust.${key}`]: 1, [`brief.${key}`]: 1 },
-      },
-      { arrayFilters: [{ 'mine.userId': me }] },
-    ),
-  ]);
-  await User.deleteOne({ _id: me });
-
-  for (const match of matches) {
-    match.perUser = match.perUser.filter((p) => String(p.userId) !== key); // in-memory only: notify just the other side
-    if (match.status === 'closed') emitStatus(match);
-    else await setStatus(match, 'closed');
-  }
-  io.in(`user:${key}`).disconnectSockets(true);
+  await deleteAccount(req.user._id);
   res.status(204).end();
 });
