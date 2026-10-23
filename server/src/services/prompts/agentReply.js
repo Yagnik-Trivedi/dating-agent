@@ -157,7 +157,19 @@ function finalInstruction(plan, firstName) {
   ].filter(Boolean).join(' ');
 }
 
-export function build({ firstName, matchName, style, exemplars, myFacts, guidance, tone, aboutThem, transcript, plan, warning }) {
+// Plan 33: what my agent remembers of earlier sittings (summaries, open threads, topics already talked through).
+function memoryLines(memory) {
+  if (!memory) return [];
+  return [
+    "YOU'VE BEEN TEXTING FOR A FEW DAYS. EARLIER SITTINGS, IN SHORT:",
+    ...memory.summaries.map((s) => `- ${s}`),
+    memory.threads.length ? `Open threads from last time: ${memory.threads.join('; ')}.` : '',
+    memory.covered.length ? `Already talked through (don't ask about these again; refer back to them if it fits): ${memory.covered.join('; ')}.` : '',
+    '',
+  ].filter((l, i, a) => l !== '' || i === a.length - 1);
+}
+
+export function build({ firstName, matchName, style, exemplars, myFacts, guidance, tone, aboutThem, transcript, plan, warning, memory = null }) {
   const none = '(none)';
   return [
     {
@@ -210,6 +222,7 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
     {
       role: 'user',
       content: [
+        ...memoryLines(memory),
         'CONVERSATION SO FAR:',
         transcript.length ? transcript.join('\n') : `(nothing yet: write ${firstName}'s first message, reacting to something in ${matchName}'s profile)`,
         warning ? `\nYOUR PREVIOUS DRAFT WAS REJECTED: ${warning}\nWrite a new one that fixes this.` : '',

@@ -26,6 +26,7 @@ import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
 import { tierOf } from './evidence.js';
+import { memoryFor, rawTranscript, repeatsEarlier } from './memory.js';
 import { currentSession, inSessions, sessionLimits, sessionPlan, tierRank, unlockedTier } from './sessions.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
@@ -261,9 +262,13 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const sources = new Set(notes.map((_, i) => `N${i + 1}`));
   const aboutThem = notes.map((n, i) => `[N${i + 1}] ${n.predicate}: ${n.object}`);
   if (brief.summary) { aboutThem.push(`[P1] from their profile: ${brief.summary}`); sources.add('P1'); }
-  const transcript = history.slice(-20).map((m) => `${String(m.senderId) === me ? 'You' : matchName}: ${m.text}`);
+  // Plan 33: the last 20 messages raw (with a marker where a session started), earlier sessions as summaries + threads.
+  const transcript = rawTranscript(history, sessionMode ? conv : null, (m) => `${String(m.senderId) === me ? 'You' : matchName}: ${m.text}`);
+  const memory = sessionMode ? memoryFor(conv, { me, otherId, myName: persona.firstName, theirName: matchName }) : null;
+  // Questions I asked in earlier sessions: never again (plan 33 A5, "nothing gets asked twice").
+  const earlierQuestions = sessionMode ? history.slice(0, session.startCount).filter((m) => String(m.senderId) === me).flatMap((m) => sentencesOf(m.text)).filter((s) => s.includes('?')) : [];
   const prompt = {
-    firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, plan,
+    firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, plan, memory,
     style: [persona.voice.description,
       // Plan 30 S2: a short onboarding leaves few samples (confidence low): plain and short beats an invented style.
       (persona.voice.sampleCount ?? 0) < KG.VOICE_CONFIDENT_SAMPLES && `Only a few examples of how ${persona.firstName} texts are known: keep replies short and plain, and don't invent quirks.`,
@@ -306,6 +311,13 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     if (topicFacts.length && hedgeSentences(c.text).length) c.problems.push(`you DO know your answer about ${asked.label}: say it from the listed facts instead of sounding unsure.`);
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
+    if (earlierQuestions.length && !plan.end) {
+      const again = draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => s.includes('?') && repeatsEarlier(s, earlierQuestions));
+      if (again.length) {
+        c.problems.push(`you already asked "${repeatsEarlier(again[0], earlierQuestions)}" in an earlier chat: don't ask it again; follow up on what they said instead.`);
+        c.sessionDrop = again;
+      }
+    }
     if (human && !plan.end) {
       const hp = humanProblems({ text: c.text, draft, plan, read: readNow(), state, theyAsked: Boolean(perception.isQuestion || perception.aboutMeQuestion), theirText: latest, facts });
       c.problems.push(...hp.problems);
@@ -326,7 +338,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   }
   // A clean draft wins; otherwise the one that keeps the most words once failing sentences are dropped (eval: picking
   // by fewest problems often left nothing, and the fixed fallback read as low effort to the judges).
-  const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !(a.humanDrop ?? []).includes(s) && !echoOf(s, recent)).join(' ')).length;
+  const kept = (a) => words(a.draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => !a.grounding.drop.includes(s) && !(a.humanDrop ?? []).includes(s) && !(a.sessionDrop ?? []).includes(s) && !echoOf(s, recent)).join(' ')).length;
   let best = attempts.find((a) => !a.problems.length)
     ?? attempts.reduce((a, b) => (kept(b) > kept(a) || (kept(b) === kept(a) && b.problems.length < a.problems.length) ? b : a));
   // Only failing sentences are dropped: grounding failures, leaks (keywords + embeddings vs my private facts, on every
@@ -336,7 +348,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     const sentences = attempt.draft.messages.flatMap((m) => sentencesOf(m));
     const sentVecs = persona.privateFacts.length && sentences.length ? await embed(sentences, { purpose: 'agent-leak-check', userId: me, inputType: 'query' }) : [];
     const leaks = leakCheck(sentences, persona.privateFacts, sentVecs);
-    const drop = new Set([...attempt.grounding.drop, ...(attempt.humanDrop ?? []), ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
+    const drop = new Set([...attempt.grounding.drop, ...(attempt.humanDrop ?? []), ...(attempt.sessionDrop ?? []), ...leaks.map((l) => l.sentence), ...sentences.filter((s) => echoOf(s, recent))]);
     // A sentence I already sent is dropped too (tuning it2: "undhiyu chhe?" ×3), and a scrap of under 3 words counts as
     // nothing surviving, so the constrained regeneration writes a real message instead.
     for (const s of sentences) if (mySent.has(norm(s).join(' '))) drop.add(s);
@@ -358,6 +370,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     draft.messages = draft.messages.map(oneQuestion);
     const c = draftProblems({ draft, plan: cPlan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
     if (human) c.humanDrop = humanProblems({ text: c.text, draft, plan: cPlan, read: readNow(), state, theyAsked: Boolean(perception.isQuestion || perception.aboutMeQuestion), theirText: latest, facts }).drop;
+    c.sessionDrop = draft.messages.flatMap((m) => sentencesOf(m)).filter((s) => s.includes('?') && repeatsEarlier(s, earlierQuestions));
     const constrained = { draft, ...c };
     ({ leaks, drop, messages } = await survivors(constrained));
     if (messages.length) { attempts.push(constrained); best = constrained; }

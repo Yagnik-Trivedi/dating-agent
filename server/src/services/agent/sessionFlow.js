@@ -9,10 +9,11 @@ import { enqueue } from '../jobs/queue.js';
 import { KG } from '../kg/config.js';
 import { flushUsage } from '../llm/budget.js';
 import { currentSession, depthOf, gapMs, inSessions, newSession, sessionInfo, sessionsMax } from '../conversation/sessions.js';
+import { summarizeSession } from '../conversation/memory.js';
 import { cancelReplies, scheduleReply, stopConversation } from './scheduler.js';
 
-/** Hooks filled by later steps (summary, evidence + decision); kept here so the flow runs without them. */
-const hooks = { summarize: null, decide: null };
+/** Filled by the judge step (evidence passes + the per-side decision); until then a session never decides. */
+const hooks = { decide: null };
 export const setSessionHooks = (h) => Object.assign(hooks, h);
 
 export function emitSession(match, conv) {
@@ -66,7 +67,7 @@ export async function runSessionEnd({ conversationId, n }) {
   const match = await Match.findById(conv.matchId);
   if (match?.status !== 'agent_chatting') return { skipped: true };
 
-  if (hooks.summarize && currentSession(conv).summary == null) await hooks.summarize(conv, match);
+  if (currentSession(conv).summary == null) await summarizeSession(conv, match);
   const decisions = hooks.decide ? await hooks.decide(conv, match) : {};
   conv = await Conversation.findById(conversationId).lean();
   const tokens = await sessionTokens(match._id, currentSession(conv).startedAt);

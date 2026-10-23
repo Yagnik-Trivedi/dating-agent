@@ -1,5 +1,5 @@
-// Plan 33 C1 (A5): the session lifecycle on an ephemeral replica set, with the LLM switched off (summary and evidence
-// passes fail gracefully): close → goodbye → gap → next session → … → the verdict after the last session.
+// Plan 33 C1 (A5): the session lifecycle on an ephemeral replica set. No LLM: each session's summary is pre-filled (the
+// switched-off LLM would pause the job, as a spent budget does): close → goodbye → gap → next session → … → the verdict.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import mongoose from 'mongoose';
@@ -13,6 +13,7 @@ import { newSession } from '../src/services/conversation/sessions.js';
 import { start, stop } from '../scripts/lib/testDb.js';
 
 const oid = () => new mongoose.Types.ObjectId();
+const summarized = (conv, n) => Conversation.updateOne({ _id: conv._id }, { $set: { [`sessions.${n - 1}.summary`]: '', [`sessions.${n - 1}.threads`]: [] } });
 before(async () => { await start(); env.LLM_ENABLED = false; });
 after(stop);
 
@@ -38,6 +39,7 @@ test('a session closes, ends once, and the next one starts after the gap; the la
   assert.deepEqual(c.sessions[0].interestEnd, { [a]: 0.7, [b]: 0.4 });
   assert.equal(await Job.countDocuments({ type: 'sessionEnd' }), 1);
 
+  await summarized(conv, 1);
   await runSessionEnd({ conversationId: conv._id, n: 1 });
   c = await Conversation.findById(conv._id).lean();
   assert.ok(c.nextSessionAt > Date.now(), 'the next session waits for the gap');
@@ -54,6 +56,7 @@ test('a session closes, ends once, and the next one starts after the gap; the la
   for (const n of [2, 3]) {
     if (n === 3) await startNextSession({ conversationId: conv._id, n: 3 });
     await endSession(conv._id, n);
+    await summarized(conv, n);
     await runSessionEnd({ conversationId: conv._id, n });
   }
   c = await Conversation.findById(conv._id).lean();
