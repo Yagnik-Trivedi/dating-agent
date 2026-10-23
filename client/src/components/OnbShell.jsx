@@ -6,7 +6,9 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import { Btn, IconBtn, T, Wordmark } from './r7'
 import { useMobile } from './prelude'
 
-export const ONB_STEPS = ['Basics', 'Photos', 'Prompts', 'Lifestyle and values', 'How you reply', 'Done']
+// Plan 33 Q2: "Your world right now" is the required last step before the agent can chat (about 8 minutes).
+export const ONB_STEPS = ['Basics', 'Photos', 'Prompts', 'Lifestyle and values', 'How you reply', 'Your world', 'Done']
+const MINUTES_AFTER = [14, 13, 12, 10, 9, 8, 0] // left after each step starts (Your world is ~8)
 
 /**
  * Scroll to the part of the step that still needs an answer and flash it. A text field (Field puts the id on the input)
@@ -40,7 +42,7 @@ export default function OnbShell({ step, title, sub, children, next = 'Continue'
           <span className="small">{step ? `Step ${step} of ${n} · ${ONB_STEPS[step - 1]}` : label}</span>
           {step && <div className="onb-bar"><motion.i initial={false} animate={{ width: `${(step / n) * 100}%` }} transition={T.slow} /></div>}
         </div>
-        {!mobile && step && <span className="small onb-time"><Clock size={14} strokeWidth={1.8} aria-hidden="true" />{step === n ? 'All done' : `About ${minutesLeft ?? Math.max(1, 6 - step)} min left`}</span>}
+        {!mobile && step && <span className="small onb-time"><Clock size={14} strokeWidth={1.8} aria-hidden="true" />{step === n ? 'All done' : `About ${minutesLeft ?? MINUTES_AFTER[step - 1]} min left`}</span>}
       </header>
       <main className={`onb-main ${wide ? 'wide' : ''}`}>
         <h1 className="h1">{title}</h1>{sub && <p className="lead">{sub}</p>}

@@ -17,6 +17,9 @@ const Matches = lazy(() => import('./pages/Matches'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Welcome = lazy(() => import('./pages/Onboarding').then((m) => ({ default: m.Welcome })))
 const Teach = lazy(() => import('./pages/Onboarding').then((m) => ({ default: m.Teach })))
+const TeachModules = lazy(() => import('./pages/Modules').then((m) => ({ default: m.TeachModules }))) // plan 33
+const TeachModule = lazy(() => import('./pages/Modules').then((m) => ({ default: m.TeachModule })))
+const WorldStep = lazy(() => import('./pages/Modules').then((m) => ({ default: m.WorldStep })))
 const Profile = lazy(() => import('./pages/Profile'))
 const Replay = lazy(() => import('./pages/Replay'))
 const Report = lazy(() => import('./pages/Report'))
@@ -55,6 +58,9 @@ export default function App() {
             <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
             <Route path="/onboarding" element={<Protected onboarding><Onboarding /></Protected>} />
             <Route path="/welcome" element={<Protected><Welcome /></Protected>} />
+            <Route path="/onboarding/world" element={<Protected><WorldStep /></Protected>} />
+            <Route path="/teach" element={<Protected><TeachModules /></Protected>} />
+            <Route path="/teach/m/:id" element={<Protected><TeachModule /></Protected>} />
             <Route path="/teach/:block" element={<Protected><Teach /></Protected>} />
             <Route element={<Protected><Layout /></Protected>}>
               <Route path="/onboarding/review" element={<You review />} />

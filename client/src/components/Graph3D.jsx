@@ -63,6 +63,7 @@ export default function Graph3D({ L, selected, onSelect, filter = 'all', query =
           )
         })}
         {L.contra.map(([a, b], i) => <Line key={i} points={[a.pos, b.pos]} color="#9A5546" lineWidth={1.4} dashed dashSize={0.09} gapSize={0.07} />)}
+        {(L.links ?? []).map(([a, b, type], i) => <Line key={`l${i}`} points={[a.pos, b.pos]} color={type === 'ASSOCIATED' ? '#B08A3E' : '#6F7A4E'} lineWidth={type === 'ASSOCIATED' ? 0.8 : 1.1} transparent opacity={off(a) || off(b) ? 0.12 : 0.7} />)}
         {sel && <Billboard position={sel.pos}><mesh><ringGeometry args={[sel.r + 0.05, sel.r + 0.085, 48]} /><meshBasicMaterial color="#A2613F" /></mesh></Billboard>}
       </group></Intro>
       <OrbitControls target={mobile ? [0, -0.9, 0] : [0, -0.2, 0]} autoRotate={auto} autoRotateSpeed={0.55} enablePan={false} enableDamping minDistance={6} maxDistance={mobile ? 28 : 16} onStart={() => setAuto(false)} />

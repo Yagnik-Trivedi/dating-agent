@@ -7,13 +7,14 @@ import { useReducedMotion } from 'motion/react'
 import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Quote, RefreshCw, Search, Trash2, X } from 'lucide-react'
 import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw } from '../components/r7'
 import { TextBars } from '../components/charts'
+import BrainMeter from '../components/BrainMeter'
 import TeachCards from '../components/TeachCards'
 import TextingStyle, { styleBody } from '../components/TextingStyle'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
-import { buildGraph, canRender3D, CONF_WORD, IMP_WORD, lighten } from '../lib/graph'
+import { buildGraph, canRender3D, CONF_WORD, IMP_WORD, lighten, LINK_WORD, TIER_WORD } from '../lib/graph'
 
 const Graph3D = lazy(() => import('../components/Graph3D')) // three.js only loads when this screen opens
 const PRIV_L = { public: 'Public', if_asked: 'Only if asked', private: 'Private' }
@@ -34,6 +35,7 @@ function Radial2D({ L, selected, onSelect, w, h }) {
       {L.hubs.map((hb) => <line data-draw key={hb.id} x1={cx} y1={cy} x2={hubXY[hb.id][0]} y2={hubXY[hb.id][1]} className="r-line" />)}
       {L.facts.map((f) => <line data-draw key={f.id} x1={hubXY[f.hub][0]} y1={hubXY[f.hub][1]} x2={pos[f.id][0]} y2={pos[f.id][1]} className="r-line l2" />)}
       {L.contra.map(([a, b], i) => <line key={i} x1={pos[a.id][0]} y1={pos[a.id][1]} x2={pos[b.id][0]} y2={pos[b.id][1]} className="r-contra" />)}
+      {(L.links ?? []).map(([a, b, type], i) => <line key={`l${i}`} x1={pos[a.id][0]} y1={pos[a.id][1]} x2={pos[b.id][0]} y2={pos[b.id][1]} className={`r-brain ${type === 'ASSOCIATED' ? 'assoc' : ''}`} />)}
       {L.facts.map((f) => <g key={f.id} tabIndex={0} role="button" aria-label={f.t} onClick={() => onSelect(f.id)} onKeyDown={(e) => e.key === 'Enter' && onSelect(f.id)} className="r-node">
         {f.privacy === 'private' ? <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f)} fill="#FBF8F3" stroke={f.tint} strokeWidth="2" /> : <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f)} fill={lighten(f.tint)} opacity={0.3 + 0.7 * f.conf} />}
         {selected === f.id && <circle cx={pos[f.id][0]} cy={pos[f.id][1]} r={rad(f) + 5} fill="none" stroke="#A2613F" strokeWidth="2" />}
@@ -55,7 +57,52 @@ function useSize(ref) {
   return s
 }
 
-function FactSheet({ f, hub, mobile, conflict, onClose, onChanged }) {
+/** Plan 33: where a fact sits in the brain map, and what it's linked to. */
+function BrainPlace({ f, L, onSelect }) {
+  const linked = (L.links ?? []).filter(([a, b]) => a.id === f.id || b.id === f.id).map(([a, b, type]) => {
+    const other = a.id === f.id ? b : a
+    const word = type === 'BRANCH_OF' ? (a.id === f.id ? 'Part of' : 'More on it') : type === 'WHY' ? (a.id === f.id ? 'Why it matters' : 'The reason for') : LINK_WORD.ASSOCIATED
+    return { other, word }
+  })
+  if (!f.branch && !f.uncertain && !f.current && !linked.length) return null
+  return (
+    <div className="fs-brain">
+      {f.branch && <p className="fs-path small" aria-label="Where this sits">{f.branch.join(' › ')}</p>}
+      <p className="fs-tags">{f.uncertain && <span className="pv pv-asked">Not sure</span>}{f.current && <span className="pv pv-public">Right now · asked again later</span>}{f.tier && <span className="pv pv-private">{TIER_WORD[f.tier]}</span>}</p>
+      {linked.length > 0 && <ul className="fs-links">{linked.map(({ other, word }) => <li key={other.id}><span className="small">{word}</span><button type="button" className="link" onClick={() => onSelect(other.id)}>{other.t}</button></li>)}</ul>}
+    </div>
+  )
+}
+
+/** Plan 33 Q2: the brain map as a tree: life areas → branches → what your agent knows there, plus how filled it is. */
+function BrainView({ L, onSelect }) {
+  const byId = new Map(L.facts.map((f) => [f.id, f]))
+  const brain = L.brain
+  if (!brain) return null
+  return (
+    <div className="brain-v">
+      <div className="brain-v-top card">
+        <BrainMeter strength={{ ...brain.strength, modulesDone: brain.modules.filter((m) => m.done).length }} />
+        <Link className="btn secondary sm" to="/teach"><BookOpen size={16} strokeWidth={1.8} aria-hidden="true" />Teach it more</Link>
+      </div>
+      <div className="brain-areas">{brain.areas.map((a) => (
+        <details key={a.area} className="brain-a card" open={a.count <= 12}>
+          <summary><b>{a.area}</b><span className="small">{a.count}</span></summary>
+          <ul>{a.branches.map((b) => (
+            <li key={b.topic || '-'}>
+              {b.topic && <span className="brain-b small">{b.topic}</span>}
+              <span className="brain-fs">{b.facts.map((id) => byId.get(id)).filter(Boolean).map((f) => (
+                <button key={f.id} type="button" className={`chip brain-f ${f.uncertain ? 'unsure' : ''}`} onClick={() => onSelect(f.id)}>{f.t}{f.uncertain && <em> · not sure</em>}{f.privacy === 'private' && <Lock size={11} strokeWidth={2.2} aria-label="private" />}</button>
+              ))}</span>
+            </li>
+          ))}</ul>
+        </details>
+      ))}</div>
+    </div>
+  )
+}
+
+function FactSheet({ f, hub, mobile, conflict, onClose, onChanged, L, onSelect }) {
   const toast = useToast()
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState(f.t)
@@ -72,6 +119,7 @@ function FactSheet({ f, hub, mobile, conflict, onClose, onChanged }) {
         <form className="fs-edit" onSubmit={save}><span className="input"><input value={text} onChange={(e) => setText(e.target.value)} maxLength={120} autoFocus aria-label="Edit this fact" /></span><Btn size="sm" type="submit">Save</Btn></form>
       ) : <h2 className="fs-t">{f.t}</h2>}
       <p className="fs-meta"><span>{CONF_WORD(f.conf)}</span><span aria-hidden="true">·</span><span>{f.dealbreaker ? 'A dealbreaker' : IMP_WORD[f.imp]}</span></p>
+      {L && <BrainPlace f={f} L={L} onSelect={onSelect} />}
       {f.q ? <figure className="evq"><blockquote><Quote size={15} strokeWidth={1.8} aria-hidden="true" />{f.q}</blockquote><figcaption>{[f.src, day(f.at)].filter(Boolean).join(', ')}</figcaption></figure>
         : <p className="fs-src small">From: {f.src}</p>}
       {conflict && (
@@ -180,6 +228,7 @@ export default function You({ review = false }) {
   const hub = f && L.hubs.find((h) => h.id === f.hub)
   const conflict = f && data.contradictions.find((c) => c.a.id === f.id || c.b.id === f.id)
   const isList = view === 'list'
+  const isBrain = view === 'brain'
   const privateN = L?.facts.filter((x) => x.privacy === 'private').length ?? 0
 
   let graph
@@ -193,7 +242,7 @@ export default function You({ review = false }) {
   const controls = (
     <div className="y-controls">
       <label className="search"><Search size={17} strokeWidth={1.7} aria-hidden="true" /><span className="sr-only">Search what your agent knows</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={mobile ? 'Search facts' : 'Search what your agent knows'} /></label>
-      <Tabs id="you-view" value={view} onChange={setView} items={[['graph', 'Graph'], ['list', 'List']]} />
+      <Tabs id="you-view" value={view} onChange={setView} items={[['graph', 'Graph'], ['brain', 'Brain'], ['list', 'List']]} />
     </div>
   )
   const chips = L && (
@@ -203,15 +252,15 @@ export default function You({ review = false }) {
     </div>
   )
   const reviewBar = review && <div className="nbox ok you-review"><span><b>This is what your agent learned from your answers.</b> Fix anything that’s off, mark things private, or delete them.</span><Link className="btn primary sm" to="/discover">Looks right<ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link></div>
-  const sheet = f && hub && <FactSheet f={f} hub={hub} mobile={mobile} conflict={conflict} onClose={() => setSel(null)} onChanged={load} />
-  const list = L && <ListView L={L} voice={data.graph.voice} style={data.graph.textingStyle} onSelect={setSel} onChanged={load} />
+  const sheet = f && hub && <FactSheet f={f} hub={hub} mobile={mobile} conflict={conflict} onClose={() => setSel(null)} onChanged={load} L={L} onSelect={setSel} />
+  const list = L && (isBrain ? <BrainView L={L} onSelect={setSel} /> : <ListView L={L} voice={data.graph.voice} style={data.graph.textingStyle} onSelect={setSel} onChanged={load} />)
 
   if (mobile) return (
     <div className="scr app-scr you m">
       <header className="y-head"><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</header>
       {reviewBar}
-      {controls}{!isList && chips}
-      {isList ? <div className="y-lwrap">{list}</div> : <div className="y-canvas" ref={canvas}>{graph}</div>}
+      {controls}{!isList && !isBrain && chips}
+      {isList || isBrain ? <div className="y-lwrap">{list}</div> : <div className="y-canvas" ref={canvas}>{graph}</div>}
       {sheet}
       <TabBar />
     </div>
@@ -224,8 +273,8 @@ export default function You({ review = false }) {
         {controls}
       </div>
       {reviewBar}
-      {!isList && chips}
-      {isList ? <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div> : <div className="y-main">
+      {!isList && !isBrain && chips}
+      {isList || isBrain ? <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div> : <div className="y-main">
         <div className="y-canvas" ref={canvas}>{graph}{L?.facts.length > 0 && <><Legend /><p className="y-hint small">{use3D ? 'Drag to turn · scroll to zoom · tap a dot' : 'Tap a dot'}</p></>}</div>
         {sheet || <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>}
       </div>}

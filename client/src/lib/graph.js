@@ -13,7 +13,7 @@ export const HUBS = [
   { id: 'opinions', name: 'Opinions & humour', tint: '#A88C6A' },
   { id: 'voice', name: 'How I text', tint: '#6E7378' },
 ]
-const SOURCE = { questionnaire_choice: 'Your answer, onboarding', questionnaire_story: 'Your story, onboarding', user_answer: 'You told your agent', own_chat: 'A chat of yours', reflection: 'Your agent noticed', agent_observed: 'From a chat' }
+const SOURCE = { questionnaire_choice: 'Your answer, onboarding', questionnaire_story: 'Your story, onboarding', questionnaire_module: 'Your answer, Teach your agent', user_answer: 'You told your agent', own_chat: 'A chat of yours', reflection: 'Your agent noticed', agent_observed: 'From a chat' }
 
 function rng(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 } }
 const norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l) }
@@ -39,12 +39,18 @@ export function buildGraph(api, contradictions = []) {
       id: n.id, i, t: n.label, hub: n.hub, imp: level, conf: n.confidence ?? 0.6, privacy: voice ? 'public' : n.disclosure ?? 'public',
       src: voice ? 'Learned from your replies' : SOURCE[n.source] ?? 'Your answer', q: n.quote ?? null, at: n.learnedAt ?? null, voice, editable: !voice,
       dealbreaker: Boolean(n.isDealbreaker), tint: h.tint, pos: h.pos.map((p, k) => p + dir[k] * d), r: [0, 0.085, 0.12, 0.16][level],
+      // Plan 33 brain map
+      branch: n.branch ?? null, uncertain: Boolean(n.uncertain), current: Boolean(n.current), tier: n.tier ?? null,
     }
   })
   const fid = new Map(facts.map((f) => [f.id, f]))
   const contra = contradictions.map((c) => [fid.get(c.a.id), fid.get(c.b.id)]).filter(([a, b]) => a && b)
-  return { hubs, facts, contra }
+  // Plan 33: a follow-up under its answer, a reason, the same thing on another branch.
+  const links = (api.brainLinks ?? []).map((l) => [fid.get(l.source), fid.get(l.target), l.label]).filter(([a, b]) => a && b)
+  return { hubs, facts, contra, links, brain: api.brain ?? null }
 }
+export const LINK_WORD = { BRANCH_OF: 'More on', WHY: 'Why', ASSOCIATED: 'Also on another branch' }
+export const TIER_WORD = { surface: 'Small talk', personal: 'Personal', deep: 'Deep' }
 export const CONF_WORD = (c) => (c >= 0.85 ? 'Sure' : c >= 0.6 ? 'Fairly sure' : 'Unsure')
 export const IMP_WORD = ['', 'A detail', 'Matters', 'Matters a lot']
 /** Light tint for fact spheres: the hub colour mixed with cream. */

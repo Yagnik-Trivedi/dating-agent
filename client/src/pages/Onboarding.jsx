@@ -1,7 +1,9 @@
-// Plan 30 S2 onboarding, ~5 minutes (Round 7 Step 2 design): 1 Basics · 2 Photos · 3 Prompts · 4 Lifestyle and values ·
-// 5 How you reply → submit (the graph builds in the background) → 6 Done (Welcome). The live check step was removed
-// (owner, 2026-10-19). A step that isn't complete says what's missing and jumps to it (OnbShell `missing`).
-// "Teach your agent more" (Teach) adds the optional blocks later: stories, 10 more replies, personality, how you text.
+// Plan 30 S2 onboarding (Round 7 Step 2 design): 1 Basics · 2 Photos · 3 Prompts · 4 Lifestyle and values ·
+// 5 How you reply → submit (the graph builds in the background) → 6 Your world right now (plan 33, required; Modules.jsx)
+// → 7 Done (Welcome). The live check step was removed (owner, 2026-10-19). A step that isn't complete says what's missing
+// and jumps to it (OnbShell `missing`). Plan 33: each value has an optional "say more"; the agree/disagree statements are
+// not in the core (personality now comes from the modules' situation picks; old answers still count).
+// "Teach your agent more" (/teach, Modules.jsx) is the module list; the old blocks here stay for replies and how you text.
 // Plan 32 KP1: step 5 also asks "How do you usually text?" (taps, skippable) and records the device each reply is typed on.
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -104,6 +106,9 @@ function ValueQ({ item, v, onChange }) {
         <div className="vq-row"><span className="lbl">How important is this?</span><Importance value={v.importance ?? null} onChange={(importance) => set({ importance })} /></div>
         <div className="vq-row"><span className="lbl">In a partner I’d accept</span><Chips multi items={opts} value={v.accepts ?? all} onChange={(accepts) => accepts.length && set({ accepts })} label={`${item.text}: partner`} /></div>
         <label className="vq-deal"><Toggle on={Boolean(v.dealbreaker)} onChange={(dealbreaker) => set({ dealbreaker })} label={`Dealbreaker: ${item.text}`} /><span><b>Dealbreaker</b> · Never show me people outside what I’d accept</span></label>
+        {item.more && <Field label={item.more.text} optional>{(id) => item.more.type === 'story'
+          ? <textarea id={id} className="ta" rows={3} maxLength={600} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} placeholder="Say more, in your own words" />
+          : <Input id={id} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} maxLength={300} placeholder="Say more, in your own words" />}</Field>}
       </>}
     </section>
   )
@@ -190,12 +195,12 @@ export default function Onboarding() {
   async function submit() {
     setBusy(true); setError(null)
     try {
-      const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer))
+      const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer).map(([k, v]) => [k, { ...v, more: v.more?.trim() || undefined }]))
       // The self-report first, so the build that starts on submit already blends it in.
       if (Object.keys(styleBody(style)).length) await api.put('/api/onboarding/texting-style', styleBody(style))
       await api.post('/api/onboarding/submit', { answers: { I: answers.I, B: B2, D: answers.D, E: Object.fromEntries(core.map((i) => [i.id, answers.E[i.id]])), Edevice: devicesFor(core.map((i) => i.id)) } })
       localStorage.removeItem(key)
-      setDest('/welcome')
+      setDest('/onboarding/world') // plan 33: "Your world right now" comes next, then Welcome
       await refresh() // status 'done' → the redirect above
     } catch (err) { setError(errMsg(err)); setBusy(false) }
   }
@@ -253,7 +258,7 @@ export function Welcome() {
   useEffect(() => { refresh().catch(() => {}) }, [refresh]) // the background self-check may have updated the status
   const first = (profile?.name ?? user.name ?? '').split(' ')[0]
   return (
-    <OnbShell step={6} title={`You’re in${first ? `, ${first}` : ''}.`} sub="You’re visible in Discover. New photos show once their check finishes." next="Start browsing" onNext={() => navigate('/discover')}>
+    <OnbShell step={7} title={`You’re in${first ? `, ${first}` : ''}.`} sub="You’re visible in Discover. New photos show once their check finishes." next="Start browsing" onNext={() => navigate('/discover')}>
       <h2 className="h3 teach-h">Teach your agent more <span className="small">· optional</span></h2>
       <TeachCards />
     </OnbShell>
