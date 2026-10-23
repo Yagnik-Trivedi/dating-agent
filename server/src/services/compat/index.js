@@ -21,6 +21,7 @@ import { cleanText } from '../persona/text.js';
 import { setStatus } from '../pipeline/index.js';
 import * as windDownPrompt from '../prompts/windDown.js';
 import { scanMessage } from '../trust/rules.js';
+import { inSessions, newSession } from '../conversation/sessions.js';
 import { LABEL, lowerVerdict, myDecision } from './report.js';
 
 export { LABEL, lowerVerdict, myDecision, reportFor } from './report.js';
@@ -153,9 +154,18 @@ export async function extend(matchId, userId) {
   if (!match.perUser.some((p) => p.agentActive)) throw httpError(409, 'NO_AGENT', 'Both of you took over; just keep chatting');
   const last = await Conversation.findOne({ matchId: match._id }).sort({ round: -1 }).lean();
   if (!last || last.round > 1) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once');
-  const endAfter = await Message.countDocuments({ matchId: match._id }) + KG.EXTEND_TURNS;
+  const count = await Message.countDocuments({ matchId: match._id });
+  const endAfter = count + KG.EXTEND_TURNS;
+  const agentState = Object.fromEntries(Object.entries(last.agentState ?? {}).map(([u, s]) => [u, { ...s, lowInterestTurns: 0 }]));
+  // Plan 33: a session-mode chat gets one more session on the same high bar (its ledger and summaries carry over).
+  const sessionMode = inSessions(last);
+  const seed = (last.seed + 1) >>> 0;
+  const n = (last.sessionIndex ?? 1) + 1;
   try {
-    await Conversation.create({ matchId: match._id, round: last.round + 1, seed: (last.seed + 1) >>> 0, agentState: Object.fromEntries(Object.entries(last.agentState ?? {}).map(([u, s]) => [u, { ...s, lowInterestTurns: 0 }])), endAfter, naturalEndFrom: endAfter });
+    await Conversation.create(sessionMode
+      ? { matchId: match._id, round: last.round + 1, seed, agentState, depth: last.depth, extraSessions: (last.extraSessions ?? 0) + 1, ledger: last.ledger,
+        sessionIndex: n, phase: 'chatting', sessions: [...(last.sessions ?? []), newSession({ seed, depth: last.depth, n, startCount: count })] }
+      : { matchId: match._id, round: last.round + 1, seed, agentState, endAfter, naturalEndFrom: endAfter });
   } catch (err) {
     if (err.code === 11000) throw httpError(409, 'ALREADY_EXTENDED', 'This chat was already extended once'); // a parallel request won
     throw err;

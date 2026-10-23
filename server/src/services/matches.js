@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Conversation } from '../models/Conversation.js';
 import { Like } from '../models/Like.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
@@ -10,6 +11,7 @@ import { serializeMessage } from './chat.js';
 import { reportFor } from './compat/report.js';
 import { enqueue } from './jobs/queue.js';
 import { statusFor } from './pipeline/index.js';
+import { sessionInfo } from './conversation/sessions.js';
 
 // Dealbreakers stay private to their owner (the agent uses them; the other person doesn't see the list).
 export { PUBLIC_PROFILE, PUBLIC_PROJECTION } from '../models/Profile.js';
@@ -60,9 +62,10 @@ export async function matchListItem(match, viewerId) {
 export async function matchDetail(match, viewerId) {
   const other = otherUserId(match, viewerId);
   const mine = side(match, viewerId);
-  const [profile, report] = await Promise.all([
+  const [profile, report, conv] = await Promise.all([
     Profile.findOne({ userId: other }).select(PUBLIC_PROFILE).lean(),
     reportFor(match._id, viewerId),
+    Conversation.findOne({ matchId: match._id }, { depth: 1, sessionIndex: 1, phase: 1, nextSessionAt: 1, extraSessions: 1 }).sort({ round: -1 }).lean(),
   ]);
   const key = String(viewerId);
   return {
@@ -82,6 +85,7 @@ export async function matchDetail(match, viewerId) {
     trust: match.trust?.[key] ?? null,
     brief: match.brief?.[key] ?? null,
     report, // my own judge's MatchDecision (plan 09), never the other side's
+    session: sessionInfo(conv), // plan 33: "Session 2 of up to 5"; null for a short chat
   };
 }
 

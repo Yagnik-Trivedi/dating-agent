@@ -58,3 +58,22 @@ export function sessionInfo(conv) {
   if (!inSessions(conv)) return null;
   return { depth: depthOf(conv), n: conv.sessionIndex ?? 1, of: sessionsMax(conv), phase: conv.phase ?? 'chatting', nextSessionAt: conv.phase === 'gap' ? conv.nextSessionAt ?? null : null };
 }
+
+/** The thread about them the last session left open ("the exam on Friday"), for the next session's callback. */
+export const callbackFor = (conv, otherId) => (conv.sessions?.at(-2)?.threads ?? []).find((t) => String(t.about) === String(otherId))?.text ?? null;
+
+/**
+ * The act plan inside a session (mutates plan). Their "talk tomorrow?" gets a short goodbye; any other end but a
+ * dealbreaker closes this session, not the chat (code decides at the session's end whether there's a next one); a
+ * later session's first message picks the chat back up with a callback.
+ */
+export function sessionPlan(plan, { conv, otherId, goodbye = false, sessionStart = false, theirMsgs = [] }) {
+  plan.session = currentSession(conv).n;
+  if (goodbye) return Object.assign(plan, { end: 'session_ack', move: 'close', topic: null, askBack: false });
+  if (plan.end && plan.end !== 'dealbreaker_hint') return Object.assign(plan, { endReason: plan.end, end: 'session' });
+  if (sessionStart) {
+    const gapFrom = conv.sessions.at(-2)?.endedAt ?? 0;
+    Object.assign(plan, { move: 'callback', topic: null, askBack: true, callback: callbackFor(conv, otherId), callbackReply: theirMsgs.some((m) => m.createdAt > gapFrom) });
+  }
+  return plan;
+}

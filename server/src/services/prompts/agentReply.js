@@ -7,6 +7,9 @@ const langName = (l) => LANG[l] ?? l;
 
 function planLines(plan, firstName) {
   if (plan.plain) return ['- Reply naturally, the way ' + firstName + ' would.']; // RULES=off ablation: no act plan
+  // Plan 33: a session ends like a real evening of texting, not like a goodbye forever.
+  if (plan.end === 'session') return [`- Wrap up FOR NOW, the way people stop texting for the day: one short, warm line in ${firstName}'s style that you have to go (sleep, work, food, an errand) and will talk later${plan.closingStyle ? ` (e.g. "${plan.closingStyle}")` : ''}. No question except "talk tomorrow?"-style. Never sound like a final goodbye.`];
+  if (plan.end === 'session_ack') return [`- They're stopping for now. Reply with a short, warm "talk later" in ${firstName}'s style (like "haha ok night! talk tomorrow"). No question, no new topic.`];
   if (plan.end) return [`- END the conversation now: one short, kind closing line in ${firstName}'s own closing style${plan.closingStyle ? ` (e.g. "${plan.closingStyle}")` : ''}. No question.`];
   if (plan.mode === 'human') return humanLines(plan, firstName);
   const lines = [
@@ -33,6 +36,7 @@ function moveLine(plan, firstName) {
     follow_up: '- Shape: react to what they said, then ONE curious follow-up about a detail they just mentioned. Go deeper on their thread; don\'t change the subject.',
     share: `- Shape: react, then share something of ${firstName}'s own that connects to what they said (only from the listed facts), so they have something to reply to. If no listed fact connects, just react warmly.`,
     react: '- Shape: a short, natural reaction to what they said (laugh, tease or relate if it fits). That is the whole message.',
+    callback: callbackLine(plan),
     topic: null,
     end: null,
   }[plan.move] ?? null;
@@ -80,6 +84,7 @@ const humanMoveLine = (plan, firstName) => ({
   ask_theirs: '- Move: react, then one short question about what they just said ("wait what happened?"). Not a new topic.',
   share: `- Move: share a little of ${firstName}'s own that connects to what they said ("same, I just got home too"); from the listed facts only when it's about ${firstName}. No question.`,
   stay: "- Move: they're telling you something or having a rough time: stay with them. React or ask about THEIR thing. No new topic, no story of yours, no jokes if they're down.",
+  callback: callbackLine(plan),
   close: null,
 }[plan.move] ?? null);
 
@@ -125,7 +130,18 @@ function finalHuman(plan, firstName) {
   ].filter(Boolean).join(' ');
 }
 
+// Plan 33: the first message of a later session, after hours (or a day) of quiet.
+function callbackLine(plan) {
+  const replying = plan.callbackReply ? ' Reply to what they sent while you were away first.' : '';
+  return plan.callback
+    ? `- Move: you're picking the chat back up after a while.${replying} Open casually and follow up on this from last time: "${plan.callback}" (e.g. "hey! how did it go?"). One short message.`
+    : `- Move: you're picking the chat back up after a while.${replying} Open casually (a hey, something small from your day only if a listed fact covers it) and ask one easy thing that follows from your last chat. One short message.`;
+}
+
 function finalInstruction(plan, firstName) {
+  if (plan.end === 'session') return 'say you have to go for now and will talk later, in one short warm line (not a final goodbye).';
+  if (plan.end === 'session_ack') return 'say a short warm "talk later" back (no question).';
+  if (plan.move === 'callback') return plan.callback ? `pick the chat back up: a casual hey and a follow-up on "${plan.callback}".` : 'pick the chat back up: a casual hey and one easy question from your last chat.';
   if (plan.end) return 'end the conversation kindly in one short line (no question).';
   if (plan.mode === 'human') return finalHuman(plan, firstName);
   return [

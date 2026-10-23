@@ -3,6 +3,7 @@ import { Like } from '../../models/Like.js';
 import { Match } from '../../models/Match.js';
 import { resumeConversations } from '../agent/index.js';
 import { runAgentTurn } from '../agent/scheduler.js';
+import { runSessionEnd, startNextSession } from '../agent/sessionFlow.js';
 import { compactNotes } from '../compat/compactNotes.js';
 import { startEvaluation } from '../compat/index.js';
 import { runJudge } from '../conversation/judge.js';
@@ -28,6 +29,8 @@ registerJob('evaluate', async ({ matchId, reason }) => {
 });
 registerJob('judge', runJudge); // one per side per conversation; the second one settles the match
 registerJob('compactNotes', compactNotes);
+registerJob('sessionEnd', runSessionEnd); // plan 33: summary + evidence passes + continue / end, after each session
+registerJob('nextSession', startNextSession); // plan 33: the next session after the gap
 // Stale chats stop; chats that never started (or lost a reply before it was queued) get a turn.
 registerJob('agentSweep', () => resumeConversations());
 registerJob('seedLikeBack', async ({ seedId, userId }) => {

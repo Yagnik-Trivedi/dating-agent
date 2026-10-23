@@ -8,10 +8,11 @@ import { User } from '../../models/User.js';
 import { emitToUser, io } from '../../sockets/io.js';
 import { sendMessage } from '../chat.js';
 import { cancel, enqueue } from '../jobs/queue.js';
-import { side } from '../matches.js';
+import { otherUserId, side } from '../matches.js';
 import { emitStatus, queueEvaluation } from '../pipeline/index.js';
 import { composeTurn } from '../conversation/engine.js';
 import { fileQuestion } from './askMyHuman.js';
+import { endSession, markClosing } from './sessionFlow.js';
 
 const LOCK_STALE_MS = 2 * 60_000;
 const RETRY_MS = 30_000;
@@ -106,6 +107,7 @@ export async function runReply(matchId, userId) {
     const turn = await composeTurn(match, userId); // plan 08 engine: perceive → interest → act plan → generate → checks
     if (!turn) return;
 
+    const conv = turn.actPlan?.session ? await Conversation.findOne({ matchId, status: 'active' }, { sessionIndex: 1 }).lean() : null;
     for (const [i, text] of turn.messages.entries()) {
       // The delay overlaps the model work: the first message waits only for what's left of its typing time (plan 30 S1).
       const pace = paceMs(text);
@@ -118,6 +120,8 @@ export async function runReply(matchId, userId) {
         scheduleReply(matchId, userId);
         return;
       }
+      // Plan 33: "talk tomorrow?" is marked before it's sent, so the other agent's turn already knows a goodbye is due.
+      if (i === 0 && turn.end === 'session' && !(await markClosing(conv._id, conv.sessionIndex, userId))) return;
       const sent = await sendMessage({
         match: current, senderId: userId, authoredBy: 'agent', text, meta: { usedFactIds: turn.usedFactIds },
         ...(i === 0 && { extra: { actPlan: turn.actPlan, checks: turn.checks } }),
@@ -126,7 +130,11 @@ export async function runReply(matchId, userId) {
     }
     failures.delete(key);
     if (turn.inbox) await fileQuestion(userId, matchId, turn.inbox, { askedBy: turn.inbox.askedBy });
-    if (turn.end) {
+    if (turn.end === 'session_ack' || (turn.end === 'session' && !side(match, otherUserId(match, userId))?.agentActive)) {
+      await endSession(conv._id, conv.sessionIndex); // both said bye (or nobody's agent will): summary, evidence, next
+    } else if (turn.end === 'session') {
+      // the other agent's goodbye comes through onIncomingMessage
+    } else if (turn.end) {
       // dealbreaker_hint keeps the v1 judge's 'dealbreaker' stop semantics until plan 09's judge replaces it.
       if (turn.end === 'dealbreaker_hint') await stopConversation(matchId, 'dealbreaker', { viewerId: String(userId), why: 'Something they said clashes with one of your dealbreakers.', endedBy: 'dealbreaker_hint' });
       else await stopConversation(matchId, turn.end);

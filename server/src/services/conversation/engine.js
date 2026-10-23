@@ -12,7 +12,7 @@ import { rng as seeded } from '../../utils/rng.js';
 import { asActor } from '../actor.js';
 import { KG } from '../kg/config.js';
 import { embed } from '../llm/client.js';
-import { nameOf, otherUserId } from '../matches.js';
+import { nameOf, otherUserId, side } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
 import { tagLanguageHeuristic } from '../kg/language.js';
@@ -25,6 +25,8 @@ import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { tierOf } from './evidence.js';
+import { currentSession, inSessions, sessionLimits, sessionPlan, tierRank, unlockedTier } from './sessions.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
 
@@ -173,7 +175,14 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   }));
   const lastMineIdx = history.map((m) => String(m.senderId)).lastIndexOf(me);
   const theirMsgs = history.slice(lastMineIdx + 1).filter((m) => String(m.senderId) !== me);
-  if (history.length && !theirMsgs.length) return null; // nothing new to answer
+  // Plan 33 C1: in a session-mode chat, nobody replies between sessions; once I said "talk tomorrow?" only their goodbye
+  // is due; the first message of a later session may open without anything new to answer (a callback).
+  const sessionMode = inSessions(conv);
+  const session = sessionMode ? currentSession(conv) : null;
+  if (sessionMode && (conv.phase === 'gap' || (conv.phase === 'closing' && session.closedBy === me))) return null;
+  const goodbye = sessionMode && conv.phase === 'closing';
+  const sessionStart = sessionMode && session.n > 1 && history.length === session.startCount;
+  if (history.length && !theirMsgs.length && !sessionStart) return null; // nothing new to answer
   const state = { interest: null, lowInterestTurns: 0, turn: 0, toldStoryIds: [], topicsTouched: [], ...(conv.agentState?.[me] ?? {}) };
   const rng = seeded(turnSeed(conv.seed, me, state.turn));
   const matchName = nameOf(match, otherId);
@@ -202,16 +211,23 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Plan 30 S1: by default the read happens inside the reply call (one model round-trip). Until then the plan uses what
   // code can see on its own (a question to me, their language); a strong conflict or a dealbreaker found by the read
   // still forces the stance check / the ending through the one allowed regeneration.
-  const merged = !opening && env.AGENT_TURN_MODE === 'merged';
-  if (!opening && !merged) await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
+  // Plan 33: a session's first message may have nothing of theirs to read (a callback after the gap).
+  const reading = !opening && theirMsgs.length > 0;
+  const merged = reading && env.AGENT_TURN_MODE === 'merged';
+  if (reading && !merged) await afterRead((await perceiveObserve({ ...observeArgs, context })).perception);
   if (merged) perception = quickRead(theirMsgs.map((m) => m.text));
   state.heardAttrs = heardIn(state.heardAttrs, theirMsgs.map((m) => m.text));
   const freshAgenda = opening ? agenda : (await Match.findById(match._id, { brief: 1 }).lean())?.brief?.[me]?.agenda ?? agenda;
-  const stories = storyCandidates(persona, state.toldStoryIds);
+  // Plan 33 (A5): each session unlocks deeper things to share: 1 small talk, 2 stories and people, 3+ everything.
+  const unlocked = sessionMode ? tierRank(unlockedTier(session.n)) : tierRank('deep');
+  const stories = tierRank('personal') <= unlocked ? storyCandidates(persona, state.toldStoryIds) : [];
+  const limits = sessionMode ? sessionLimits(conv, { otherAgent: Boolean(side(match, otherId)?.agentActive) })
+    : { maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END };
   const plan = rulesOn
     ? planAct({ mode: human ? 'human' : 'sn', state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: human || agendaSettled(freshAgenda),
-      maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast } })
+      ...limits, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast } })
     : plainPlan(persona.voice, history.length);
+  if (sessionMode) sessionPlan(plan, { conv, otherId, goodbye, sessionStart, theirMsgs });
   plan.closingStyle = persona.voice.closingStyle ?? null;
   plan.opening = opening;
   // "Ask my human", structurally: their question to me → its topic (dictionary only) → does my graph have ANY fact on it?
@@ -236,7 +252,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Asked about something my graph covers: its sayable facts are always in the prompt (B4 run: "haven't thought much
   // about kids yet" while her answer is "open" made his judge say no).
   const topicFacts = asked && known ? factsOnTopic(asked, persona.facts).filter((f) => f.disclosure !== 'private') : [];
-  const picked = [...topicFacts, ...selectFacts(persona, { incomingVec, incomingText: latest, rng }).filter((f) => !topicFacts.includes(f))];
+  const picked = [...topicFacts, ...selectFacts(persona, { incomingVec, incomingText: latest, rng }).filter((f) => !topicFacts.includes(f) && tierRank(tierOf(f)) <= unlocked)];
   const facts = new Map(picked.map((f, i) => [`F${i + 1}`, f]));
   stories.forEach((s, i) => facts.set(`S${i + 1}`, s));
   if (plan.topic?.kind === 'story') plan.topic.storyId = [...facts].find(([, f]) => String(f._id) === plan.topic.id)?.[0];
@@ -263,7 +279,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= (conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END) && (!rulesOn || human || agendaSettled(freshAgenda));
+  const mayEnd = history.length >= limits.naturalEndFrom && (!rulesOn || human || agendaSettled(freshAgenda));
   const readNow = () => (perception.doing ? perception : plan.read ?? {}); // this turn's read once the merged call ran
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     let draft;
@@ -387,7 +403,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       lastRead: { mood: readNow().mood ?? 'chill', energy: readNow().energy ?? 'medium', doing: readNow().doing ?? 'chatting' },
     }),
   });
-  const end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
+  let end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
+  if (sessionMode && end === 'natural') end = 'session';
   return {
     messages, end, unknownAboutMe, inbox, usedFactIds: used,
     // Human mode: the mood the reply was matched to, refined by this turn's read once it arrived (replay and eval labels).

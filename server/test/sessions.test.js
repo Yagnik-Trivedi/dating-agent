@@ -44,3 +44,15 @@ test('unlocked tier per session, and the room indicator', () => {
   const at = new Date();
   assert.deepEqual(sessionInfo({ depth: 'full', sessionIndex: 2, phase: 'gap', nextSessionAt: at }), { depth: 'full', n: 2, of: 5, phase: 'gap', nextSessionAt: at });
 });
+
+test('session plan: their "talk tomorrow?" → my goodbye; any end but a dealbreaker closes the session; a later session opens with a callback', async () => {
+  const { sessionPlan } = await import('../src/services/conversation/sessions.js');
+  const them = 'u2';
+  const conv = { depth: 'demo', sessions: [{ n: 1, endedAt: new Date(1000), threads: [{ about: them, text: 'her exam on Friday' }, { about: 'u1', text: 'my trip' }] }, { n: 2, startCount: 16, target: 32 }] };
+  assert.deepEqual(sessionPlan({ move: 'react', askBack: true }, { conv, otherId: them, goodbye: true }), { session: 2, end: 'session_ack', move: 'close', topic: null, askBack: false });
+  for (const end of ['max_turns', 'natural', 'interest']) assert.equal(sessionPlan({ end }, { conv, otherId: them }).end, 'session');
+  assert.equal(sessionPlan({ end: 'dealbreaker_hint' }, { conv, otherId: them }).end, 'dealbreaker_hint', 'a dealbreaker still ends the whole chat');
+  const cb = sessionPlan({ move: 'react' }, { conv, otherId: them, sessionStart: true, theirMsgs: [{ createdAt: new Date(500) }] });
+  assert.deepEqual([cb.move, cb.callback, cb.callbackReply, cb.askBack], ['callback', 'her exam on Friday', false, true]);
+  assert.equal(sessionPlan({ move: 'react' }, { conv, otherId: them, sessionStart: true, theirMsgs: [{ createdAt: new Date(2000) }] }).callbackReply, true, 'they wrote during the gap');
+});
