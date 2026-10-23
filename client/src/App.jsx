@@ -38,10 +38,12 @@ function Protected({ children, onboarding = false }) {
   return children
 }
 
+/** Logged in → Discover. `/login?switch=1` shows the form anyway: log this tab into another account (lib/token.js). */
 function PublicOnly({ children }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
   if (loading) return <Loading />
-  return user ? <Navigate to="/discover" replace /> : children
+  return user && !new URLSearchParams(location.search).has('switch') ? <Navigate to="/discover" replace /> : children
 }
 
 export default function App() {

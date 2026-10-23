@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
 import { disconnectSocket } from '../lib/socket'
+import { clearToken, getToken, setToken } from '../lib/token'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState(() => ({ loading: Boolean(localStorage.getItem('token')), user: null, profile: null, system: {} }))
+  const [state, setState] = useState(() => ({ loading: Boolean(getToken()), user: null, profile: null, system: {} }))
 
   const refresh = useCallback(async () => {
     const { data } = await api.get('/api/me')
@@ -14,13 +15,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token')
+    clearToken()
     disconnectSocket()
     setState({ loading: false, user: null, profile: null, system: {} })
   }, [])
 
   useEffect(() => {
-    if (localStorage.getItem('token')) refresh().catch(logout)
+    if (getToken()) refresh().catch(logout)
   }, [refresh, logout])
 
   const value = useMemo(() => ({
@@ -31,12 +32,13 @@ export function AuthProvider({ children }) {
     setProfile: (profile) => setState((s) => ({ ...s, profile })),
     async login(email, password) {
       const { data } = await api.post('/api/auth/login', { email, password })
-      localStorage.setItem('token', data.token)
+      setToken(data.token)
+      disconnectSocket() // a tab switching accounts reconnects as the new one
       return refresh()
     },
     async signup(fields) {
       const { data } = await api.post('/api/auth/signup', fields)
-      localStorage.setItem('token', data.token)
+      setToken(data.token)
       return refresh()
     },
   }), [state, refresh, logout])
