@@ -3,6 +3,7 @@
 // device?: 'mobile' | 'desktop', source?, burst? }].
 import { KG } from './config.js';
 import { tagLanguageHeuristic, tokensOf } from './language.js';
+import { fillerRates, hedgeRate } from '../persona/texture.js';
 
 const EMOJI = /\p{Extended_Pictographic}/gu;
 // Plan 32 KP1: emoji that react (faces, hands, hearts, fire, sparkles…) fit any chat; a thing emoji (🍍 from the
@@ -140,6 +141,8 @@ export function computeVoiceProfile(samples, { mirrorsPrior = 0.5, priorWeight =
     elongationRate: rate((s) => /(\p{L})\1{2,}/u.test(s.text)),
     endings: shares(endings),
     petPhrases: petPhrases(S),
+    fillers: fillerRates(S), // plan 33 A6: { hmm: 0.2, idk: 0.1, … } only the forms the user uses
+    hedgeRate: hedgeRate(S),
     closingStyle: closing?.text.trim() ?? null,
     selfReport: report && Object.keys(report).length ? report : null,
     devices: { mobile: S.filter((s) => s.device === 'mobile').length, desktop: S.filter((s) => s.device === 'desktop').length, unknown: S.filter((s) => !s.device).length },

@@ -27,6 +27,7 @@ import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
 import { tierOf } from './evidence.js';
 import { memoryFor, rawTranscript, repeatsEarlier } from './memory.js';
+import { fillersIn, HEDGE, isHedged, planTexture, stripForeign } from '../persona/texture.js';
 import { currentSession, inSessions, sessionLimits, sessionPlan, tierRank, unlockedTier } from './sessions.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
@@ -81,6 +82,18 @@ export function sentRecord({ messages, claims = [], facts, plan }) {
     told: cited.filter((f) => f.predicate === 'story').map((f) => String(f._id)),
     raised: plan.topic?.kind === 'agenda' && raisedIn(plan.topic, messages.join(' ')),
   };
+}
+
+/**
+ * Plan 33 (A6, A9): the texture actually sent. hedge: of the sent sentences saying something I hold loosely (a claim
+ * citing a [not sure] fact), how many hedge it. → { filler (planned), used: [form], stripped: [form], hedge: { loose, hedged } }
+ */
+export function textureRecord({ messages, claims = [], facts, filler = null, stripped = [] }) {
+  const sent = messages.flatMap((m) => sentencesOf(m));
+  const loose = sent.filter((s) => claims.some((c) => covers(c.text, s) && (c.factIds ?? []).some((id) => isHedged(facts.get(id)))));
+  const used = fillersIn(messages.join(' '));
+  // Soft check (recorded, never regenerated): more fillers than the plan's one, plus a laugh.
+  return { filler, used, stripped, over: used.length > (filler ? 1 : 0) + 1, hedge: { loose: loose.length, hedged: loose.filter((s) => HEDGE.test(s)).length } };
 }
 
 // --- Plan 31 (CONVO_MODE=human). Section-B attributes whose question reads as a form question (a question about their
@@ -257,7 +270,15 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const facts = new Map(picked.map((f, i) => [`F${i + 1}`, f]));
   stories.forEach((s, i) => facts.set(`S${i + 1}`, s));
   if (plan.topic?.kind === 'story') plan.topic.storyId = [...facts].find(([, f]) => String(f._id) === plan.topic.id)?.[0];
-  const myFacts = [...facts].map(([id, f]) => `[${id}] ${f.predicate}: ${f.conceptLabel && !f.userEdited ? f.conceptLabel : f.object}${f.predicate === 'story' ? ` (in their words: "${f.evidence?.[0]?.quote?.slice(0, 200) ?? ''}")` : ''}${f.disclosure === 'if_asked' ? ' [only because they asked]' : ''}`);
+  // Plan 33 (A6): something held loosely is said with a hedge; their question on it may get a think-out-loud first, and
+  // a question on something with no fact an honest "idk". Fillers: only the user's own, at about their rate.
+  const texture = rulesOn && !opening ? planTexture({ voice: persona.voice, samples: persona.samples, rng: seeded(turnSeed(conv.seed ^ 0x5eed, me, state.turn)),
+    answering: Boolean(plan.answerFirst || question), unknown: Boolean(plan.unknownTopic), loose: topicFacts.length > 0 && topicFacts.every(isHedged) }) : null;
+  if (texture) {
+    plan.texture = { filler: texture.filler, fillers: texture.fillers };
+    if (texture.move && ['reply', 'answer'].includes(plan.move) && !plan.end) plan.move = texture.move;
+  }
+  const myFacts = [...facts].map(([id, f]) => `[${id}] ${f.predicate}: ${f.conceptLabel && !f.userEdited ? f.conceptLabel : f.object}${f.predicate === 'story' ? ` (in their words: "${f.evidence?.[0]?.quote?.slice(0, 200) ?? ''}")` : ''}${f.disclosure === 'if_asked' ? ' [only because they asked]' : ''}${rulesOn && isHedged(f) ? ' [not sure]' : ''}`);
   const notes = await KgFact.find({ observerId: me, subjectId: otherId, matchId: match._id }, { object: 1, predicate: 1, confidence: 1 }).sort({ confidence: -1 }).limit(15).lean();
   const sources = new Set(notes.map((_, i) => `N${i + 1}`));
   const aboutThem = notes.map((n, i) => `[N${i + 1}] ${n.predicate}: ${n.object}`);
@@ -308,7 +329,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
     const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: Boolean(question) });
-    if (topicFacts.length && hedgeSentences(c.text).length) c.problems.push(`you DO know your answer about ${asked.label}: say it from the listed facts instead of sounding unsure.`);
+    if (topicFacts.some((f) => !isHedged(f)) && hedgeSentences(c.text).length) c.problems.push(`you DO know your answer about ${asked.label}: say it from the listed facts instead of sounding unsure.`);
     if (plan.mustDisagree && i === 0) c.stance = await stanceCheck({ draft: c.text, disagreeOn: plan.disagreeOn, userId: me, matchId: match._id });
     c.problems.push(...(c.stance ?? []));
     if (earlierQuestions.length && !plan.end) {
@@ -378,6 +399,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Plan 32 KP1: only my own emoji (an emoji from an example's context, like 🍍 or 😞, read oddly in the H1 run).
   const myEmoji = new Set([...(persona.voice.topEmojis ?? []), plan.emoji].filter(Boolean));
   messages = messages.map((m) => ownEmojiOnly(m, myEmoji)).filter((m) => words(m).length);
+  // Plan 33 (A6): never a filler or laugh the user doesn't use ("lol" for someone who writes "haha").
+  const stripped = [];
+  if (texture) messages = messages.map((m) => { const s = stripForeign(m, { fillers: texture.fillers, voice: persona.voice }); stripped.push(...s.stripped); return s.text; }).filter((m) => words(m).length);
   if (!messages.length) {
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
@@ -422,6 +446,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     messages, end, unknownAboutMe, inbox, usedFactIds: used,
     // Human mode: the mood the reply was matched to, refined by this turn's read once it arrived (replay and eval labels).
     actPlan: { ...plan, interest: state.interest, ...(human && { read: { mood: readNow().mood, energy: readNow().energy, doing: readNow().doing } }) },
-    checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop], fallback },
+    checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop], fallback,
+      ...(texture && { texture: textureRecord({ messages, claims: best.draft.claims, facts, filler: plan.texture.filler, stripped }) }) },
   };
 });

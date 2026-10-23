@@ -25,6 +25,8 @@ const voiceProfileSchema = new mongoose.Schema({
   elongationRate: Number,
   endings: Mixed, // { none, '.', '!', '?', '..', emoji } shares
   petPhrases: [String],
+  fillers: Mixed, // plan 33 A6: { form: share of replies using it }, only forms the user uses
+  hedgeRate: Number, // plan 33 A6: share of replies that hedge ("i think", "idk", "kinda")
   closingStyle: String,
   selfReport: Mixed, // plan 32 KP1: the User.textingStyle the metrics were blended with (for "How I text")
   devices: Mixed, // { mobile, desktop, unknown } sample counts

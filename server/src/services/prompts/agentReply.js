@@ -25,9 +25,24 @@ function planLines(plan, firstName) {
     plan.mustDisagree ? `- DISAGREE with "${plan.disagreeOn}". ${firstName} firmly holds the opposite view: keep it friendly, but do not give in or say they're right.` : null,
     plan.topic?.kind === 'agenda' ? topicLine(plan.topic, firstName, plan.askBack) : null,
     plan.topic?.kind === 'story' ? `- If it connects to what you're talking about, tell the story [${plan.topic.storyId}] briefly in your own words with a natural lead-in ("that reminds me…"); if it doesn't connect, skip it.` : null,
+    ...textureLines(plan, firstName),
   ];
   return lines.filter(Boolean);
 }
+
+// Plan 33 (A6): the user's own fillers only, at about their rate; never one they don't use (code strips those too).
+function textureLines(plan, firstName) {
+  if (!plan.texture) return [];
+  const { filler, fillers } = plan.texture;
+  const own = fillers.length ? `${firstName}'s own filler words: ${fillers.map((f) => `"${f}"`).join(', ')}.` : `${firstName} doesn't use filler words like "hmm", "idk" or "tbh".`;
+  return [`- ${own}${filler ? ` One "${filler}" fits this message, where it sounds natural.` : fillers.length ? ' None needed this time.' : ''} Never a filler or laugh ${firstName} doesn't use. Laugh only if something was actually funny.`];
+}
+
+// Plan 33 (A6): two ways real people answer.
+const TEXTURE_MOVES = {
+  think: (firstName) => `- Move: think out loud for a moment before answering, the way people text ("hmm good question... i think X? but Y is also nice"), then answer from the listed facts. ${firstName} isn't fully sure on this, so let that show.`,
+  not_sure: (firstName) => `- Move: honestly say you don't know or never really thought about it, in ${firstName}'s own words, then add something real and close to it from the listed facts, or ask what they think. Never invent an answer.`,
+};
 
 // Plan 30 SN: the shape of this message. Not every message is "reaction + question".
 function moveLine(plan, firstName) {
@@ -37,6 +52,8 @@ function moveLine(plan, firstName) {
     share: `- Shape: react, then share something of ${firstName}'s own that connects to what they said (only from the listed facts), so they have something to reply to. If no listed fact connects, just react warmly.`,
     react: '- Shape: a short, natural reaction to what they said (laugh, tease or relate if it fits). That is the whole message.',
     callback: callbackLine(plan),
+    think: TEXTURE_MOVES.think(firstName),
+    not_sure: TEXTURE_MOVES.not_sure(firstName),
     topic: null,
     end: null,
   }[plan.move] ?? null;
@@ -85,6 +102,8 @@ const humanMoveLine = (plan, firstName) => ({
   share: `- Move: share a little of ${firstName}'s own that connects to what they said ("same, I just got home too"); from the listed facts only when it's about ${firstName}. No question.`,
   stay: "- Move: they're telling you something or having a rough time: stay with them. React or ask about THEIR thing. No new topic, no story of yours, no jokes if they're down.",
   callback: callbackLine(plan),
+  think: TEXTURE_MOVES.think(firstName),
+  not_sure: TEXTURE_MOVES.not_sure(firstName),
   close: null,
 }[plan.move] ?? null);
 
@@ -103,6 +122,7 @@ function humanLines(plan, firstName) {
     plan.mustDisagree ? `- DISAGREE with "${plan.disagreeOn}". ${firstName} firmly holds the opposite view: keep it friendly, but do not give in.` : null,
     plan.topic?.kind === 'agenda' ? `- If it fits right now, ask this plainly in one short casual line: "${askOnceText(plan.topic.text)}" No setup, no story, no hint first. If it doesn't fit, don't ask it.` : null,
     plan.topic?.kind === 'story' ? `- They told you a story: if [${plan.topic.storyId}] truly connects, share it in one or two sentences. Otherwise skip it.` : null,
+    ...textureLines(plan, firstName),
   ].filter(Boolean);
 }
 
@@ -122,6 +142,8 @@ function finalHuman(plan, firstName) {
       : plan.answerFirst && `answer their question about ${firstName} simply (listed facts, or say in your own words that you don't know).`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
     plan.move === 'stay' && 'stay with what they are telling you; no new topic.',
+    plan.move === 'think' && 'think out loud for a second ("hmm…"), then answer.',
+    plan.move === 'not_sure' && "it's fine to say you honestly don't know.",
     plan.topic?.kind === 'agenda' && `if it fits, ask plainly: "${askOnceText(plan.topic.text)}"; if not, skip it.`,
     !plan.topic && plan.move === 'react' && 'just a short reaction, no question.',
     !plan.topic && plan.move === 'share' && `share a little of ${firstName}'s that connects, no question.`,
@@ -148,6 +170,7 @@ function finalInstruction(plan, firstName) {
     plan.unknownTopic ? `answer their question honestly: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you're not sure (no made-up preference); don't just ask it back.`
       : plan.answerFirst && `first answer their question about ${firstName} (from the listed facts, or honestly say you're not sure); don't just ask it back.`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
+    plan.move === 'think' && 'think out loud for a second ("hmm…"), then answer.',
     plan.topic?.kind === 'agenda' && (plan.topic.how === 'lull'
       ? `if it flows, move the chat toward ${topicText(plan.topic.text)}, linked to something already said; if it would sound abrupt, skip it.`
       : `reply to their message, and if it flows from it, ease into ${topicText(plan.topic.text)}; if not, skip it.`),
@@ -206,6 +229,7 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
         `- Don't agree, compliment or show enthusiasm unless ${firstName} genuinely would, given the facts. Being brief, bored or in disagreement is fine.`,
         '- Reply to what they actually said first. Never copy their words, slang or sentence pattern. Vary how messages start.',
         `- Never claim anything about ${firstName} that is not listed; if you don't know, say you're not sure or haven't tried it.`,
+        myFacts.some((f) => f.endsWith('[not sure]')) ? `- Facts marked [not sure] are things ${firstName} only half-likes or hasn't made up their mind about: say them with a hedge ("i think…", "kinda", "idk, maybe"). Say the others plainly.` : '',
         '  Say facts the way a person would ("work-life balance matters to me"), never by reading out a label. Text in [brackets] is a note, never something to write.',
         `- Never state anything about ${matchName} that isn't in "what you know" or in their own messages (no guessing their interests, photos or plans).`,
         `- If they sincerely ask whether they're talking to an AI or a bot, answer honestly that ${firstName} uses the app's AI assistant for early chats.`,
