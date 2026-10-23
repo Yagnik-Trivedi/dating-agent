@@ -23,6 +23,8 @@ import * as icebreakersPrompt from '../prompts/icebreakers.js';
 import * as judgePrompt from '../prompts/judge.js';
 import { topicText } from '../prompts/agentReply.js';
 import { debug } from '../../utils/log.js';
+import { judgeFromLedger } from './sessionJudge.js';
+import { inSessions } from './sessions.js';
 
 // The LLM lists evidence only; judgeDecision.js decides (owner's judge fix). factId: which of MY facts (F1…) it bears on.
 const quoted = { quote: z.string().trim().max(400).catch(''), why: z.string().trim().min(1).max(300), messageId: z.string().nullable().catch(null), factId: z.string().trim().nullable().catch(null) };
@@ -118,9 +120,9 @@ async function writeIcebreakers({ userId, matchId, matchName, events, notes }) {
   }
 }
 
-const OPTIONS = Object.fromEntries(QUESTIONS.sections.find((x) => x.id === 'B').items.map((i) => [i.id, i.options.map((o) => o.value)]));
-const label = (f) => `${f.predicate}: ${f.object}${f.isDealbreaker ? ' [dealbreaker]' : ''}${f.importance >= 0.9 ? ' (matters a lot)' : ''}${f.disclosure === 'private' ? ' [private]' : ''}`;
-const traitWords = (t) => [
+export const OPTIONS = Object.fromEntries(QUESTIONS.sections.find((x) => x.id === 'B').items.map((i) => [i.id, i.options.map((o) => o.value)]));
+export const label = (f) => `${f.predicate}: ${f.object}${f.isDealbreaker ? ' [dealbreaker]' : ''}${f.importance >= 0.9 ? ' (matters a lot)' : ''}${f.disclosure === 'private' ? ' [private]' : ''}`;
+export const traitWords = (t) => [
   t.extraversion != null && (t.extraversion < 0.4 ? 'calm, low-key' : t.extraversion > 0.7 ? 'outgoing, playful' : null),
   t.agreeableness > 0.7 && 'values kindness and warmth',
   t.openness > 0.7 && 'curious, idea-rich',
@@ -180,12 +182,15 @@ export async function judgeSide({ conversationId, userId }) {
     const shown = facts.filter((f) => !['trait', 'style'].includes(f.predicate)).sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, 60);
     const factById = new Map(shown.map((f, i) => [`F${i + 1}`, f]));
     // My dealbreakers the chat never settled: a severity-2 friction, not a pass (plan 31: the gate and their profile settle some).
-    const { undiscussed, profileFrictions, worthAsking } = fromAgenda(match.brief?.[me]?.agenda ?? [], dealbreakers);
+    let { undiscussed, profileFrictions, worthAsking } = fromAgenda(match.brief?.[me]?.agenda ?? [], dealbreakers);
 
     let value;
     let judgeModel = null;
     let validation = { reasked: false, dropped: [] };
-    if (!messages.length) {
+    if (inSessions(conv) && messages.length) {
+      // Plan 33: full / demo chats are judged from the session ledger, on the high bar (sessionJudge.js).
+      ({ value, judgeModel, validation, worthAsking } = await judgeFromLedger(conv, match, me));
+    } else if (!messages.length) {
       value = { decision: 'unsure', confidence: 0, positives: [], frictions: [], dealbreakerRisk: [], noFrictionJustification: 'There was no conversation to judge.', summaryForUser: "This chat never really got going, so it's your call." };
     } else {
       const traits = Object.fromEntries(facts.filter((f) => f.predicate === 'trait').map((f) => [f.object, f.value]));

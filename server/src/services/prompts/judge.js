@@ -3,8 +3,20 @@
 // and chat moments, and the transcript. The output is a private decision: never shown to the other side.
 // Output (evidence only; judgeDecision.js decides in code): { positives: [{ quote, why, messageId, factId }],
 //   frictions: [{ quote, why, severity, messageId, factId }], dealbreakerRisk: [{ attribute, quote, value }], noFrictionJustification, summaryForUser }
+// Plan 33 (full / demo chats): the same prompt is the per-session EVIDENCE PASS (mid tier, one call per side per
+// session): `session` = { n, earlier: [summaries], theirEarlier: [their earlier messages] }; it adds "inconsistencies".
 
-export function build({ userName, matchName, facts, dealbreakers, traits, notes, events, agenda, transcript, endedBy, warning }) {
+// Plan 33 A7: the bar looks for depth; this tells the judge what counts.
+const sessionRules = (session, matchName) => [
+  '',
+  `THIS IS SITTING ${session.n} of a chat over a few days. List evidence from THIS sitting's transcript only (earlier sittings are summarized for context).`,
+  '- Look for evidence that goes deep: how they actually live (stories, people, work, daily life), and values in action (how',
+  '  they handle things, the future, why things matter to them). A shared like (coffee, a film, a food) is minor: list it, but never stretch it.',
+  `- inconsistencies: something ${matchName} said in this sitting that contradicts what ${matchName} said earlier. "quote" is from this`,
+  '  sitting, "earlier" from their earlier messages, both VERBATIM. Usually empty; never a change of mood or a joke.',
+];
+
+export function build({ userName, matchName, facts, dealbreakers, traits, notes, events, agenda, transcript, endedBy, warning, session = null }) {
   const none = '(none)';
   return [
     {
@@ -46,6 +58,7 @@ export function build({ userName, matchName, facts, dealbreakers, traits, notes,
         '"frictions": [{"quote": "...", "why": "...", "severity": 1, "messageId": "m8", "factId": null}], "dealbreakerRisk": [{"attribute": "smoking", "quote": "...", "value": "socially"}],',
         '"noFrictionJustification": null, "summaryForUser": "..."}',
         'severity: 1 minor, 2 notable, 3 serious.',
+        ...(session ? [...sessionRules(session, matchName), 'Also add "inconsistencies": [{"quote": "...", "earlier": "..."}] to the JSON.'] : []),
       ].join('\n'),
     },
     {
@@ -57,7 +70,9 @@ export function build({ userName, matchName, facts, dealbreakers, traits, notes,
         `What ${userName}'s agent noted about ${matchName} (quoted):\n${notes.join('\n') || none}`,
         `Moments the agent recorded (type, weight, quote):\n${events.join('\n') || none}`,
         `What ${userName} wanted to find out (topic: status):\n${agenda.join('\n') || none}`,
-        `The conversation ended because: ${endedBy ?? 'unknown'}`,
+        session?.earlier?.length ? `Earlier sittings, in short:\n${session.earlier.join('\n')}` : '',
+        session?.theirEarlier?.length ? `${matchName}'s own words in earlier sittings (for inconsistencies only):\n${session.theirEarlier.join('\n')}` : '',
+        session ? '' : `The conversation ended because: ${endedBy ?? 'unknown'}`,
         `Transcript (id, sender):\n${transcript.join('\n') || '(no messages)'}`,
         warning ? `YOUR LAST ANSWER FAILED THESE CHECKS, fix them: ${warning}` : '',
       ].filter(Boolean).join('\n\n'),

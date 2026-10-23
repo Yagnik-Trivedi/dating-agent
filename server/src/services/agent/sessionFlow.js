@@ -10,11 +10,9 @@ import { KG } from '../kg/config.js';
 import { flushUsage } from '../llm/budget.js';
 import { currentSession, depthOf, gapMs, inSessions, newSession, sessionInfo, sessionsMax } from '../conversation/sessions.js';
 import { summarizeSession } from '../conversation/memory.js';
+import { decideSession } from '../conversation/sessionJudge.js';
 import { cancelReplies, scheduleReply, stopConversation } from './scheduler.js';
 
-/** Filled by the judge step (evidence passes + the per-side decision); until then a session never decides. */
-const hooks = { decide: null };
-export const setSessionHooks = (h) => Object.assign(hooks, h);
 
 export function emitSession(match, conv) {
   const info = sessionInfo(conv);
@@ -68,7 +66,7 @@ export async function runSessionEnd({ conversationId, n }) {
   if (match?.status !== 'agent_chatting') return { skipped: true };
 
   if (currentSession(conv).summary == null) await summarizeSession(conv, match);
-  const decisions = hooks.decide ? await hooks.decide(conv, match) : {};
+  const decisions = await decideSession(conv, match);
   conv = await Conversation.findById(conversationId).lean();
   const tokens = await sessionTokens(match._id, currentSession(conv).startedAt);
   await Conversation.updateOne({ _id: conv._id }, { $set: { [`sessions.${n - 1}.decisions`]: decisions, [`sessions.${n - 1}.tokens`]: tokens } });

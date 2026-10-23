@@ -13,7 +13,11 @@ import { newSession } from '../src/services/conversation/sessions.js';
 import { start, stop } from '../scripts/lib/testDb.js';
 
 const oid = () => new mongoose.Types.ObjectId();
-const summarized = (conv, n) => Conversation.updateOne({ _id: conv._id }, { $set: { [`sessions.${n - 1}.summary`]: '', [`sessions.${n - 1}.threads`]: [] } });
+// The summary and both evidence passes as if they had run (empty): the code decision is what's under test here.
+const summarized = (conv, n) => Conversation.updateOne({ _id: conv._id }, {
+  $set: { [`sessions.${n - 1}.summary`]: '', [`sessions.${n - 1}.threads`]: [] },
+  $push: Object.fromEntries(Object.keys(conv.agentState).map((u) => [`ledger.${u}.passes`, n])),
+});
 before(async () => { await start(); env.LLM_ENABLED = false; });
 after(stop);
 
