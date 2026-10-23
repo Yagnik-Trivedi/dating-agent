@@ -24,3 +24,6 @@ DA.md
 
 # Owner test-run backups (scripts/admin-matches.js): real users' data, never committed
 server/backups/
+
+# MediaPipe files left over from the removed live check (generated, not part of the app)
+client/public/mediapipe/
