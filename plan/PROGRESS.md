@@ -85,6 +85,8 @@ Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md),
 - Match room at 375 / 1440 px: 0 px overflow, no console errors.
 - `smoke:browsers` on the local production build: chromium, firefox, webkit ✓.
 
+**Demo accounts deleted (owner's OK, 2026-10-23):** `node scripts/delete-demo-accounts.js --keep-judges --yes` on the deployed Atlas database deleted the 38 seed personas and their data. Kept: the 2 judge logins (Naina, Rehan) and the 9 real accounts (11 in total). The judge accounts' pre-made matches with seeds are now closed, with the seed side shown as "Deleted user". `npm run seed` would bring the personas back. The local dev DB was not touched.
+
 **Not measured** (no live chats, owner's decision): tokens and minutes per pair, the A9 rows and transcripts. `node scripts/eval/session-metrics.js --latest 5` reports them from the team's real chats.
 
 **Deviations / things to watch in the real test:**
