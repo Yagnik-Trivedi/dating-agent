@@ -1,8 +1,14 @@
 // A rejected AI key (401/403) pauses the agent visibly instead of failing every call silently (production, 2026-10-22:
 // 579 calls in 3 days all failed with 401 while the UI showed nothing). One probe per 5 minutes checks the key again.
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { after, before, test } from 'node:test';
+import { env } from '../src/config/env.js';
 import { checkBudget, markAuthFailure, markAuthOk, pauseReason } from '../src/services/llm/budget.js';
+
+// CI runs with the kill switch on (LLM_ENABLED=false), which pauses first by design; this test needs it off.
+const enabled = env.LLM_ENABLED;
+before(() => { env.LLM_ENABLED = true; });
+after(() => { env.LLM_ENABLED = enabled; });
 
 test('a rejected key pauses the agent with a reason; the next call is blocked until the probe window; success clears it', async () => {
   assert.equal(pauseReason()?.code ?? null, null);
