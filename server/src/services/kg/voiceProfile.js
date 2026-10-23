@@ -85,7 +85,7 @@ const blend = (pairs, prior) => {
  * → the VoiceProfile metric fields (no LLM). selfReport: User.textingStyle (plan 32 KP1): it sets the prior for emoji,
  * length, bursts and lowercase; desktop samples count DESKTOP_STYLE_WEIGHT for emoji, length and bursts.
  */
-export function computeVoiceProfile(samples, { mirrorsPrior = 0.5, priorWeight = 2, selfReport = null } = {}) {
+export function computeVoiceProfile(samples, { mirrorsPrior = 0.5, priorWeight = 2, selfReport = null, hedgePrior = null } = {}) {
   const S = samples.filter((s) => s.text?.trim()).map((s) => ({ ...s, lang: s.lang ?? tagLanguageHeuristic(s.text), weight: s.weight ?? 1 }));
   const P = KG.SELF_REPORT_PRIORS;
   const report = selfReport && Object.fromEntries(['emoji', 'bursts', 'length', 'caps', 'stickers'].filter((k) => selfReport[k]).map((k) => [k, selfReport[k]]));
@@ -142,7 +142,8 @@ export function computeVoiceProfile(samples, { mirrorsPrior = 0.5, priorWeight =
     endings: shares(endings),
     petPhrases: petPhrases(S),
     fillers: fillerRates(S), // plan 33 A6: { hmm: 0.2, idk: 0.1, … } only the forms the user uses
-    hedgeRate: hedgeRate(S),
+    // Plan 33 Q1: T8 "your opinions are usually…" pulls the measured rate toward what they say about themselves.
+    hedgeRate: hedgePrior == null ? hedgeRate(S) : r2((hedgeRate(S) * S.length + hedgePrior * KG.SELF_REPORT_WEIGHT) / (S.length + KG.SELF_REPORT_WEIGHT)),
     closingStyle: closing?.text.trim() ?? null,
     selfReport: report && Object.keys(report).length ? report : null,
     devices: { mobile: S.filter((s) => s.device === 'mobile').length, desktop: S.filter((s) => s.device === 'desktop').length, unknown: S.filter((s) => !s.device).length },

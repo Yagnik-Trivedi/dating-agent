@@ -1,5 +1,6 @@
 // Deterministic facts from onboarding (plan 05 §5 step 1): identity, A (traits), B (structured values/goals/lifestyle
 // with accepts + dealbreaker flag) and D (interests). No LLM. `conceptText` / `conceptType` feed concept resolution.
+import { coreValueFacts, coreValuePlace, moduleTraitScores } from './moduleFacts.js';
 import { QUESTIONS } from './questions.js';
 
 const section = (id) => QUESTIONS.sections.find((s) => s.id === id);
@@ -44,6 +45,9 @@ export function traitScores(answersA = {}) {
   }));
 }
 
+/** Likert traits, with each trait the module picks cover replaced by their score (plan 33 A4). */
+export const allTraitScores = (answers = {}) => ({ ...traitScores(answers.A), ...moduleTraitScores(answers.M) });
+
 const choice = { source: 'questionnaire_choice', confidence: 1, disclosure: 'public', polarity: 1 };
 const answerRef = (id) => [{ quote: null, sourceRef: { kind: 'answer', id }, at: new Date() }];
 
@@ -59,8 +63,9 @@ export function questionnaireFacts(answers = {}) {
   }
   if (I.family?.trim()) facts.push({ ...choice, predicate: 'background', object: `family: ${I.family.trim()}`, attribute: 'family_setup', value: I.family.trim(), evidence: [{ quote: I.family.trim(), sourceRef: { kind: 'answer', id: 'I.family' } }] });
 
-  // A — traits: shape tone only, never said; read-only in the review.
-  for (const [trait, value] of Object.entries(traitScores(answers.A))) {
+  // A — traits: shape tone only, never said; read-only in the review. Plan 33: a module's trait picks replace the
+  // agree/disagree statements for that trait when present.
+  for (const [trait, value] of Object.entries(allTraitScores(answers))) {
     facts.push({ ...choice, predicate: 'trait', object: trait, attribute: trait, value, confidence: 0.8, disclosure: 'private', evidence: answerRef('A') });
   }
 
@@ -82,8 +87,10 @@ export function questionnaireFacts(answers = {}) {
       ...(item.id === 'religion' && { sensitivity: { topic: 'religion', sensitive: true } }),
       conceptText: `${item.id.replace(/_/g, ' ')}: ${option.label.toLowerCase()}`, conceptType: item.predicate === 'lifestyle' ? 'lifestyle' : 'value',
       evidence: answerRef(`B.${item.id}`),
+      ...coreValuePlace(item.id), // plan 33: its place in the brain map
     });
   }
+  facts.push(...coreValueFacts(answers.B)); // plan 33: the optional "say more" under a value
 
   // D — interests with intensity → strength.
   const seen = new Set();

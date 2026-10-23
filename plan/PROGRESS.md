@@ -2,7 +2,7 @@
 
 The team's single status board. Claude Code updates it after every plan-30 step. **Commit locally after each step (CLAUDE.md); never push or deploy until the owner says "push"** (plan 30, S7). `CLAUDE.md` → Status has the detailed acceptance results for each finished plan.
 
-- **Last updated:** 2026-10-23, by Claude Code (plan 33 C1 code done and tested, local commits, not pushed; no simulated chats: the team tests with real accounts)
+- **Last updated:** 2026-10-23, by Claude Code (plan 33 C1, Q1 and Q2 code done and tested, local commits, not pushed; no simulated chats: the team tests with real accounts)
 - **Main-line branch:** `main` (pushed through `4670cd3` and **deployed** 2026-10-22 on the owner's "push and deploy" (plan 32 KP; live on Render + Vercel, `smoke:browsers` 3/3 on the live site). Before: `18c9e3d` on 2026-10-19. **Auto-deploy is ON**: Render deploys every push to `main` (On Commit); Vercel builds every push that touches `client/`. A push now = a deploy.)
 - **Live site (read-only until S7):** https://dating-agent-flame.vercel.app · API https://dating-agent-api.onrender.com
 
@@ -29,6 +29,28 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → KP → S33 → S4 → 
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).
+
+## S33 Q1 + Q2 results: question bank, brain map, the screens (2026-10-23) 🔄 code done, not pushed
+
+**Owner (Arya, 2026-10-23):** all 16 modules (not the W/T/X/V fallback); skip `expand-personas.js` (the seed personas are deleted, the team tests with real accounts); "complete all parts in one go and test at the end, only the required tests"; no demo chats.
+
+**Q1 (server):**
+- `kg/questionBank.js`: core (B reworded per A4 + an optional "say more"; option values unchanged) + 15 modules (W required, L, F, O, E, S, H, T, D, K, FA, V, R, FU, X): 121 questions, 153 with follow-ups, every one with type, branch, tier, uses, disclosure, current and trait flags. Today's story ids are aliases (`ALIASES`, A4's mapping). `questions.js` keeps its sections and re-exports the bank.
+- `kg/answers.js`: `moduleAnswersSchema(id)` (flat `M[module][qid]`, follow-ups `W1_1`…; "idk" / "can't decide" valid), `B[item].more`.
+- Models (superset only): `KgFact.branch | qid | module | slot | uncertain | depthTier | currentUntil`, source `questionnaire_module`; `KgEdge` `BRANCH_OF | WHY | ASSOCIATED` + `module`; `VoiceSample` source `module` + `qid`; `InboxItem.qid | kind (drip | recheck)`. `factKey` prefers `slot`, so the same thing on two branches stays two facts (ASSOCIATED).
+- `kg/moduleFacts.js` (pure): every answer → at least one fact in the user's own words on its branch; taps/picks per option, "can't decide" → uncertain; "how strongly?" sets the parent's strength; a "why" → a deep reason (WHY); other follow-ups → child facts (BRANCH_OF); V8 → like → gives → why; replies → voice samples; current answers → `currentUntil` (+30 days); trait picks → Big Five scores that replace the Likert ones per trait; core values get area + tier, "say more" becomes a fact.
+- `kg/buildModule.js` + job `buildModule` + `POST /onboarding/module/:id`: quick build in the request (no model calls), then the job: ONE model call per module for stories and answers over 12 words (`prompts/extractModuleFacts.js`, verbatim-checked, SUPPORTS), concepts, vectors; replaces only that module's facts, edges and reply samples; recomputes traits and ASSOCIATED. The core build leaves module facts and edges alone; a re-submit keeps `answers.M`. `GET /onboarding/modules` (questions, answers, progress, brain strength), `PUT /onboarding/values-more`.
+- Voice: T8 sets a hedge prior (`hedgePriorOf`); X/H7 replies feed the fillers and hedge rate through the normal voice rebuild.
+- Retrieval: the persona cache loads brain edges; `selectFacts` adds up to `BRANCH_EXTRA` (3) neighbours of what the chat touched (children, reasons, parents) and at most ONE associated hop; the engine's session tier filter still applies; uncertain facts are marked `[not sure]` (C1's `isHedged`). C1's `evidence.js` already reads `depthTier` / `branch[0]`.
+- Learning: `maybeDrip` (on opening the inbox, per user: at most one module question a day from the least-filled module, only when nothing else is open, never judge-only or private ones); `reconfirm` re-asks a current module answer after `currentUntil` (once per period); answering either saves into the module and rebuilds it.
+- "This is you" API: nodes carry `branch | tier | uncertain | qid | current`; `brainLinks`; `brain` (areas → branches, module progress, strength).
+- `MAX_SELF_FACTS` 150 → 320 (all modules answered fit).
+- **Fixed (pre-existing):** a core onboarding build that hit a spent budget / `LLM_ENABLED=false` crashed the server process (an un-awaited rejected promise in `buildUserGraph`).
+
+**Q2 (client):** onboarding step 4 shows "say more" under each answered value; new step 6 "Your world right now" (W, at least 6 of 12) before Welcome (step 7); `ModuleRunner` renders any module (tap, pick, line, story, reply, why; follow-ups open once answered; skip anything; draft kept on the device; voice input via the browser's speech recognition where it exists); "Teach your agent more" = `/teach` (module list + brain meter + replies / how you text), `/teach/m/:id`, a toast "your agent can now talk about …" after a save; "This is you" has a **Brain** tab (areas → branches → facts, "not sure" marks, privacy lock), brain links drawn in the 3D and 2D graphs, and the fact sheet shows its branch path, Not sure / Right now / depth tags and linked facts. The personality statements are not in the core (old answers still count).
+
+**Checks:** `npm test` 204/204 (new `test/questionBank.test.js`: bank shape + aliases + B values unchanged, idk valid, branches / tiers / uncertain / current / links, traits, "say more", T8 hedge prior, retrieval neighbours + one associated hop + private never, per-module build isolation + re-save + ASSOCIATED on a replica set); `api-check` passed (local DB, AI off); a local end-to-end run of the new endpoints (signup → core → W and F modules → wrong option refused → blank removes → graph branches/links/brain → drip → answer lands in its module); client build OK. **Not run:** live model extraction on real answers, `onboard-sample` / `kg-review-check` / `storage-report` (need the model), screenshots at 375 / 1440 px, demo chats (owner).
+**Not done:** the server does not block an agent from chatting without W (existing real accounts never saw W; the app nudges instead); `expand-personas.js` skipped (owner).
 
 ## S33 C1 results: long chats, the high bar, natural texture (2026-10-23) 🔄 code done, ⏸ STOP
 

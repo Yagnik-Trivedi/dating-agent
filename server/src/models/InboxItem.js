@@ -12,6 +12,10 @@ const inboxItemSchema = new mongoose.Schema({
   // 'held' (plan 32 KP3): a small detail ("which temple?") kept out of the inbox until it comes up in more chats.
   status: { type: String, enum: ['open', 'answered', 'dismissed', 'held'], default: 'open' },
   heldKey: { type: String, default: null }, // what counts as "the same small question" across chats
+  // Plan 33: a module question asked in the inbox: the daily drip from an empty branch, or a current fact asked again.
+  // Its answer is saved into that module's answers and rebuilds the module.
+  qid: { type: String, default: null },
+  kind: { type: String, enum: ['drip', 'recheck'] },
   answer: String,
   answeredAt: Date,
 }, { timestamps: { createdAt: true, updatedAt: false }, versionKey: false });

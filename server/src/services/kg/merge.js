@@ -5,7 +5,7 @@ import { factKey } from './factKey.js';
 // Never touched by a rebuild: what the user told us later, notes, reflections and their own chats.
 export const PROTECTED_SOURCES = new Set(['user_answer', 'agent_observed', 'reflection', 'own_chat']);
 const REBUILT_SOURCES = new Set(['questionnaire_choice', 'questionnaire_story']);
-const polarKey = (f) => `${factKey(f)}|${f.polarity ?? 1}`;
+export const polarKey = (f) => `${factKey(f)}|${f.polarity ?? 1}`;
 
 const unionEvidence = (a = [], b = []) => {
   const seen = new Set(a.map((e) => `${e.quote}|${e.sourceRef?.id}`));
@@ -49,7 +49,7 @@ export function mergeFacts(facts) {
  * Re-submit merge (F27) of freshly merged facts against the existing self graph.
  * → { inserts: [fact], updates: [{ id, set, pushEvidence }], keepEdited: [{ id, pushEvidence }], deletes: [id], keyToId }
  */
-export function planResubmit({ merged, existing, tombstones }) {
+export function planResubmit({ merged, existing, tombstones, rebuilt = REBUILT_SOURCES }) {
   const dead = new Set(tombstones);
   const byKey = new Map(existing.filter((e) => !PROTECTED_SOURCES.has(e.source)).map((e) => [polarKey(e), e]));
   const out = { inserts: [], updates: [], keepEdited: [], deletes: [], keyToId: new Map() };
@@ -66,7 +66,7 @@ export function planResubmit({ merged, existing, tombstones }) {
     out.updates.push({ id: old._id, set: { ...set, disclosure: old.disclosure ?? set.disclosure }, pushEvidence: newEvidence });
   }
   for (const e of existing) {
-    if (REBUILT_SOURCES.has(e.source) && !e.userEdited && !wanted.has(polarKey(e))) out.deletes.push(e._id);
+    if (rebuilt.has(e.source) && !e.userEdited && !wanted.has(polarKey(e))) out.deletes.push(e._id);
   }
   return out;
 }

@@ -9,7 +9,15 @@
 //   D: { interests: [{ name: string, intensity: 'casual'|'into_it'|'obsessed' }] }
 //   E: { [sampleId]: string }  (VOICE_SAMPLES_ONBOARDING prompts across moods)
 
+//   B[itemId].more?: string (plan 33: the optional "say more" line under a value)
+//   M: { [moduleId]: { [questionId]: answer } } (plan 33 modules, questionBank.js; saved per module)
+import { CORE_VALUES } from './questionBank.js';
+
+export { ALIASES, CORE_VALUES, MODULE_IDS, MODULES, moduleOf, QUESTION_BY_ID, STRENGTH_OF } from './questionBank.js';
+
 const opts = (...labels) => labels.map((label) => ({ value: label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''), label }));
+// Plan 33 A4: the core values reworded casually, each with an optional "say more". Option values never change.
+const core = (item) => ({ ...item, text: CORE_VALUES[item.id]?.text ?? item.text, oldText: item.text, ...(CORE_VALUES[item.id]?.more && { more: { text: CORE_VALUES[item.id].more, type: CORE_VALUES[item.id].moreType ?? 'line' } }) });
 
 export const QUESTIONS = {
   sections: [
@@ -85,7 +93,7 @@ export const QUESTIONS = {
         { id: 'diet', text: 'Diet?', predicate: 'lifestyle', options: opts('Veg', 'Non-veg', 'Vegan', 'Jain', 'Eggetarian', 'No preference') },
         { id: 'conflict', text: 'How do you handle conflict?', predicate: 'values', options: opts('Talk it out immediately', 'Need space first', 'Avoid it') },
         { id: 'alone_time', text: 'How much alone time do you need?', predicate: 'lifestyle', options: opts('Lots', 'Some', 'Little') },
-      ],
+      ].map(core),
     },
     {
       id: 'C',

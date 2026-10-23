@@ -29,6 +29,13 @@ export function selectFacts(persona, { incomingVec, incomingText = '', rng, k = 
       out.push(p.f);
       if (p.f.conceptId) seenConcepts.add(String(p.f.conceptId));
     }
+    // Plan 33 brain map: what the chat touched brings its branch along (a specific, a story, the reason why) and one
+    // hop to the same thing on another branch, so one topic can lead to connected things the user really has.
+    for (const f of branchNeighbours(persona, out, pool.map((p) => p.f)).slice(0, Math.max(0, k - out.length))) {
+      pool.splice(pool.findIndex((p) => p.f === f), 1);
+      out.push(f);
+      if (f.conceptId) seenConcepts.add(String(f.conceptId));
+    }
   }
   while (out.length < k && pool.length) {
     const ws = pool.map((p) => Math.exp(p.score / KG.TOPIC_TEMP));
@@ -41,6 +48,24 @@ export function selectFacts(persona, { incomingVec, incomingText = '', rng, k = 
     out.push(f);
   }
   return out;
+}
+
+/**
+ * Plan 33 (B2 Retrieval): up to BRANCH_EXTRA sayable neighbours of the touched facts: children, reasons and parents
+ * first, then at most ONE associated hop. `pool`: the facts still allowed (disclosure already applied).
+ */
+export function branchNeighbours(persona, touched, pool, max = KG.BRANCH_EXTRA) {
+  if (!persona.links?.size) return [];
+  const allowed = new Map(pool.map((f) => [String(f._id), f]));
+  const near = [], far = [];
+  for (const t of touched) {
+    for (const { id, rel } of persona.links.get(String(t._id)) ?? []) {
+      const f = allowed.get(id);
+      if (!f || near.includes(f) || far.includes(f)) continue;
+      (rel === 'associated' ? far : near).push(f);
+    }
+  }
+  return [...near.slice(0, far.length ? max - 1 : max), ...far.slice(0, 1)];
 }
 
 /** Up to 2 public stories not told yet in this conversation. */

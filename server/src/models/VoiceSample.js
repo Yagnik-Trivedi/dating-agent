@@ -6,7 +6,8 @@ const voiceSampleSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   incoming: { type: String, default: null }, // the message being replied to
   text: { type: String, required: true },
-  source: { type: String, enum: ['onboarding', 'inbox', 'approved_draft', 'edited_draft', 'own_chat', 'import'], required: true },
+  source: { type: String, enum: ['onboarding', 'module', 'inbox', 'approved_draft', 'edited_draft', 'own_chat', 'import'], required: true },
+  qid: String, // plan 33: the module reply question (X1…, H7) it answers; rebuilt with that module
   mood: String, // greeting | curious | opinion | excited | disagree | plan | apologetic | tease | closing | long_reply | casual …
   lang: {
     languages: [String], // e.g. ['en', 'hi_latn']

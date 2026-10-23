@@ -7,6 +7,7 @@ import { runSessionEnd, startNextSession } from '../agent/sessionFlow.js';
 import { compactNotes } from '../compat/compactNotes.js';
 import { startEvaluation } from '../compat/index.js';
 import { runJudge } from '../conversation/judge.js';
+import { runModuleBuild } from '../kg/buildModule.js';
 import { runUserGraphBuild } from '../kg/buildUserGraph.js';
 import { conceptCleanup, rebuildVoice, reconfirm, reflect } from '../kg/learning.js';
 import { createMatch } from '../matches.js';
@@ -17,6 +18,7 @@ import { archiveNotes } from './archive.js';
 import { registerJob } from './queue.js';
 
 registerJob('buildUserGraph', runUserGraphBuild);
+registerJob('buildModule', runModuleBuild); // plan 33: one module's finer facts, after the quick build in the request
 registerJob('matchCreated', runMatchCreated);
 registerJob('startChat', runScheduledChat); // credit guard: a match over the daily live-chat cap starts the next day
 registerJob('awaitGraph', runAwaitGraph); // plan 30 S1: a match waits for both phase-2 graphs (max 10 min)

@@ -4,7 +4,9 @@ import { toBinary } from '../utils/vector.js';
 const { ObjectId, Mixed } = mongoose.Schema.Types;
 
 export const FACT_PREDICATES = ['likes', 'dislikes', 'values', 'goal', 'lifestyle', 'trait', 'story', 'background', 'opinion', 'humor', 'reflection', 'style'];
-export const FACT_SOURCES = ['questionnaire_choice', 'questionnaire_story', 'user_answer', 'agent_observed', 'reflection', 'style_derived', 'own_chat'];
+// questionnaire_module (plan 33): a module answer; rebuilt only by that module's build, never by the core build.
+export const FACT_SOURCES = ['questionnaire_choice', 'questionnaire_story', 'questionnaire_module', 'user_answer', 'agent_observed', 'reflection', 'style_derived', 'own_chat'];
+export const DEPTH_TIERS = ['surface', 'personal', 'deep'];
 // v1 sources still written by the v1 brief (profile → removed in plan 07) and belief updates (conversation → plan 08).
 const LEGACY_SOURCES = ['profile', 'conversation'];
 
@@ -35,6 +37,15 @@ const kgFactSchema = new mongoose.Schema({
   lastConfirmed: { type: Date, default: Date.now },
   validUntil: Date,
   isCurrent: Boolean,
+  // Plan 33 brain map (A3): where the answer sits (life area → topic → specific), which question it came from, real
+  // uncertainty ("can't decide", "idk"), how deep it goes (A7) and, for a current fact, when to ask again.
+  branch: { type: [String], default: undefined },
+  qid: String,
+  module: String,
+  slot: String, // the answer slot it came from ("M.F5", "M.E3.thriller", "M.O2#best trip"): its identity (factKey)
+  uncertain: Boolean,
+  depthTier: { type: String, enum: DEPTH_TIERS },
+  currentUntil: Date,
   buildId: String,
   archiveAt: Date, // notes of closed matches: removed by the TTL index (plan 17 archiveNotes)
   embedding: { type: Buffer, select: false, set: (v) => toBinary(v) }, // only facts with no conceptId (plan 15 §6.3)
@@ -47,5 +58,7 @@ kgFactSchema.index({ observerId: 1, conversationId: 1 });
 kgFactSchema.index({ matchId: 1 });
 kgFactSchema.index({ isCurrent: 1, lastConfirmed: 1 }, { partialFilterExpression: { isCurrent: true } }); // reconfirm job
 kgFactSchema.index({ archiveAt: 1 }, { expireAfterSeconds: 0 });
+kgFactSchema.index({ subjectId: 1, observerId: 1, module: 1 }, { partialFilterExpression: { module: { $exists: true } } }); // per-module build
+kgFactSchema.index({ currentUntil: 1 }, { partialFilterExpression: { currentUntil: { $exists: true } } }); // re-ask current facts
 
 export const KgFact = mongoose.model('KgFact', kgFactSchema);

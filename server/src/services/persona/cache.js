@@ -2,6 +2,7 @@
 // loaded once and keyed by userId:graphVersion, so any self-graph or voice write invalidates it. Tiny Map LRU.
 // Only ever loaded for the speaking user's OWN id.
 import { Concept } from '../../models/Concept.js';
+import { KgEdge } from '../../models/KgEdge.js';
 import { KgFact } from '../../models/KgFact.js';
 import { Profile } from '../../models/Profile.js';
 import { User } from '../../models/User.js';
@@ -14,6 +15,22 @@ import { embed } from '../llm/client.js';
 
 const MAX = 200;
 const lru = new Map();
+const BRAIN_EDGES = ['BRANCH_OF', 'WHY', 'ASSOCIATED'];
+
+/**
+ * Plan 33 brain map: fact id → [{ id, rel }] where rel is 'child' (a follow-up under it), 'parent', 'why' (the reason
+ * it matters), 'because' (what this is the reason for) or 'associated' (the same thing on another branch).
+ */
+export function brainLinks(edges = []) {
+  const out = new Map();
+  const add = (a, b, rel) => { const k = String(a); if (!out.has(k)) out.set(k, []); out.get(k).push({ id: String(b), rel }); };
+  for (const e of edges) {
+    if (e.type === 'BRANCH_OF') { add(e.to.id, e.from.id, 'child'); add(e.from.id, e.to.id, 'parent'); }
+    if (e.type === 'WHY') { add(e.from.id, e.to.id, 'why'); add(e.to.id, e.from.id, 'because'); }
+    if (e.type === 'ASSOCIATED') { add(e.from.id, e.to.id, 'associated'); add(e.to.id, e.from.id, 'associated'); }
+  }
+  return out;
+}
 
 export const clearPersonaCache = () => lru.clear();
 
@@ -27,11 +44,12 @@ export async function loadPersona(userId) {
     lru.set(key, hit);
     return hit;
   }
-  const [all, voice, samples, profile] = await Promise.all([
+  const [all, voice, samples, profile, edges] = await Promise.all([
     KgFact.find({ subjectId: userId, observerId: null }).select('+embedding').lean(),
     VoiceProfile.findOne({ userId }).lean(),
     VoiceSample.find({ userId }).select('+embedding').sort({ createdAt: -1 }).limit(KG.MAX_VOICE_SAMPLES).lean(),
     Profile.findOne({ userId }, { name: 1, gate: 1 }).lean(),
+    KgEdge.find({ subjectId: userId, observerId: null, type: { $in: BRAIN_EDGES } }, { from: 1, to: 1, type: 1 }).lean(),
   ]);
   const concepts = new Map((await Concept.find({ _id: { $in: all.map((f) => f.conceptId).filter(Boolean) } }).select('+embedding').lean()).map((c) => [String(c._id), c]));
   const facts = all.filter((f) => !['trait', 'style'].includes(f.predicate)).map((f) => {
@@ -54,6 +72,7 @@ export async function loadPersona(userId) {
     voice: voice ?? {},
     samples: samples.map((s) => ({ ...s, embedding: undefined, vector: s.embedding ? fromBinary(s.embedding) : byText.get(s.incoming) ?? null })),
     gate: profile?.gate ?? null,
+    links: brainLinks(edges), // plan 33: fact id → its branch neighbours
   };
   lru.set(key, persona);
   if (lru.size > MAX) lru.delete(lru.keys().next().value);

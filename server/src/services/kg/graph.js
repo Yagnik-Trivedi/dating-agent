@@ -1,9 +1,12 @@
 // The user's own graph for the review screen (plan 05 §6, plan 15 §5): center → 8 hubs → facts, plus "How I text"
 // nodes generated from the VoiceProfile. Traits are never shown; no embedding bytes leave the server.
 import { Concept } from '../../models/Concept.js';
+import { KgEdge } from '../../models/KgEdge.js';
 import { KgFact } from '../../models/KgFact.js';
 import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { KG } from './config.js';
+import { moduleProgress } from './moduleFacts.js';
+import { MODULES } from './questions.js';
 import { TEXTING_STYLE } from './textingStyle.js';
 
 export const HUBS = [
@@ -42,10 +45,36 @@ export function voiceNodes(v) {
   return out;
 }
 
+/**
+ * Plan 33 brain map: life areas → branches → facts, plus how filled each module is. A fact without a branch (today's
+ * stories, interests) sits in the area its predicate suggests, so nothing is left out of the map.
+ */
+const AREA_OF_PREDICATE = { likes: 'likes', dislikes: 'likes', background: 'who I am', story: 'stories', opinion: 'opinions', humor: 'humour', values: 'values & lifestyle', lifestyle: 'values & lifestyle', goal: 'the future', reflection: 'who I am' };
+export function brainOf(facts, answers = {}) {
+  const areas = new Map();
+  for (const f of facts) {
+    const path = f.branch?.length ? f.branch : [AREA_OF_PREDICATE[f.predicate] ?? 'other'];
+    const area = path[0];
+    if (!areas.has(area)) areas.set(area, { area, count: 0, branches: new Map() });
+    const a = areas.get(area);
+    a.count++;
+    const topic = path[1] ?? '';
+    if (!a.branches.has(topic)) a.branches.set(topic, []);
+    a.branches.get(topic).push(String(f._id));
+  }
+  const progress = moduleProgress(answers);
+  return {
+    areas: [...areas.values()].sort((x, y) => y.count - x.count).map((a) => ({ area: a.area, count: a.count, branches: [...a.branches].map(([topic, ids]) => ({ topic, facts: ids })) })),
+    modules: MODULES.map((m) => ({ id: m.id, title: m.title, area: m.area, ...progress.modules[m.id] })),
+    strength: { filled: progress.filled, total: progress.total },
+  };
+}
+
 export async function userGraph(user) {
-  const [facts, voice] = await Promise.all([
+  const [facts, voice, edges] = await Promise.all([
     KgFact.find({ subjectId: user._id, observerId: null, predicate: { $nin: ['trait', 'style'] } }).select('-embedding').lean(),
     VoiceProfile.findOne({ userId: user._id }).lean(),
+    KgEdge.find({ subjectId: user._id, observerId: null, type: { $in: ['BRANCH_OF', 'WHY', 'ASSOCIATED'] } }, { from: 1, to: 1, type: 1 }).lean(),
   ]);
   const concepts = new Map((await Concept.find({ _id: { $in: facts.map((f) => f.conceptId).filter(Boolean) } }, { label: 1 }).lean()).map((c) => [String(c._id), c.label]));
   const nodes = [{ id: 'me', label: user.name, type: 'self', group: 'self', size: 1, center: true }];
@@ -61,9 +90,15 @@ export async function userGraph(user) {
       object: f.object, type: f.predicate, group: hub, hub, size: Math.max(f.importance ?? 0, f.strength ?? 0) || 0.5, weight: Math.max(f.importance ?? 0, f.strength ?? 0) || 0.5,
       confidence, disclosure: f.disclosure, source: f.source, polarity: f.polarity, strength: f.strength, userEdited: f.userEdited, isDealbreaker: f.isDealbreaker,
       quote: f.evidence?.[0]?.quote ?? null, learnedAt: f.evidence?.[0]?.at ?? f.createdAt ?? null, // "This is you": where it came from (plan 30 S6)
+      // Plan 33 brain map: where it sits, how deep it goes, and "not sure".
+      branch: f.branch ?? null, tier: f.depthTier ?? null, uncertain: Boolean(f.uncertain), qid: f.qid ?? null, current: Boolean(f.currentUntil),
     });
     links.push({ source: `hub:${hub}`, target: String(f._id), label: f.predicate });
   }
+  // Brain-map cross-links between my own facts (a follow-up, a reason, the same thing on another branch).
+  const shown = new Set(nodes.map((n) => n.id));
+  const brainLinks = edges.filter((e) => shown.has(String(e.from.id)) && shown.has(String(e.to.id)))
+    .map((e) => ({ source: String(e.from.id), target: String(e.to.id), label: e.type }));
   for (const n of voiceNodes(voice)) {
     used.add('voice');
     nodes.push({ ...n, type: 'voice', group: 'voice', hub: 'voice', size: 0.6, weight: 0.6, confidence: Math.min(0.9, (voice.sampleCount ?? 0) / 30) });
@@ -75,7 +110,8 @@ export async function userGraph(user) {
   }
   // Plan 32 KP1: "How I text" chips — the self-report the user can correct right here.
   const { at, ...style } = (user.toObject ? user.toObject() : user).textingStyle ?? {};
-  return { nodes, links, voice: voiceStats(voice), textingStyle: { questions: TEXTING_STYLE, value: style } };
+  const answers = (user.toObject ? user.toObject() : user).onboarding?.answers ?? {};
+  return { nodes, links, brainLinks, brain: brainOf(facts.filter((f) => hubOf(f)), answers), voice: voiceStats(voice), textingStyle: { questions: TEXTING_STYLE, value: style } };
 }
 
 /** Plain numbers for the "How I text" bars (my own voice; plan 30 S6). 0–1 positions on each bar's scale. */

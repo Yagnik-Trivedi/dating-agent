@@ -28,6 +28,7 @@ import { factText } from './factEmbedding.js';
 import { tagLanguageHeuristic } from './language.js';
 import { mergeFacts, planResubmit, PROTECTED_SOURCES } from './merge.js';
 import { QUESTIONS } from './questions.js';
+import { hedgePriorOf } from './moduleFacts.js';
 import { questionnaireFacts } from './questionnaireFacts.js';
 import { applyCorrections, computeVoiceProfile } from './voiceProfile.js';
 
@@ -98,12 +99,15 @@ export async function buildUserGraph(userId, { quick = false, failBeforeCommit =
   const voiceP = onboardingSamples(answers, userId, { llm: !quick }).then(async (samples) => {
     const now = Date.now();
     const recency = (s) => 0.5 ** ((now - new Date(s.createdAt ?? now)) / (90 * 86_400_000)); // 90-day half-life
-    const voice = computeVoiceProfile([...samples, ...await othersP].map((s) => ({ ...s, weight: recency(s) })), { selfReport: user?.textingStyle });
+    const voice = computeVoiceProfile([...samples, ...await othersP].map((s) => ({ ...s, weight: recency(s) })), { selfReport: user?.textingStyle, hedgePrior: hedgePriorOf(answers) });
     const style = quick ? NO_STYLE : await chatJSON({ tier: 'mid', reasoning: false, schema: styleSchema, purpose: 'onboarding-style', userId,
       messages: describeStyle.build({ samples: samples.map((s) => ({ incoming: s.incoming ?? '(they start a new message)', reply: s.text })), metrics: { wordCounts: voice.wordCounts, emojiPerMessage: voice.emojiPerMessage, laughForms: voice.laughForms, language: voice.language } }),
     }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return NO_STYLE; });
     return { samples, voice, style };
   });
+  // Awaited below; if an earlier step throws first (a spent budget, AI switched off), this rejection must not go
+  // unhandled: that crashed the whole server process (found in the plan 33 local check).
+  voiceP.catch(() => {});
   let storiesDone = 0;
   progress('stories', 0, stories.length);
   const extracted = await mapLimit(stories, LLM_CONCURRENCY, async (q) => {
@@ -153,7 +157,7 @@ export async function buildUserGraph(userId, { quick = false, failBeforeCommit =
     KgFact.find({ subjectId: userId, observerId: null }).lean(),
     KgTombstone.distinct('key', { subjectId: userId }),
   ]);
-  const plan = planResubmit({ merged, existing, tombstones });
+  const plan = planResubmit({ merged, existing: existing.filter((e) => e.source !== 'questionnaire_module'), tombstones }); // modules: buildModule
 
   // 8. Embed only facts with no concept (stories, odd free text). Quick: none (phase 2 embeds them).
   const needVector = quick ? [] : plan.inserts.filter((f) => !f.conceptId);
@@ -192,7 +196,8 @@ export async function buildUserGraph(userId, { quick = false, failBeforeCommit =
     for (const k of plan.keepEdited) if (k.pushEvidence.length) await KgFact.updateOne({ _id: k.id }, { $push: { evidence: { $each: k.pushEvidence } } }, { session });
     if (plan.deletes.length) await KgFact.deleteMany({ _id: { $in: plan.deletes } }, { session });
     // Build-made edges are rebuilt; resolved contradictions and reflection links stay.
-    await KgEdge.deleteMany({ subjectId: userId, observerId: null, type: { $in: ['SUPPORTS', 'CONTRADICTS'] }, resolved: { $ne: true } }, { session });
+    // A module's own edges (plan 33) are rebuilt by that module's build only.
+    await KgEdge.deleteMany({ subjectId: userId, observerId: null, type: { $in: ['SUPPORTS', 'CONTRADICTS'] }, resolved: { $ne: true }, module: { $exists: false } }, { session });
     if (edges.length) await KgEdge.insertMany(edges, { session });
     await VoiceSample.deleteMany({ userId, source: 'onboarding' }, { session });
     if (samples.length) await VoiceSample.insertMany(samples, { session });

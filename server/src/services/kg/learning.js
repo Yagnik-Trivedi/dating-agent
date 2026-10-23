@@ -14,6 +14,8 @@ import * as reflectPrompt from '../prompts/reflect.js';
 import { resetConceptCache } from './canonicalize.js';
 import { KG } from './config.js';
 import { cosine } from './similarity.js';
+import { hedgePriorOf, moduleProgress } from './moduleFacts.js';
+import { MODULES, QUESTION_BY_ID } from './questions.js';
 import { applyCorrections, computeVoiceProfile } from './voiceProfile.js';
 
 const DISCLOSURE_RANK = { public: 0, if_asked: 1, private: 2 };
@@ -52,13 +54,13 @@ function keepSet(samples) {
 }
 
 export async function rebuildVoice({ userId }) {
-  const [samples, user] = await Promise.all([VoiceSample.find({ userId }).lean(), User.findById(userId, { textingStyle: 1 }).lean()]);
+  const [samples, user] = await Promise.all([VoiceSample.find({ userId }).lean(), User.findById(userId, { textingStyle: 1, 'onboarding.answers.M.T': 1 }).lean()]);
   if (!samples.length) return { samples: 0, dropped: 0 }; // nothing to build from yet (the self-report waits for onboarding)
   const keep = keepSet(samples);
   const drop = samples.filter((s) => !keep.includes(s)).map((s) => s._id);
   if (drop.length) await VoiceSample.deleteMany({ _id: { $in: drop } });
   const now = Date.now();
-  const voice = computeVoiceProfile(keep.map((s) => ({ ...s, weight: 0.5 ** ((now - s.createdAt) / (90 * 86_400_000)) })), { selfReport: user?.textingStyle });
+  const voice = computeVoiceProfile(keep.map((s) => ({ ...s, weight: 0.5 ** ((now - s.createdAt) / (90 * 86_400_000)) })), { selfReport: user?.textingStyle, hedgePrior: hedgePriorOf(user?.onboarding?.answers) });
   const kept = await VoiceProfile.findOne({ userId }, { description: 1, doList: 1, dontList: 1, corrections: 1, neverSay: 1 }).lean();
   await VoiceProfile.updateOne({ userId }, { $set: applyCorrections({ ...voice, ...kept, _id: undefined, userId }) }, { upsert: true });
   await User.updateOne({ _id: userId }, { $inc: { graphVersion: 1 } });
@@ -86,10 +88,13 @@ export async function reflect({ userId }) {
   return { insights: saved };
 }
 
-/** Daily: "Still learning guitar?" for current-state facts not confirmed in CURRENT_FACT_TTL_DAYS (≤ 200 per run). */
+/**
+ * Daily: "Still learning guitar?" for current-state facts not confirmed in CURRENT_FACT_TTL_DAYS, and (plan 33) a
+ * "right now" module answer past its currentUntil asked again as its own question (≤ 200 each per run).
+ */
 export async function reconfirm() {
   const before = new Date(Date.now() - KG.CURRENT_FACT_TTL_DAYS * 86_400_000);
-  const facts = await KgFact.find({ observerId: null, isCurrent: true, lastConfirmed: { $lt: before } }, { subjectId: 1, object: 1 }).limit(200).lean();
+  const facts = await KgFact.find({ observerId: null, isCurrent: true, lastConfirmed: { $lt: before }, module: { $exists: false } }, { subjectId: 1, object: 1 }).limit(200).lean();
   let asked = 0;
   for (const f of facts) {
     const question = `Is this still true about you: "${f.object}"?`;
@@ -97,7 +102,42 @@ export async function reconfirm() {
     await InboxItem.create({ userId: f.subjectId, question });
     asked++;
   }
+  const due = await KgFact.find({ observerId: null, currentUntil: { $lt: new Date() }, qid: { $exists: true } }, { subjectId: 1, qid: 1 }).limit(200).lean();
+  for (const f of due) {
+    const q = QUESTION_BY_ID.get(f.qid);
+    const qid = q?.parent ?? f.qid; // a follow-up's fact re-asks its question
+    const top = QUESTION_BY_ID.get(qid);
+    if (!top || !['line', 'story'].includes(top.type)) continue;
+    // Asked once per period: a dismissed question comes back after CURRENT_DAYS, not every day.
+    await KgFact.updateOne({ _id: f._id }, { $set: { currentUntil: new Date(Date.now() + KG.CURRENT_DAYS * 86_400_000) } });
+    if (await InboxItem.exists({ userId: f.subjectId, qid, status: 'open' })) continue;
+    await InboxItem.create({ userId: f.subjectId, question: top.text, qid, kind: 'recheck', topicLabel: top.topic });
+    asked++;
+  }
   return { asked };
+}
+
+/**
+ * Plan 33 (A1 "the drip"): at most one question a day from an empty branch, in the inbox, and only when nothing else is
+ * waiting there. Called when the user opens the inbox (per user; no job scans users). The least-filled module goes
+ * first; only questions the agent can talk about (never the judge-only or love questions, never replies or taps).
+ */
+export async function maybeDrip(userId) {
+  const since = new Date(Date.now() - KG.DRIP_EVERY_DAYS * 86_400_000);
+  if (await InboxItem.exists({ userId, status: 'open' })) return null;
+  if (await InboxItem.exists({ userId, kind: 'drip', createdAt: { $gt: since } })) return null;
+  const user = await User.findById(userId, { onboarding: 1 }).lean();
+  if (user?.onboarding?.status !== 'done') return null;
+  const answers = user.onboarding.answers ?? {};
+  const asked = new Set(await InboxItem.distinct('qid', { userId, kind: 'drip' }));
+  const { modules } = moduleProgress(answers);
+  const order = MODULES.filter((m) => m.id !== 'X').sort((a, b) => modules[a.id].answered / modules[a.id].total - modules[b.id].answered / modules[b.id].total);
+  for (const m of order) {
+    const q = m.questions.find((x) => ['line', 'story'].includes(x.type) && x.uses !== 'judge' && x.disclosure === 'public'
+      && !String(answers.M?.[m.id]?.[x.id] ?? '').trim() && !(x.alias && answers.C?.[x.alias.slice(2)]) && !asked.has(x.id));
+    if (q) return InboxItem.create({ userId, question: q.text, qid: q.id, kind: 'drip', topicLabel: m.title });
+  }
+  return null;
 }
 
 /** Nightly: merge unverified auto-created concepts into an equivalent one (same name, or cosine ≥ T_HIGH). */

@@ -31,7 +31,8 @@ export const KG = Object.freeze({
   DEFAULT_EMOJIS: Object.freeze(['😂', '😄', '🙂']), // the user reports using emoji but none of their own is usable yet
   STYLE_REBUILD_EVERY: 20, REFLECT_EVERY: 10,
   // caps & retention
-  MAX_SELF_FACTS: 150, MAX_VOICE_SAMPLES: 200, NOTES_RETENTION_DAYS: 30,
+  // Plan 33: 150 → 320, so a user who answers every module (~160 questions + follow-ups) keeps all of it.
+  MAX_SELF_FACTS: 320, MAX_VOICE_SAMPLES: 200, NOTES_RETENTION_DAYS: 30,
   VOICE_SAMPLES_ONBOARDING: 15,
   // embeddings
   EMBED_DIMS: null, // null = model default
@@ -97,6 +98,10 @@ export const KG = Object.freeze({
   HEDGE_STRENGTH: 0.5, // a like or opinion held below this is said with a hedge ("i think", "kinda")
   FILLER_MAX_RATE: 0.6, // at most this chance of a filler per message, whatever the samples say
   THINK_RATE: 0.5, // answering me on something I hold loosely: × my hedge rate, the chance of thinking out loud first
+  // Plan 33 Q1: the question bank and the brain map.
+  CURRENT_DAYS: 30, // a "right now" answer (cur) is asked again after this many days
+  BRANCH_EXTRA: 3, // touching a fact also offers up to this many of its branch neighbours (children, reasons, one associated hop)
+  DRIP_EVERY_DAYS: 1, // at most one question from an empty branch in the inbox per this many days
   // judge (plan 09)
   JUDGE_YES_MIN: 0.65, // a yes whose code confidence falls below this is unsure (calibrated on the re-judged B5 chats: 0.6 → 2 harmful, 0.65 → 1)
   // The decision is made in code from the judge's verified evidence (owner's judge fix, 2026-10-18; judgeDecision.js).
@@ -112,7 +117,7 @@ export const KG = Object.freeze({
   // jobs (plan 17)
   JOB_POLL_MS: 1000, JOB_LOCK_MS: 120_000, JOB_MAX_ATTEMPTS: 5, JOB_DONE_TTL_DAYS: 7,
   JOB_CONCURRENCY: Object.freeze({
-    buildUserGraph: 1, matchCreated: 2, agentTurn: 3, evaluate: 2, judge: 2, compactNotes: 1,
+    buildUserGraph: 1, buildModule: 1, matchCreated: 2, agentTurn: 3, evaluate: 2, judge: 2, compactNotes: 1,
     sessionEnd: 2, nextSession: 2, rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2, moderatePhoto: 2,
   }),
 });
