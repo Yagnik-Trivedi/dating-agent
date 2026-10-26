@@ -15,6 +15,7 @@ import { embed } from '../llm/client.js';
 import { nameOf, otherUserId, side } from '../matches.js';
 import { loadPersona } from '../persona/cache.js';
 import { lookupConcept } from '../kg/canonicalize.js';
+import { factText } from '../kg/phrases.js';
 import { tagLanguageHeuristic } from '../kg/language.js';
 import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
 import { covers, groundingCheck, hedgeSentences, leakCheck, orphaned, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
@@ -278,7 +279,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     plan.texture = { filler: texture.filler, fillers: texture.fillers };
     if (texture.move && ['reply', 'answer'].includes(plan.move) && !plan.end) plan.move = texture.move;
   }
-  const myFacts = [...facts].map(([id, f]) => `[${id}] ${f.predicate}: ${f.conceptLabel && !f.userEdited ? f.conceptLabel : f.object}${f.predicate === 'story' ? ` (in their words: "${f.evidence?.[0]?.quote?.slice(0, 200) ?? ''}")` : ''}${f.disclosure === 'if_asked' ? ' [only because they asked]' : ''}${rulesOn && isHedged(f) ? ' [not sure]' : ''}`);
+  const myFacts = [...facts].map(([id, f]) => `[${id}] ${f.predicate}: ${factText(f, f.conceptLabel)}${f.predicate === 'story' ? ` (in their words: "${f.evidence?.[0]?.quote?.slice(0, 200) ?? ''}")` : ''}${f.disclosure === 'if_asked' ? ' [only because they asked]' : ''}${rulesOn && isHedged(f) ? ' [not sure]' : ''}`);
   const notes = await KgFact.find({ observerId: me, subjectId: otherId, matchId: match._id }, { object: 1, predicate: 1, confidence: 1 }).sort({ confidence: -1 }).limit(15).lean();
   const sources = new Set(notes.map((_, i) => `N${i + 1}`));
   const aboutThem = notes.map((n, i) => `[N${i + 1}] ${n.predicate}: ${n.object}`);

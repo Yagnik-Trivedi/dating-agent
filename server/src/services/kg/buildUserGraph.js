@@ -9,6 +9,7 @@ import { KgEdge } from '../../models/KgEdge.js';
 import { KgFact } from '../../models/KgFact.js';
 import { KgTombstone } from '../../models/KgTombstone.js';
 import { User } from '../../models/User.js';
+import { Profile } from '../../models/Profile.js';
 import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { VoiceSample } from '../../models/VoiceSample.js';
 import { emitToUser } from '../../sockets/io.js';
@@ -120,7 +121,8 @@ export async function buildUserGraph(userId, { quick = false, failBeforeCommit =
   });
   const dropped = extracted.reduce((s, e) => s + e.dropped, 0);
   const storyFacts = extracted.flatMap((e) => e.facts);
-  const all = [...questionnaireFacts(answers), ...storyFacts, ...extracted.map((e) => e.story).filter(Boolean)];
+  const prompts = (await Profile.findOne({ userId }, { prompts: 1 }).lean())?.prompts ?? []
+  const all = [...questionnaireFacts(answers, { prompts }), ...storyFacts, ...extracted.map((e) => e.story).filter(Boolean)];
 
   // 4. Concepts (dictionary only). Quick: exact/alias lookups only. Full: one batched pass (one embedding call, one
   // tie-break call for the ambiguous band).

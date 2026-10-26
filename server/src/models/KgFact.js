@@ -42,6 +42,7 @@ const kgFactSchema = new mongoose.Schema({
   branch: { type: [String], default: undefined },
   qid: String,
   module: String,
+  sourceAnswerId: String, // UX P0-4: the profile prompt it came from ("prompt_2")
   slot: String, // the answer slot it came from ("M.F5", "M.E3.thriller", "M.O2#best trip"): its identity (factKey)
   uncertain: Boolean,
   depthTier: { type: String, enum: DEPTH_TIERS },

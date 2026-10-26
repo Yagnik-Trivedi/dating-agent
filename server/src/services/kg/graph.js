@@ -6,6 +6,7 @@ import { KgFact } from '../../models/KgFact.js';
 import { VoiceProfile } from '../../models/VoiceProfile.js';
 import { KG } from './config.js';
 import { moduleProgress } from './moduleFacts.js';
+import { factText } from './phrases.js';
 import { MODULES } from './questions.js';
 import { TEXTING_STYLE } from './textingStyle.js';
 
@@ -86,7 +87,7 @@ export async function userGraph(user) {
     used.add(hub);
     const confidence = Math.round(decayed(f) * 100) / 100;
     nodes.push({
-      id: String(f._id), label: f.userEdited || !f.conceptId ? f.object : (concepts.get(String(f.conceptId)) ?? f.object),
+      id: String(f._id), label: factText(f, concepts.get(String(f.conceptId))), // UX P0-4: answers keep their natural phrase
       object: f.object, type: f.predicate, group: hub, hub, size: Math.max(f.importance ?? 0, f.strength ?? 0) || 0.5, weight: Math.max(f.importance ?? 0, f.strength ?? 0) || 0.5,
       confidence, disclosure: f.disclosure, source: f.source, polarity: f.polarity, strength: f.strength, userEdited: f.userEdited, isDealbreaker: f.isDealbreaker,
       quote: f.evidence?.[0]?.quote ?? null, learnedAt: f.evidence?.[0]?.at ?? f.createdAt ?? null, // "This is you": where it came from (plan 30 S6)

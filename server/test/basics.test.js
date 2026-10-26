@@ -82,7 +82,7 @@ test('plan 32 KP2: an existing fact is updated in place (same id), a deleted one
   await KgTombstone.create({ subjectId: id, key: factKey({ predicate: 'lifestyle', attribute: 'diet', object: 'diet: vegan' }) });
   assert.deepEqual((await editBasics(id, { smoking: 'socially', diet: 'vegan', kids: 'not_an_answer' })).sort(), ['diet', 'smoking']);
   const after = await KgFact.findById(smoking._id).lean();
-  assert.deepEqual([after.value, after.object, after.disclosure], ['socially', 'smoking: socially', 'public']);
+  assert.deepEqual([after.value, after.object, after.disclosure], ['socially', 'smokes socially', 'public']);
   assert.equal(after.evidence.at(-1).sourceRef.id, 'B.smoking');
   assert.equal(await KgFact.countDocuments({ subjectId: id, attribute: 'diet' }), 0);
   const p = await Profile.findOne({ userId: id }).lean();

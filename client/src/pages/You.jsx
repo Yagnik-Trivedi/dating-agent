@@ -161,7 +161,7 @@ function howIText(v) {
   if (!v) return []
   return [
     { k: 'Message length', v: `${v.medianWords < 10 ? 'Short' : v.medianWords < 20 ? 'Medium' : 'Long'} · about ${v.medianWords} words`, you: Math.min(1, v.medianWords / 30), scale: ['Short', 'Long'] },
-    { k: 'Emoji use', v: v.emojiPerMessage >= 0.15 ? `Often · ${Math.round(v.emojiPerMessage * 10)} in 10 messages` : 'Rarely', you: Math.min(1, v.emojiPerMessage), scale: ['Rarely', 'Often'] },
+    { k: 'Emoji use', v: v.emojiPerMessage >= 0.15 ? `Often · ${v.emojiPerMessage >= 0.95 ? `about ${Math.round(v.emojiPerMessage)} per message` : `about ${Math.round(v.emojiPerMessage * 10)} in 10 messages`}` : 'Rarely', you: Math.min(1, v.emojiPerMessage), scale: ['Rarely', 'Often'] },
     { k: 'Language mix', v: v.nonEnglishShare >= 0.1 ? `About ${Math.round(v.nonEnglishShare * 100)}% not in English` : 'Mostly English', you: v.nonEnglishShare, scale: ['English', 'Mixed'] },
     { k: 'Laugh style', v: v.laugh ? `“${v.laugh}”` : 'Rarely laughs in text', you: Math.min(1, v.laughRate * 2), scale: ['Rarely', 'A lot'] },
     { k: 'Messages in a row', v: (v.burstiness ?? 0) >= 0.3 ? 'Often a few short ones' : 'Usually one', you: Math.min(1, (v.burstiness ?? 0) * 1.6), scale: ['One', 'Several'] },

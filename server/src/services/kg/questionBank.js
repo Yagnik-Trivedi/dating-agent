@@ -283,5 +283,5 @@ export const CORE_VALUES = {
   looking_for: { text: 'What are you looking for?', more: 'What would a good relationship feel like day to day?', area: 'love & dating', tier: 'deep', uses: 'judge', disclosure: 'if_asked' },
   diet: { text: 'Diet?', more: 'A food you could eat every day?', area: 'food & drink', tier: 'personal', uses: 'agent' },
   conflict: { text: 'When you disagree with someone close, you usually…', more: 'Tell me about the last time.', moreType: 'story', area: 'how I handle things', tier: 'deep', uses: 'judge', disclosure: 'if_asked' },
-  alone_time: { text: 'After a busy week you need…', area: 'how I handle things', tier: 'deep', uses: 'both' },
+  alone_time: { text: 'After a busy week, how much alone time do you need?', area: 'how I handle things', tier: 'deep', uses: 'both' },
 };

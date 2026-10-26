@@ -10,6 +10,7 @@
 // Follow-ups: a "how strongly?" sets the parent's strength; a "why" is a reason (WHY edge); anything else is a child
 // fact on the parent's branch (BRANCH_OF, child → parent).
 import { KG } from './config.js';
+import { worldPhrase } from './phrases.js';
 import { CORE_VALUES, moduleOf, QUESTION_BY_ID, QUESTIONS, STRENGTH_OF } from './questions.js';
 
 export const LONG_WORDS = 12;
@@ -34,7 +35,7 @@ function base(q, mod, now) {
 function optionFact(q, mod, now, option, slot) {
   const unsure = Boolean(option.unsure);
   return {
-    ...base(q, mod, now), slot, predicate: q.as ?? 'likes', object: `${q.topic}: ${option.label.toLowerCase()}`, value: option.value, strength: 0.6,
+    ...base(q, mod, now), slot, predicate: q.as ?? 'likes', object: worldPhrase(q.id, { option: option.value }) ?? `${q.topic}: ${option.label.toLowerCase()}`, value: option.value, strength: 0.6,
     ...(unsure && { uncertain: true }),
     ...(q.concept && !unsure && { conceptText: option.label.toLowerCase(), conceptType: q.concept }),
     evidence: answerRef(`M.${q.id}`, option.label),
@@ -48,7 +49,7 @@ function textFact(q, mod, now, text, slot, predicate = q.as ?? 'background') {
   const short = words(t) <= 4;
   return {
     ...base(q, mod, now), slot, predicate: q.type === 'story' ? 'story' : predicate, // a story is the agent's anecdote
-    object: `${q.topic}: ${clip(t)}`, strength: 0.6,
+    object: clip(worldPhrase(q.id, { text: t }) ?? `${q.topic}: ${t}`), strength: 0.6, // UX P0-4: natural phrases for Your world
     ...(unsure && { uncertain: true }),
     ...(q.concept && short && !unsure && { conceptText: t.toLowerCase().replace(/[.!?]+$/, ''), conceptType: q.concept }),
     evidence: answerRef(`M.${q.id}`, t),

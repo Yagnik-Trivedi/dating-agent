@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Profile } from '../models/Profile.js';
 import { cityGeo } from '../services/cities.js';
 import { editBasics, isBasicAnswer, myBasics } from '../services/kg/basicsEdit.js';
+import { syncPromptFacts } from '../services/kg/promptFacts.js';
 import { BASICS, buildGate } from '../services/match/gate.js';
 import { queueProfileCheck } from '../services/trust/checkProfile.js';
 import { parse } from '../utils/http.js';
@@ -64,6 +65,7 @@ export async function saveProfile(userId, body) {
   );
   // Also fills my public basics and removes hidden ones (editBasics rebuilds the gate itself).
   if (!(await editBasics(userId, answerEdits)).length) await buildGate(userId);
+  if ('prompts' in fields) await syncPromptFacts(userId, fields.prompts); // UX P0-4: the agent can say them right away
   return Profile.findOne({ userId }).lean();
 }
 
