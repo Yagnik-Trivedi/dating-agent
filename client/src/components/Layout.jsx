@@ -16,7 +16,7 @@ export default function Layout() {
   const { user, profile, system } = useAuth()
   const [counts, setCounts] = useState({ likesEnabled: true })
   const load = useCallback(() => {
-    api.get('/api/inbox').then(({ data }) => setCounts((c) => ({ ...c, notifications: (data.items ?? []).filter((i) => i.status === 'open').length }))).catch(() => {})
+    api.get('/api/inbox').then(({ data }) => setCounts((c) => ({ ...c, notifications: (data.items ?? []).filter((i) => i.status === 'open' && i.matchId).length /* UX P1-3: optional module questions don't count */ }))).catch(() => {})
     api.get('/api/likes/incoming').then(({ data }) => setCounts((c) => ({ ...c, likes: data.likes.length }))).catch(() => {})
   }, [])
   useEffect(load, [load, pathname])

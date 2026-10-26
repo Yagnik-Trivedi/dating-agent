@@ -213,3 +213,7 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .y-head-acts { display: flex; align-items: center; gap: 2px; margin-right: -8px; }
 .bell .count { position: absolute; right: 0; top: 0; min-width: 18px; height: 18px; font-size: 12px; padding: 0 5px; box-shadow: 0 0 0 2px var(--surface); }
 .topnav nav .count { margin-left: 6px; }
+
+/* UX P1-3: inbox groups */
+.ask-group + .ask-group { margin-top: 28px; }
+.ask-group > .h3 { margin: 0 0 12px; }

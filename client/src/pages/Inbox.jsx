@@ -28,9 +28,10 @@ function AskCard({ item, onAnswered }) {
   const asked = 1 + (item.askedAgain?.length ?? 0)
   return (
     <article className="ask card">
-      <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />From your agent</span>
-      <h2 className="ask-q">{item.question}</h2>
-      <p className="small">{item.askedBy ? `${item.askedBy} asked this in your chat` : 'Your agent wants to know'}{item.topicLabel?.length > 3 ? `, about ${item.topicLabel}` : ''}{asked > 1 ? ` · asked ${asked} times` : ''}. Your agent didn’t guess.{item.matchId && <> <Link className="link" to={`/matches/${item.matchId}`}>See the chat</Link></>}</p>
+      <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />{item.matchId ? 'From your agent' : 'Teach your agent'}</span>
+      <h3 className="ask-q">{item.question}</h3>
+      {/* UX P1-3: a module question nobody asked says so; only a chat question "didn't guess" */}
+      {!item.matchId ? <p className="small">Optional. Answer if you like: it helps your agent sound like you{item.topicLabel?.length > 3 ? `, about ${item.topicLabel}` : ''}.</p> : <p className="small">{item.askedBy ? `${item.askedBy} asked this in your chat` : 'Your agent wants to know'}{item.topicLabel?.length > 3 ? `, about ${item.topicLabel}` : ''}{asked > 1 ? ` · asked ${asked} times` : ''}. Your agent didn’t guess. <Link className="link" to={`/matches/${item.matchId}`}>See the chat</Link></p>}
       <form className="ask-form" onSubmit={submit}>
         <label htmlFor={`a-${item._id}`} className="sr-only">Your answer</label>
         <textarea id={`a-${item._id}`} className="ta" rows={2} value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={1000} placeholder="Answer the way you’d say it…" />
@@ -38,6 +39,18 @@ function AskCard({ item, onAnswered }) {
       </form>
     </article>
   )
+}
+
+/** UX P1-3: questions from a chat first; module questions are a separate, optional group. */
+function Groups({ items, onAnswered }) {
+  const chat = items.filter((i) => i.matchId), teach = items.filter((i) => !i.matchId)
+  const group = (title, sub, list) => list.length > 0 && (
+    <section className="ask-group" aria-label={title}>
+      <h2 className="h3">{title} <span className="small">· {sub}</span></h2>
+      <div className="asks">{list.map((i) => <AskCard key={i._id} item={i} onAnswered={onAnswered} />)}</div>
+    </section>
+  )
+  return <>{group('Asked in a chat', `${chat.length} waiting`, chat)}{group('Teach your agent', 'optional', teach)}</>
 }
 
 export default function Inbox() {
@@ -52,7 +65,7 @@ export default function Inbox() {
   const body = error ? <Empty icon={RefreshCw} title="We couldn’t load your questions" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{error}</Empty>
     : !items ? <div aria-busy="true"><Shimmer w="60%" /><Shimmer /><Shimmer w="80%" /></div>
       : !items.length ? <Empty icon={InboxIcon} title="Nothing to answer">When your agent isn’t sure about something, it asks you here instead of guessing.</Empty>
-        : <div className="asks">{items.map((i) => <AskCard key={i._id} item={i} onAnswered={answered} />)}</div>
-  if (mobile) return <Shell title="Ask my human" sub={items?.length ? `${items.length} question${items.length === 1 ? '' : 's'} from your agent` : undefined}><div className="pad">{body}</div></Shell>
+        : <Groups items={items} onAnswered={answered} />
+  if (mobile) return <Shell title="Ask my human" back sub={items?.some((i) => i.matchId) ? `${items.filter((i) => i.matchId).length} asked in a chat` : undefined}><div className="pad">{body}</div></Shell>
   return <Shell><div className="page narrow"><div className="pg-h"><div><h1 className="h1">Ask my human</h1><p className="lead">Your agent asks instead of guessing. Each answer becomes a fact you can see and edit in “This is you”.</p></div></div>{body}</div></Shell>
 }
