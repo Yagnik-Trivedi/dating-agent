@@ -149,6 +149,7 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .demo-card .btn { flex: none; }
 @media (max-width: 560px) { .demo-card { flex-wrap: wrap; } .demo-card .btn { width: 100%; } }
 .demo-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; background: var(--beige); color: var(--text-2); font: 600 12px/1 var(--sans); white-space: nowrap; }
+.rm-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; } /* status + Demo profile on one row (fits the 64px phone header) */
 .ph-cap .demo-chip { background: rgb(255 255 255 / .9); color: var(--text); margin-right: 8px; }
 
 /* UX P0-2: swipe deck + round Pass / Like bar + keyboard hint */
@@ -192,3 +193,12 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .vq-more, .mr-subs { margin-top: 4px; }
 .vq-more > summary, .mr-subs > summary { cursor: pointer; font-weight: 600; font-size: 14.5px; color: var(--text-2); padding: 8px 0; min-height: 44px; display: flex; align-items: center; gap: 4px; }
 .vq-more[open] > summary, .mr-subs[open] > summary { color: var(--text); }
+
+/* Mobile sweep: on touch screens the smallest controls get an invisible ~44px hit area; nothing changes visually. */
+@media (pointer: coarse) {
+  .link { position: relative; }
+  .link::after, .tg::after, .sc-tick::after { content: ''; position: absolute; }
+  .link::after { inset: -12px -4px; }
+  .tg::after { inset: -8px -2px; }
+  .sc-tick::after { inset: -16px -2px; }
+}

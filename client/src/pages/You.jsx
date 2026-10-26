@@ -236,7 +236,7 @@ export default function You({ review = false }) {
   else if (!L) graph = <div className="g-loading"><span className="sk-dot" />Loading your graph…</div>
   else if (!L.facts.length) graph = building ? <div className="g-state" role="status"><Dots /><h2 className="h3">Your agent is still reading your stories</h2><p className="small">Your graph fills in as it learns. This usually takes a minute or two after onboarding.</p></div>
     : <Empty icon={Orbit} title="Nothing here yet" action={<Link className="btn primary" to="/onboarding"><BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />Teach your agent</Link>}>Answer a few prompts or tell a story, and your agent will start mapping what matters to you.</Empty>
-  else if (use3D) graph = <Suspense fallback={<div className="g-loading"><span className="sk-dot" />Loading your graph…</div>}><Graph3D L={L} selected={sel} onSelect={setSel} filter={filter} query={query} mobile={mobile} /></Suspense>
+  else if (use3D) graph = <Suspense fallback={<div className="g-loading"><span className="sk-dot" />Loading your graph…</div>}><Graph3D L={L} selected={sel} onSelect={setSel} filter={filter} query={query} mobile={mobile} paused={isList || isBrain} /></Suspense>
   else graph = size.w > 0 && <Radial2D L={L} selected={sel} onSelect={setSel} w={size.w} h={size.h} />
 
   const controls = (
@@ -260,7 +260,9 @@ export default function You({ review = false }) {
       <header className="y-head"><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</header>
       {reviewBar}
       {controls}{!isList && !isBrain && chips}
-      {isList || isBrain ? <div className="y-lwrap">{list}</div> : <div className="y-canvas" ref={canvas}>{graph}</div>}
+      {(isList || isBrain) && <div className="y-lwrap">{list}</div>}
+      {/* Stays mounted (hidden, paused) under List/Brain: unmounting the 3D canvas mid-render threw "removeChild" */}
+      <div className="y-canvas" ref={canvas} style={isList || isBrain ? { display: 'none' } : undefined}>{graph}</div>
       {sheet}
       <TabBar />
     </div>
@@ -274,10 +276,11 @@ export default function You({ review = false }) {
       </div>
       {reviewBar}
       {!isList && !isBrain && chips}
-      {isList || isBrain ? <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div> : <div className="y-main">
+      {(isList || isBrain) && <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div>}
+      <div className="y-main" style={isList || isBrain ? { display: 'none' } : undefined}>
         <div className="y-canvas" ref={canvas}>{graph}{L?.facts.length > 0 && <><Legend /><p className="y-hint small">{use3D ? 'Drag to turn · scroll to zoom · tap a dot' : 'Tap a dot'}</p></>}</div>
-        {sheet || <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>}
-      </div>}
+        {!(isList || isBrain) && (sheet || <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>)}
+      </div>
     </div>
   )
 }

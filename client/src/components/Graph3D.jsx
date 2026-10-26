@@ -18,7 +18,7 @@ function Intro({ children }) {
   return <group ref={g}>{children}</group>
 }
 
-export default function Graph3D({ L, selected, onSelect, filter = 'all', query = '', mobile }) {
+export default function Graph3D({ L, selected, onSelect, filter = 'all', query = '', mobile, paused }) {
   const [hover, setHover] = useState(null)
   const [auto, setAuto] = useState(true)
   const hubPos = Object.fromEntries(L.hubs.map((h) => [h.id, h.pos]))
@@ -28,7 +28,7 @@ export default function Graph3D({ L, selected, onSelect, filter = 'all', query =
   const sel = L.facts.find((f) => f.id === selected)
   return (
     <Canvas className="g3d" dpr={[1, 1.5]} resize={{ scroll: false, offsetSize: true }} camera={{ position: [0, mobile ? 3.6 : 5.2, mobile ? 21 : 10.2], fov: mobile ? 46 : 42 }}
-      gl={{ antialias: true }} onPointerMissed={() => setHover(null)}>
+      gl={{ antialias: true }} frameloop={paused ? 'never' : 'always'} onPointerMissed={() => setHover(null)}>
       <color attach="background" args={['#FBF8F3']} />
       <ambientLight intensity={0.95} />
       <directionalLight position={[5, 8, 6]} intensity={0.85} />
