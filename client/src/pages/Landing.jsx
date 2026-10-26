@@ -54,14 +54,14 @@ export default function Landing() {
       <header className="l-nav"><Wordmark />
         {!mobile && <nav className="l-links"><a href="#how">How it works</a><a href="#trust">Safety and privacy</a></nav>}
         {mobile ? <IconBtn icon={menu ? X : Menu} label={menu ? 'Close menu' : 'Menu'} aria-expanded={menu} onClick={() => setMenu(!menu)} />
-          : <div className="l-right"><Link className="link plain" to="/login">Log in</Link><Link className="btn primary" to="/signup">Join Prelude</Link></div>}
+          : <div className="l-right"><Link className="link plain" to="/login">Log in</Link><Link className="btn primary" to="/signup">Join Twine</Link></div>}
       </header>
       {mobile && menu && <nav className="l-menu card"><a href="#how" onClick={() => setMenu(false)}>How it works</a><a href="#trust" onClick={() => setMenu(false)}>Safety and privacy</a><Link to="/login">Log in</Link></nav>}
       <section className="l-hero">
         <div className="l-copy">
           <h1 className="l-h">A dating app that breaks the ice for you.</h1>
           <p className="lead">Photos, prompts and likes, like any good app. When you both like each other, your agents can have the first conversation in your own words. You read every line, and take over whenever you like.</p>
-          <div className="l-ctas"><Link className={`btn primary lg ${mobile ? 'block' : ''}`} to="/signup">Join Prelude</Link>{!mobile && <a className="btn ghost lg" href="#how">See how it works<ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></a>}</div>
+          <div className="l-ctas"><Link className={`btn primary lg ${mobile ? 'block' : ''}`} to="/signup">Join Twine</Link>{!mobile && <a className="btn ghost lg" href="#how">See how it works<ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" /></a>}</div>
           <p className="small">{mobile ? <>Already here? <Link className="link" to="/login">Log in</Link></> : 'Free to use.'}</p>
         </div>
         <HeroArt mobile={mobile} />
@@ -74,7 +74,7 @@ export default function Landing() {
         <h2 className="h2">Built to be trusted</h2>
         <ul>{TRUST.map(([I, t, d], i) => <Reveal key={t} i={i}><li><I size={20} strokeWidth={1.7} aria-hidden="true" /><div><h3 className="h3">{t}</h3><p>{d}</p></div></li></Reveal>)}</ul>
       </section>
-      <section className="l-cta"><Reveal><h2 className="h2">Ready when you are.</h2><p className="lead">Setting up takes a few minutes. Teaching your agent more is optional.</p><Link className="btn primary lg" to="/signup">Join Prelude</Link></Reveal></section>
+      <section className="l-cta"><Reveal><h2 className="h2">Ready when you are.</h2><p className="lead">Setting up takes a few minutes. Teaching your agent more is optional.</p><Link className="btn primary lg" to="/signup">Join Twine</Link></Reveal></section>
       <footer className="l-foot"><Wordmark /><span className="small">Built for the Nebius x NVIDIA hackathon · illustrated people only</span></footer>
     </div>
   )

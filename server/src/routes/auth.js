@@ -48,7 +48,7 @@ authRouter.post('/signup', async (req, res) => {
   if (req.body?.consentAgent !== true) throw httpError(400, 'CONSENT_REQUIRED', `You must agree: "${CONSENT_TEXT}"`);
   const { email, password, name, dob, gender, interestedIn, city } = parse(signupBody, req.body);
   const age = ageFrom(dob);
-  if (age < 18) throw httpError(400, 'UNDERAGE', 'You need to be 18 or older to use Prelude.');
+  if (age < 18) throw httpError(400, 'UNDERAGE', 'You need to be 18 or older to use Twine.');
   if (age > 100) throw httpError(400, 'VALIDATION', 'Please check your date of birth.');
   if (await User.exists({ email: email.toLowerCase() })) throw httpError(409, 'EMAIL_TAKEN', 'An account with this email already exists');
 

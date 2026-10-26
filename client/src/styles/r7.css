@@ -68,6 +68,8 @@ textarea.cm-field::placeholder { color: var(--text-2); }
 .avatar { border-radius: 50%; object-fit: cover; flex: none; background: var(--cream); }
 .avatar.ring { box-shadow: 0 0 0 3px var(--surface); }
 .wordmark { font: 500 26px/1 var(--serif); letter-spacing: -.02em; color: var(--text); }
+.wordmark { display: inline-flex; align-items: center; gap: .32em; }
+.wordmark-mark { height: .95em; width: auto; flex: none; transform: translateY(.04em); }
 
 /* status */
 .st { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }

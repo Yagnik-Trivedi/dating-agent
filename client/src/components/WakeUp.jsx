@@ -51,7 +51,7 @@ export default function WakeUp({ children }) {
   const retry = () => { setState('checking'); setWhy(''); setSecs(0); setAttempt((a) => a + 1) }
   const show = state === 'waking' || state === 'down' || state === 'blocked'
   const copy = {
-    waking: ['Waking up the server…', 'Prelude runs on free hosting that naps when it’s quiet. Waking can take up to 2 minutes. Thanks for your patience.'],
+    waking: ['Waking up the server…', 'Twine runs on free hosting that naps when it’s quiet. Waking can take up to 2 minutes. Thanks for your patience.'],
     down: ['We can’t reach the server right now', 'Nothing was sent or shared while it was down. Please try again in a moment.'],
     blocked: ['Your browser blocked the connection', `The server didn’t get a chance to answer (${why}). A privacy extension or network filter can do this; try turning it off for this site, or use another browser.`],
   }[state]

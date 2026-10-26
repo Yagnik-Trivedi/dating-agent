@@ -7,6 +7,8 @@ import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'motion/r
 import { Compass, Users, MessageCircle, Orbit, Bell, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
 import { illustration } from '../lib/art'
 import { useMobile } from './prelude'
+import twineMark from '../assets/twine-mark.svg'
+import twineMarkLight from '../assets/twine-mark-light.svg'
 
 /* ---------- motion tokens (the design's motion spec) ---------- */
 export const T = {
@@ -30,7 +32,12 @@ export const photoOf = (p, i = 0, scene) => {
   return (typeof ph === 'string' ? ph : ph?.url) || (i === 0 || scene ? illustration(String(p?.userId ?? p?._id ?? p?.name ?? '?'), scene ?? 'portrait') : null)
 }
 export const Avatar = ({ p, src, size = 40, ring }) => <img className={`avatar ${ring ? 'ring' : ''}`} src={src ?? photoOf(p, 0, 'portrait2')} width={size} height={size} alt="" />
-export const Wordmark = ({ light }) => <span className={`wordmark ${light ? 'light' : ''}`}>Prelude</span>
+export const Wordmark = ({ light }) => (
+  <span className={`wordmark ${light ? 'light' : ''}`}>
+    <img className="wordmark-mark" src={light ? twineMarkLight : twineMark} alt="" aria-hidden="true" />
+    Twine
+  </span>
+)
 
 export const STATUS = { agents: 'Agents chatting', compatible: 'Compatible', maybe: 'Maybe', not: 'Not compatible', flagged: 'Flagged', chatting: 'You’re chatting', waiting: 'Getting ready', closed: 'Closed', paused: 'Paused' }
 /** Server match status → the design's six chips. */
@@ -201,7 +208,7 @@ export function TopNav() {
   const navigate = useNavigate()
   return (
     <header className="topnav">
-      <NavLink to="/discover" aria-label="Prelude home"><Wordmark /></NavLink>
+      <NavLink to="/discover" aria-label="Twine home"><Wordmark /></NavLink>
       <nav aria-label="Main">{NAV.filter(([to]) => to !== '/likes' || counts.likesEnabled).map(([to, l, I, k]) => (
         <NavLink key={to} to={to} className={navOn}><I size={18} strokeWidth={1.7} aria-hidden="true" />{l}{k === 'likes' && counts.likes > 0 && <b className="count">{counts.likes}</b>}{k === 'matches' && counts.matches > 0 && <i className="ndot" aria-label="new" />}</NavLink>
       ))}</nav>
