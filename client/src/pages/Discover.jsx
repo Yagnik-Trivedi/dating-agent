@@ -8,6 +8,7 @@ import { Compass, MapPin, ShieldAlert, SlidersHorizontal, X } from 'lucide-react
 import { Btn, Empty, IconBtn, LikeBtn, Shell, Shimmer, T, TabBar } from '../components/r7'
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import Preferences from '../components/Preferences'
+import DemoMatchCard, { DemoChip } from '../components/DemoMatch'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
@@ -26,7 +27,7 @@ function DragHero({ p, photos, onDecide, onLikePhoto, busy }) {
       <LikeBtn what="photo 1" light onLike={() => onLikePhoto({ kind: 'photo', ref: '0' })} disabled={busy} />
       <motion.span className="drag-tag like" style={{ opacity: likeO }}>Like</motion.span>
       <motion.span className="drag-tag pass" style={{ opacity: passO }}>Pass</motion.span>
-      <figcaption className="ph-cap"><h1>{p.name}{p.age ? `, ${p.age}` : ''}</h1><p>{p.city && <span>{p.city}</span>}</p></figcaption>
+      <figcaption className="ph-cap"><h1>{p.name}{p.age ? `, ${p.age}` : ''}</h1><p><DemoChip p={p} />{p.city && <span>{p.city}</span>}</p></figcaption>
     </motion.figure>
   )
 }
@@ -69,6 +70,7 @@ export default function Discover() {
   if (error || !deck || !p) {
     return (
       <Shell title={mobile ? 'Discover' : null}>
+        <div className="pad demo-wrap"><DemoMatchCard /></div>
         {error ? <Empty icon={Compass} title="We couldn’t load Discover" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{errMsg(error)}</Empty>
           : !deck ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="80%" /></div>
             : <Empty icon={Compass} title="You’ve seen everyone nearby" action={<Btn kind="secondary" icon={SlidersHorizontal} onClick={() => setPrefs(true)}>Change preferences</Btn>}>New people join every day. Come back tomorrow, or check what your agent knows about you in the meantime.</Empty>}
@@ -80,7 +82,7 @@ export default function Discover() {
   if (mobile) return (
     <div className="scr app-scr m discover">
       <div className="d-scroll">
-        
+        <div className="demo-wrap m"><DemoMatchCard /></div>
         <DragHero key={p.userId} p={p} photos={photos} onDecide={(liked) => decide(liked, { kind: 'profile' })} onLikePhoto={setLiking} busy={busy} />
         <div className="d-stack"><ProfileBody p={p} photos={photos} mobile onLike={setLiking} busy={busy} /></div>
       </div>
@@ -95,7 +97,7 @@ export default function Discover() {
   )
   return (
     <Shell className="discover">
-      
+      <div className="demo-wrap"><DemoMatchCard /></div>
       <div className="d-sub">{prefsBtn}<span className="small">{deck.length} {deck.length === 1 ? 'person' : 'people'} near {p.city ?? 'you'} who fit what you’re looking for</span></div>
       <motion.div className="d-grid" key={p.userId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={T.slow}>
         <div className="d-left">
@@ -106,7 +108,7 @@ export default function Discover() {
           </div>
         </div>
         <div className="d-right">
-          <header className="d-head"><div><h1 className="h1">{p.name}{p.age ? `, ${p.age}` : ''}</h1>{p.city && <p className="d-meta"><MapPin size={16} strokeWidth={1.7} aria-hidden="true" />{p.city}</p>}</div></header>
+          <header className="d-head"><div><h1 className="h1">{p.name}{p.age ? `, ${p.age}` : ''}</h1>{p.city && <p className="d-meta"><MapPin size={16} strokeWidth={1.7} aria-hidden="true" />{p.city}</p>}<DemoChip p={p} /></div></header>
           <ProfileBody p={p} photos={photos} onLike={setLiking} busy={busy} />
         </div>
       </motion.div>

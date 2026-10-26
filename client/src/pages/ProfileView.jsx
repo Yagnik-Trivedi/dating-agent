@@ -6,6 +6,7 @@ import { Ban, Flag, MapPin, MoreHorizontal, UserX, X } from 'lucide-react'
 import { Btn, Empty, IconBtn, Shell, Shimmer } from '../components/r7'
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import { BlockSheet, ReportSheet } from '../components/Safety'
+import { DemoChip } from '../components/DemoMatch'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
@@ -68,7 +69,7 @@ export default function ProfileView() {
       <div className="d-grid">
         <div className="d-left"><Photo src={photos[0]} i={0} n={photos.length} name={p.name} h={600} onLike={like} busy={busy} /><div className="d-under">{actions}</div></div>
         <div className="d-right">
-          <header className="d-head"><div><h1 className="h1">{p.name}{p.age ? `, ${p.age}` : ''}</h1>{p.city && <p className="d-meta"><MapPin size={16} strokeWidth={1.7} aria-hidden="true" />{p.city}</p>}</div>{more}</header>
+          <header className="d-head"><div><h1 className="h1">{p.name}{p.age ? `, ${p.age}` : ''}</h1>{p.city && <p className="d-meta"><MapPin size={16} strokeWidth={1.7} aria-hidden="true" />{p.city}</p>}<DemoChip p={p} /></div>{more}</header>
           {comment}
           <ProfileBody p={p} photos={photos} onLike={like} busy={busy} />
         </div>

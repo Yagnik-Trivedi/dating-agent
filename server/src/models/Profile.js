@@ -6,6 +6,7 @@ const GATE_ATTRIBUTE_IDS = QUESTIONS.sections.find((s) => s.id === 'B').items.ma
 const profileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   name: String,
+  demo: Boolean, // a seed persona (scripts/seed.js): public, shown as "Demo profile"; can start a demo match (UX P0-5)
   age: Number,
   city: String,
   gender: String,

@@ -7,6 +7,7 @@ import { User } from '../models/User.js';
 import { enqueue } from '../services/jobs/queue.js';
 import { buildGate, discoverQuery, passesGate } from '../services/match/gate.js';
 import { createMatch, PUBLIC_PROJECTION } from '../services/matches.js';
+import { pickDemoPersona, startDemoMatch } from '../services/demo.js';
 import { blockedIds } from '../services/safety.js';
 import { scanMessage } from '../services/trust/rules.js';
 import { emitToUser } from '../sockets/io.js';
@@ -95,4 +96,16 @@ discoverRouter.post('/likes', async (req, res) => {
 
   const match = await createMatch(me, toUserId);
   res.json(match ? { matched: true, matchId: match._id } : { matched: false }); // not active yet: delivered later
+});
+
+// UX P0-5 "Try a demo match": shown when I have no matches; starts a match with a demo persona from my own deck.
+discoverRouter.get('/demo-match', async (req, res) => {
+  const hasMatch = await Match.exists({ users: req.user._id });
+  res.json({ available: !hasMatch && Boolean(await pickDemoPersona(req.user._id)) });
+});
+discoverRouter.post('/demo-match', async (req, res) => {
+  notHeld(await Profile.findOne({ userId: req.user._id }, { status: 1 }).lean());
+  const match = await startDemoMatch(req.user._id);
+  if (!match) throw httpError(404, 'NO_DEMO_PERSONA', 'No demo profile fits your preferences right now. Try widening your age range or distance in Discover.');
+  res.status(201).json({ matchId: match._id });
 });

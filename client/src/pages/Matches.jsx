@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MessageCircle, RefreshCw, Search } from 'lucide-react'
 import { Btn, Empty, Shell, Shimmer, Tabs } from '../components/r7'
+import DemoMatchCard from '../components/DemoMatch'
 import MatchRow from '../components/MatchRow'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -44,7 +45,7 @@ export default function Matches() {
       <Shell title={mobile ? 'Matches' : null}>
         {error ? <Empty icon={MessageCircle} title="We couldn’t load your matches" action={<Btn kind="secondary" icon={RefreshCw} onClick={load}>Try again</Btn>}>{error}</Empty>
           : !matches ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="70%" /></div>
-            : <Empty icon={MessageCircle} title="No matches yet" action={<Btn onClick={() => navigate('/discover')}>Go to Discover</Btn>}>When you and someone like each other, they’ll show up here. Your agents can break the ice for you.</Empty>}
+            : <><div className="pad demo-wrap"><DemoMatchCard /></div><Empty icon={MessageCircle} title="No matches yet" action={<Btn onClick={() => navigate('/discover')}>Go to Discover</Btn>}>When you and someone like each other, they’ll show up here. Your agents can break the ice for you.</Empty></>}
       </Shell>
     )
   }

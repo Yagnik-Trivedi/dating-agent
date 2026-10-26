@@ -10,6 +10,7 @@ import { InterestLine } from '../components/charts'
 import MatchRow from '../components/MatchRow'
 import { useMobile } from '../components/prelude'
 import { BlockSheet, ReportSheet } from '../components/Safety'
+import { DemoChip } from '../components/DemoMatch'
 import { cropToJpeg } from '../lib/photos'
 import { useAuth } from '../hooks/useAuth'
 import { useMatch, wouldntSay } from '../hooks/useMatch'
@@ -180,7 +181,7 @@ export default function MatchRoom() {
     <header className="rm-head">
       {mobile && <IconBtn icon={ChevronLeft} label="Back to matches" onClick={() => navigate('/matches')} />}
       <Avatar p={match.other} src={match.other.photo ?? undefined} size={mobile ? 40 : 44} />
-      <div className="rm-who"><h2>{them}</h2><StatusChip s={chipOf(match.status)} live={match.status === 'agent_chatting'} /></div>
+      <div className="rm-who"><h2>{them}</h2><StatusChip s={chipOf(match.status)} live={match.status === 'agent_chatting'} /><DemoChip p={match.otherProfile} /></div>
       <span className="menu-wrap push-r">
         <IconBtn icon={MoreHorizontal} label="More: unmatch, block, report" aria-expanded={menu} onClick={() => setMenu(!menu)} />
         {menu && <div className="menu-pop right" role="menu">

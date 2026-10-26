@@ -44,7 +44,7 @@ try {
       },
       { upsert: true, new: true, runValidators: true },
     );
-    await Profile.updateOne({ userId: user._id }, { $set: { userId: user._id, ...p.profile } }, { upsert: true });
+    await Profile.updateOne({ userId: user._id }, { $set: { userId: user._id, ...p.profile, demo: true } }, { upsert: true });
     await buildGate(user._id);
     // Plan 30 S1: the trust check's model part, once per profile version, so a match with a seed never waits for it.
     await precheckProfile({ userId: user._id }).catch((err) => console.error(`trust precheck ${p.email}: ${err.message}`));
