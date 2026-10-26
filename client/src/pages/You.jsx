@@ -8,7 +8,6 @@ import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Q
 import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw, AccountLinks } from '../components/r7'
 import { TextBars } from '../components/charts'
 import BrainMeter from '../components/BrainMeter'
-import TeachCards from '../components/TeachCards'
 import TextingStyle, { styleBody } from '../components/TextingStyle'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -199,7 +198,8 @@ function ListView({ L, voice, style, onSelect, onChanged }) {
       })}</div>
       <aside className="yl-side card"><h2 className="h3">How I text</h2><p className="small">Learned from your replies. Your agent uses this to sound like you. Tap a “How I text” dot in the graph to correct it.</p>{voice ? <TextBars items={howIText(voice)} /> : <p className="small">Not enough replies yet.</p>}
         <HowITextChips style={style} onChanged={onChanged} />
-        {(voice?.samples ?? 0) < 10 && <><p className="small teach-hint">Your agent has only a few of your replies, so it keeps its messages plain. Teach it more:</p><TeachCards /></>}</aside>
+        {/* UX P1-9: one compact card, not Welcome's module list again */}
+        <Link className="teach-mini" to="/teach"><BookOpen size={18} strokeWidth={1.8} aria-hidden="true" /><span><b>Teach your agent more</b><span className="small">{(voice?.samples ?? 0) < 10 ? 'It has only a few of your replies, so it keeps its messages plain.' : 'More answers help it sound like you.'}</span></span><ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link></aside>
     </div>
   )
 }
