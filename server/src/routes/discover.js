@@ -33,7 +33,8 @@ discoverRouter.get('/discover', async (req, res) => {
   const gate = mine?.gate ?? await buildGate(me);
   // One indexed query (gate both ways), random order: nothing is ranked by overlap (plan 15 §1).
   const found = await Profile.aggregate([
-    { $match: discoverQuery(gate, [me, ...seen, ...blocked]) },
+    // UX P0-1: nobody sees a profile with no approved photo; demo personas (illustrations) are exempt.
+    { $match: { $and: [discoverQuery(gate, [me, ...seen, ...blocked]), { $or: [{ 'photos.0': { $exists: true } }, { demo: true }] }] } },
     { $sample: { size: limit } },
     { $addFields: { _gate: '$gate' } },
     { $project: PUBLIC_PROJECTION },

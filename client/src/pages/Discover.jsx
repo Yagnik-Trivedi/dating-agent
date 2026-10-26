@@ -10,6 +10,7 @@ import { Btn, Empty, IconBtn, LikeBtn, Shell, Shimmer, T, TabBar } from '../comp
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import Preferences from '../components/Preferences'
 import DemoMatchCard, { DemoChip } from '../components/DemoMatch'
+import PhotoNudge from '../components/PhotoNudge'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -141,7 +142,7 @@ export default function Discover() {
   if (error || !deck || !p) {
     return (
       <Shell title={mobile ? 'Discover' : null}>
-        <div className="pad demo-wrap"><DemoMatchCard /></div>
+        <div className="pad demo-wrap"><PhotoNudge /><DemoMatchCard /></div>
         {error ? <Empty icon={Compass} title="We couldn’t load Discover" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{errMsg(error)}</Empty>
           : !deck ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="80%" /></div>
             : <Empty icon={Compass} title="You’ve seen everyone nearby" action={<Btn kind="secondary" icon={SlidersHorizontal} onClick={() => setPrefs(true)}>Change preferences</Btn>}>New people join every day. Come back tomorrow, or check what your agent knows about you in the meantime.</Empty>}
@@ -153,7 +154,7 @@ export default function Discover() {
   if (mobile) return (
     <div className="scr app-scr m discover">
       <div className="d-scroll">
-        <div className="demo-wrap m"><DemoMatchCard /></div>
+        <div className="demo-wrap m"><PhotoNudge /><DemoMatchCard /></div>
         <SwipeCard key={p.userId} onDecide={(liked) => decide(liked)} disabled={busy} flyRef={flyRef}>
           <Hero p={p} photos={photos} idx={idx} onNext={nextPhoto} onLikePhoto={setLiking} busy={busy} />
           <div className="d-stack"><ProfileBody p={p} photos={photos} mobile onLike={setLiking} busy={busy} /></div>
@@ -168,7 +169,7 @@ export default function Discover() {
   )
   return (
     <Shell className="discover">
-      <div className="demo-wrap"><DemoMatchCard /></div>
+      <div className="demo-wrap"><PhotoNudge /><DemoMatchCard /></div>
       <div className="d-sub">{prefsBtn}<span className="small">{deck.length} {deck.length === 1 ? 'person' : 'people'} near {p.city ?? 'you'} who fit what you’re looking for</span>
         {hint && <button type="button" className="kbd-hint" onClick={() => { setHint(false); hideHint() }} aria-label="Keyboard: left arrow to pass, right arrow to like. Dismiss">← pass · → like</button>}
       </div>

@@ -215,8 +215,10 @@ export default function Onboarding() {
   )
   if (step === 2) return (
     <OnbShell step={2} wide title="Add 2 to 6 photos" sub="Photos are cropped to 4:5. Drag to reorder; the first is your main photo. Each new photo gets a quick automatic check before anyone else sees it."
-      onBack={back} missing={q.photosRequired && photos && usable < 2 ? { text: `Add at least 2 photos (${usable} so far)`, target: 'onb-photos' } : null}
-      nextDisabled={q.photosRequired && !photos} next={!q.photosRequired && usable < 2 ? 'Skip for now' : undefined} onNext={() => next()}>
+      onBack={back} missing={photos && usable < 2 ? { text: `Add at least 2 photos (${usable} so far)`, target: 'onb-photos' } : null}
+      nextDisabled={!photos || usable < 2} onNext={() => next()}
+      // UX P0-1: Continue needs 2 photos; skipping is a deliberate secondary choice (gone when PHOTOS_REQUIRED is on)
+      skip={!q.photosRequired && usable < 2 ? 'Add photos later' : undefined} onSkip={() => next()}>
       <div id="onb-photos">{photos ? <PhotoGrid photos={photos} setPhotos={setPhotos} onError={setError} /> : <Loading />}</div>{err}
     </OnbShell>
   )

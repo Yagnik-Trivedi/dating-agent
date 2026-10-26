@@ -90,7 +90,7 @@ export function Signup() {
   }
 
   return (
-    <AuthShell title="Join Twine" sub="It takes about five minutes to set up.">
+    <AuthShell title="Join Twine" sub="It takes about five minutes to set up. Next: add your photos.">
       <form className="form" onSubmit={submit} noValidate>
         <div className="row2">
           <Field label="First name">{(id) => <Input id={id} value={f.name} onChange={set('name')} autoComplete="given-name" maxLength={60} required />}</Field>

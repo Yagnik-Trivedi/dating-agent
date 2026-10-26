@@ -63,9 +63,18 @@ assert.equal(r.status, 401);
 ok('wrong password → 401, no token → 401');
 
 // --- profiles + discover
-r = await call('PUT', '/profile', { token: A.token, body: { age: 27, city: 'Pune', gender: 'woman', interestedIn: ['man'], dealbreakers: ['smoking'] } });
+// UX P0-1: Discover only shows profiles with an approved photo; a DiceBear avatar is the one URL PUT /profile accepts.
+const avatar = (n) => [`https://api.dicebear.com/9.x/notionists/svg?seed=${n}-${run}`];
+r = await call('PUT', '/profile', { token: A.token, body: { age: 27, city: 'Pune', gender: 'woman', interestedIn: ['man'], dealbreakers: ['smoking'], photos: avatar('a') } });
 assert.equal(r.status, 200);
-await call('PUT', '/profile', { token: B.token, body: { age: 29, city: 'Pune', gender: 'man', interestedIn: ['woman'] } });
+await call('PUT', '/profile', { token: B.token, body: { age: 29, city: 'Pune', gender: 'man', interestedIn: ['woman'], photos: avatar('b') } });
+r = await call('GET', '/discover', { token: B.token });
+assert.ok(r.body.profiles.some((p) => p.userId === A.id));
+await call('PUT', '/profile', { token: A.token, body: { photos: [] } });
+r = await call('GET', '/discover', { token: B.token });
+assert.ok(!r.body.profiles.some((p) => p.userId === A.id));
+await call('PUT', '/profile', { token: A.token, body: { photos: avatar('a') } });
+ok('a profile with no photo is hidden from Discover (UX P0-1)');
 r = await call('PUT', '/profile', { token: B.token, body: { age: 16 } });
 assert.equal(r.status, 400);
 ok('profile update; age < 18 rejected');

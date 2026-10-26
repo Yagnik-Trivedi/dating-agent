@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { Check, Users, X } from 'lucide-react'
 import { Btn, Empty, Shell, Shimmer, T, photoOf } from '../components/r7'
+import PhotoNudge from '../components/PhotoNudge'
 import { useLikeFlow } from '../components/ProfileParts'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -54,10 +55,10 @@ export default function LikesYou() {
     : !likes ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /></div>
       : !n ? <Empty icon={Users} title="No likes yet" action={<Btn kind="secondary" onClick={() => navigate('/profile')}>Improve your profile</Btn>}>When someone likes your photo or prompt, they’ll show up here, with what they liked. Profiles with three prompts get more likes.</Empty>
         : <div className="lt-grid">{likes.map((l, i) => <LikeTile key={l.profile.userId} l={l} i={i} mine={profile ?? {}} onAnswer={answer} busy={busy} />)}</div>
-  if (mobile) return <Shell title="Likes you" sub={n ? `${n} ${n === 1 ? 'person' : 'people'} · free to see` : undefined}><div className="pad">{body}</div>{ui}</Shell>
+  if (mobile) return <Shell title="Likes you" sub={n ? `${n} ${n === 1 ? 'person' : 'people'} · free to see` : undefined}><div className="pad"><PhotoNudge />{body}</div>{ui}</Shell>
   return (
     <Shell>
-      <div className="page"><div className="pg-h"><div><h1 className="h1">Likes you</h1>{n > 0 && <p className="lead">{n === 1 ? 'One person' : `${n} people`} liked something on your profile. Seeing them is always free.</p>}</div></div>{body}</div>
+      <div className="page"><PhotoNudge /><div className="pg-h"><div><h1 className="h1">Likes you</h1>{n > 0 && <p className="lead">{n === 1 ? 'One person' : `${n} people`} liked something on your profile. Seeing them is always free.</p>}</div></div>{body}</div>
       {ui}
     </Shell>
   )

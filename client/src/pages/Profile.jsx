@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
 import { Btn, Chips, Field, Input, Shell, Toggle, photoOf } from '../components/r7'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
+import PhotoNudge from '../components/PhotoNudge'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -41,6 +42,8 @@ export default function Profile() {
   useEffect(() => {
     if (profile && !f) setF({ job: profile.job ?? '', workplace: profile.workplace ?? '', education: profile.education ?? '', height: profile.height ?? '', languages: profile.languages ?? [], bio: profile.bio ?? '', prompts: (profile.prompts ?? []).slice(0, 3) })
   }, [profile, f])
+  const ready = Boolean(f)
+  useEffect(() => { if (ready && window.location.hash === '#photos') document.getElementById('ed-photos')?.scrollIntoView({ behavior: 'smooth' }) }, [ready]) // /profile#photos (UX P0-1)
   if (!f) return <Shell title="Edit profile" back />
 
   const ok = (photos ?? []).filter((p) => p.status === 'ok')
@@ -66,6 +69,7 @@ export default function Profile() {
   const prev = { ...profile, ...f, photos: ok.map((p) => p.url) }
   const sections = (
     <div className="ed-sections">
+      <PhotoNudge />
       <Meter parts={parts} onGo={go} />
       <section className="ed-sec" id="ed-photos"><div className="ed-h"><h2 className="h3">Photos</h2><span className="small">Drag to reorder</span></div>
         {photos && <PhotoGrid photos={photos} setPhotos={setPhotos} onError={(m) => toast(m, { tone: 'bad' })} />}</section>
