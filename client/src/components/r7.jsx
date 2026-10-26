@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useId, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'motion/react'
-import { Compass, Users, MessageCircle, Orbit, Bell, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
+import { Compass, Users, MessageCircle, Orbit, Settings as Gear, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
 import { illustration } from '../lib/art'
 import { useMobile } from './prelude'
 import twineMark from '../assets/twine-mark.svg'
@@ -205,25 +205,37 @@ const NAV = [['/discover', 'Discover', Compass, 'discover'], ['/likes', 'Likes y
 const navOn = ({ isActive }) => (isActive ? 'on' : '')
 export function TopNav() {
   const { counts, user } = useContext(ShellCtx)
-  const navigate = useNavigate()
   return (
     <header className="topnav">
       <NavLink to="/discover" aria-label="Twine home"><Wordmark /></NavLink>
       <nav aria-label="Main">{NAV.filter(([to]) => to !== '/likes' || counts.likesEnabled).map(([to, l, I, k]) => (
         <NavLink key={to} to={to} className={navOn}><I size={18} strokeWidth={1.7} aria-hidden="true" />{l}{k === 'likes' && counts.likes > 0 && <b className="count">{counts.likes}</b>}{k === 'matches' && counts.matches > 0 && <i className="ndot" aria-label="new" />}</NavLink>
-      ))}</nav>
+      ))}
+        <NavLink to="/inbox" className={navOn}><MessageCircleQuestion size={18} strokeWidth={1.7} aria-hidden="true" />Ask my human{counts.notifications > 0 && <b className="count" aria-label={`${counts.notifications} open`}>{counts.notifications}</b>}</NavLink>
+      </nav>
       <div className="topnav-r">
-        <span className="bell"><IconBtn icon={Bell} label={counts.notifications ? `Notifications, ${counts.notifications} new` : 'Notifications'} onClick={() => navigate('/notifications')} />{counts.notifications > 0 && <i className="ndot" />}</span>
-        <NavLink to="/settings" aria-label="Your account and settings"><Avatar p={user} size={34} /></NavLink>
+        <AccountLinks />
+        <NavLink to="/profile" aria-label="Edit your profile" title="Edit your profile"><Avatar p={user} size={34} /></NavLink>
       </div>
     </header>
+  )
+}
+/** UX P1-2: Settings as a gear (desktop top bar, and the mobile "This is you" header with Ask my human). */
+export function AccountLinks({ ask }) {
+  const { counts } = useContext(ShellCtx)
+  const navigate = useNavigate()
+  return (
+    <>
+      {ask && <span className="bell"><IconBtn icon={MessageCircleQuestion} label={counts.notifications ? `Ask my human, ${counts.notifications} open` : 'Ask my human'} onClick={() => navigate('/inbox')} />{counts.notifications > 0 && <b className="count">{counts.notifications}</b>}</span>}
+      <IconBtn icon={Gear} label="Settings" onClick={() => navigate('/settings')} />
+    </>
   )
 }
 export function TabBar() {
   const { counts } = useContext(ShellCtx)
   return (
     <nav className="tabbar" aria-label="Main">{NAV.filter(([to]) => to !== '/likes' || counts.likesEnabled).map(([to, l, I, k]) => (
-      <NavLink key={to} to={to} className={navOn}><span className="tb-i"><I size={22} strokeWidth={1.7} aria-hidden="true" />{k === 'likes' && counts.likes > 0 && <b className="count">{counts.likes}</b>}{k === 'matches' && counts.matches > 0 && <i className="ndot" />}</span>{k === 'you' ? 'You' : l}</NavLink>
+      <NavLink key={to} to={to} className={navOn}><span className="tb-i"><I size={22} strokeWidth={1.7} aria-hidden="true" />{k === 'likes' && counts.likes > 0 && <b className="count">{counts.likes}</b>}{k === 'matches' && counts.matches > 0 && <i className="ndot" />}{k === 'you' && counts.notifications > 0 && <i className="ndot" aria-label="Your agent has a question" />}</span>{k === 'you' ? 'You' : l}</NavLink>
     ))}</nav>
   )
 }

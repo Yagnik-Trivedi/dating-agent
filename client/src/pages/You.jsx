@@ -5,7 +5,7 @@ import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRe
 import { Link } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
 import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Quote, RefreshCw, Search, Trash2, X } from 'lucide-react'
-import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw } from '../components/r7'
+import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw, AccountLinks } from '../components/r7'
 import { TextBars } from '../components/charts'
 import BrainMeter from '../components/BrainMeter'
 import TeachCards from '../components/TeachCards'
@@ -257,7 +257,7 @@ export default function You({ review = false }) {
 
   if (mobile) return (
     <div className="scr app-scr you m">
-      <header className="y-head"><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</header>
+      <header className="y-head"><div><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</div><div className="y-head-acts"><AccountLinks ask /></div></header>
       {reviewBar}
       {controls}{!isList && !isBrain && chips}
       {(isList || isBrain) && <div className="y-lwrap">{list}</div>}

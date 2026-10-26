@@ -207,3 +207,9 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .bas-bio { font-size: 15px; line-height: 1.5; color: var(--text); margin: 0 0 14px; }
 .discover.d .bas-row, .discover.d .bas-bio { font-size: 16px; }
 .discover.d .d-left { padding-bottom: 4px; } /* the selected thumbnail's border isn't clipped */
+
+/* UX P1-2: Ask my human + Settings in the mobile "This is you" header; the open-question count on the icon */
+.you.m .y-head { align-items: center; }
+.y-head-acts { display: flex; align-items: center; gap: 2px; margin-right: -8px; }
+.bell .count { position: absolute; right: 0; top: 0; min-width: 18px; height: 18px; font-size: 12px; padding: 0 5px; box-shadow: 0 0 0 2px var(--surface); }
+.topnav nav .count { margin-left: 6px; }
