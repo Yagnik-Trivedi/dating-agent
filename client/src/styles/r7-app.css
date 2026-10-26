@@ -202,3 +202,8 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
   .tg::after { inset: -8px -2px; }
   .sc-tick::after { inset: -16px -2px; }
 }
+
+/* UX P1-1: the details card reads at body size (the bio was "small" text); desktop rows a touch larger */
+.bas-bio { font-size: 15px; line-height: 1.5; color: var(--text); margin: 0 0 14px; }
+.discover.d .bas-row, .discover.d .bas-bio { font-size: 16px; }
+.discover.d .d-left { padding-bottom: 4px; } /* the selected thumbnail's border isn't clipped */

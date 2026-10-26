@@ -46,7 +46,7 @@ export function Basics({ p }) {
   return (
     <section className="basics card" aria-label="Basics">
       {rows.length > 0 && <ul className="bas-row">{rows.map(([I, t]) => <li key={t}><I size={17} strokeWidth={1.7} aria-hidden="true" />{t}</li>)}</ul>}
-      {p.bio && <p className="small">{p.bio}</p>}
+      {p.bio && <p className="bas-bio">{p.bio}</p>}
       {p.tags?.interests?.length > 0 && <div className="interests">{p.tags.interests.map((x) => <span key={x} className="tag">{x}</span>)}</div>}
     </section>
   )
