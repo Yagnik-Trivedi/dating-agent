@@ -13,6 +13,7 @@ test('UX P0-4: answers become natural phrases, sensitive basics if_asked, prompt
   assert.equal(by('alone_time').object, 'needs some alone time after a busy week');
   assert.equal(by('career').disclosure, 'public');
   assert.equal(by('job').object, 'works as an architect');
+  assert.equal(questionnaireFacts({ I: { job: 'UX researcher' } })[0].object, 'works as a UX researcher');
   assert.ok(facts.every((f) => f.predicate === 'trait' || !/^[a-z ]+: /.test(f.object)), 'no "key: value" objects');
   const p = facts.find((f) => f.sourceAnswerId === 'prompt_1');
   assert.equal(p.predicate, 'lifestyle');

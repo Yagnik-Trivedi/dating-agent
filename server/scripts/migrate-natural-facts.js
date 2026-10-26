@@ -9,7 +9,7 @@ import { env } from '../src/config/env.js';
 import { KgFact } from '../src/models/KgFact.js';
 import { Profile } from '../src/models/Profile.js';
 import { User } from '../src/models/User.js';
-import { IF_ASKED_ATTRIBUTES, valuePhrase, worldPhrase } from '../src/services/kg/phrases.js';
+import { IF_ASKED_ATTRIBUTES, jobPhrase, valuePhrase, worldPhrase } from '../src/services/kg/phrases.js';
 import { syncPromptFacts } from '../src/services/kg/promptFacts.js';
 
 const yes = process.argv.includes('--yes');
@@ -18,7 +18,7 @@ const yes = process.argv.includes('--yes');
 function fix(f) {
   const set = {};
   let object = null;
-  if (f.source === 'questionnaire_choice' && f.attribute && f.value) object = valuePhrase(f.attribute, f.value);
+  if (f.source === 'questionnaire_choice' && f.attribute && f.value) object = f.attribute === 'job' ? jobPhrase(String(f.value)) : valuePhrase(f.attribute, f.value);
   const qid = /^M\.(W\d+(?:_\d+)?)$/.exec(f.slot ?? '')?.[1];
   if (qid) object = worldPhrase(qid, { option: f.value }) ?? worldPhrase(qid, { text: f.evidence?.[0]?.quote });
   if (object && !f.userEdited && f.object !== object) set.object = object;

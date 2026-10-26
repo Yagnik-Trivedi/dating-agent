@@ -56,7 +56,9 @@ export const worldPhrase = (qid, { text, option } = {}) => {
   return f && String(text ?? '').trim() ? f(clean(text)) : null;
 };
 /** Basics. */
-export const jobPhrase = (job) => `works as ${/^(a|an|the)\s/i.test(job) || /\s(at|in|for)\s/i.test(job) ? lower1(job) : /^[aeiou]/i.test(job) ? `an ${lower1(job)}` : `a ${lower1(job)}`}`;
+// An acronym takes the article of its first letter's name ("an MBA student", "a UX researcher").
+const vowelSound = (job) => (/^[A-Z]{2}/.test(job) ? /^[AEFHILMNORSX]/.test(job) : /^[aeiou]/i.test(job));
+export const jobPhrase = (job) => `works as ${/^(a|an|the)\s/i.test(job) ?lower1(job) : `${vowelSound(job) ? 'an' : 'a'} ${lower1(job)}`}`;
 
 // Profile prompts → a claimable fact in the user's own words. The kind follows the prompt.
 const PROMPT_KIND = [
