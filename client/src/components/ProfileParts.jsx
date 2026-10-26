@@ -70,8 +70,8 @@ export function LikeSheet({ like, p, photos, onClose, onSend, busy }) {
   const close = () => { setComment(''); onClose() }
   const send = (c) => { onSend(c); setComment('') }
   return (
-    <Sheet open={Boolean(like)} title={`Like ${p?.name ?? 'their'}’s ${like?.kind === 'prompt' ? 'prompt' : 'photo'}`} onClose={close}
-      footer={<><Btn kind="ghost" onClick={() => send('')} disabled={busy}>Like without a comment</Btn><Btn onClick={() => send(comment.trim())} loading={busy} disabled={!comment.trim()}>Send like</Btn></>}>
+    <Sheet open={Boolean(like)} title={like?.kind === 'profile' ? `Like ${p?.name ?? 'them'}` : `Like ${p?.name ?? 'their'}’s ${like?.kind === 'prompt' ? 'prompt' : 'photo'}`} onClose={close}
+      footer={<><Btn kind="ghost" onClick={close} disabled={busy}>Cancel</Btn><Btn onClick={() => send(comment.trim())} loading={busy}>Send like</Btn></>}>
       {prompt ? <article className="prompt mini"><p className="pq">{prompt.q}</p><p className="pa">{prompt.a}</p></article>
         : like?.kind === 'photo' && <img className="like-ph" src={photos?.[Number(like.ref)]} alt="The photo you’re liking" />}
       <Field label="Add a comment" optional hint={`A comment makes it easy to start talking. ${COMMENT_MAX - comment.length} characters left.`}>

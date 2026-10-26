@@ -109,3 +109,11 @@ discoverRouter.post('/demo-match', async (req, res) => {
   if (!match) throw httpError(404, 'NO_DEMO_PERSONA', 'No demo profile fits your preferences right now. Try widening your age range or distance in Discover.');
   res.status(201).json({ matchId: match._id });
 });
+
+// UX P0-2: undo my last pass (one level; the client offers it for 5 s). Only a pass can be undone, never a like.
+discoverRouter.delete('/likes/:toUserId', async (req, res) => {
+  const toUserId = parse(objectId, req.params.toUserId);
+  const { deletedCount } = await Like.deleteOne({ fromUserId: req.user._id, toUserId, liked: false });
+  if (!deletedCount) throw httpError(404, 'NOT_FOUND', 'Nothing to undo');
+  res.status(204).end();
+});
