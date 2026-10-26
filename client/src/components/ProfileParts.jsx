@@ -16,6 +16,8 @@ const KIDS = { yes: 'Wants kids', no: 'Doesn’t want kids', open: 'Open to kids
 const GOAL = { long_term: 'Looking for long-term', open_to_long_term: 'Open to long-term', short_term: 'Looking for something short-term', figuring_it_out: 'Figuring out what they want' }
 const DIET = { veg: 'Vegetarian', non_veg: 'Eats non-veg', vegan: 'Vegan', jain: 'Jain food', eggetarian: 'Eggetarian' }
 const label = (t) => String(t ?? '').replace(/_/g, ' ')
+/** UX P1-8: interests display in Title Case like languages ("road trips" → "Road Trips"); stored values unchanged. */
+export const titleCase = (t) => String(t ?? '').replace(/(^|[\s/-])(\p{Ll})/gu, (_, sep, c) => sep + c.toUpperCase())
 export const COMMENT_MAX = 150
 
 /** Photos to show: their own, plus illustrated scenes for demo people with fewer than 3. */
@@ -47,7 +49,7 @@ export function Basics({ p }) {
     <section className="basics card" aria-label="Basics">
       {rows.length > 0 && <ul className="bas-row">{rows.map(([I, t]) => <li key={t}><I size={17} strokeWidth={1.7} aria-hidden="true" />{t}</li>)}</ul>}
       {p.bio && <p className="bas-bio">{p.bio}</p>}
-      {p.tags?.interests?.length > 0 && <div className="interests">{p.tags.interests.map((x) => <span key={x} className="tag">{x}</span>)}</div>}
+      {p.tags?.interests?.length > 0 && <div className="interests">{p.tags.interests.map((x) => <span key={x} className="tag">{titleCase(x)}</span>)}</div>}
     </section>
   )
 }

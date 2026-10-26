@@ -10,6 +10,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Plus } from 'lucide-react'
 import OnbShell from '../components/OnbShell'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
+import { titleCase } from '../components/ProfileParts'
 import TeachCards from '../components/TeachCards'
 import TextingStyle, { styleBody } from '../components/TextingStyle'
 import { Chips, Composer, Field, IconBtn, Importance, Input, Seg, Toggle } from '../components/r7'
@@ -50,7 +51,7 @@ function Basics({ q, value, onChange, interests, onInterests }) {
       </div>
       <Field label="Height" optional hint="Only shown if you add it.">{(id) => <Input id={id} value={value.height ?? ''} onChange={set('height')} maxLength={20} placeholder="e.g. 5′10″" />}</Field>
       <div className="field"><span className="lbl">Things you’re into <em>· optional, helps your agent</em></span>
-        <Chips multi items={[...new Set([...D.suggestions, ...interests.map((i) => i.name)])]} value={interests.map((i) => i.name)}
+        <Chips multi items={[...new Set([...D.suggestions, ...interests.map((i) => i.name)])].map((n) => [n, titleCase(n)])} value={interests.map((i) => i.name)}
           onChange={(names) => onInterests(names.map((name) => interests.find((i) => i.name === name) ?? { name, intensity: 'into_it' }))} label="Interests" />
       </div>
     </>
