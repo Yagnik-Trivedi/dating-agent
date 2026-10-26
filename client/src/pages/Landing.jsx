@@ -30,9 +30,10 @@ function HeroArt({ mobile }) {
     </div>
   )
 }
-function Reveal({ children, i = 0, className = '' }) {
+function Reveal({ children, i = 0, className = '', as = 'div' }) {
   const rm = useReducedMotion()
-  return <motion.div className={className} initial={rm ? { opacity: 0 } : { opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ ...T.slow, delay: i * 0.06 }}>{children}</motion.div>
+  const M = motion[as] // as="li": the list item itself animates (a div between <ol> and <li> broke the list)
+  return <M className={className} initial={rm ? { opacity: 0 } : { opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ ...T.slow, delay: i * 0.06 }}>{children}</M>
 }
 const STEPS = [
   [MessageSquareText, 'Like a photo or a prompt', 'Profiles are photos and prompts. Like the part that caught your eye.'],
@@ -68,11 +69,11 @@ export default function Landing() {
       </section>
       <section className="l-steps" id="how" aria-labelledby="how-h">
         <h2 className="h2" id="how-h">How it works</h2>
-        <ol>{STEPS.map(([I, t, d], i) => <Reveal key={t} i={i}><li><span className="st-n">{i + 1}</span><I size={22} strokeWidth={1.6} aria-hidden="true" /><h3 className="h3">{t}</h3><p>{d}</p></li></Reveal>)}</ol>
+        <ol>{STEPS.map(([I, t, d], i) => <Reveal as="li" key={t} i={i}><span className="st-n">{i + 1}</span><I size={22} strokeWidth={1.6} aria-hidden="true" /><h3 className="h3">{t}</h3><p>{d}</p></Reveal>)}</ol>
       </section>
       <section className="l-trust" id="trust">
         <h2 className="h2">Built to be trusted</h2>
-        <ul>{TRUST.map(([I, t, d], i) => <Reveal key={t} i={i}><li><I size={20} strokeWidth={1.7} aria-hidden="true" /><div><h3 className="h3">{t}</h3><p>{d}</p></div></li></Reveal>)}</ul>
+        <ul>{TRUST.map(([I, t, d], i) => <Reveal as="li" key={t} i={i}><I size={20} strokeWidth={1.7} aria-hidden="true" /><div><h3 className="h3">{t}</h3><p>{d}</p></div></Reveal>)}</ul>
       </section>
       <section className="l-cta"><Reveal><h2 className="h2">Ready when you are.</h2><p className="lead">Setting up takes a few minutes. Teaching your agent more is optional.</p><Link className="btn primary lg" to="/signup">Join Twine</Link></Reveal></section>
       <footer className="l-foot"><Wordmark /><span className="small">Built for the Nebius x NVIDIA hackathon · illustrated people only</span></footer>

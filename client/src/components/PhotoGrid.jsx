@@ -62,9 +62,9 @@ export default function PhotoGrid({ photos, setPhotos, onError }) {
 
   return (
     <div className="photo-step">
-      <Reorder.Group as="div" axis="x" values={list} onReorder={setPhotos} className="slots" role="list">
+      <Reorder.Group as="div" axis="x" values={list} onReorder={setPhotos} className="slots">
         {list.map((p, i) => (
-          <Reorder.Item as="div" key={p._id} value={p} role="listitem" className={`slot filled s-${p.status}`} onDragEnd={() => save(list)}>
+          <Reorder.Item as="div" key={p._id} value={p} className={`slot filled s-${p.status}`} onDragEnd={() => save(list)}>
             <img src={p.url} alt={`Your photo ${i + 1}${i === 0 ? ' (main)' : ''}`} draggable={false} />
             {i === 0 && <span className="slot-main">Main</span>}
             {p.status === 'pending' && <span className="slot-badge"><Clock size={13} strokeWidth={2} aria-hidden="true" />Checking</span>}

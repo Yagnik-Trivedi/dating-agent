@@ -65,10 +65,10 @@ export default function Replay() {
   const scrub = (
     <div className="scrub">
       <button type="button" className="sc-play" aria-label={playing ? 'Pause replay' : 'Play replay'} onClick={() => { if (!playing && at >= N - 1) setAt(0); setPlaying(!playing) }}>{playing ? <Pause size={18} strokeWidth={2} /> : <Play size={18} strokeWidth={2} />}</button>
-      <div className="sc-track" role="slider" tabIndex={0} aria-label="Replay position" aria-valuemin={1} aria-valuemax={N} aria-valuenow={at + 1} aria-valuetext={`Message ${at + 1} of ${N}`}
-        onKeyDown={(e) => { if (e.key === 'ArrowRight') setAt((a) => Math.min(N - 1, a + 1)); if (e.key === 'ArrowLeft') setAt((a) => Math.max(0, a - 1)) }}>
+      <div className="sc-track" role="slider" tabIndex={0} aria-label="Replay position" aria-valuemin={1} aria-valuemax={N} aria-valuenow={at + 1} aria-valuetext={`Message ${at + 1} of ${N}${ev.has(at) ? ', evidence for your letter' : ''}`}
+        onKeyDown={(e) => { if (e.key === 'Home') setAt(0); if (e.key === 'End') setAt(N - 1); if (e.key === 'ArrowRight') setAt((a) => Math.min(N - 1, a + 1)); if (e.key === 'ArrowLeft') setAt((a) => Math.max(0, a - 1)) }}>
         <i className="sc-fill" style={{ width: `${pct(at)}%` }} />
-        {data.messages.map((m, i) => <button type="button" key={m._id} className={`sc-tick ${ev.has(i) ? 'ev' : ''} ${laughs.has(i) ? 'mo' : ''}`} style={{ left: `${pct(i)}%` }} aria-label={`Go to message ${i + 1}${ev.has(i) ? ', evidence for your letter' : ''}`} onClick={() => setAt(i)} />)}
+        {data.messages.map((m, i) => <span key={m._id} aria-hidden="true" className={`sc-tick ${ev.has(i) ? 'ev' : ''} ${laughs.has(i) ? 'mo' : ''}`} style={{ left: `${pct(i)}%` }} onClick={() => setAt(i)} />)}
         <motion.span className="sc-thumb" initial={false} animate={{ left: `${pct(at)}%` }} transition={T.spring} />
       </div>
       <span className="sc-t">{at + 1} / {N}</span>
@@ -103,7 +103,7 @@ export default function Replay() {
     <div className="scr app-scr d replay">
       <TopNav />
       <div className="rp-grid">
-        <div className="rp-main"><header className="rp-h"><h1 className="h1">The agents’ conversation</h1><p className="lead">{sub}. Every word, as written. Highlighted messages are the evidence your letter quotes.</p></header>{scrub}<div className="rp-scroll">{transcript}</div></div>
+        <div className="rp-main"><header className="rp-h"><h1 className="h1">The agents’ conversation</h1><p className="lead">{sub}. Every word, as written. Highlighted messages are the evidence your letter quotes.</p></header>{scrub}<div className="rp-scroll" tabIndex={0} role="region" aria-label="Conversation">{transcript}</div></div>
         <aside className="rp-side">{whyBlock || <p className="small">Your letter quotes no single message here.</p>}</aside>
       </div>
     </div>
