@@ -21,10 +21,12 @@ test('a complete answer set parses; accepts defaults to every option', () => {
   assert.equal(out.B.smoking.dealbreaker, false);
 });
 
-test('importance has no default', () => {
+test('importance defaults to "medium" (Somewhat) and is never required (UX P0-3)', () => {
   const a = valid();
   delete a.B.kids.importance;
-  assert.equal(answersSchema.safeParse(a).success, false);
+  const out = answersSchema.safeParse(a);
+  assert.equal(out.success, true);
+  assert.equal(out.data.B.kids.importance, 'medium');
 });
 
 test('a dealbreaker that accepts everything is rejected; with one option excluded it passes', () => {

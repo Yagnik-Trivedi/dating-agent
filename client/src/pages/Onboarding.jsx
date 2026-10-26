@@ -98,26 +98,28 @@ function ValueQ({ item, v, onChange }) {
   const all = item.options.map((o) => o.value)
   const opts = item.options.map((o) => [o.value, o.label])
   const set = (patch) => onChange({ ...v, ...patch })
+  // UX P0-3: importance starts at "Somewhat" and is never required; partner filters stay hidden behind "Dealbreaker for me".
+  const ruledOut = v?.dealbreaker ? all.filter((o) => !(v.accepts ?? all).includes(o)) : []
   return (
     <section className="vq card" id={`vq-${item.id}`} aria-label={item.text}>
       <h2 className="h3">{item.text}</h2>
-      <div className="vq-row"><span className="lbl">You</span><Chips items={opts} value={v?.answer ?? null} onChange={(answer) => set({ answer })} label={`${item.text}: you`} /></div>
+      <div className="vq-row"><span className="lbl">You</span><Chips items={opts} value={v?.answer ?? null} onChange={(answer) => set({ answer, importance: v?.importance ?? 'medium' })} label={`${item.text}: you`} /></div>
       {v?.answer && <>
-        <div className="vq-row"><span className="lbl">How important is this?</span><Importance value={v.importance ?? null} onChange={(importance) => set({ importance })} /></div>
-        <div className="vq-row"><span className="lbl">In a partner I’d accept</span><Chips multi items={opts} value={v.accepts ?? all} onChange={(accepts) => accepts.length && set({ accepts })} label={`${item.text}: partner`} /></div>
-        <label className="vq-deal"><Toggle on={Boolean(v.dealbreaker)} onChange={(dealbreaker) => set({ dealbreaker })} label={`Dealbreaker: ${item.text}`} /><span><b>Dealbreaker</b> · Never show me people outside what I’d accept</span></label>
-        {item.more && <Field label={item.more.text} optional>{(id) => item.more.type === 'story'
-          ? <textarea id={id} className="ta" rows={3} maxLength={600} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} placeholder="Say more, in your own words" />
-          : <Input id={id} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} maxLength={300} placeholder="Say more, in your own words" />}</Field>}
+        <div className="vq-row"><span className="lbl">How important is this?</span><Importance value={v.importance ?? 'medium'} onChange={(importance) => set({ importance })} /></div>
+        <label className="vq-deal"><Toggle on={Boolean(v.dealbreaker)} onChange={(on) => set({ dealbreaker: on, accepts: undefined })} label={`Dealbreaker for me: ${item.text}`} /><span><b>Dealbreaker for me</b> · Never show me people who answer differently</span></label>
+        {v.dealbreaker && <div className="vq-row"><span className="lbl">Rule out matches who answer:</span>
+          <Chips multi items={opts} value={ruledOut} onChange={(out) => out.length < all.length && set({ accepts: all.filter((o) => !out.includes(o)) })} label={`${item.text}: rule out`} /></div>}
+        {item.more && <details className="vq-more" open={Boolean(v.more)}><summary>Say more <span className="small">· optional</span></summary>
+          <Field label={item.more.text} optional>{(id) => item.more.type === 'story'
+            ? <textarea id={id} className="ta" rows={3} maxLength={600} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} placeholder="Say more, in your own words" />
+            : <Input id={id} value={v.more ?? ''} onChange={(e) => set({ more: e.target.value })} maxLength={300} placeholder="Say more, in your own words" />}</Field></details>}
       </>}
     </section>
   )
 }
 const valuesMissing = (B, section) => {
-  const noImp = section.items.find((i) => B[i.id]?.answer && !B[i.id].importance)
-  if (noImp) return { text: `“${noImp.text}”: pick how important it is`, target: `vq-${noImp.id}` }
   const bad = section.items.find((i) => B[i.id]?.dealbreaker && (B[i.id].accepts ?? i.options).length >= i.options.length)
-  return bad ? { text: `“${bad.text}”: a dealbreaker needs at least one option you wouldn’t accept`, target: `vq-${bad.id}` } : null
+  return bad ? { text: `“${bad.text}”: pick at least one answer to rule out, or turn the dealbreaker off`, target: `vq-${bad.id}` } : null
 }
 
 /* 5 · How you reply: one message at a time, like a chat. Tap a reply to change it. */
@@ -195,7 +197,7 @@ export default function Onboarding() {
   async function submit() {
     setBusy(true); setError(null)
     try {
-      const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer).map(([k, v]) => [k, { ...v, more: v.more?.trim() || undefined }]))
+      const B2 = Object.fromEntries(Object.entries(answers.B).filter(([, v]) => v?.answer).map(([k, v]) => [k, { ...v, importance: v.importance ?? 'medium', more: v.more?.trim() || undefined }]))
       // The self-report first, so the build that starts on submit already blends it in.
       if (Object.keys(styleBody(style)).length) await api.put('/api/onboarding/texting-style', styleBody(style))
       await api.post('/api/onboarding/submit', { answers: { I: answers.I, B: B2, D: answers.D, E: Object.fromEntries(core.map((i) => [i.id, answers.E[i.id]])), Edevice: devicesFor(core.map((i) => i.id)) } })

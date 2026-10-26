@@ -11,8 +11,8 @@ export default function TeachCards() {
   if (!data) return <Shimmer w="60%" />
   return (
     <>
-      <ModuleList data={data} compact />
-      <Link className="link teach-all" to="/teach">All modules, replies and how you text<ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link>
+      <ModuleList data={data} compact limit={3} />
+      <Link className="link teach-all" to="/teach">See all modules, replies and how you text<ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" /></Link>
     </>
   )
 }

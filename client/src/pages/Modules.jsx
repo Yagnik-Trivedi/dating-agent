@@ -11,7 +11,7 @@ import { useToast } from '../hooks/useToast'
 import { errMsg } from '../lib/api'
 import { answeredCount, cleanAnswers, saveModule, useModules } from '../lib/modules'
 
-export const WORLD_MIN = 6 // "Your world right now" is required: at least this many of its 12 questions
+export const WORLD_MIN = 3 // "Your world right now" is required: at least this many of its 12 questions (UX P0-3: was 6)
 
 /** Draft kept on this device while answering (save as you go). */
 function useDraft(key, initial) {
@@ -21,14 +21,15 @@ function useDraft(key, initial) {
 }
 
 /** The module list: brain meter, then every module with its progress. Also used on Welcome and This is you. */
-export function ModuleList({ data, compact }) {
+/** limit: show only that many suggested (not yet done) modules, for Welcome and This is you (UX P0-3). */
+export function ModuleList({ data, compact, limit }) {
   const navigate = useNavigate()
   const extra = [['/teach/replies', MessagesSquare, '10 more replies', 'Helps your agent get your humour right.'], ['/teach/texting', Smartphone, 'How you text', 'Emoji, short bursts, capitals.']]
   return (
     <div className="mods">
       <BrainMeter strength={data.strength} compact={compact} />
       <div className="teach">
-        {data.modules.map((m) => {
+        {(limit ? data.modules.filter((m) => !m.progress?.done).slice(0, limit) : data.modules).map((m) => {
           const n = answeredCount(m, data.answers[m.id], data.fromStories)
           return (
             <button key={m.id} type="button" className={`teach-c card mod-c ${m.progress?.done ? 'done' : ''}`} onClick={() => navigate(`/teach/m/${m.id}`)}>
@@ -77,7 +78,7 @@ function ModulePage({ data, id, step, onSaved, required }) {
   }
   const firstOpen = mod.questions.find((q) => !value[q.id] || (Array.isArray(value[q.id]) && !value[q.id].length))
   return (
-    <OnbShell step={step} label="Teach your agent more" title={mod.title} sub={mod.intro} minutesLeft={step ? mod.minutes : undefined}
+    <OnbShell step={step} label="Teach your agent more" title={mod.title} sub={mod.intro} minutesLeft={undefined}
       onBack={step ? undefined : () => window.history.back()} next={step ? 'Save and continue' : 'Save'} nextLoading={busy} onNext={save}
       missing={required && n < required ? { text: `Answer at least ${required} (${n} so far)`, target: firstOpen && `mq-card-${firstOpen.id}` } : !n ? { text: 'Answer at least one to save' } : null}>
       <p className="small mr-count" aria-live="polite">{n} of {mod.questions.length} answered · skip anything</p>

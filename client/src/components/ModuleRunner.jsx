@@ -90,12 +90,13 @@ export default function ModuleRunner({ mod, value, onChange, fromStories = {} })
           {q.type === 'pick' && <p className="small">“Can’t decide” is a real answer.</p>}
           {q.alias && fromStories[q.id] && !filled(value[q.id]) && <p className="small mr-old">Already answered in your stories: “{String(fromStories[q.id]).slice(0, 120)}”. Add to it if you like.</p>}
           <Answer q={q} value={value[q.id]} onChange={set(q.id)} />
-          {filled(value[q.id]) && q.subs.length > 0 && (
-            <div className="mr-subs">
+          {filled(value[q.id]) && q.subs.length > 0 && ( // UX P0-3: follow-ups are optional and start collapsed
+            <details className="mr-subs" open={q.subs.some((s) => filled(value[s.id]))}>
+              <summary>More about this <span className="small">· optional</span></summary>
               {q.subs.map((s) => (
                 <div key={s.id} className="mr-sub"><span className="lbl">{s.text}</span><Answer q={s} value={value[s.id]} onChange={set(s.id)} /></div>
               ))}
-            </div>
+            </details>
           )}
         </li>
       ))}

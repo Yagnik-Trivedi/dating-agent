@@ -14,7 +14,7 @@ const bItem = (item) => {
   const values = item.options.map((o) => o.value);
   return z.object({
     answer: z.enum(values),
-    importance: z.enum(B.importance.map((i) => i.value), { error: 'Pick how much this matters' }), // no default (F7)
+    importance: z.enum(B.importance.map((i) => i.value)).default('medium'), // UX P0-3: "Somewhat" unless the user picks (was required, F7)
     accepts: z.array(z.enum(values)).min(1).default(values),
     dealbreaker: z.boolean().default(false),
     more: text(item.more?.type === 'story' ? 600 : 300).optional(), // plan 33: the optional "say more"

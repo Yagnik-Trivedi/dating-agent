@@ -8,7 +8,7 @@ import { useMobile } from './prelude'
 
 // Plan 33 Q2: "Your world right now" is the required last step before the agent can chat (about 8 minutes).
 export const ONB_STEPS = ['Basics', 'Photos', 'Prompts', 'Lifestyle and values', 'How you reply', 'Your world', 'Done']
-const MINUTES_AFTER = [14, 13, 12, 10, 9, 8, 0] // left after each step starts (Your world is ~8)
+const MINUTES_AFTER = [8, 7, 6, 5, 3, 2, 0] // left after each step starts; about 8 minutes in all (UX P0-3)
 
 /**
  * Scroll to the part of the step that still needs an answer and flash it. A text field (Field puts the id on the input)

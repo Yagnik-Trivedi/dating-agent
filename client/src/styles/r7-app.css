@@ -183,3 +183,8 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 /* UX P0-1: never crop the head. Photos keep their upper part; illustrated demo people are anchored to the top. */
 .ph img, .hero-ph > img, .lt-ph, .prev-card img, .ab-ph { object-position: 50% 22%; }
 .ph img[src^="data:image/svg"], .hero-ph > img[src^="data:image/svg"], .lt-ph[src^="data:image/svg"], .prev-card img[src^="data:image/svg"], .ab-ph[src^="data:image/svg"] { object-position: 50% 0; }
+
+/* UX P0-3: optional "Say more" and module follow-ups start collapsed */
+.vq-more, .mr-subs { margin-top: 4px; }
+.vq-more > summary, .mr-subs > summary { cursor: pointer; font-weight: 600; font-size: 14.5px; color: var(--text-2); padding: 8px 0; min-height: 44px; display: flex; align-items: center; gap: 4px; }
+.vq-more[open] > summary, .mr-subs[open] > summary { color: var(--text); }
