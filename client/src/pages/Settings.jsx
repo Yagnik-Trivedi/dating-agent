@@ -3,13 +3,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Inbox, Lock, LogOut, Trash2 } from 'lucide-react'
-import { Btn, Seg, Sheet, Shell, Toggle } from '../components/r7'
+import { Btn, Chips, Sheet, Shell, Toggle } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
 import { disconnectSocket } from '../lib/socket'
 
+// UX P1-4: plain-language labels; the API values stay off / shadow / auto.
+const MODE_LABELS = [['off', 'I’ll chat myself'], ['shadow', 'Agent starts, I watch'], ['auto', 'Agent handles first chats']]
 const MODES = {
   off: 'Your agent never talks to anyone. You chat yourself, always.',
   shadow: 'After a mutual like, your agent has the first conversation while you read along. Pause it or take over any time.',
@@ -37,7 +39,7 @@ export default function Settings() {
   const body = (
     <div className="settings">
       <section className="set-sec card"><h2 className="h3">Your agent</h2>
-        <div className="set-row col"><b>Agent mode</b><Seg label="Agent mode" value={user.agentMode} onChange={(m) => m !== user.agentMode && !saving && save({ agentMode: m }, m === 'off' ? 'Your agent is off. You’ll chat yourself.' : 'Saved. Your agent will handle the first conversations.')} items={[['off', 'Off'], ['shadow', 'Shadow'], ['auto', 'Auto']]} /><p className="small">{MODES[user.agentMode]}</p></div>
+        <div className="set-row col"><b>Agent mode</b><Chips label="Agent mode" value={user.agentMode} onChange={(m) => m !== user.agentMode && !saving && save({ agentMode: m }, m === 'off' ? 'Your agent is off. You’ll chat yourself.' : 'Saved. Your agent will handle the first conversations.')} items={MODE_LABELS} /><p className="small">{MODES[user.agentMode]}</p></div>
         <div className="set-row"><div><b>Learn from my chats</b><span className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</span></div>
           <Toggle on={learn} label="Learn from my chats" disabled={Boolean(saving)} onChange={(v) => save({ learnFromChats: v }, v ? 'Your agent will learn from your chats' : 'Your agent won’t learn from your chats')} /></div>
         <Link to="/inbox" className="set-row link-row"><div><b>Ask my human</b><span className="small">Questions your agent asked instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
