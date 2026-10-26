@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, Eye, EyeOff, KeyRound, Mail, MapPin, Search } from 'lucide-react'
-import { Btn, Check2, Chips, Field, IconBtn, Input, Seg, Wordmark } from '../components/r7'
+import { Btn, Check2, Chips, Field, IconBtn, Input, Wordmark } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { api, errMsg } from '../lib/api'
@@ -14,7 +14,33 @@ const ageFrom = (dob) => {
   const [y, m, d] = dob.split('-').map(Number), now = new Date()
   return now.getFullYear() - y - ((now.getMonth() + 1) * 100 + now.getDate() < m * 100 + d ? 1 : 0)
 }
-const maxDob = () => { const d = new Date(); d.setFullYear(d.getFullYear() - 18); return d.toISOString().slice(0, 10) }
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const pad = (n) => String(n).padStart(2, '0')
+
+/** UX P1-5: date of birth as Day / Month / Year menus (the native date field showed "dd-----yyyy"). → "YYYY-MM-DD" or "" */
+function DobSelect({ value, onChange }) {
+  const [y0, m0, d0] = value ? value.split('-').map(Number) : []
+  const [v, setV] = useState({ d: d0 ?? '', m: m0 ?? '', y: y0 ?? '' })
+  const top = new Date().getFullYear() - 18
+  const days = v.y && v.m ? new Date(v.y, v.m, 0).getDate() : 31
+  const pick = (k) => (e) => {
+    const n = { ...v, [k]: e.target.value ? Number(e.target.value) : '' }
+    if (n.d > (n.y && n.m ? new Date(n.y, n.m, 0).getDate() : 31)) n.d = ''
+    setV(n); onChange(n.d && n.m && n.y ? `${n.y}-${pad(n.m)}-${pad(n.d)}` : '')
+  }
+  const sel = (k, label, opts) => (
+    <span className="input dob-sel"><select aria-label={label} value={v[k]} onChange={pick(k)} required>
+      <option value="">{label}</option>{opts.map(([val, l]) => <option key={val} value={val}>{l}</option>)}
+    </select></span>
+  )
+  return (
+    <div className="dob" role="group" aria-label="Date of birth">
+      {sel('d', 'Day', Array.from({ length: days }, (_, i) => [i + 1, i + 1]))}
+      {sel('m', 'Month', MONTHS.map((l, i) => [i + 1, l]))}
+      {sel('y', 'Year', Array.from({ length: 83 }, (_, i) => [top - i, top - i]))}
+    </div>
+  )
+}
 export const INTEREST = { Women: ['woman'], Men: ['man'], Everyone: ['woman', 'man', 'nonbinary'] }
 
 function AuthShell({ title, sub, children }) {
@@ -75,7 +101,10 @@ export function Signup() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v?.target ? v.target.value : v }))
-  const ready = f.name && f.email && f.password.length >= 8 && f.dob && f.gender && f.interested.length && f.city.trim() && f.consent
+  // UX P1-5: two short screens (your account → about you); still one sign-up call at the end.
+  const [step, setStep] = useState(1)
+  const accountReady = f.name.trim() && /^\S+@\S+\.\S+$/.test(f.email.trim()) && f.password.length >= 8
+  const ready = accountReady && f.dob && f.gender && f.interested.length && f.city.trim() && f.consent
 
   async function submit(e) {
     e.preventDefault()
@@ -90,24 +119,25 @@ export function Signup() {
   }
 
   return (
-    <AuthShell title="Join Twine" sub="It takes about 8 minutes to set up. Next: add your photos.">
-      <form className="form" onSubmit={submit} noValidate>
-        <div className="row2">
-          <Field label="First name">{(id) => <Input id={id} value={f.name} onChange={set('name')} autoComplete="given-name" maxLength={60} required />}</Field>
-          <Field label="Date of birth" hint="You must be 18 or older.">{(id) => <Input id={id} type="date" max={maxDob()} value={f.dob} onChange={set('dob')} required />}</Field>
-        </div>
+    <AuthShell title={step === 1 ? 'Join Twine' : 'About you'} sub={step === 1 ? 'It takes about 8 minutes to set up. Step 1 of 2: your account.' : 'Step 2 of 2. Next: add your photos.'}>
+      {step === 1 ? <form className="form" onSubmit={(e) => { e.preventDefault(); if (accountReady) setStep(2) }} noValidate>
+        <Field label="First name">{(id) => <Input id={id} value={f.name} onChange={set('name')} autoComplete="given-name" maxLength={60} required />}</Field>
         <Field label="Email">{(id) => <Input id={id} type="email" icon={Mail} value={f.email} onChange={set('email')} autoComplete="email" required />}</Field>
         <Field label="Password" hint="At least 8 characters.">{(id) => <Input id={id} type={show ? 'text' : 'password'} icon={KeyRound} value={f.password} onChange={set('password')} autoComplete="new-password" minLength={8} required right={<IconBtn icon={show ? EyeOff : Eye} label={show ? 'Hide password' : 'Show password'} className="sm" onClick={() => setShow(!show)} />} />}</Field>
+        <Btn size="lg" block type="submit" disabled={!accountReady}>Continue</Btn>
+        <p className="small center">Already have an account? <Link className="link" to="/login">Log in</Link></p>
+      </form> : <form className="form" onSubmit={submit} noValidate>
+        <div className="field"><span className="lbl">Date of birth</span><DobSelect value={f.dob} onChange={set('dob')} /><p className="f-hint">You must be 18 or older.</p></div>
         <CityBox value={f.city} onChange={set('city')} />
         <div className="row2 stack">
-          <div className="field"><span className="lbl">I am</span><Seg label="I am" value={f.gender} onChange={set('gender')} items={[['woman', 'A woman'], ['man', 'A man'], ['nonbinary', 'Non-binary']]} /></div>
+          <div className="field"><span className="lbl">I am</span><Chips label="I am" value={f.gender} onChange={set('gender')} items={[['woman', 'A woman'], ['man', 'A man'], ['nonbinary', 'Non-binary']]} /></div>
           <div className="field"><span className="lbl">Interested in</span><Chips multi items={['Women', 'Men', 'Everyone']} value={f.interested} onChange={set('interested')} label="Interested in" /></div>
         </div>
         <div className="consent"><Check2 checked={f.consent} onChange={set('consent')} required><b>{CONSENT_TEXT}</b> Your agent writes the first messages in your words; you can read every line, pause it or take over any time. Both of you always see which messages an agent wrote.</Check2></div>
         {error && <p className="f-err" role="alert">{error}</p>}
         <Btn size="lg" block type="submit" loading={busy} disabled={!ready}>Create account</Btn>
-        <p className="small center">Already have an account? <Link className="link" to="/login">Log in</Link></p>
-      </form>
+        <Btn type="button" kind="ghost" block icon={ArrowLeft} onClick={() => { setStep(1); setError(null) }}>Back to your account</Btn>
+      </form>}
     </AuthShell>
   )
 }
