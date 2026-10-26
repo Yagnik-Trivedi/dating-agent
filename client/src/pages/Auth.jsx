@@ -16,12 +16,12 @@ const ageFrom = (dob) => {
 }
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pad = (n) => String(n).padStart(2, '0')
+const TOP_YEAR = new Date().getFullYear() - 18 // the youngest allowed birth year
 
 /** UX P1-5: date of birth as Day / Month / Year menus (the native date field showed "dd-----yyyy"). → "YYYY-MM-DD" or "" */
 function DobSelect({ value, onChange }) {
   const [y0, m0, d0] = value ? value.split('-').map(Number) : []
   const [v, setV] = useState({ d: d0 ?? '', m: m0 ?? '', y: y0 ?? '' })
-  const top = new Date().getFullYear() - 18
   const days = v.y && v.m ? new Date(v.y, v.m, 0).getDate() : 31
   const pick = (k) => (e) => {
     const n = { ...v, [k]: e.target.value ? Number(e.target.value) : '' }
@@ -37,7 +37,7 @@ function DobSelect({ value, onChange }) {
     <div className="dob" role="group" aria-label="Date of birth">
       {sel('d', 'Day', Array.from({ length: days }, (_, i) => [i + 1, i + 1]))}
       {sel('m', 'Month', MONTHS.map((l, i) => [i + 1, l]))}
-      {sel('y', 'Year', Array.from({ length: 83 }, (_, i) => [top - i, top - i]))}
+      {sel('y', 'Year', Array.from({ length: 83 }, (_, i) => [TOP_YEAR - i, TOP_YEAR - i]))}
     </div>
   )
 }

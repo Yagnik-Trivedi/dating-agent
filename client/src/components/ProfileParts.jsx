@@ -7,6 +7,7 @@ import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
 import { Baby, Briefcase, Cigarette, GraduationCap, Languages, MapPin, MessageCircle, PenLine, Ruler, Target, Utensils, Wine } from 'lucide-react'
 import { Btn, Field, LikeBtn, Sheet, photoOf } from './r7'
+import { titleCase } from '../lib/text'
 
 const SCENES = ['portrait', 'trek', 'sketch', 'cafe', 'city']
 const DRINK = { never: 'Doesn’t drink', socially: 'Drinks socially', regularly: 'Drinks regularly' }
@@ -16,8 +17,6 @@ const KIDS = { yes: 'Wants kids', no: 'Doesn’t want kids', open: 'Open to kids
 const GOAL = { long_term: 'Looking for long-term', open_to_long_term: 'Open to long-term', short_term: 'Looking for something short-term', figuring_it_out: 'Figuring out what they want' }
 const DIET = { veg: 'Vegetarian', non_veg: 'Eats non-veg', vegan: 'Vegan', jain: 'Jain food', eggetarian: 'Eggetarian' }
 const label = (t) => String(t ?? '').replace(/_/g, ' ')
-/** UX P1-8: interests display in Title Case like languages ("road trips" → "Road Trips"); stored values unchanged. */
-export const titleCase = (t) => String(t ?? '').replace(/(^|[\s/-])(\p{Ll})/gu, (_, sep, c) => sep + c.toUpperCase())
 export const COMMENT_MAX = 150
 
 /** Photos to show: their own, plus illustrated scenes for demo people with fewer than 3. */
