@@ -49,15 +49,18 @@ const styleSchema = z.object({ description: z.string().catch(''), doList: z.arra
 
 /** Section E answers → voice samples tagged with language (LLM, code fallback; code only with llm=false). */
 async function onboardingSamples(answers, userId, { llm = true } = {}) {
-  const items = section('E').items.filter((q) => String(answers.E?.[q.id] ?? '').trim());
-  const texts = items.map((q) => String(answers.E[q.id]).trim());
+  // UX P0-6: a reply typed as several bubbles (one per line) is one sample per bubble; each one after the first is a
+  // burst (set explicitly, so the burst rate can tell these from older one-box replies).
+  const items = section('E').items.flatMap((q) => String(answers.E?.[q.id] ?? '').split('\n').map((t) => t.trim()).filter(Boolean)
+    .map((text, b, all) => ({ q, text, burst: all.length > 1 ? b > 0 : false })));
+  const texts = items.map((x) => x.text);
   if (!texts.length) return [];
   const tags = !llm ? [] : (await chatJSON({ tier: 'mid', reasoning: false, temperature: 0, schema: tagSchema, purpose: 'voice-language-tags', userId,
     messages: tagLanguage.build({ texts }) }).catch((err) => { if (err.name === 'BudgetExceededError') throw err; return { tags: [] }; })).tags;
-  return items.map((q, i) => {
+  return items.map(({ q, burst }, i) => {
     const t = tags.find((x) => x.i === i + 1);
     return {
-      userId, incoming: q.prompt ? null : q.text, text: texts[i], source: 'onboarding', mood: q.mood,
+      userId, incoming: q.prompt ? null : q.text, text: texts[i], source: 'onboarding', mood: q.mood, burst,
       ...(answers.Edevice?.[q.id] && { device: answers.Edevice[q.id] }), // plan 32 KP1: typed on a phone or a computer
       lang: t ? { languages: t.languages, script: t.script, codeSwitch: t.codeSwitch } : tagLanguageHeuristic(texts[i]),
       // No per-user vector: the 15 onboarding prompts are the same for everyone, so the agent embeds them once

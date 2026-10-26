@@ -67,7 +67,8 @@ function usableEmojis(S) {
  * self-report, which counts as SELF_REPORT_WEIGHT replies.
  */
 function burstRate(S, selfReport) {
-  const chats = S.filter((s) => s.source === 'own_chat');
+  // UX P0-6: onboarding replies count once they could be sent as bubbles (burst set: false or true).
+  const chats = S.filter((s) => s.source === 'own_chat' || (s.source === 'onboarding' && typeof s.burst === 'boolean'));
   const starts = chats.filter((s) => !s.burst).reduce((t, s) => t + s.weight, 0);
   const more = Math.min(starts, chats.filter((s) => s.burst).reduce((t, s) => t + s.weight, 0));
   const prior = KG.SELF_REPORT_PRIORS.bursts[selfReport?.bursts] ?? KG.BURST_PRIOR;

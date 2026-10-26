@@ -116,3 +116,11 @@ test('own chats: a message right after my own (nothing from them in between) is 
   const samples = await VoiceSample.find({ userId: me._id }).sort({ createdAt: 1 }).lean();
   assert.deepEqual(samples.map((s) => [s.text, s.burst]), [['omg so good', false], ['legs are dead though', true]]);
 });
+
+test('UX P0-6: onboarding replies sent as bubbles count as bursts; older one-box replies (no burst flag) do not', () => {
+  const bubbles = Array.from({ length: 20 }, (_, i) => ({ text: `reply ${i} haha`, source: 'onboarding', burst: i % 2 === 1 }));
+  assert.ok(computeVoiceProfile(bubbles).burstiness > 0.6);
+  const single = Array.from({ length: 5 }, (_, i) => ({ text: `reply ${i}`, source: 'onboarding', burst: false }));
+  assert.ok(computeVoiceProfile(single).burstiness < KG.BURST_PRIOR);
+  assert.equal(computeVoiceProfile(single.map(({ burst, ...s }) => s)).burstiness, KG.BURST_PRIOR);
+});

@@ -5,7 +5,7 @@
 // not in the core (personality now comes from the modules' situation picks; old answers still count).
 // "Teach your agent more" (/teach, Modules.jsx) is the module list; the old blocks here stay for replies and how you text.
 // Plan 32 KP1: step 5 also asks "How do you usually text?" (taps, skippable) and records the device each reply is typed on.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Plus } from 'lucide-react'
 import OnbShell from '../components/OnbShell'
@@ -122,27 +122,51 @@ const valuesMissing = (B, section) => {
   return bad ? { text: `“${bad.text}”: pick at least one answer to rule out, or turn the dealbreaker off`, target: `vq-${bad.id}` } : null
 }
 
-/* 5 · How you reply: one message at a time, like a chat. Tap a reply to change it. */
+/* 5 · How you reply: one message at a time, like a chat. Tap a reply to change it.
+   UX P0-6: Enter adds a bubble; the turn moves on after a pause (BURST_GAP_MS) or "Done". A reply's bubbles are
+   stored one per line; the server keeps each as its own sample and counts the extra ones as a burst. */
+const BURST_GAP_MS = 2200
 function Replies({ items, value, onChange }) {
   const firstOpen = items.findIndex((i) => !value[i.id]?.trim())
   const [at, setAt] = useState(firstOpen < 0 ? items.length : firstOpen)
   const [draft, setDraft] = useState('')
-  const send = () => {
-    const next = { ...value, [items[at].id]: draft.trim() }
-    onChange(next); setDraft('')
-    const open = items.findIndex((i) => !next[i.id]?.trim())
+  const [bubbles, setBubbles] = useState([])
+  const timer = useRef(null)
+  const latest = useRef({ value, at })
+  useEffect(() => { latest.current = { value, at } })
+  useEffect(() => () => clearTimeout(timer.current), [])
+  const commit = (bs) => {
+    clearTimeout(timer.current)
+    const { value: v, at: i } = latest.current
+    if (!bs.length || i >= items.length) return
+    const next = { ...v, [items[i].id]: bs.join('\n') }
+    onChange(next); setBubbles([]); setDraft('')
+    const open = items.findIndex((x) => !next[x.id]?.trim())
     setAt(open < 0 ? items.length : open)
   }
+  const wait = (bs) => { clearTimeout(timer.current); if (bs.length) timer.current = setTimeout(() => commit(bs), BURST_GAP_MS) }
+  const send = () => { const bs = [...bubbles, draft.trim()]; setBubbles(bs); setDraft(''); wait(bs) }
+  // Typing holds the turn open; an empty box after a pause moves on.
+  const type = (t) => { setDraft(t); if (t.trim()) clearTimeout(timer.current); else wait(bubbles) }
+  const drop = (k) => { const bs = bubbles.filter((_, j) => j !== k); setBubbles(bs); wait(bs) }
+  const lines = (t) => String(t ?? '').split('\n').filter((x) => x.trim())
   return (
     <div className="replies" id="onb-replies" aria-live="polite">
       {items.map((it, i) => (i <= at || value[it.id]) && (
         <div key={it.id} className="rp">
           <p className="bubble theirs-b">{it.text}</p>
-          {i !== at && value[it.id] && <button type="button" className="bubble mine-b" onClick={() => { setAt(i); setDraft(value[it.id]) }} aria-label={`Your reply: ${value[it.id]}. Change it`}>{value[it.id]}</button>}
+          {i !== at && value[it.id] && <button type="button" className="rp-mine" onClick={() => { clearTimeout(timer.current); setAt(i); setBubbles(lines(value[it.id])); setDraft('') }} aria-label={`Your reply: ${lines(value[it.id]).join(' / ')}. Change it`}>
+            {lines(value[it.id]).map((b, k) => <span key={k} className="bubble mine-b">{b}</span>)}
+          </button>}
+          {i === at && bubbles.map((b, k) => <button type="button" key={k} className="bubble mine-b" onClick={() => drop(k)} aria-label={`${b}. Remove this message`}>{b}</button>)}
         </div>
       ))}
       {at < items.length
-        ? <><p className="small rp-n">Message {at + 1} of {items.length}</p><Composer value={draft} onChange={setDraft} onSend={send} placeholder="Type it the way you would…" /></>
+        ? <>
+          <p className="small rp-n">Message {at + 1} of {items.length}{bubbles.length ? ' · Enter adds another bubble, or pause to move on' : ''}</p>
+          <Composer value={draft} onChange={type} onSend={send} placeholder={bubbles.length ? 'Add another message…' : 'Type it the way you would…'} />
+          {bubbles.length > 0 && <button type="button" className="link rp-done" onClick={() => commit(draft.trim() ? [...bubbles, draft.trim()] : bubbles)}>Done</button>}
+        </>
         : <p className="small rp-n">All {items.length} done. Tap a reply to change it.</p>}
     </div>
   )
