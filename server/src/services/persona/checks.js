@@ -27,7 +27,7 @@ const UNSURE = /\b(not (really )?sure|don'?t know|no idea|can'?t say|still figur
 const HONEST = { test: (s) => NO_EXPERIENCE.test(s) || UNSURE.test(s) };
 // Plan 34 (A1): generic small talk about my day or mood needs no fact ("pretty chill day", "week's been okay, nothing crazy",
 // "doing good"). Anything specific ("just got back from work") still does. Short clauses only.
-export const SMALL_TALK = /^\W*(?:(?:(?:my|the|this|today'?s?)\s+)?(?:day|week|weekend|morning|evening|night|today)\s*(?:'s|has|was|is|has been)?\s*(?:been\s+)?|(?:i'?m|im|i am|all|everything'?s?|doing|been|not)\s+)?(?:pretty|really|super|so|kinda|quite|not too|not bad|not|just)?\s*(?:good|great|fine|okay|ok|alright|chill|calm|busy|hectic|long|tiring|lazy|slow|meh|decent|relaxed|nice|well|bad|nothing (?:much|crazy|special)|same old|the usual)(?:\s+(?:day|week|so far|tbh|honestly|thanks|haha|lol|nothing crazy|nothing much|too|wbu|hbu|and you|you|u))*\W*$/i;
+export const SMALL_TALK = /^\W*(?:(?:(?:my|the|this|today'?s?)\s+)?(?:day|week|weekend|morning|evening|night|today)\s*(?:'s|has|was|is|has been)?\s*(?:been\s+)?|(?:i'?m|im|i am|all|everything'?s?|doing|been|not)\s+)?(?:pretty|really|super|so|kinda|quite|not too|not bad|not|just)?\s*(?:good|great|fine|okay|ok|alright|chill|calm|busy|hectic|long|tiring|lazy|slow|meh|decent|relaxed|nice|well|bad|nothing (?:much|crazy|special)|same old|the usual|going (?:well|good|great|ok|okay|fine)|chilling|relaxing|resting|vibing)(?:\s+(?:day|week|so far|tbh|honestly|thanks|haha|lol|nothing crazy|nothing much|too|wbu|hbu|and you|you|u))*\W*$/i;
 // "you're into X", "your trekking pic", "you love …": statements about the other person.
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
@@ -166,7 +166,9 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
     // the second half matches a valid claim (first v2 run).
     // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
     // rcb!" passed as no claim in agent-check run 4).
-    const aboutMe = (c) => (FIRST_PERSON.test(c) && !ABOUT_THEM_LEAD.test(c)) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
+    // Plan 34 (smallTalk): a subject-less "chilling by the pool" is about me too.
+    const aboutMe = (c) => (FIRST_PERSON.test(c) && !ABOUT_THEM_LEAD.test(c)) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2)
+      || (smallTalk && /^\W*(just\s+|been\s+)?\w+ing\b/i.test(c) && !YOU_CLAIM.test(c) && !INTERROGATIVE.test(c));
     const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !(smallTalk && SMALL_TALK.test(c)) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);

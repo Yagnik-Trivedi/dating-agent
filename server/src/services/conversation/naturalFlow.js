@@ -13,6 +13,24 @@ const between = ([lo, hi], r) => lo + Math.floor(r * (hi - lo + 1));
 // Generic get-to-know questions (an interview, not a chat): at most GETTOKNOW_PER_SESSION, never in greeting/warmup.
 export const GETTOKNOW = /\b(what do (you|u) (do|like to do)( for fun| in your free time| on (the )?weekends)|what are (your|ur) hobbies|any hobbies|where are (you|u) from|where('?s| is) home for (you|u)|what kind of (music|movies|films|books|food|shows)|tell me (a bit |more )?about (yourself|urself)|what('?s| is) (your|ur) fav(ou?rite)?\b|(your|ur) fav(ou?rite)? (movie|film|song|food|book|place|colou?r|show)|what are (you|u) looking for|what brings (you|u) (here|on here|to this app)|what do (you|u) do for (a living|work))/i;
 
+/** A reply that adds nothing: a bare reaction ("oh nice", "same here", "fair enough", "makes sense", "true that"). */
+const BARE = /^\W*(?:(?:oh+|ah+|aw+|ha(?:ha)+|lol|omg|ooh+|yeah|yes|ya|yep|ok(?:ay)?|hmm+|wow)[\s,!.]*)*(?:nice|cool|same(?: here| vibe| tbh| same)?|true(?: that)?|fair(?: enough)?|makes sense|exactly|totally|love (?:that|this|it)|for real|right|i see|got it|sounds (?:good|nice|fun)|so true|me too|ikr|nice one|good good|all good|haha+|lol)?[\s!.,]*$/iu;
+export const isBare = (t) => { const s = String(t ?? '').replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').trim(); return words(s) <= 4 && BARE.test(s); };
+/** Bouncing the question straight back ("wbu", "what about you") instead of saying something. */
+export const BOUNCE = /\b(wbu|hbu|what about (you|u)|how about (you|u)|and (you|u)\??$|you\?$)/i;
+
+/**
+ * The last resort when every draft failed (plan 34: nothing hard-coded): a short line from the user's OWN real
+ * messages (a reaction-like sample, never one already sent in this chat). → text | null
+ */
+export function ownWordsLine({ samples = [], sent = new Set(), rng, norm }) {
+  const lines = samples.flatMap((s) => String(s.text ?? '').split(/(?<=[.!?])\s+|\n/)).map((t) => t.trim())
+    .filter((t) => t && !t.includes('?') && !/\d/.test(t) && words(t) >= 1 && words(t) <= 6 && !sent.has(norm(t).join(' ')));
+  const reactions = lines.filter((t) => /^(ha|lol|omg|wait|ooh|oh|no way|aw|yay|wow|hmm|ugh)/i.test(t));
+  const pool = reactions.length ? reactions : [];
+  return pool.length ? pool[Math.floor(rng() * pool.length)] : null;
+}
+
 /** The phase of MY side in this session: greeting (first 2 of my messages), warmup, flow, winding_down. */
 export function phaseOf({ myCount, warmup, closing }) {
   if (closing) return 'winding_down';
@@ -177,10 +195,18 @@ export function naturalize(plan, ctx) {
   if (plan.end === 'natural' && !state.preClosed) { plan.end = null; plan.preClose = true; } // natural end only after a pre-close
   else if (nearEnd && !lastMine) plan.preClose = true;
   plan.phase = phaseOf({ myCount, warmup, closing: Boolean(plan.end || plan.preClose) });
+  // Length: never shrink into one-word replies after the hello (the reply pulled toward a short message kept shrinking).
+  const floor = { greeting: 5, warmup: 8, flow: 9, winding_down: 6 }[plan.phase] ?? 6;
+  plan.minWords = plan.phase === 'greeting' ? 3 : plan.phase === 'winding_down' ? 4 : 5;
+  // The chat went flat (both of the last two messages short or bare): bring something new.
+  const last2 = history.slice(-2);
+  plan.mustAdd = !plan.end && plan.phase !== 'greeting' && last2.length === 2 && last2.every((m) => words(m.text) < 6 || isBare(m.text));
+  plan.targetWords = Math.max(plan.targetWords ?? 0, plan.mustAdd ? 14 : floor);
   // The lead, shared and derived from the transcript (from where this session's warmup ended).
   const lead = leadOf(history, { seed, from: sessionFrom });
   plan.lead = plan.phase === 'flow' ? (lead.lead === me ? 'me' : lead.lead ? 'them' : 'nobody') : 'nobody';
   plan.handover = plan.lead === 'me' && lead.len + 1 >= lead.stint && rng() < N.LEAD_HANDOVER;
+  if (plan.lead === 'me') plan.targetWords = Math.max(plan.targetWords, 14); // the leader carries it
   // Questions (A2): rare, never alone outside greeting/warmup, within the window; none on a close or pre-close.
   const budget = questionBudget(history, me);
   const pAsk = plan.phase === 'greeting' ? 0.9 : plan.phase === 'warmup' ? 0.5 : plan.lead === 'them' ? N.ASK_MAX * 0.8 : N.ASK_MAX;
@@ -195,6 +221,7 @@ export function naturalize(plan, ctx) {
   }
   // Move: a pre-close finishes the thread; in flow the follower reacts, the leader shares.
   if (plan.preClose) plan.move = 'pre_close';
+  else if (plan.mustAdd && !['reply', 'stay', 'think', 'not_sure', 'callback'].includes(plan.move)) plan.move = 'bring';
   else if (!plan.end && plan.phase === 'greeting') plan.move = 'greet_back';
   else if (!plan.end && plan.phase === 'flow' && !['reply', 'stay', 'think', 'not_sure', 'callback'].includes(plan.move)) {
     plan.move = plan.lead === 'me' ? (plan.handover ? 'hand_over' : 'lead') : plan.lead === 'them' ? 'follow' : rng() < 0.5 ? 'react' : 'share';

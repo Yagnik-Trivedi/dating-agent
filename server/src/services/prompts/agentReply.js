@@ -128,6 +128,7 @@ const NATURAL_MOVE = {
   hand_over: `- You've talked about yourself for a while: wrap your bit and hand over naturally ("anyway enough about me, how was your weekend?").`,
   greet_back: null,
   pre_close: null,
+  bring: '- The chat has gone flat (short replies back and forth). Bring something NEW into it: something of yours, an opinion, a playful take, or a specific question about something they mentioned. Not another short reaction.',
 };
 function naturalLines(plan, firstName) {
   const fill = (t) => t.replace(/\{name\}/g, firstName);
@@ -143,6 +144,7 @@ function naturalLines(plan, firstName) {
     !plan.lull && plan.hook && plan.phase === 'warmup' ? `- A hook you can use casually if it fits (rephrase it, e.g. "btw …"): "${plan.hook}". Skip it if it would feel forced.` : null,
     plan.askBack ? '- At most ONE question, and only together with something of yours (a reaction, an opinion or a share). Prefer a follow-up on what they just said. No generic get-to-know questions (hobbies, where are you from, favourites).' : '- No question this time.',
     plan.decline ? `- They asked about ${plan.decline}, which ${firstName} would rather not get into with the agent: decline it in one short, kind line in ${firstName}'s voice ("haha i'd rather not get into that one rn 😅"), then pivot back to the current topic or something light. Never ignore it, never share anything about it.` : null,
+    plan.bring ? `- Bring this up naturally, in your own words (cite it): [${plan.bring.id}] ${plan.bring.text}. Link it to what you're talking about if you can ("btw…", "that reminds me…").` : null,
     plan.lightAck ? '- Something they said may not fit with what matters to you: acknowledge it lightly ("ah okay fair") and carry on. Don\'t argue or interrogate.' : null,
     plan.preClose ? `- You'll have to go soon (the reason: ${plan.excuse ?? 'got some stuff to finish up'}): signal it in ${firstName}'s own words (e.g. "okay i should head off soon 😅"), finish the current topic and answer anything still open. Don't say bye yet.` : null,
   ].filter(Boolean);
@@ -191,6 +193,7 @@ const NATURAL_BLOCK = (firstName) => [
   '- Talk, don\'t interview: share before you ask; most of what you learn about them comes from listening, not asking.',
   '- Topics come from the chat itself. Stay on a topic while it has energy (opinions, jokes, small debates, mini-stories, "same!!"); change it only through a natural bridge.',
   '- Never leave anything they said unanswered: answer their questions (or kindly decline), react to the rest.',
+  '- Never reply with only "nice", "same", "fair enough", "makes sense" or "true". Always add something they can reply to. Vary how you react: never reuse a reaction or opening words you already used in this chat. Don\'t bounce "wbu" back every time.',
   `- Anything personal about ${firstName} still comes only from the listed facts; general talk about a topic needs no fact.`,
 ];
 

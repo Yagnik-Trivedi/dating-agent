@@ -26,7 +26,7 @@ import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
-import { BARE_BYE, endVibe, excuseFor, GETTOKNOW, greetingFor, INVENTED_EXCUSE, readParts, TALK_LATER } from './naturalFlow.js';
+import { BARE_BYE, BOUNCE, endVibe, excuseFor, GETTOKNOW, greetingFor, INVENTED_EXCUSE, isBare, ownWordsLine, readParts, TALK_LATER } from './naturalFlow.js';
 import { User } from '../../models/User.js';
 import { tierOf } from './evidence.js';
 import { memoryFor, rawTranscript, repeatsEarlier } from './memory.js';
@@ -164,7 +164,7 @@ const DECLINED = /\b(rather not|not (get|getting) into|pass on that|keep that (o
 export const uncoveredItems = (items = [], covers = [], tapback = null) => items.filter((it) => !covers.includes(it.id) && (MUST_COVER.has(it.kind) || !tapback));
 
 /** Plan 34 (FLOW=natural) draft problems; they share the one regeneration. → { problems, drop } */
-export function naturalProblems({ draft, plan }) {
+export function naturalProblems({ draft, plan, myRecent = [] }) {
   const problems = [];
   const drop = new Set();
   const sentences = draft.messages.flatMap((m) => sentencesOf(m));
@@ -180,6 +180,14 @@ export function naturalProblems({ draft, plan }) {
       problems.push("no generic get-to-know question (hobbies, where you're from, favourites): follow up on what they said, or share something.");
       generic.forEach((q) => drop.add(q));
     }
+  }
+  if (!plan.end) {
+    // Going nowhere: a bare reaction, the same kind of reaction again, a "wbu" bounce again, or far too short.
+    const bareRecently = myRecent.some(isBare);
+    if (isBare(text) && (plan.mustAdd || bareRecently || plan.phase !== 'greeting')) problems.push(`don't just say "${text.trim()}": react in a fresh way AND add something real (a detail, an opinion, a bit of your day or interests from the facts, or a specific question). Never repeat a reaction you already used.`);
+    if (BOUNCE.test(text) && myRecent.some((m) => BOUNCE.test(m))) problems.push('you already bounced the question back ("wbu") recently: say something instead of asking it back again.');
+    if (words(text) < (plan.minWords ?? 0)) problems.push(`too short: write about ${plan.targetWords} words, with something they can reply to.`);
+    if (plan.mustAdd && plan.bring && !isBare(text) && words(text) < 8) problems.push(`the chat went flat: bring this up naturally: [${plan.bring.id}] ${plan.bring.text}.`);
   }
   if (plan.decline && !DECLINED.test(text)) problems.push(`they asked about ${plan.decline}: decline it kindly in one short line ("haha i'd rather not get into that one rn"), then move back to what you were talking about.`);
   if (plan.preClose && draft.end) problems.push("don't say bye yet: just signal you'll have to go soon, finish this thread and answer what's open.");
@@ -326,6 +334,12 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const facts = new Map(picked.map((f, i) => [`F${i + 1}`, f]));
   stories.forEach((s, i) => facts.set(`S${i + 1}`, s));
   if (plan.topic?.kind === 'story') plan.topic.storyId = [...facts].find(([, f]) => String(f._id) === plan.topic.id)?.[0];
+  // Plan 34: a flat chat (or my lead) brings in something of mine not yet talked about, from my own facts.
+  if (natural && (plan.mustAdd || plan.lull === 'share' || plan.move === 'lead') && !plan.end) {
+    const brought = new Set(state.brought ?? []);
+    const pickF = [...facts].find(([id, f]) => !brought.has(String(f._id)) && f.disclosure === 'public' && ['likes', 'story', 'goal', 'opinion', 'background', 'values'].includes(f.predicate) && f.attribute !== 'job');
+    if (pickF) plan.bring = { id: pickF[0], text: factText(pickF[1], pickF[1].conceptLabel), factId: String(pickF[1]._id) };
+  }
   // Plan 33 (A6): something held loosely is said with a hedge; their question on it may get a think-out-loud first, and
   // a question on something with no fact an honest "idk". Fillers: only the user's own, at about their rate.
   const texture = rulesOn && !opening ? planTexture({ voice: persona.voice, samples: persona.samples, rng: seeded(turnSeed(conv.seed ^ 0x5eed, me, state.turn)),
@@ -403,7 +417,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       c.humanDrop = hp.drop;
     }
     if (natural) {
-      const np = naturalProblems({ draft, plan });
+      const np = naturalProblems({ draft, plan, myRecent: history.filter((m) => String(m.senderId) === me).slice(-3).map((m) => m.text) });
       c.problems.push(...np.problems);
       c.humanDrop = [...(c.humanDrop ?? []), ...np.drop];
     }
@@ -483,10 +497,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
     const opener = natural ? `hey ${matchName}! how's your day going?` : `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    // Plan 34: a greeting still gets a greeting answer as the last resort.
-    const greetBack = natural && plan.phase === 'greeting' ? ['good good, wbu?', 'pretty good! wbu?', 'all good, hbu?'][Math.floor(rng() * 3)] : null;
-    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : greetBack ?? (human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng));
-    messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
+    // Plan 34: no fixed lines. The last resort is a short line from the user's own real messages, or nothing.
+    const own = natural && !plan.end && !opening ? ownWordsLine({ samples: persona.samples ?? [], sent: mySent, rng, norm }) : null;
+    const line = natural && !plan.end && !opening ? own : plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
+    if (line) messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
+    else fallback = 'silent';
   }
   // Plan 32 KP1: a burst is sent as separate bubbles (the scheduler sends each message on its own).
   if (!opening) messages = splitBurst(messages, plan.burst);
@@ -523,6 +538,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       getToKnow: { ...(state.getToKnow ?? {}), [String(naturalCtx.sessionFrom)]: (state.getToKnow?.[String(naturalCtx.sessionFrom)] ?? 0) + messages.flatMap((m) => sentencesOf(m)).filter((x) => x.includes('?') && GETTOKNOW.test(x)).length },
       hooksUsed: [...new Set([...(state.hooksUsed ?? []), ...(plan.hook ? [plan.hook] : [])])],
       preClosed: Boolean(state.preClosed || plan.preClose),
+      brought: [...new Set([...(state.brought ?? []), ...(plan.bring ? [plan.bring.factId] : []), ...used.map(String)])],
     }),
   });
   if (natural && plan.newThread) await Conversation.updateOne({ _id: conv._id }, { $set: { 'flow.thread': plan.newThread } });
