@@ -10,6 +10,7 @@ import { KgFact } from '../src/models/KgFact.js';
 import { Match } from '../src/models/Match.js';
 import { MatchDecision } from '../src/models/MatchDecision.js';
 import { Message } from '../src/models/Message.js';
+import { VoiceProfile } from '../src/models/VoiceProfile.js';
 import { compactNotes } from '../src/services/compat/compactNotes.js';
 import { cancelReplies, stopConversation } from '../src/services/agent/scheduler.js';
 import { decide, extend, reportFor, revealFor, settle, startEvaluation } from '../src/services/compat/index.js';
@@ -121,6 +122,8 @@ test('the lower side wins; each user sees only their own report', async () => {
 });
 
 test('"no" with an active agent → one wind-down from that side, closed, compaction queued; "Talk anyway" only for the "no" side', async () => {
+  // Plan 34: without a model (CI has AI off) the wind-down is my own saved closing style, never a fixed line.
+  await VoiceProfile.updateOne({ userId: A }, { $set: { closingStyle: 'take care, all the best' } }, { upsert: true });
   await decision(A, 'no');
   await decision(B, 'yes');
   assert.equal(await settle(match._id, conv._id), 'incompatible');
