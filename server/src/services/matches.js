@@ -90,7 +90,7 @@ export async function matchDetail(match, viewerId) {
 }
 
 /** Create the match for a mutual like (idempotent), notify both users, kick off the pipeline. admin: an owner's test match. */
-export async function createMatch(userA, userB, { admin = false } = {}) {
+export async function createMatch(userA, userB, { admin = false, chatDepth = null, chain = null } = {}) {
   const users = [String(userA), String(userB)].sort();
   const pairKey = users.join('_');
   const existing = await Match.findOne({ pairKey });
@@ -111,6 +111,7 @@ export async function createMatch(userA, userB, { admin = false } = {}) {
       pairKey,
       perUser: users.map((userId) => ({ userId, name: firstName(userId), agentActive: modeOf(userId) !== 'off', decision: null, choice: modeOf(userId) === 'off' ? 'self' : 'agents' })),
       ...(admin && { admin: true }),
+      ...(chatDepth && { chatDepth }), ...(chain && { chain }), // owner's chained test run
     });
   } catch (err) {
     if (err.code === 11000) return Match.findOne({ pairKey }); // both liked at the same moment

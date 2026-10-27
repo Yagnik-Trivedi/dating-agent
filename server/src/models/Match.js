@@ -31,6 +31,9 @@ const matchSchema = new mongoose.Schema({
   closedReason: { type: String, enum: ['gate', 'unmatched', 'blocked', null], default: null },
   agentState: Mixed, // { turnCount, lastAgentAt, stopReason, runningLock } (plan 08); startsAt when 'scheduled' (plan 12 credit guard); frozen: judge demo match paused until opened
   lastMessageAt: Date,
+  // Owner's chained test run: this match's chat depth (overrides CHAT_DEPTH) and the people still to go after it.
+  chatDepth: { type: String, enum: ['full', 'demo', 'short', 'chain', null], default: undefined },
+  chain: Mixed, // { owner, next: [userId], depth }
 }, { timestamps: true, versionKey: false });
 
 export const Match = mongoose.model('Match', matchSchema);

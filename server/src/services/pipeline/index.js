@@ -1,4 +1,5 @@
 import { Conversation } from '../../models/Conversation.js';
+import { chainAfter } from '../match/chain.js';
 import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
 import { Profile } from '../../models/Profile.js';
@@ -37,6 +38,7 @@ export async function setStatus(match, status) {
   match.status = status;
   emitStatus(match);
   if (status === 'closed' || status === 'flagged_fake') await enqueue('compactNotes', { matchId: String(match._id) }, { dedupeKey: `compact:${match._id}` });
+  await chainAfter(match._id, status).catch((err) => console.error(`chain ${match._id}: ${err.message}`)); // owner's chained test run
   return match;
 }
 
@@ -87,7 +89,7 @@ export async function startConversationDoc(match) {
   const existing = await Conversation.findOne({ matchId: match._id, status: 'active' }).lean();
   if (existing) return existing;
   // Plan 33 C1: full / demo chats run in sessions; short is today's single chat.
-  const depth = chatDepth(await User.find({ _id: { $in: match.users } }, { isSeed: 1, isJudge: 1 }).lean());
+  const depth = (await Match.findById(match._id, { chatDepth: 1 }).lean())?.chatDepth ?? chatDepth(await User.find({ _id: { $in: match.users } }, { isSeed: 1, isJudge: 1 }).lean());
   const startCount = depth === 'short' ? 0 : await Message.countDocuments({ matchId: match._id });
   return Conversation.create({
     matchId: match._id, round: 1 + await Conversation.countDocuments({ matchId: match._id }), seed, agentState, depth,

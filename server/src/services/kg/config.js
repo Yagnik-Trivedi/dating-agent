@@ -99,6 +99,8 @@ export const KG = Object.freeze({
   CHAT_DEPTHS: Object.freeze({
     full: Object.freeze({ sessions: 5, sessionMessages: [16, 24], gapMs: [3 * 3_600_000, 12 * 3_600_000], minSessionsForYes: 3, minMessagesForYes: 50 }),
     demo: Object.freeze({ sessions: 3, sessionMessages: [16, 16], gapMs: [45_000, 75_000], minSessionsForYes: 3, minMessagesForYes: 40 }),
+    // Owner's chained test run (2026-10-27): all of full's sessions back to back, a few seconds apart (set per match).
+    chain: Object.freeze({ sessions: 5, sessionMessages: [16, 22], gapMs: [3_000, 8_000], minSessionsForYes: 3, minMessagesForYes: 50 }),
   }),
   // What each session may draw on (A5): session 1 small talk (surface), 2 adds stories and people (personal), 3+ deep.
   SESSION_TIERS: Object.freeze(['surface', 'personal', 'deep']),
@@ -138,6 +140,6 @@ export const KG = Object.freeze({
   JOB_POLL_MS: 1000, JOB_LOCK_MS: 120_000, JOB_MAX_ATTEMPTS: 5, JOB_DONE_TTL_DAYS: 7,
   JOB_CONCURRENCY: Object.freeze({
     buildUserGraph: 1, buildModule: 1, matchCreated: 2, agentTurn: 3, evaluate: 2, judge: 2, compactNotes: 1,
-    sessionEnd: 2, nextSession: 2, rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2, moderatePhoto: 2,
+    sessionEnd: 2, nextSession: 2, chainNext: 1, rebuildVoice: 1, reflect: 1, reconfirm: 1, conceptCleanup: 1, archiveNotes: 1, seedLikeBack: 2, profileCheck: 2, awaitGraph: 2, moderatePhoto: 2,
   }),
 });

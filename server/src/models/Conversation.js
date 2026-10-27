@@ -10,7 +10,7 @@ const conversationSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
   endedBy: { type: String, enum: ['interest', 'max_turns', 'natural', 'dealbreaker_hint', 'take_over', 'stale', 'chat_myself', 'judge_yes', 'judge_no', 'sessions_done', null], default: null },
   // Plan 33 C1: full | demo = sessions; short (and docs from before plan 33, which have no depth) = one chat as before.
-  depth: { type: String, enum: ['full', 'demo', 'short'], default: 'short' },
+  depth: { type: String, enum: ['full', 'demo', 'short', 'chain'], default: 'short' },
   sessionIndex: { type: Number, default: 1 }, // the current session (1-based)
   // chatting → closing (one side said "talk tomorrow?", the other's goodbye is due) → gap (until nextSessionAt)
   phase: { type: String, enum: ['chatting', 'closing', 'gap'], default: 'chatting' },

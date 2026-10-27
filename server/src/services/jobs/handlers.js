@@ -1,5 +1,6 @@
 // Every job type the worker runs (plan 17 §3). Importing this file registers them.
 import { Like } from '../../models/Like.js';
+import { runChainNext } from '../match/chain.js';
 import { Match } from '../../models/Match.js';
 import { resumeConversations } from '../agent/index.js';
 import { runAgentTurn } from '../agent/scheduler.js';
@@ -32,7 +33,8 @@ registerJob('evaluate', async ({ matchId, reason }) => {
 registerJob('judge', runJudge); // one per side per conversation; the second one settles the match
 registerJob('compactNotes', compactNotes);
 registerJob('sessionEnd', runSessionEnd); // plan 33: summary + evidence passes + continue / end, after each session
-registerJob('nextSession', startNextSession); // plan 33: the next session after the gap
+registerJob('nextSession', startNextSession);
+registerJob('chainNext', runChainNext); // owner's chained test run: the next match after one settles // plan 33: the next session after the gap
 // Stale chats stop; chats that never started (or lost a reply before it was queued) get a turn.
 registerJob('agentSweep', () => resumeConversations());
 registerJob('seedLikeBack', async ({ seedId, userId }) => {
