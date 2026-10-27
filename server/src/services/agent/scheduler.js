@@ -119,7 +119,7 @@ export async function runReply(matchId, userId) {
     if (turn.tapback) await reactToMessage({ match, messageId: turn.tapback.messageId, userId, emoji: turn.tapback.emoji, agent: true }).catch((err) => console.warn(`tapback ${key}: ${err.message}`));
     for (const [i, text] of turn.messages.entries()) {
       // The delay overlaps the model work: the first message waits only for what's left of its typing time (plan 30 S1).
-      const pace = paceMs(text);
+      const pace = match.instant ? 0 : paceMs(text);
       await typeFor(matchId, userId, i === 0 ? Math.max(0, pace - (Date.now() - started)) : pace);
       // Re-check: took over, status changed, agent switched off, or a newer message arrived → discard the rest.
       const current = await mayReply(matchId, userId);

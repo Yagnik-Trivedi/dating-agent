@@ -60,7 +60,7 @@ export async function onIncomingMessage(message) {
   // Perceiving their message happens inside my next turn (one LLM call: perceive + observe, plan 08 §2.1).
   for (const viewer of others) {
     // No debounce after an agent's message (it never sends a burst); a human gets AGENT_DEBOUNCE_MS to finish typing.
-    if (side(match, viewer)?.agentActive) scheduleReply(match._id, viewer, message.authoredBy === 'agent' ? 0 : env.AGENT_DEBOUNCE_MS); // a side that took over neither replies nor learns
+    if (side(match, viewer)?.agentActive) scheduleReply(match._id, viewer, message.authoredBy === 'agent' || match.instant ? 0 : env.AGENT_DEBOUNCE_MS); // a side that took over neither replies nor learns
   }
 }
 

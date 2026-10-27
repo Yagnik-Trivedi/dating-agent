@@ -34,6 +34,7 @@ const matchSchema = new mongoose.Schema({
   // Owner's chained test run: this match's chat depth (overrides CHAT_DEPTH) and the people still to go after it.
   chatDepth: { type: String, enum: ['full', 'demo', 'short', 'chain', null], default: undefined },
   chain: Mixed, // { owner, next: [userId], depth }
+  instant: { type: Boolean, default: undefined }, // owner's test match: agents reply with no debounce and no typing delay
 }, { timestamps: true, versionKey: false });
 
 export const Match = mongoose.model('Match', matchSchema);

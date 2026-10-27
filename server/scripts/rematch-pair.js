@@ -3,6 +3,9 @@
 // admin match (no gate, no daily cap). Every other match is untouched. Dry run by default.
 //   node scripts/rematch-pair.js Yagu Yagunguni         → plan only
 //   node scripts/rematch-pair.js Yagu Yagunguni --yes   → back up to server/backups/<time>-pair/, wipe, re-match
+//   --depth demo                                        → this match only: 3 short sessions ~1 min apart (default: CHAT_DEPTH)
+//   --instant                                           → this match's agents reply with no debounce or typing delay
+//   --takeover Krish                                    → Krish's agent is off from the start; Krish types himself
 // Names match User.name exactly (case-insensitive). Uses MONGODB_URI from server/.env. Only enqueues jobs: the running
 // server's worker does the trust check, brief and chat, so don't run a local worker against the same database.
 import 'dotenv/config';
@@ -11,9 +14,15 @@ import mongoose from 'mongoose';
 import { User } from '../src/models/User.js';
 import { createMatch } from '../src/services/matches.js';
 
-const [nameA, nameB] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const YES = process.argv.includes('--yes');
-if (!nameA || !nameB) throw new Error('usage: node scripts/rematch-pair.js <nameA> <nameB> [--yes]');
+const argv = process.argv.slice(2);
+const DEPTH = argv.includes('--depth') ? argv[argv.indexOf('--depth') + 1] : null;
+const TAKEOVER = argv.includes('--takeover') ? argv[argv.indexOf('--takeover') + 1] : null;
+const [nameA, nameB] = argv.filter((a, i) => !a.startsWith('--') && !['--depth', '--takeover'].includes(argv[i - 1]));
+const YES = argv.includes('--yes');
+const INSTANT = argv.includes('--instant');
+if (!nameA || !nameB) throw new Error('usage: node scripts/rematch-pair.js <nameA> <nameB> [--depth full|demo|chain|short] [--instant] [--takeover <name>] [--yes]');
+if (TAKEOVER && ![nameA, nameB].some((n) => n.toLowerCase() === TAKEOVER.toLowerCase())) throw new Error(`--takeover must be ${nameA} or ${nameB}`);
+if (DEPTH && !['full', 'demo', 'chain', 'short'].includes(DEPTH)) throw new Error(`unknown --depth ${DEPTH}`);
 
 await mongoose.connect(process.env.MONGODB_URI);
 const db = mongoose.connection.db;
@@ -51,7 +60,8 @@ if (YES) {
     console.log(`  ${name.padEnd(15)} backed up ${String(docs.length).padStart(4)} · deleted ${deletedCount}`);
   }
   console.log(`backup: ${dir.pathname}`);
-  const m = await createMatch(a._id, b._id, { admin: true });
+  const takenOver = TAKEOVER ? (TAKEOVER.toLowerCase() === nameA.toLowerCase() ? a : b)._id : null;
+  const m = await createMatch(a._id, b._id, { admin: true, ...(DEPTH && { chatDepth: DEPTH }), instant: INSTANT, takenOver });
   console.log(`matched ${a.name} × ${b.name} → ${m?._id ?? 'skipped (an account is not active)'}`);
 } else {
   for (const [name, filter] of PAIR_DATA) console.log(`  would delete ${name.padEnd(15)} ${await db.collection(name).countDocuments(filter)}`);
