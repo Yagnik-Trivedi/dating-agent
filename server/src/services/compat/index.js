@@ -1,6 +1,7 @@
 // Step 4 (plan 09): one independent judge per side → MatchDecision; the match is the lower of the two; handoff only on
 // mutual yes. Decisions (continue / pass / "Talk anyway"), the wind-down, the reveal and the report view live here.
 import { z } from 'zod';
+import { env } from '../../config/env.js';
 import { Conversation } from '../../models/Conversation.js';
 import { Match } from '../../models/Match.js';
 import { MatchDecision } from '../../models/MatchDecision.js';
@@ -37,14 +38,15 @@ export async function windDown(match, userId) {
   const card = [voice?.description, voice?.doList?.length && `Do: ${voice.doList.join('; ')}`, voice?.dontList?.length && `Don't: ${voice.dontList.join('; ')}`].filter(Boolean).join('\n') || 'Casual, warm, short messages.';
   // A few short real messages as style exemplars (copy the style, never the content).
   const exemplars = samples.map((s) => s.text).filter((t) => t.length <= 140).sort((a, b) => a.length - b.length).slice(0, 4);
-  let text = "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
+  const natural = env.RULES !== 'off' && env.CONVO_MODE === 'human' && env.FLOW === 'natural'; // plan 34: the cool ending
+  let text = natural ? 'hey, gotta run! good luck with everything 🙂' : "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
   try {
     const out = await chatJSON({
       tier: 'fast', purpose: 'wind-down', userId, matchId: match._id, schema: z.object({ reply: z.string().trim().min(1).max(300) }),
-      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: card, exemplars, closingStyle: voice?.closingStyle ?? null, hadConversation: count > 0 }),
+      messages: windDownPrompt.build({ firstName: name, matchName: nameOf(match, otherUserId(match, userId)), styleCard: card, exemplars, closingStyle: voice?.closingStyle ?? null, hadConversation: count > 0, natural }),
     });
     const draft = cleanText(out.reply, name);
-    if (draft && !draft.includes('?') && scanMessage(draft).severity === 0) text = draft;
+    if (draft && !draft.includes('?') && scanMessage(draft).severity === 0 && !(natural && /same page|talk (later|soon|tomorrow)|compatib/i.test(draft))) text = draft;
   } catch (err) {
     console.error(`wind-down for ${match._id}: using the fixed line (${err.message})`); // also when AI is paused: a Pass must still close kindly
   }

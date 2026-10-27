@@ -15,6 +15,7 @@ const schema = z.object({
   aboutThem: items(z.object({ text: z.string().trim().min(1).max(300), sourceIds: z.array(z.string()).catch([]) })),
   unknownAboutMe: nullableText.catch(null).default(null),
   end: z.preprocess((v) => v === true || v === 'true', z.boolean()).catch(false),
+  covers: z.array(z.coerce.string()).catch([]).default([]), // plan 34: the read items this reply responds to
 });
 
 /** → { messages, claims, aboutThem, unknownAboutMe, end } (messages cleaned). */

@@ -26,6 +26,8 @@ import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
+import { BARE_BYE, endVibe, excuseFor, GETTOKNOW, greetingFor, INVENTED_EXCUSE, readParts, TALK_LATER } from './naturalFlow.js';
+import { User } from '../../models/User.js';
 import { tierOf } from './evidence.js';
 import { memoryFor, rawTranscript, repeatsEarlier } from './memory.js';
 import { fillersIn, HEDGE, isHedged, planTexture, stripForeign } from '../persona/texture.js';
@@ -155,6 +157,43 @@ export function humanProblems({ text, draft, plan, read = {}, state = {}, theyAs
   return { problems, drop: [...drop] };
 }
 
+// Plan 34: what in their turn must get a response in words (a joke or a plain statement may get a tapback instead).
+const MUST_COVER = new Set(['question', 'news', 'story', 'feeling', 'compliment', 'request']);
+const DECLINED = /\b(rather not|not (get|getting) into|pass on that|keep that (one )?for|another time|not (really )?comfortable|skip that|not something i talk about|leave that (one )?for)\b/i;
+/** The items of their turn my draft didn't cover. A tapback covers a statement or a joke. */
+export const uncoveredItems = (items = [], covers = [], tapback = null) => items.filter((it) => !covers.includes(it.id) && (MUST_COVER.has(it.kind) || !tapback));
+
+/** Plan 34 (FLOW=natural) draft problems; they share the one regeneration. → { problems, drop } */
+export function naturalProblems({ draft, plan }) {
+  const problems = [];
+  const drop = new Set();
+  const sentences = draft.messages.flatMap((m) => sentencesOf(m));
+  const questions = sentences.filter((s) => s.includes('?'));
+  const text = draft.messages.join(' ');
+  const missed = uncoveredItems(plan.items, draft.covers ?? [], plan.tapback);
+  if (missed.length && !plan.end) problems.push(`also respond to everything in their turn: ${missed.map((i) => `"${i.text}"`).join('; ')} (list each id you respond to in "covers").`);
+  if (!plan.end && !plan.preClose) {
+    if (questions.length && !plan.askBack && !plan.answerFirst) { problems.push('no question this time: react or share instead.'); questions.forEach((q) => drop.add(q)); }
+    if (plan.phase === 'flow' && questions.length && questions.length === sentences.length) problems.push('give something of yours first (a reaction, an opinion or a share), then at most one question.');
+    const generic = questions.filter((q) => GETTOKNOW.test(q));
+    if (generic.length && (plan.getToKnowLeft === 0 || ['greeting', 'warmup'].includes(plan.phase))) {
+      problems.push("no generic get-to-know question (hobbies, where you're from, favourites): follow up on what they said, or share something.");
+      generic.forEach((q) => drop.add(q));
+    }
+  }
+  if (plan.decline && !DECLINED.test(text)) problems.push(`they asked about ${plan.decline}: decline it kindly in one short line ("haha i'd rather not get into that one rn"), then move back to what you were talking about.`);
+  if (plan.preClose && draft.end) problems.push("don't say bye yet: just signal you'll have to go soon, finish this thread and answer what's open.");
+  if (plan.end) {
+    if (BARE_BYE.test(text)) problems.push(`never just "bye": close properly (${plan.vibe ?? 'neutral'}), with the excuse.`);
+    if (!['session', 'session_ack'].includes(plan.end) && TALK_LATER.test(text)) { problems.push('this is a final goodbye: no "talk later" or future plans.'); sentences.filter((x) => TALK_LATER.test(x)).forEach((x) => drop.add(x)); }
+  }
+  if ((plan.end || plan.preClose) && INVENTED_EXCUSE.test(text) && !INVENTED_EXCUSE.test(plan.excuse ?? '')) {
+    problems.push(`use only this excuse: "${plan.excuse}" (no invented people, places or events).`);
+    sentences.filter((x) => INVENTED_EXCUSE.test(x)).forEach((x) => drop.add(x));
+  }
+  return { problems, drop: [...drop] };
+}
+
 /**
  * Is my agenda settled enough for a natural end? Everything with priority ≥ END_BLOCK_PRIORITY answered. A dealbreaker
  * on a section-B attribute is already settled by the gate (plan 30 SN: it comes up only if the chat leads there).
@@ -214,10 +253,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const opening = history.length === 0;
   const rulesOn = env.RULES !== 'off';
   const human = rulesOn && env.CONVO_MODE === 'human'; // plan 31; sn = plan 30 SN exactly
+  const natural = human && env.FLOW === 'natural'; // plan 34; plan33 = plan 31/33 exactly
   let perception = {};
   const myLast = lastMineIdx >= 0 ? history[lastMineIdx].text : null;
   const context = { theirName: matchName, lines: history.slice(Math.max(0, lastMineIdx - 6), lastMineIdx + 1).map((m) => `${String(m.senderId) === me ? persona.firstName : matchName}: ${m.text}`) };
-  const observeArgs = { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn: state.turn };
+  const observeArgs = { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn: state.turn, ...(natural && { natural: true }) };
   const afterRead = async (p) => {
     perception = p;
     if (rulesOn) Object.assign(state, updateInterest(state, { ...perception, laughsEasily: (persona.voice.laughRate ?? 0) > 0.2 }, { extraversion: persona.traits.extraversion }));
@@ -238,19 +278,31 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const stories = tierRank('personal') <= unlocked ? storyCandidates(persona, state.toldStoryIds) : [];
   const limits = sessionMode ? sessionLimits(conv, { otherAgent: Boolean(side(match, otherId)?.agentActive) })
     : { maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END };
+  // Plan 34: the natural layer's context (my "leave for me" topics, the brief's openers as hooks, this session's start).
+  const leaveForMe = natural ? (await User.findById(me, { 'settings.leaveForMe': 1 }).lean())?.settings?.leaveForMe ?? [] : [];
+  const naturalCtx = natural && { history, me, otherId, persona, seed: conv.seed, sessionFrom: sessionMode ? session.startCount : 0, flow: conv.flow ?? {},
+    hooks: (brief.openers ?? []).map((o) => o.text), leaveForMe, theirText: theirMsgs.map((m) => m.text).join('\n'), now: new Date(), tz: KG.NATURAL.DEFAULT_TZ };
   const plan = rulesOn
     ? planAct({ mode: human ? 'human' : 'sn', state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: human || agendaSettled(freshAgenda),
-      ...limits, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast } })
+      ...limits, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast }, ...(naturalCtx && { natural: naturalCtx }) })
     : plainPlan(persona.voice, history.length);
   if (sessionMode) sessionPlan(plan, { conv, otherId, goodbye, sessionStart, theirMsgs });
+  // Plan 34: a session pause or goodbye decided by sessionPlan also gets its vibe and a real excuse.
+  if (natural && plan.end && !plan.vibe) Object.assign(plan, { vibe: endVibe(state.interest ?? 0.5, { dealbreaker: plan.end === 'dealbreaker_hint' }), excuse: excuseFor({ facts: persona.facts, tz: KG.NATURAL.DEFAULT_TZ }).text });
   plan.closingStyle = persona.voice.closingStyle ?? null;
   plan.opening = opening;
   // "Ask my human", structurally: their question to me → its topic (dictionary only) → does my graph have ANY fact on it?
   const question = opening ? null : questionToMe(theirMsgs.map((m) => m.text).join('\n'));
   const asked = question ? await topicOf(question, lookupConcept) : null;
   const known = asked ? knowsTopic(asked, persona.facts) : null;
-  if (asked && !known) plan.unknownTopic = asked.label;
+  if (asked && !known && !plan.decline) plan.unknownTopic = asked.label;
 
+  // Plan 34: a casual hello from the user's own greeting words (no LLM call); the brief's openers become warmup hooks.
+  if (natural && opening && !plan.end) {
+    const line = greetingFor({ voice: persona.voice, samples: persona.samples ?? [], rng, theirName: matchName, tz: KG.NATURAL.DEFAULT_TZ, lower });
+    await save({ turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns, lastAsked: true });
+    return { messages: [line], actPlan: { ...plan, phase: 'greeting', move: 'greet', fromGreeting: true }, checks: { leak: [] }, end: null, unknownAboutMe: null, usedFactIds: [] };
+  }
   // Opening with a brief opener (already grounded + validated): no LLM call.
   if (opening && brief.openers?.length && !plan.end) {
     const o = brief.openers[Math.floor(rng() * brief.openers.length)];
@@ -306,13 +358,13 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const attempts = [];
   let warning = null;
   // The model's own "end" counts only once my agenda is settled (eval i2: it closed at 14 messages before smoking came up).
-  const mayEnd = history.length >= limits.naturalEndFrom && (!rulesOn || human || agendaSettled(freshAgenda));
+  const mayEnd = history.length >= limits.naturalEndFrom && (!rulesOn || human || agendaSettled(freshAgenda)) && (!natural || state.preClosed);
   const readNow = () => (perception.doing ? perception : plan.read ?? {}); // this turn's read once the merged call ran
   for (let i = 0; i <= KG.MAX_REGENERATIONS; i++) {
     let draft;
     if (merged && i === 0) {
       // A broken merged answer (longer JSON) falls back to the two-call path for this turn instead of failing it.
-      const out = await generateTurn({ prompt, read: perceiveArgs({ persona, theirMsgs, context, myLast, agenda }), tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id })
+      const out = await generateTurn({ prompt, read: perceiveArgs({ persona, theirMsgs, context, myLast, agenda, natural }), tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id })
         .catch((err) => { if (err.name !== 'LLMJsonError') throw err; console.warn(`agent ${match._id}: merged turn unreadable, using two calls`); return null; });
       if (out) {
         draft = out.draft;
@@ -326,6 +378,8 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       if (hold) Object.assign(plan, { mustDisagree: true, disagreeOn: hold.text });
       if (rulesOn && perception.dealbreakerHit) Object.assign(plan, { end: 'dealbreaker_hint', topic: null, askBack: false });
       plan.reactions = (perception.concepts ?? []).map((c) => ({ text: c.text, kind: !c.own ? 'unknown' : c.own.polarity === -1 ? 'dislike' : c.own.strength >= 0.75 ? 'excited' : c.own.strength >= 0.5 ? 'positive' : 'lukewarm' }));
+      if (natural) readParts(plan, { ...naturalCtx, state, perception, voice: persona.voice, rng, msgCount: history.length });
+      if (natural && plan.end === 'dealbreaker_hint') plan.vibe = 'cool';
     } else draft = await generate({ prompt, tier, temperature: state.temperature ?? 0.8, userId: me, matchId: match._id, warning });
     if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
     draft.messages = draft.messages.map(oneQuestion);
@@ -344,6 +398,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       const hp = humanProblems({ text: c.text, draft, plan, read: readNow(), state, theyAsked: Boolean(perception.isQuestion || perception.aboutMeQuestion), theirText: latest, facts });
       c.problems.push(...hp.problems);
       c.humanDrop = hp.drop;
+    }
+    if (natural) {
+      const np = naturalProblems({ draft, plan });
+      c.problems.push(...np.problems);
+      c.humanDrop = [...(c.humanDrop ?? []), ...np.drop];
     }
     if (draft.end && !plan.end && !mayEnd) c.problems.push(human ? "you wrapped up the chat too early: don't say goodbye yet, just reply." : "you wrapped up the chat, but there's more to talk about: don't say goodbye, keep it going with a question.");
     if (plan.end === 'dealbreaker_hint' && !draft.end) c.problems.push('end the conversation now: one short, kind closing line, no question.');
@@ -397,6 +456,20 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     ({ leaks, drop, messages } = await survivors(constrained));
     if (messages.length) { attempts.push(constrained); best = constrained; }
   }
+  // Plan 34 (A5): nothing ignored. A question still uncovered after the regeneration gets the constrained retry focused on
+  // it (prepended); a statement or joke still uncovered gets a tapback on their last bubble.
+  if (natural && !plan.end && !opening && messages.length && fallback === 'none') {
+    const missed = uncoveredItems(plan.items, best.draft.covers ?? [], plan.tapback);
+    const q = missed.find((i) => i.kind === 'question');
+    if (q) {
+      const draft = await generate({ prompt: { ...prompt, plan: { ...plan, targetWords: 10, burst: 1, topic: null, askBack: false, move: 'reply' } }, tier, temperature: 0.4, userId: me, matchId: match._id,
+        warning: `you skipped their question "${q.text}". Write ONE short line that answers it (from the listed facts, or honestly say you don't know, or kindly decline if it's off-limits). Nothing else.` });
+      if (lower) draft.messages = draft.messages.map((m) => m.charAt(0).toLowerCase() + m.slice(1));
+      const c = draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering: true });
+      const extra = await survivors({ draft, ...c });
+      if (extra.messages.length) { messages = [...extra.messages.slice(0, 1), ...messages]; leaks = [...leaks, ...extra.leaks]; best.draft.claims = [...(best.draft.claims ?? []), ...(draft.claims ?? [])]; fallback = 'covered_question'; }
+    } else if (missed.length && !plan.tapback) plan.tapback = missed.some((i) => i.kind === 'joke') ? '😂' : '❤️';
+  }
   // Plan 32 KP1: only my own emoji (an emoji from an example's context, like 🍍 or 😞, read oddly in the H1 run).
   const myEmoji = new Set([...(persona.voice.topEmojis ?? []), plan.emoji].filter(Boolean));
   messages = messages.map((m) => ownEmojiOnly(m, myEmoji)).filter((m) => words(m).length);
@@ -406,7 +479,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   if (!messages.length) {
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
-    const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
+    const opener = natural ? `hey ${matchName}! how's your day going?` : `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
     const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
     messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
@@ -440,11 +513,20 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       theyTold: Boolean(state.theyTold || readNow().doing === 'telling'),
       lastRead: { mood: readNow().mood ?? 'chill', energy: readNow().energy ?? 'medium', doing: readNow().doing ?? 'chatting' },
     }),
+    // Plan 34: generic get-to-know questions per session, the hooks used, and whether I already pre-closed.
+    ...(natural && {
+      getToKnow: { ...(state.getToKnow ?? {}), [String(naturalCtx.sessionFrom)]: (state.getToKnow?.[String(naturalCtx.sessionFrom)] ?? 0) + messages.flatMap((m) => sentencesOf(m)).filter((x) => x.includes('?') && GETTOKNOW.test(x)).length },
+      hooksUsed: [...new Set([...(state.hooksUsed ?? []), ...(plan.hook ? [plan.hook] : [])])],
+      preClosed: Boolean(state.preClosed || plan.preClose),
+    }),
   });
+  if (natural && plan.newThread) await Conversation.updateOne({ _id: conv._id }, { $set: { 'flow.thread': plan.newThread } });
   let end = plan.end ?? (best.draft.end && mayEnd ? 'natural' : null);
   if (sessionMode && end === 'natural') end = 'session';
+  // Plan 34 (A4.1): a tapback on their last bubble (the scheduler applies it).
+  const tapback = natural && plan.tapback && theirMsgs.length ? { emoji: plan.tapback, messageId: theirMsgs.at(-1)._id } : null;
   return {
-    messages, end, unknownAboutMe, inbox, usedFactIds: used,
+    messages, end, unknownAboutMe, inbox, usedFactIds: used, tapback,
     // Human mode: the mood the reply was matched to, refined by this turn's read once it arrived (replay and eval labels).
     actPlan: { ...plan, interest: state.interest, ...(human && { read: { mood: readNow().mood, energy: readNow().energy, doing: readNow().doing } }) },
     checks: { style: best.style, styleNotes: styleNotes(best.text, plan), grounding: best.grounding.problems, stance: best.stance ?? null, leak: leaks.map((l) => l.sentence), regenerated: attempts.length > 1, dropped: [...drop], fallback,

@@ -3,6 +3,7 @@
 import { KG } from '../kg/config.js';
 import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { SAD_EMOJI } from '../kg/voiceProfile.js';
+import { naturalize } from './naturalFlow.js';
 
 // Plan 30 SN: what in a chat naturally leads to each section-B attribute. Broader than askedAboutMe's ATTRIBUTE_WORDS
 // (which detect the attribute itself): a bar story leads to drinking, a nephew to kids, a job offer abroad to location.
@@ -76,7 +77,8 @@ const reactionOf = (own) => {
  * → { targetWords, burst, move, askBack, emoji, laugh, reactions, mustDisagree, disagreeOn, topic, language, end }
  */
 export function planAct(args) {
-  if (args.mode === 'human') return planHuman(args);
+  // Plan 34: FLOW=natural adds the natural layer on top of plan 31's human plan; plan33 (no args.natural) is unchanged.
+  if (args.mode === 'human') return args.natural ? naturalize(planHuman(args), { ...args.natural, state: args.state, perception: args.perception, voice: args.voice, rng: args.rng, msgCount: args.msgCount, limits: { maxMessages: args.maxMessages } }) : planHuman(args);
   return planSN(args);
 }
 
