@@ -11,7 +11,7 @@ import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
-import { Prompts } from './Onboarding'
+import PromptCards from '../components/PromptCards'
 
 const LANGS = ['english', 'hindi', 'gujarati', 'marathi', 'tamil', 'telugu', 'kannada', 'bengali', 'punjabi', 'malayalam']
 const cap = (s) => s[0].toUpperCase() + s.slice(1)
@@ -74,7 +74,8 @@ export default function Profile() {
       <section className="ed-sec" id="ed-photos"><div className="ed-h"><h2 className="h3">Photos</h2><span className="small">Drag to reorder</span></div>
         {photos && <PhotoGrid photos={photos} setPhotos={setPhotos} onError={(m) => toast(m, { tone: 'bad' })} />}</section>
       <section className="ed-sec" id="ed-prompts"><div className="ed-h"><h2 className="h3">Prompts</h2><span className="small">{f.prompts.length} of 3</span></div>
-        <Prompts value={f.prompts} onChange={(prompts) => setF({ ...f, prompts })} /></section>
+        <PromptCards value={f.prompts} onChange={(prompts) => setF((x) => ({ ...x, prompts }))}
+          onSave={(prompts) => api.put('/api/profile', { prompts: prompts.filter((p) => p.a.trim()).map((p) => ({ q: p.q, a: p.a.trim() })) })} /></section>
       <section className="ed-sec" id="ed-basics"><div className="ed-h"><h2 className="h3">Basics</h2></div>
         <Field label="What do you do?">{(id) => <Input id={id} value={f.job} onChange={set('job')} maxLength={120} />}</Field>
         <Field label="Where do you work?" optional>{(id) => <Input id={id} value={f.workplace} onChange={set('workplace')} maxLength={120} />}</Field>
