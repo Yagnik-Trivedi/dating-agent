@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Inbox, Lock, LogOut, Trash2 } from 'lucide-react'
-import { Btn, Chips, Sheet, Shell, Toggle } from '../components/r7'
+import { Btn, Chips, Input, Sheet, Shell, Toggle } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -12,6 +12,25 @@ import { disconnectSocket } from '../lib/socket'
 
 // UX P1-4: plain-language labels; the API values stay off / shadow / auto.
 const MODE_LABELS = [['off', 'I’ll chat myself'], ['shadow', 'Agent starts, I watch'], ['auto', 'Agent handles first chats']]
+// Plan 34: topics the agent kindly declines and leaves for the two humans.
+const LEAVE_PRESETS = ['politics', 'religion', 'exes', 'salary']
+
+function LeaveForMe({ value = [], onSave, saving }) {
+  const [draft, setDraft] = useState('')
+  const all = [...new Set([...LEAVE_PRESETS, ...value])]
+  const add = () => { const t = draft.trim().toLowerCase(); if (t && !value.includes(t) && value.length < 12) onSave([...value, t]); setDraft('') }
+  return (
+    <div className="set-row col"><b>Topics my agent leaves for me</b>
+      <span className="small">If a match asks about these, your agent kindly says it would rather not get into it and changes the subject.</span>
+      <Chips multi label="Topics my agent leaves for me" items={all.map((t) => [t, t.charAt(0).toUpperCase() + t.slice(1)])} value={value} onChange={(v) => !saving && onSave(v)} />
+      <form className="leave-add" onSubmit={(e) => { e.preventDefault(); add() }}>
+        <Input aria-label="Add a topic" value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={40} placeholder="Add a topic, e.g. my job" />
+        <Btn kind="secondary" size="sm" type="submit" disabled={!draft.trim() || Boolean(saving)}>Add</Btn>
+      </form>
+    </div>
+  )
+}
+
 const MODES = {
   off: 'Your agent never talks to anyone. You chat yourself, always.',
   shadow: 'After a mutual like, your agent has the first conversation while you read along. Pause it or take over any time.',
@@ -42,6 +61,7 @@ export default function Settings() {
         <div className="set-row col"><b>Agent mode</b><Chips label="Agent mode" value={user.agentMode} onChange={(m) => m !== user.agentMode && !saving && save({ agentMode: m }, m === 'off' ? 'Your agent is off. You’ll chat yourself.' : 'Saved. Your agent will handle the first conversations.')} items={MODE_LABELS} /><p className="small">{MODES[user.agentMode]}</p></div>
         <div className="set-row"><div><b>Learn from my chats</b><span className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</span></div>
           <Toggle on={learn} label="Learn from my chats" disabled={Boolean(saving)} onChange={(v) => save({ learnFromChats: v }, v ? 'Your agent will learn from your chats' : 'Your agent won’t learn from your chats')} /></div>
+        <LeaveForMe value={user.settings?.leaveForMe ?? []} saving={saving} onSave={(v) => save({ leaveForMe: v }, 'Saved. Your agent will leave those topics for you.')} />
         <Link to="/inbox" className="set-row link-row"><div><b>Ask my human</b><span className="small">Questions your agent asked instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
       </section>
       <section className="set-sec card"><h2 className="h3">Privacy and trust</h2>

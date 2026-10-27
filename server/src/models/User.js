@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   // Plan 30 S1: 'building' after the quick phase-1 build, 'ready' once stories/concepts/style are in (agent chats wait for it).
   graphStatus: { type: String, enum: ['building', 'ready', 'failed'] },
   graphReadyAt: Date,
-  settings: { learnFromChats: { type: Boolean, default: true }, _id: false },
+  settings: { learnFromChats: { type: Boolean, default: true }, leaveForMe: { type: [String], default: undefined }, _id: false }, // plan 34: topics my agent declines
   // Plan 32 KP1: "How do you usually text?" (services/kg/textingStyle.js). The voice profile's prior; survives rebuilds.
   textingStyle: {
     emoji: { type: String, enum: ['a_lot', 'some', 'rarely'] },

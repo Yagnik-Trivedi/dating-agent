@@ -6,7 +6,7 @@ import { Match } from '../../models/Match.js';
 import { Message } from '../../models/Message.js';
 import { User } from '../../models/User.js';
 import { emitToUser, io } from '../../sockets/io.js';
-import { sendMessage } from '../chat.js';
+import { reactToMessage, sendMessage } from '../chat.js';
 import { cancel, enqueue } from '../jobs/queue.js';
 import { otherUserId, side } from '../matches.js';
 import { emitStatus, queueEvaluation } from '../pipeline/index.js';
@@ -108,6 +108,8 @@ export async function runReply(matchId, userId) {
     if (!turn) return;
 
     const conv = turn.actPlan?.session ? await Conversation.findOne({ matchId, status: 'active' }, { sessionIndex: 1 }).lean() : null;
+    // Plan 34 (A4.1): a tapback lands first, like a person reacting before typing (never instead of an answer).
+    if (turn.tapback) await reactToMessage({ match, messageId: turn.tapback.messageId, userId, emoji: turn.tapback.emoji, agent: true }).catch((err) => console.warn(`tapback ${key}: ${err.message}`));
     for (const [i, text] of turn.messages.entries()) {
       // The delay overlaps the model work: the first message waits only for what's left of its typing time (plan 30 S1).
       const pace = paceMs(text);

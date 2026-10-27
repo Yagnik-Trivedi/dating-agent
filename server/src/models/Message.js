@@ -10,6 +10,8 @@ const messageSchema = new mongoose.Schema({
   text: { type: String, default: '', maxlength: 1000 }, // empty only for a photo message
   attachments: [{ kind: { type: String, enum: ['image'] }, url: String, w: Number, h: Number, _id: false }], // plan 30 S3.7
   like: { kind: { type: String, enum: ['photo', 'prompt', 'profile'] }, ref: String, _id: false }, // the like comment that opened the chat (S3.4)
+  // Plan 34 (A4.1): tapback reactions, one per user; agent = my agent reacted for me (labelled for screen readers).
+  reactions: { type: [{ by: { type: ObjectId, ref: 'User' }, emoji: String, agent: Boolean, at: Date, _id: false }], default: undefined },
   archiveAt: Date, // agent messages of closed matches: removed by the TTL index (plan 17 archiveNotes)
   actPlan: mongoose.Schema.Types.Mixed, // plan 08: the sampled act plan behind an agent message (replay/eval)
   checks: mongoose.Schema.Types.Mixed, // plan 08: style/grounding/stance/leak results

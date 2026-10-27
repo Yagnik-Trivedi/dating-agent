@@ -22,6 +22,19 @@ export function serializeMessage(msg, viewerId) {
   return m;
 }
 
+/**
+ * Plan 34 (A4.1): set (or clear, emoji null) userId's tapback on a message of the OTHER person in this match, and push
+ * it to both users. → the message's reactions
+ */
+export async function reactToMessage({ match, messageId, userId, emoji, agent = false }) {
+  const msg = await Message.findOne({ _id: messageId, matchId: match._id }, { senderId: 1, reactions: 1 }).lean();
+  if (!msg || String(msg.senderId) === String(userId)) throw httpError(404, 'NOT_FOUND', 'Message not found');
+  const reactions = [...(msg.reactions ?? []).filter((r) => String(r.by) !== String(userId)), ...(emoji ? [{ by: userId, emoji, agent, at: new Date() }] : [])];
+  await Message.updateOne({ _id: messageId }, { $set: { reactions } });
+  for (const uid of match.users) emitToUser(uid, 'message:reaction', { matchId: String(match._id), messageId: String(messageId), reactions });
+  return reactions;
+}
+
 /** Save a message (human or agent), push it to both users, then fire the agent hook. */
 export async function sendMessage({ match, senderId, authoredBy, text, meta, extra = {} }) {
   const clean = String(text ?? '').trim();

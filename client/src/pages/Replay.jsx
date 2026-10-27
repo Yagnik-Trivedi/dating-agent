@@ -2,6 +2,7 @@
 // quotes are evidence markers (green), laughs are clay markers; tapping a "why" point jumps the scrubber there.
 // Play steps through the messages; ← → move the slider. Only my side's moments and my own letter.
 import { useEffect, useRef, useState } from 'react'
+import Tapbacks from '../components/Tapbacks'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { ArrowRight, Check, ChevronLeft, History, Pause, PenLine, Play } from 'lucide-react'
@@ -80,6 +81,7 @@ export default function Replay() {
         <li key={m._id} className={`msg ${String(m.senderId) === me ? 'mine' : 'theirs'} ${i === at ? 'cur' : ''} ${i > at ? 'future' : ''}`}>
           <span className="agent-tag">{m.authoredBy === 'agent' && <PenLine size={13} strokeWidth={1.9} aria-hidden="true" />}{m.authoredBy === 'agent' ? `Written by ${name(m)}’s agent` : `${name(m)}`} · message {i + 1}</span>
           <p className={`bubble ${ev.has(i) ? 'evidence' : ''}`}>{m.text}</p>
+          <Tapbacks reactions={m.reactions} me={me} nameOf={(uid) => (String(uid) === me ? (user.name ?? 'You') : data.them)} />
           {ev.has(i) && <span className="ev-tag">Evidence in your letter</span>}
         </li>
       ))}

@@ -4,6 +4,7 @@
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
+import Tapbacks from '../components/Tapbacks'
 import { ArrowRight, Ban, BellRing, Check, CheckCheck, ChevronDown, ChevronLeft, Circle, Flag, Hand, Heart, Lock, MoreHorizontal, Pause, PenLine, Play, Quote, RefreshCw, UserX, WifiOff } from 'lucide-react'
 import { Btn, Composer, Dots, Empty, Field, IconBtn, Avatar, Sheet, Shimmer, StatusChip, T, Tabs, TopNav, chipOf } from '../components/r7'
 import { InterestLine } from '../components/charts'
@@ -71,13 +72,14 @@ function StatusStrip({ steps, step, open, onToggle }) {
 }
 
 const LIKED = { photo: 'Liked a photo', prompt: 'Liked a prompt', profile: 'Liked the profile' }
-function Bubble({ m, mine, author, last, seen, onWouldnt }) {
+function Bubble({ m, mine, author, last, seen, onWouldnt, me, nameOf, onReact }) {
   return (
     <motion.div layout className={`msg ${mine ? 'mine' : 'theirs'}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={T.base}>
       {m.authoredBy === 'agent' && <span className="agent-tag"><PenLine size={13} strokeWidth={1.9} aria-hidden="true" />Written by {author}’s agent</span>}
       {m.like?.kind && <span className="agent-tag"><Heart size={13} strokeWidth={1.9} aria-hidden="true" />{LIKED[m.like.kind]}{m.like.kind === 'prompt' && `: “${m.like.ref}”`}</span>}
       {m.attachments?.map((a) => <img key={a.url} className="msg-photo" src={a.url} alt={`Photo from ${mine ? 'you' : author}`} width={a.w} height={a.h} />)}
       {m.text && <p className="bubble" lang={DEVA.test(m.text) ? 'hi' : undefined}>{m.text}</p>}
+      <Tapbacks reactions={m.reactions} me={me} nameOf={nameOf} onReact={onReact} />
       <span className="msg-meta">{time(m.createdAt)}{seen && <><CheckCheck size={14} strokeWidth={2} aria-hidden="true" />Seen</>}{mine && m.authoredBy === 'agent' && last && <><span aria-hidden="true">·</span><button type="button" className="link" onClick={() => onWouldnt(m._id)}>I wouldn’t say that</button></>}</span>
     </motion.div>
   )
@@ -126,7 +128,7 @@ export default function MatchRoom() {
   const navigate = useNavigate()
   const mobile = useMobile()
   const toast = useToast()
-  const { match, messages, facts, events, interestSeries, typingUserId, error, reload, send, takeover, pause, resume, sendTyping } = useMatch(id)
+  const { match, messages, facts, events, interestSeries, typingUserId, error, reload, send, react, takeover, pause, resume, sendTyping } = useMatch(id)
   const [tab, setTab] = useState('chat')
   const [stripOpen, setStripOpen] = useState(null)
   const [text, setText] = useState('')
@@ -204,7 +206,8 @@ export default function MatchRoom() {
       {messages.map((m, i) => {
         const mine = String(m.senderId) === me
         const sessionStart = match.session?.starts?.indexOf(i) ?? -1
-        return <Fragment key={m._id}>{sessionStart >= 0 && <p className="sys">Session {sessionStart + 2} · they picked it up again · {time(m.createdAt)}</p>}<Bubble m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt}
+        return <Fragment key={m._id}>{sessionStart >= 0 && <p className="sys">Session {sessionStart + 2} · they picked it up again · {time(m.createdAt)}</p>}<Bubble m={m} mine={mine} author={mine ? (user?.name ?? 'Your') : them} last={i === lastMine} onWouldnt={setWouldnt} me={me} nameOf={(uid) => (String(uid) === me ? (user?.name ?? 'You') : them)}
+          onReact={!mine && canType ? (emoji) => react(m._id, emoji).catch(() => {}) : undefined}
           seen={mine && i === lastMineAny && Boolean(match.otherReadAt) && new Date(match.otherReadAt) >= new Date(m.createdAt)} /></Fragment>
       })}
       {typingUserId && (() => {

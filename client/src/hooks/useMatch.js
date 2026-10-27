@@ -55,6 +55,8 @@ export function useMatch(matchId) {
     setTypingUserId((t) => (String(t) === String(message.senderId) ? null : t))
     if (document.visibilityState === 'visible') getSocket().emit('message:read', { matchId }) // plan 30 S3.7: "Seen"
   })
+  // Plan 34 (A4.1): tapbacks arrive live.
+  useSocketEvent('message:reaction', ({ matchId: id, messageId, reactions }) => { if (same(id)) setMessages((prev) => prev.map((m) => (String(m._id) === String(messageId) ? { ...m, reactions } : m))) })
   useSocketEvent('match:read', ({ matchId: id, at }) => { if (same(id)) setMatch((m) => (m ? { ...m, otherReadAt: at } : m)) })
 
   useSocketEvent('typing', ({ matchId: id, userId }) => {
@@ -92,6 +94,11 @@ export function useMatch(matchId) {
     setMessages((prev) => (prev.some((m) => m._id === data.message._id) ? prev : [...prev, data.message]))
   }, [matchId])
 
+  const react = useCallback(async (messageId, emoji) => {
+    const { data } = await api.post(`/api/matches/${matchId}/messages/${messageId}/reaction`, { emoji })
+    setMessages((prev) => prev.map((m) => (String(m._id) === String(messageId) ? { ...m, reactions: data.reactions } : m)))
+  }, [matchId])
+
   const takeover = useCallback(async () => {
     setMatch((m) => ({ ...m, agentActive: false, paused: false })) // instant; the server confirms below
     try { setMatch((await api.post(`/api/matches/${matchId}/takeover`)).data.match) } catch (err) { loadDetail().catch(() => {}); throw err }
@@ -120,7 +127,7 @@ export function useMatch(matchId) {
     return data.match
   }, [matchId])
 
-  return { match, messages, facts, events, interest, interestSeries, typingUserId, error, reload: load, send, takeover, pause, resume, decide, extend, sendTyping }
+  return { match, messages, facts, events, interest, interestSeries, typingUserId, error, reload: load, send, react, takeover, pause, resume, decide, extend, sendTyping }
 }
 
 /** "I wouldn't say that" on my own agent's message, optionally with how I'd say it. → { rule, kind } */

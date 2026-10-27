@@ -4,7 +4,8 @@ import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
 import { Message } from '../models/Message.js';
 import { cancelReplies, pauseAgent, resumeAgent, thaw } from '../services/agent/index.js';
-import { sendMessage, serializeMessage } from '../services/chat.js';
+import { reactToMessage, sendMessage, serializeMessage } from '../services/chat.js';
+import { KG } from '../services/kg/config.js';
 import { getMatchFor, HIDDEN, matchDetail, matchListItem, otherUserId } from '../services/matches.js';
 import { decide, extend, reportFor, revealFor } from '../services/compat/index.js';
 import { ChatEvent } from '../models/ChatEvent.js';
@@ -59,6 +60,17 @@ matchesRouter.post('/matches/:id/messages', async (req, res) => {
   const attachments = image ? [await checkedChatImage(image, `${req.protocol}://${req.get('host')}`, req.user._id)] : undefined;
   const message = await sendMessage({ match, senderId: req.user._id, authoredBy: 'human', text, extra: attachments ? { attachments } : {} });
   res.status(201).json({ message: serializeMessage(message, req.user._id) });
+});
+
+// Plan 34 (A4.1): a tapback on one of their messages. Humans react once their own agent isn't talking for them.
+matchesRouter.post('/matches/:id/messages/:messageId/reaction', async (req, res) => {
+  const { emoji } = parse(z.object({ emoji: z.enum(KG.NATURAL.TAPBACKS).nullable() }), req.body);
+  const match = await getMatchFor(req.params.id, req.user._id);
+  if (['closed', 'flagged_fake'].includes(match.status)) throw httpError(409, 'MATCH_CLOSED', 'This conversation is closed');
+  if (!mongoose.isValidObjectId(req.params.messageId)) throw httpError(404, 'NOT_FOUND', 'Message not found');
+  const mine = match.perUser?.find((p) => String(p.userId) === String(req.user._id));
+  if (mine?.agentActive) throw httpError(409, 'AGENT_ACTIVE', 'Take over the chat to react yourself');
+  res.json({ reactions: await reactToMessage({ match, messageId: req.params.messageId, userId: req.user._id, emoji }) });
 });
 
 // Plan 30 S3.6: "Let our agents break the ice" or "Chat myself now". Either side picking self → a normal human chat.

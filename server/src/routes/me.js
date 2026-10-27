@@ -16,10 +16,11 @@ meRouter.get('/me', async (req, res) => {
 });
 
 meRouter.put('/me/settings', async (req, res) => {
-  const { agentMode, learnFromChats } = parse(z.object({ agentMode: z.enum(['off', 'shadow', 'auto']), learnFromChats: z.boolean() })
+  const { agentMode, learnFromChats, leaveForMe } = parse(z.object({ agentMode: z.enum(['off', 'shadow', 'auto']), learnFromChats: z.boolean(), leaveForMe: z.array(z.string().trim().min(1).max(40)).max(12) })
     .partial().refine((b) => Object.keys(b).length, { message: 'Nothing to change' }), req.body);
   if (agentMode) req.user.agentMode = agentMode;
   if (learnFromChats !== undefined) req.user.settings.learnFromChats = learnFromChats;
+  if (leaveForMe) req.user.settings.leaveForMe = [...new Set(leaveForMe.map((t) => t.toLowerCase()))]; // plan 34
   await req.user.save();
   res.json({ user: req.user });
 });
