@@ -16,6 +16,7 @@ export const HUBS = [
 const SOURCE = { questionnaire_choice: 'Your answer, onboarding', questionnaire_story: 'Your story, onboarding', questionnaire_module: 'Your answer, Teach your agent', user_answer: 'You told your agent', own_chat: 'A chat of yours', reflection: 'Your agent noticed', agent_observed: 'From a chat' }
 
 function rng(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 } }
+const GOLDEN = Math.PI * (3 - Math.sqrt(5)) // the golden angle, for even spreads
 const norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l) }
 const imp = (w) => (w >= 0.85 ? 3 : w >= 0.5 ? 2 : 1)
 
@@ -23,15 +24,21 @@ const imp = (w) => (w >= 0.85 ? 3 : w >= 0.5 ? 2 : 1)
 export function buildGraph(api, contradictions = []) {
   const r = rng(7), R = 3.1
   const present = new Set(api.nodes.filter((n) => n.hub && !n.hubNode).map((n) => n.hub))
-  const hubs = HUBS.filter((h) => present.has(h.id)).map((h, i, all) => {
-    const th = (i / all.length) * Math.PI * 2, y = (i % 2 ? 1 : -1) * 0.95
-    return { ...h, pos: [Math.cos(th) * R * 1.12, y, Math.sin(th) * R * 1.12] }
+  // UI polish A1: hubs spread over a flattened sphere (Fibonacci points), so they sit at different depths, not on one ring.
+  const shown = HUBS.filter((h) => present.has(h.id))
+  const hubs = shown.map((h, i, all) => {
+    const y = all.length > 1 ? (1 - (i / (all.length - 1)) * 2) * 0.72 : 0 // kept off the poles, so no hub projects onto You
+    const ring = Math.sqrt(Math.max(0, 1 - y * y)), th = i * GOLDEN
+    return { ...h, pos: [Math.cos(th) * ring * R * 1.15, y * R * 0.42, Math.sin(th) * ring * R * 1.15] }
   })
   const byId = Object.fromEntries(hubs.map((h) => [h.id, h]))
+  const seen = {}
   const facts = api.nodes.filter((n) => n.hub && !n.hubNode && n.type !== 'self' && byId[n.hub]).slice(0, MAX_NODES).map((n, i) => {
     const h = byId[n.hub], out = norm(h.pos)
-    const rand = norm([r() - 0.5, r() - 0.5, r() - 0.5])
-    const dir = norm(out.map((o, k) => o * 0.9 + rand[k] * 1.1))
+    // A1: facts fan out around their hub in 3D (a Fibonacci direction per fact, leaning outward from You).
+    const k = (seen[n.hub] = (seen[n.hub] ?? 0) + 1), fy = 1 - ((k * 0.618) % 1) * 2, fr = Math.sqrt(Math.max(0, 1 - fy * fy))
+    const rand = norm([Math.cos(k * GOLDEN) * fr + (r() - 0.5) * 0.3, fy, Math.sin(k * GOLDEN) * fr + (r() - 0.5) * 0.3])
+    const dir = norm(out.map((o, j) => o * 0.75 + rand[j] * 1.1))
     const d = 0.8 + r() * 0.55
     const voice = n.type === 'voice'
     const level = imp(n.weight ?? 0.5)
