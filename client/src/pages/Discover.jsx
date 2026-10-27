@@ -154,7 +154,9 @@ export default function Discover() {
   if (mobile) return (
     <div className="scr app-scr m discover">
       <div className="d-scroll">
-        <div className="demo-wrap m"><PhotoNudge /><DemoMatchCard /></div>
+        {/* UI polish M2: the photo reminder is a slim pill over the photo's top edge, so it doesn't push the photo down */}
+        <div className="nudge-over"><PhotoNudge /></div>
+        <div className="demo-wrap m"><DemoMatchCard /></div>
         <SwipeCard key={p.userId} onDecide={(liked) => decide(liked)} disabled={busy} flyRef={flyRef}>
           <Hero p={p} photos={photos} idx={idx} onNext={nextPhoto} onLikePhoto={setLiking} busy={busy} />
           <div className="d-stack"><ProfileBody p={p} photos={photos} mobile onLike={setLiking} busy={busy} /></div>
