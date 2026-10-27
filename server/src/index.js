@@ -39,7 +39,8 @@ app.use(express.json({ limit: '1mb' }));
 
 // No DB call: keep-alive pingers hit this.
 app.get('/health', (req, res) => {
-  res.json({ ok: true, uptime: process.uptime(), time: new Date().toISOString() });
+  // viaSite: did this request come through the Vercel rewrite with a matching ORIGIN_SECRET (never the secret itself)
+  res.json({ ok: true, uptime: process.uptime(), time: new Date().toISOString(), viaSite: req.viaVercel });
 });
 
 // Did the service restart / is the self-ping running? (plan 12)
