@@ -455,3 +455,7 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
   .d-body, .m-body, .lt-page, .onb-main, .asks, .lt-grid, .y-lwrap, .prev-body, .no-likes, .m2-prev, .pc-list, .y-sum, .in-side, .d-rail { animation: none; }
   .teach-c:hover, .mt-opt:hover, .demo-card:hover, button.card:hover, a.card:hover { transform: none; }
 }
+
+/* UI polish B7: the inline wake-up hint */
+.slow-hint { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--cream); color: var(--text-2); }
+.slow-hint b { color: var(--text); }

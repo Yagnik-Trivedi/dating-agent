@@ -9,6 +9,14 @@ import { Btn, Wordmark } from './r7'
 const HEALTH = `${import.meta.env.VITE_API_URL ?? ''}/health`
 const GIVE_UP_MS = 120_000
 const TRY_MS = 20_000
+const WAKING = ['Waking up the server…', 'Twine runs on free hosting that naps when it’s quiet. Waking can take up to 2 minutes. Thanks for your patience.']
+
+/** UI polish B7: an inline hint for a request that's still loading after 3 s (the server may have napped since the app opened). */
+export function SlowHint() {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setSlow(true), 3000); return () => clearTimeout(t) }, [])
+  return slow && <p className="slow-hint small" role="status"><b>{WAKING[0]}</b> {WAKING[1]}</p>
+}
 
 async function ping() {
   const ctrl = new AbortController() // not AbortSignal.timeout: Safari < 16 doesn't have it
@@ -51,7 +59,7 @@ export default function WakeUp({ children }) {
   const retry = () => { setState('checking'); setWhy(''); setSecs(0); setAttempt((a) => a + 1) }
   const show = state === 'waking' || state === 'down' || state === 'blocked'
   const copy = {
-    waking: ['Waking up the server…', 'Twine runs on free hosting that naps when it’s quiet. Waking can take up to 2 minutes. Thanks for your patience.'],
+    waking: WAKING,
     down: ['We can’t reach the server right now', 'Nothing was sent or shared while it was down. Please try again in a moment.'],
     blocked: ['Your browser blocked the connection', `The server didn’t get a chance to answer (${why}). A privacy extension or network filter can do this; try turning it off for this site, or use another browser.`],
   }[state]

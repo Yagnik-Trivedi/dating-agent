@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { Compass, Heart, Keyboard, MapPin, MessageCircle, ShieldAlert, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { Btn, Empty, IconBtn, LikeBtn, Shell, Shimmer, T, TabBar } from '../components/r7'
+import { SlowHint } from '../components/WakeUp'
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import Preferences from '../components/Preferences'
 import DemoMatchCard, { DemoChip } from '../components/DemoMatch'
@@ -169,7 +170,7 @@ export default function Discover() {
       <Shell title={mobile ? 'Discover' : null}>
         <div className="pad demo-wrap"><PhotoNudge /><DemoMatchCard /></div>
         {error ? <Empty icon={Compass} title="We couldn’t load Discover" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{errMsg(error)}</Empty>
-          : !deck ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="80%" /></div>
+          : !deck ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /><Shimmer w="80%" /><SlowHint /></div>
             : <Empty icon={Compass} title="You’ve seen everyone nearby" action={<Btn kind="secondary" icon={SlidersHorizontal} onClick={() => setPrefs(true)}>Change preferences</Btn>}>New people join every day. Come back tomorrow, or check what your agent knows about you in the meantime.</Empty>}
         {matchSheet}
       </Shell>
