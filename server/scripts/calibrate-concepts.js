@@ -11,6 +11,11 @@ import { flushUsage } from '../src/services/llm/budget.js';
 await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10_000 });
 const concepts = await Concept.find({ createdBy: 'seed', type: 'activity' }).select('+embedding').lean();
 const pairs = concepts.flatMap((c) => c.aliases.map((alias) => ({ alias, own: c })));
+if (!pairs.length) {
+  console.log('No seeded concept aliases in this database: run `node scripts/seed-concepts.js` (or `npm run seed`) first.');
+  await mongoose.disconnect();
+  process.exit(0);
+}
 const vectors = await embed(pairs.map((p) => p.alias), { purpose: 'calibrate-concepts', inputType: 'query' });
 
 const truePos = [], hardNeg = [];

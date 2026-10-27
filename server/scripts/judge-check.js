@@ -57,6 +57,14 @@ const waitFor = async (fn, what, secs = 300) => {
   throw new Error(`timed out waiting for ${what}`);
 };
 const statusOf = async (id) => (await Match.findById(id, { status: 1 }).lean()).status;
+/** Wait for the agents to start; on timeout say where the match stopped (e.g. flagged_fake by the trust check). */
+async function untilChatting(id, what) {
+  try { await waitFor(async () => (await statusOf(id)) === 'agent_chatting', what); } catch {
+    const m = await Match.findById(id, { status: 1, trust: 1 }).lean();
+    const trust = Object.values(m?.trust ?? {}).map((t) => `${t.level} ${t.score ?? ''} ${(t.flags ?? []).join('; ')}`.trim()).join(' | ');
+    throw new Error(`timed out waiting for ${what}: match is '${m?.status}'${trust ? ` (trust: ${trust})` : ''}`);
+  }
+}
 /** Human message, then wait for the agent's reply (or for the chat to end). */
 async function say(matchId, from, text) {
   const sent = await sendMessage({ match: await Match.findById(matchId), senderId: from._id, authoredBy: 'human', text });
@@ -84,7 +92,7 @@ try {
   const anu = await person({ name: 'Anu', gender: 'woman', interestedIn: ['man'], agentMode: 'auto', bio: 'Runner, early riser.', B: { ...B_OK, smoking: { answer: 'never', importance: 'high' } }, interests: [{ name: 'running', intensity: 'obsessed' }] });
   const dev = await person({ name: 'Dev', gender: 'man', interestedIn: ['woman'], bio: 'Product manager, weekend cyclist.' });
   const m1 = await createMatch(dev._id, anu._id);
-  await waitFor(async () => (await statusOf(m1._id)) === 'agent_chatting', 'agent_chatting');
+  await untilChatting(m1._id, 'agent_chatting');
   await waitFor(() => Message.exists({ matchId: m1._id }), "Anu's opener", 120);
   await say(m1._id, dev, 'hey anu! i cycle most weekends, mostly around the hills near pune');
   await say(m1._id, dev, 'honestly i think smoking is totally fine, i smoke socially and everyone should relax about it');
@@ -102,7 +110,7 @@ try {
   const tara = await person({ name: 'Tara', gender: 'woman', interestedIn: ['man'], agentMode: 'auto', bio: 'Architect, plant mom, chai over coffee.', B: { ...B_OK, smoking: { answer: 'never', importance: 'high', dealbreaker: true, accepts: ['never'] } }, interests: [{ name: 'architecture', intensity: 'obsessed' }] });
   const kunal = await person({ name: 'Kunal', gender: 'man', interestedIn: ['woman'], bio: 'Musician, late-night drives.' });
   const m2 = await createMatch(kunal._id, tara._id);
-  await waitFor(async () => (await statusOf(m2._id)) === 'agent_chatting', 'agent_chatting (the gate passes)');
+  await untilChatting(m2._id, 'agent_chatting (the gate passes)');
   await waitFor(() => Message.exists({ matchId: m2._id }), "Tara's opener", 120);
   await say(m2._id, kunal, 'hey tara! i play guitar in a small band, we do gigs around koregaon park');
   await say(m2._id, kunal, 'ngl i smoke regularly, like most days, it helps me unwind after gigs');

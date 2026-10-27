@@ -1,0 +1,60 @@
+// Restart ONE pair's chat from scratch: back up and delete everything between the two accounts (match, messages,
+// conversation, chat events, verdicts, likes, inbox items and notes from that match), then match them again as an
+// admin match (no gate, no daily cap). Every other match is untouched. Dry run by default.
+//   node scripts/rematch-pair.js Yagu Yagunguni         → plan only
+//   node scripts/rematch-pair.js Yagu Yagunguni --yes   → back up to server/backups/<time>-pair/, wipe, re-match
+// Names match User.name exactly (case-insensitive). Uses MONGODB_URI from server/.env. Only enqueues jobs: the running
+// server's worker does the trust check, brief and chat, so don't run a local worker against the same database.
+import 'dotenv/config';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import mongoose from 'mongoose';
+import { User } from '../src/models/User.js';
+import { createMatch } from '../src/services/matches.js';
+
+const [nameA, nameB] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const YES = process.argv.includes('--yes');
+if (!nameA || !nameB) throw new Error('usage: node scripts/rematch-pair.js <nameA> <nameB> [--yes]');
+
+await mongoose.connect(process.env.MONGODB_URI);
+const db = mongoose.connection.db;
+console.log(`database: ${mongoose.connection.host.replace(/^[^.]+/, '***')} · ${YES ? 'WIPE + MATCH' : 'dry run'}`);
+
+const exact = (name) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+async function one(name) {
+  const found = await User.find({ name: exact(name), isSeed: { $ne: true }, isJudge: { $ne: true } }, { name: 1, email: 1, 'onboarding.status': 1 }).lean();
+  if (found.length !== 1) throw new Error(`expected exactly one account named "${name}", found ${found.length}`);
+  if (found[0].onboarding?.status !== 'done') throw new Error(`${found[0].name} hasn't finished onboarding (no agent)`);
+  return found[0];
+}
+const a = await one(nameA), b = await one(nameB);
+const pairKey = [String(a._id), String(b._id)].sort().join('_');
+const matchIds = (await db.collection('matches').find({ pairKey }, { projection: { _id: 1 } }).toArray()).map((m) => m._id);
+const ab = [{ observerId: a._id, subjectId: b._id }, { observerId: b._id, subjectId: a._id }];
+
+const PAIR_DATA = [
+  ['matches', { _id: { $in: matchIds } }], ['messages', { matchId: { $in: matchIds } }],
+  ['conversations', { matchId: { $in: matchIds } }], ['chatevents', { matchId: { $in: matchIds } }],
+  ['matchdecisions', { matchId: { $in: matchIds } }], ['inboxitems', { matchId: { $in: matchIds } }],
+  ['likes', { $or: [{ fromUserId: a._id, toUserId: b._id }, { fromUserId: b._id, toUserId: a._id }] }],
+  ['kgfacts', { $or: [{ matchId: { $in: matchIds } }, ...ab] }], ['kgedges', { $or: ab }],
+  ['jobs', { 'payload.matchId': { $in: matchIds.map(String) }, status: { $in: ['queued', 'running', 'failed'] } }],
+];
+
+console.log(`${a.name} × ${b.name}: ${matchIds.length} existing match(es)`);
+if (YES) {
+  const dir = new URL(`../backups/${new Date().toISOString().replace(/[:.]/g, '-')}-pair/`, import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  for (const [name, filter] of PAIR_DATA) {
+    const docs = await db.collection(name).find(filter).toArray();
+    writeFileSync(new URL(`${name}.json`, dir), JSON.stringify(docs));
+    const { deletedCount } = await db.collection(name).deleteMany(filter);
+    console.log(`  ${name.padEnd(15)} backed up ${String(docs.length).padStart(4)} · deleted ${deletedCount}`);
+  }
+  console.log(`backup: ${dir.pathname}`);
+  const m = await createMatch(a._id, b._id, { admin: true });
+  console.log(`matched ${a.name} × ${b.name} → ${m?._id ?? 'skipped (an account is not active)'}`);
+} else {
+  for (const [name, filter] of PAIR_DATA) console.log(`  would delete ${name.padEnd(15)} ${await db.collection(name).countDocuments(filter)}`);
+  console.log('\nRe-run with --yes to wipe and re-match.');
+}
+await mongoose.disconnect();
