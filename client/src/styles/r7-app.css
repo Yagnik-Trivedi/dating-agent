@@ -441,3 +441,17 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .discover.d .d-with-rail { flex: 1; min-height: 0; align-items: stretch; }
 .discover.d .d-with-rail > .d-grid { flex: 0 1 1020px; height: 100%; }
 .discover.d .d-with-rail > .d-rail { align-self: flex-start; overflow-y: auto; max-height: 100%; }
+
+/* UI polish A5: small, purposeful motion (all off under reduced motion; nothing loops but the live dot) */
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.d-body, .m-body, .lt-page, .onb-main { animation: page-in 180ms var(--ease) backwards; }
+.asks, .lt-grid, .y-lwrap, .prev-body, .no-likes, .m2-prev, .pc-list, .y-sum, .in-side, .d-rail { animation: fade-in 220ms ease-out backwards; }
+.teach-c, .mt-opt, .demo-card, .m2-prev, button.card, a.card { transition: transform 160ms var(--ease), box-shadow 160ms var(--ease); }
+.teach-c:hover, .mt-opt:hover, .demo-card:hover, button.card:hover, a.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -16px rgb(43 36 32 / .4); }
+.match-knot { display: block; width: 72px; height: auto; margin: 0 auto 4px; }
+.tnum { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .d-body, .m-body, .lt-page, .onb-main, .asks, .lt-grid, .y-lwrap, .prev-body, .no-likes, .m2-prev, .pc-list, .y-sum, .in-side, .d-rail { animation: none; }
+  .teach-c:hover, .mt-opt:hover, .demo-card:hover, button.card:hover, a.card:hover { transform: none; }
+}

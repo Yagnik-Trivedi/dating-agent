@@ -1,6 +1,8 @@
 // A Hinge-style profile (Round 7 Step 2 design), shared by Discover, the profile view (/u/:id) and Likes you:
 // photos and prompts interleaved, each with its own Like; liking opens a sheet with an optional comment (plan 30 S3.4).
 import { useState } from 'react'
+import twineMark from '../assets/twine-mark.svg'
+import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -84,10 +86,13 @@ export function LikeSheet({ like, p, photos, onClose, onSend, busy }) {
 
 /** It's a match: how do you want to start? (S3.6). onStart(choice). */
 export function MatchChoice({ open, name, defaultChoice = 'agents', onStart, onClose, busy }) {
+  const rm = useReducedMotion()
   const [choice, setChoice] = useState(defaultChoice)
   const opts = [['agents', PenLine, 'Let our agents break the ice (~3 min)', 'They talk in your styles, you both can read along, and each of you gets a private letter.'], ['self', MessageCircle, 'Chat myself now', 'Skip the agents and say hello yourself.']]
   return (
     <Sheet open={open} title={`You and ${name} liked each other`} onClose={onClose} footer={<Btn onClick={() => onStart(choice)} loading={busy}>Start</Btn>}>
+      {/* UI polish A5: the match moment, the two loops of the Twine mark knotting together (still under reduced motion) */}
+      <motion.img className="match-knot" src={twineMark} alt="" aria-hidden="true" initial={rm ? false : { scale: 0.4, rotate: -35, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} />
       <p className="lead sm">How do you want to start?</p>
       <div className="mt-opts" role="radiogroup" aria-label="How to start">
         {opts.map(([k, I, t, d]) => <button key={k} type="button" role="radio" aria-checked={choice === k} className={`mt-opt card ${choice === k ? 'on' : ''}`} onClick={() => setChoice(k)}><I size={22} strokeWidth={1.6} aria-hidden="true" /><b>{t}</b><span>{d}</span></button>)}

@@ -5,7 +5,7 @@ import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRe
 import { Link } from 'react-router-dom'
 import { useReducedMotion } from 'motion/react'
 import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Lock, Orbit, Pencil, Quote, RefreshCw, Search, Trash2, X } from 'lucide-react'
-import { Btn, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw, AccountLinks } from '../components/r7'
+import { Btn, CountUp, Dots, Empty, IconBtn, Privacy, TabBar, Tabs, TopNav, useDraw, AccountLinks } from '../components/r7'
 import { TextBars } from '../components/charts'
 import BrainMeter from '../components/BrainMeter'
 import TextingStyle, { styleBody } from '../components/TextingStyle'
@@ -85,7 +85,7 @@ function Summary({ L, onSelect }) {
       {top.length > 0 && <><h3 className="ls-h">What matters most to you</h3>
         <ul className="y-sum-top">{top.map((f) => <li key={f.id}><button type="button" className="y-sum-f" onClick={() => onSelect(f.id)}><i style={{ background: f.tint }} aria-hidden="true" />{f.t}</button></li>)}</ul></>}
       <h3 className="ls-h">Who can see it</h3>
-      <p className="y-sum-priv"><span><b>{n('public')}</b> public</span><span><b>{n('if_asked')}</b> only if asked</span><span><b>{n('private')}</b> private</span></p>
+      <p className="y-sum-priv"><span><b><CountUp n={n('public')} /></b> public</span><span><b><CountUp n={n('if_asked')} /></b> only if asked</span><span><b><CountUp n={n('private')} /></b> private</span></p>
       {next.length > 0 && <><h3 className="ls-h">Teach it next</h3>
         <ul className="y-sum-next">{next.map((m) => <li key={m.id}><Link className="link" to={`/teach/m/${m.id}`}>{m.title}</Link></li>)}</ul></>}
       <p className="small y-sum-hint">Tap a dot to see what your agent knows and where it learned it.</p>
@@ -276,7 +276,7 @@ export default function You({ review = false }) {
 
   if (mobile) return (
     <div className="scr app-scr you m">
-      <header className="y-head"><div><h1 className="h2">This is you</h1>{L && <p className="small">{L.facts.length} facts · {privateN} private</p>}</div><div className="y-head-acts"><AccountLinks ask /></div></header>
+      <header className="y-head"><div><h1 className="h2">This is you</h1>{L && <p className="small"><CountUp n={L.facts.length} /> facts · <CountUp n={privateN} /> private</p>}</div><div className="y-head-acts"><AccountLinks ask /></div></header>
       {reviewBar}
       {controls}{!isList && !isBrain && chips}
       {(isList || isBrain) && <div className="y-lwrap">{list}</div>}

@@ -1,9 +1,9 @@
 // Prelude Round 7 Step 2 kit (Frontend-Design/07-prelude-step2/source/src/ui.jsx, plan 30 S6): the one component set.
 // Same markup and motion as the design; the board's demo state is replaced by props (controlled inputs, real counts,
 // real routes). Motion: transform + opacity only; MotionConfig reducedMotion="user" (App) + useReducedMotion here.
-import { createContext, useContext, useEffect, useId, useRef } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'motion/react'
+import { motion, AnimatePresence, LayoutGroup, useReducedMotion, animate } from 'motion/react'
 import { Compass, Users, MessageCircle, Orbit, Settings as Gear, Globe, MessageCircleQuestion, Lock, Plus, X, Check, ChevronLeft, ImagePlus, SendHorizontal, CircleCheck } from 'lucide-react'
 import { illustration } from '../lib/art'
 import { useMobile } from './prelude'
@@ -197,6 +197,18 @@ export function useDraw(ref, { duration = 1000, delay = 0, ease = 'inOutQuad', s
     })
     return () => { alive = false; a?.revert?.() }
   }, [rm, ...deps])
+}
+
+/** UI polish A5: a number that counts up when it first appears (instant under reduced motion). */
+export function CountUp({ n }) {
+  const rm = useReducedMotion()
+  const [v, setV] = useState(rm ? n : 0)
+  useEffect(() => {
+    if (rm) { setV(n); return }
+    const a = animate(0, n, { duration: 0.6, ease: 'easeOut', onUpdate: (x) => setV(Math.round(x)) })
+    return () => a.stop()
+  }, [n, rm])
+  return <span className="tnum">{v}</span>
 }
 
 /* Navigation. Counts come from the shell context (Layout). "Likes you" arrives in plan 30 S3. */
