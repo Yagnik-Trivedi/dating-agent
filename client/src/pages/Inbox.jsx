@@ -66,6 +66,6 @@ export default function Inbox() {
     : !items ? <div aria-busy="true"><Shimmer w="60%" /><Shimmer /><Shimmer w="80%" /></div>
       : !items.length ? <Empty icon={InboxIcon} title="Nothing to answer">When your agent isn’t sure about something, it asks you here instead of guessing.</Empty>
         : <Groups items={items} onAnswered={answered} />
-  if (mobile) return <Shell title="Ask my human" back sub={items?.some((i) => i.matchId) ? `${items.filter((i) => i.matchId).length} asked in a chat` : undefined}><div className="pad">{body}</div></Shell>
-  return <Shell><div className="page narrow"><div className="pg-h"><div><h1 className="h1">Ask my human</h1><p className="lead">Your agent asks instead of guessing. Each answer becomes a fact you can see and edit in “This is you”.</p></div></div>{body}</div></Shell>
+  if (mobile) return <Shell title="Your agent has questions" back sub={items?.some((i) => i.matchId) ? `${items.filter((i) => i.matchId).length} asked in a chat` : undefined}><div className="pad">{body}</div></Shell>
+  return <Shell><div className="page narrow"><div className="pg-h"><div><h1 className="h1">Your agent has questions</h1><p className="lead">It asks instead of guessing. Each answer becomes something it can say about you.</p></div></div>{body}</div></Shell>
 }

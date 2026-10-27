@@ -62,7 +62,7 @@ export default function Settings() {
         <div className="set-row"><div><b>Learn from my chats</b><span className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</span></div>
           <Toggle on={learn} label="Learn from my chats" disabled={Boolean(saving)} onChange={(v) => save({ learnFromChats: v }, v ? 'Your agent will learn from your chats' : 'Your agent won’t learn from your chats')} /></div>
         <LeaveForMe value={user.settings?.leaveForMe ?? []} saving={saving} onSave={(v) => save({ leaveForMe: v }, 'Saved. Your agent will leave those topics for you.')} />
-        <Link to="/inbox" className="set-row link-row"><div><b>Ask my human</b><span className="small">Questions your agent asked instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
+        <Link to="/inbox" className="set-row link-row"><div><b>Your agent has questions</b><span className="small">It asks instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
       </section>
       <section className="set-sec card"><h2 className="h3">Privacy and trust</h2>
         <Link to="/you" className="set-row link-row"><div><b>What your agent knows</b><span className="small">Make any fact public, only-if-asked or private in “This is you”.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>

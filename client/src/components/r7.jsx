@@ -211,7 +211,7 @@ export function TopNav() {
       <nav aria-label="Main">{NAV.filter(([to]) => to !== '/likes' || counts.likesEnabled).map(([to, l, I, k]) => (
         <NavLink key={to} to={to} className={navOn}><I size={18} strokeWidth={1.7} aria-hidden="true" />{l}{k === 'likes' && counts.likes > 0 && <b className="count">{counts.likes}</b>}{k === 'matches' && counts.matches > 0 && <i className="ndot" aria-label="new" />}</NavLink>
       ))}
-        <NavLink to="/inbox" className={navOn}><MessageCircleQuestion size={18} strokeWidth={1.7} aria-hidden="true" />Ask my human{counts.notifications > 0 && <b className="count" aria-label={`${counts.notifications} open`}>{counts.notifications}</b>}</NavLink>
+        <NavLink to="/inbox" className={navOn}><MessageCircleQuestion size={18} strokeWidth={1.7} aria-hidden="true" />Ask me{counts.notifications > 0 && <b className="count" aria-label={`${counts.notifications} open`}>{counts.notifications}</b>}</NavLink>
       </nav>
       <div className="topnav-r">
         <AccountLinks />
@@ -226,7 +226,7 @@ export function AccountLinks({ ask }) {
   const navigate = useNavigate()
   return (
     <>
-      {ask && <span className="bell"><IconBtn icon={MessageCircleQuestion} label={counts.notifications ? `Ask my human, ${counts.notifications} open` : 'Ask my human'} onClick={() => navigate('/inbox')} />{counts.notifications > 0 && <b className="count">{counts.notifications}</b>}</span>}
+      {ask && <span className="bell"><IconBtn icon={MessageCircleQuestion} label={counts.notifications ? `Your agent has questions, ${counts.notifications} open` : 'Your agent has questions'} onClick={() => navigate('/inbox')} />{counts.notifications > 0 && <b className="count">{counts.notifications}</b>}</span>}
       <IconBtn icon={Gear} label="Settings" onClick={() => navigate('/settings')} />
     </>
   )
