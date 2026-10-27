@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
-import { Compass, Heart, MapPin, ShieldAlert, SlidersHorizontal, X } from 'lucide-react'
+import { Compass, Heart, Keyboard, MapPin, MessageCircle, ShieldAlert, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { Btn, Empty, IconBtn, LikeBtn, Shell, Shimmer, T, TabBar } from '../components/r7'
 import { LikeSheet, Photo, ProfileBody, photosOf, useLikeFlow } from '../components/ProfileParts'
 import Preferences from '../components/Preferences'
@@ -67,6 +67,31 @@ const ActionBar = ({ name, onPass, onLike, busy, extra }) => (
     {extra}
   </div>
 )
+
+// UI polish A9: a right rail beside the card. "Why you're seeing them" uses PUBLIC profile data only (city and the
+// interests both profiles list); nothing from either graph.
+function Rail({ p, me }) {
+  const mine = new Set((me?.tags?.interests ?? []).map((x) => String(x).toLowerCase()))
+  const shared = (p.tags?.interests ?? []).filter((x) => mine.has(String(x).toLowerCase()))
+  const sameCity = me?.city && p.city && me.city.toLowerCase() === p.city.toLowerCase()
+  return (
+    <aside className="d-rail" aria-label="About this profile">
+      <section className="card dr-sec"><h2 className="dr-h"><Sparkles size={16} strokeWidth={1.8} aria-hidden="true" />Why you’re seeing {p.name}</h2>
+        <ul className="dr-list">
+          <li>{p.name} fits what you’re looking for, and you fit theirs.</li>
+          {sameCity && <li>You’re both in {p.city}.</li>}
+          {shared.length > 0 && <li>You both list {shared.slice(0, 3).join(', ')}.</li>}
+        </ul>
+      </section>
+      <section className="card dr-sec"><h2 className="dr-h"><MessageCircle size={16} strokeWidth={1.8} aria-hidden="true" />If you both say yes</h2>
+        <p className="small">Your agent says hi in your own words and gets to know {p.name} first. You read every line and can take over any time.</p>
+      </section>
+      <section className="card dr-sec"><h2 className="dr-h"><Keyboard size={16} strokeWidth={1.8} aria-hidden="true" />Keyboard</h2>
+        <ul className="dr-keys"><li><kbd>←</kbd> pass</li><li><kbd>→</kbd> like</li><li><kbd>↑</kbd> next photo</li></ul>
+      </section>
+    </aside>
+  )
+}
 
 export default function Discover() {
   const mobile = useMobile()
@@ -175,6 +200,7 @@ export default function Discover() {
       <div className="d-sub">{prefsBtn}<span className="small">{deck.length} {deck.length === 1 ? 'person' : 'people'} near {p.city ?? 'you'} who fit what you’re looking for</span>
         {hint && <button type="button" className="kbd-hint" onClick={() => { setHint(false); hideHint() }} aria-label="Keyboard: left arrow to pass, right arrow to like. Dismiss">← pass · → like</button>}
       </div>
+      <div className="d-with-rail">
       <SwipeCard key={p.userId} className="d-grid" onDecide={(liked) => decide(liked)} disabled={busy} flyRef={flyRef}>
         <div className="d-left">
           <Photo src={photos[idx]} i={idx} n={photos.length} name={p.name} onLike={setLiking} busy={busy} />
@@ -187,6 +213,8 @@ export default function Discover() {
           <ProfileBody p={p} photos={photos} onLike={setLiking} busy={busy} />
         </div>
       </SwipeCard>
+      <Rail p={p} me={profile} />
+      </div>
       <ActionBar name={p.name} onPass={() => flyRef.current?.(false)} onLike={likeProfile} busy={busy} />
       {matchSheet}
     </Shell>

@@ -74,6 +74,25 @@ function BrainPlace({ f, L, onSelect }) {
 }
 
 /** Plan 33 Q2: the brain map as a tree: life areas → branches → what your agent knows there, plus how filled it is. */
+// UI polish B3: before a dot is tapped, the side panel sums up what the agent knows (never a percentage).
+function Summary({ L, onSelect }) {
+  const top = L.facts.filter((f) => !f.voice).sort((a, b) => b.imp - a.imp || b.conf - a.conf).slice(0, 5)
+  const n = (p) => L.facts.filter((f) => !f.voice && f.privacy === p).length
+  const next = (L.brain?.modules ?? []).filter((m) => !m.done).slice(0, 3)
+  return (
+    <aside className="fact-sheet side y-sum" aria-label="What your agent knows, in short">
+      {L.brain && <BrainMeter compact strength={{ ...L.brain.strength, modulesDone: L.brain.modules.filter((m) => m.done).length }} />}
+      {top.length > 0 && <><h3 className="ls-h">What matters most to you</h3>
+        <ul className="y-sum-top">{top.map((f) => <li key={f.id}><button type="button" className="y-sum-f" onClick={() => onSelect(f.id)}><i style={{ background: f.tint }} aria-hidden="true" />{f.t}</button></li>)}</ul></>}
+      <h3 className="ls-h">Who can see it</h3>
+      <p className="y-sum-priv"><span><b>{n('public')}</b> public</span><span><b>{n('if_asked')}</b> only if asked</span><span><b>{n('private')}</b> private</span></p>
+      {next.length > 0 && <><h3 className="ls-h">Teach it next</h3>
+        <ul className="y-sum-next">{next.map((m) => <li key={m.id}><Link className="link" to={`/teach/m/${m.id}`}>{m.title}</Link></li>)}</ul></>}
+      <p className="small y-sum-hint">Tap a dot to see what your agent knows and where it learned it.</p>
+    </aside>
+  )
+}
+
 function BrainView({ L, onSelect }) {
   const byId = new Map(L.facts.map((f) => [f.id, f]))
   const brain = L.brain
@@ -279,7 +298,7 @@ export default function You({ review = false }) {
       {(isList || isBrain) && <div className="y-lwrap d">{list}{sheet && <div className="yl-sheet">{sheet}</div>}</div>}
       <div className="y-main" style={isList || isBrain ? { display: 'none' } : undefined}>
         <div className="y-canvas" ref={canvas}>{graph}{L?.facts.length > 0 && <><Legend /><p className="y-hint small">{use3D ? 'Drag to turn · scroll to zoom · tap a dot' : 'Tap a dot'}</p></>}</div>
-        {!(isList || isBrain) && (sheet || <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>)}
+        {!(isList || isBrain) && (sheet || (L ? <Summary L={L} onSelect={setSel} /> : <aside className="fact-sheet side empty"><p className="small">Tap a dot to see what your agent knows and where it learned it.</p></aside>))}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 // never makes it up; it asks here. Each answer becomes a fact I can see and edit in "This is you".
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Inbox as InboxIcon, PenLine, RefreshCw } from 'lucide-react'
+import { BookOpen, Inbox as InboxIcon, PenLine, RefreshCw, Sparkles } from 'lucide-react'
 import { Btn, Empty, Shell, Shimmer } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useSocketEvent } from '../hooks/useSocket'
@@ -53,6 +53,26 @@ function Groups({ items, onAnswered }) {
   return <>{group('Asked in a chat', `${chat.length} waiting`, chat)}{group('Teach your agent', 'optional', teach)}</>
 }
 
+// UI polish A9: the desktop side panel. The newest things the agent learned about me (my own graph) + how answers are used.
+function Learned() {
+  const [facts, setFacts] = useState(null)
+  useEffect(() => {
+    api.get('/api/kg/me').then(({ data }) => setFacts((data.nodes ?? []).filter((n) => n.hub && n.learnedAt && n.type !== 'voice' && n.type !== 'self')
+      .sort((a, b) => new Date(b.learnedAt) - new Date(a.learnedAt)).slice(0, 5))).catch(() => setFacts([]))
+  }, [])
+  return (
+    <aside className="in-side">
+      <section className="card in-sec"><h2 className="dr-h"><Sparkles size={16} strokeWidth={1.8} aria-hidden="true" />What your agent learned lately</h2>
+        {!facts ? <Shimmer w="70%" /> : facts.length ? <ul className="dr-list">{facts.map((f) => <li key={f.id}>{f.label}</li>)}</ul> : <p className="small">Nothing new yet.</p>}
+        <Link className="link" to="/you">See everything in “This is you”</Link>
+      </section>
+      <section className="card in-sec"><h2 className="dr-h"><BookOpen size={16} strokeWidth={1.8} aria-hidden="true" />How answers are used</h2>
+        <p className="small">Each answer becomes something your agent can say about you, in your words. You can edit it or make it private any time in “This is you”. Your agent never makes up an answer it doesn’t have.</p>
+      </section>
+    </aside>
+  )
+}
+
 export default function Inbox() {
   const mobile = useMobile()
   const [items, setItems] = useState(null)
@@ -67,5 +87,5 @@ export default function Inbox() {
       : !items.length ? <Empty icon={InboxIcon} title="Nothing to answer">When your agent isn’t sure about something, it asks you here instead of guessing.</Empty>
         : <Groups items={items} onAnswered={answered} />
   if (mobile) return <Shell title="Your agent has questions" back sub={items?.some((i) => i.matchId) ? `${items.filter((i) => i.matchId).length} asked in a chat` : undefined}><div className="pad">{body}</div></Shell>
-  return <Shell><div className="page narrow"><div className="pg-h"><div><h1 className="h1">Your agent has questions</h1><p className="lead">It asks instead of guessing. Each answer becomes something it can say about you.</p></div></div>{body}</div></Shell>
+  return <Shell><div className="page in2"><div className="in-main"><div className="pg-h"><div><h1 className="h1">Your agent has questions</h1><p className="lead">It asks instead of guessing. Each answer becomes something it can say about you.</p></div></div>{body}</div><Learned /></div></Shell>
 }

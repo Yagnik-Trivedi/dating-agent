@@ -57,19 +57,21 @@ export default function Settings() {
   const learn = user.settings?.learnFromChats !== false
   const body = (
     <div className="settings">
-      <section className="set-sec card"><h2 className="h3">Your agent</h2>
+      <section className="set-sec card" id="set-agent"><h2 className="h3">Your agent</h2>
         <div className="set-row col"><b>Agent mode</b><Chips label="Agent mode" value={user.agentMode} onChange={(m) => m !== user.agentMode && !saving && save({ agentMode: m }, m === 'off' ? 'Your agent is off. You’ll chat yourself.' : 'Saved. Your agent will handle the first conversations.')} items={MODE_LABELS} /><p className="small">{MODES[user.agentMode]}</p></div>
         <div className="set-row"><div><b>Learn from my chats</b><span className="small">After you take over, your own messages help your agent sound like you. Only your words are kept, never theirs.</span></div>
           <Toggle on={learn} label="Learn from my chats" disabled={Boolean(saving)} onChange={(v) => save({ learnFromChats: v }, v ? 'Your agent will learn from your chats' : 'Your agent won’t learn from your chats')} /></div>
         <LeaveForMe value={user.settings?.leaveForMe ?? []} saving={saving} onSave={(v) => save({ leaveForMe: v }, 'Saved. Your agent will leave those topics for you.')} />
         <Link to="/inbox" className="set-row link-row"><div><b>Your agent has questions</b><span className="small">It asks instead of guessing.</span></div><Inbox size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
       </section>
-      <section className="set-sec card"><h2 className="h3">Privacy and trust</h2>
+      <section className="set-sec card" id="set-privacy"><h2 className="h3">Privacy and trust</h2>
         <Link to="/you" className="set-row link-row"><div><b>What your agent knows</b><span className="small">Make any fact public, only-if-asked or private in “This is you”.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
       </section>
-      <section className="set-sec card"><h2 className="h3">Account</h2>
+      <section className="set-sec card" id="set-account"><h2 className="h3">Account</h2>
         <Link to="/profile" className="set-row link-row"><div><b>Edit profile</b><span className="small">Photos, prompts and who you’d like to meet.</span></div><ChevronRight size={18} strokeWidth={1.7} aria-hidden="true" /></Link>
         <div className="set-row"><div><b>Signed in</b><span className="small">{user.email}</span></div><Btn kind="secondary" size="sm" icon={LogOut} onClick={() => { disconnectSocket(); logout() }}>Log out</Btn></div>
+      </section>
+      <section className="set-sec card danger" id="set-danger"><h2 className="h3">Danger zone</h2>
         <div className="set-row"><div><b>Delete account</b><span className="small">Removes your profile, photos, chats and everything your agent knows. This can’t be undone.</span></div><Btn kind="danger" size="sm" icon={Trash2} onClick={() => setConfirm(true)}>Delete</Btn></div>
       </section>
       <p className="small set-note"><Lock size={14} strokeWidth={1.7} aria-hidden="true" /> Early conversations with your matches may be handled by AI agents, including yours. You agreed to this when you signed up.</p>
@@ -80,5 +82,9 @@ export default function Settings() {
     </div>
   )
   if (mobile) return <Shell title="Settings" back><div className="pad">{body}</div></Shell>
-  return <Shell><div className="page narrow"><h1 className="h1">Settings</h1>{body}</div></Shell>
+  // UI polish A9: the usual settings layout on desktop, a sub-nav on the left and the sections on the right.
+  const nav = [['set-agent', 'Agent'], ['set-privacy', 'Privacy'], ['set-account', 'Account'], ['set-danger', 'Danger zone']]
+  return <Shell><div className="page set2"><h1 className="h1">Settings</h1><div className="set2-grid">
+    <nav className="set-nav" aria-label="Settings sections">{nav.map(([id, l]) => <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>{l}</a>)}</nav>
+    {body}</div></div></Shell>
 }
