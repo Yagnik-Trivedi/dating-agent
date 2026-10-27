@@ -26,7 +26,7 @@ import { generate, generateTurn } from './generate.js';
 import { updateInterest } from './interest.js';
 import { observe, perceiveArgs, perceiveObserve } from './perceive.js';
 import { bridgesTo, MIN_MESSAGES_FOR_NATURAL_END, planAct } from './planAct.js';
-import { BARE_BYE, BOUNCE, endVibe, excuseFor, GETTOKNOW, greetingFor, INVENTED_EXCUSE, isBare, ownWordsLine, readParts, TALK_LATER } from './naturalFlow.js';
+import { BARE_BYE, BOUNCE, endVibe, excuseFor, GETTOKNOW, INVENTED_EXCUSE, isBare, ownWordsLine, readParts, TALK_LATER } from './naturalFlow.js';
 import { User } from '../../models/User.js';
 import { tierOf } from './evidence.js';
 import { memoryFor, rawTranscript, repeatsEarlier } from './memory.js';
@@ -184,12 +184,12 @@ export function naturalProblems({ draft, plan, myRecent = [] }) {
   if (!plan.end) {
     // Going nowhere: a bare reaction, the same kind of reaction again, a "wbu" bounce again, or far too short.
     const bareRecently = myRecent.some(isBare);
-    if (isBare(text) && (plan.mustAdd || bareRecently || plan.phase !== 'greeting')) problems.push(`don't just say "${text.trim()}": react in a fresh way AND add something real (a detail, an opinion, a bit of your day or interests from the facts, or a specific question). Never repeat a reaction you already used.`);
-    if (BOUNCE.test(text) && myRecent.some((m) => BOUNCE.test(m))) problems.push('you already bounced the question back ("wbu") recently: say something instead of asking it back again.');
+    if (isBare(text) && (plan.mustAdd || bareRecently || plan.phase !== 'greeting')) problems.push(`"${text.trim()}" is only a bare reaction: react in a fresh way of your own AND add something real (a detail, an opinion, a bit of your day or interests from the facts, or a specific question). Never repeat a reaction already used in this chat.`);
+    if (BOUNCE.test(text) && myRecent.some((m) => BOUNCE.test(m))) problems.push('you already turned the question back to them recently: say something of your own instead.');
     if (words(text) < (plan.minWords ?? 0)) problems.push(`too short: write about ${plan.targetWords} words, with something they can reply to.`);
     if (plan.mustAdd && plan.bring && !isBare(text) && words(text) < 8) problems.push(`the chat went flat: bring this up naturally: [${plan.bring.id}] ${plan.bring.text}.`);
   }
-  if (plan.decline && !DECLINED.test(text)) problems.push(`they asked about ${plan.decline}: decline it kindly in one short line ("haha i'd rather not get into that one rn"), then move back to what you were talking about.`);
+  if (plan.decline && !DECLINED.test(text)) problems.push(`they asked about ${plan.decline}: decline it kindly in one short line in your own words, then move back to what you were talking about.`);
   if (plan.preClose && draft.end) problems.push("don't say bye yet: just signal you'll have to go soon, finish this thread and answer what's open.");
   if (plan.end) {
     if (BARE_BYE.test(text)) problems.push(`never just "bye": close properly (${plan.vibe ?? 'neutral'}), with the excuse.`);
@@ -308,14 +308,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const known = asked ? knowsTopic(asked, persona.facts) : null;
   if (asked && !known && !plan.decline) plan.unknownTopic = asked.label;
 
-  // Plan 34: a casual hello from the user's own greeting words (no LLM call); the brief's openers become warmup hooks.
-  if (natural && opening && !plan.end) {
-    const line = greetingFor({ voice: persona.voice, samples: persona.samples ?? [], rng, theirName: matchName, tz: KG.NATURAL.DEFAULT_TZ, lower });
-    await save({ turn: state.turn + 1, interest: state.interest, lowInterestTurns: state.lowInterestTurns, lastAsked: true });
-    return { messages: [line], actPlan: { ...plan, phase: 'greeting', move: 'greet', fromGreeting: true }, checks: { leak: [] }, end: null, unknownAboutMe: null, usedFactIds: [] };
-  }
+  // Plan 34: the opening hello is written by the model in the user's own style (no template); the brief's openers become
+  // warmup hooks.
+  if (natural && opening && !plan.end) Object.assign(plan, { phase: 'greeting', move: 'greet', askBack: true, targetWords: Math.max(4, Math.min(plan.targetWords ?? 8, 10)) });
   // Opening with a brief opener (already grounded + validated): no LLM call.
-  if (opening && brief.openers?.length && !plan.end) {
+  if (!natural && opening && brief.openers?.length && !plan.end) {
     const o = brief.openers[Math.floor(rng() * brief.openers.length)];
     const leaks = leakCheck(sentencesOf(o.text), persona.privateFacts);
     if (!leaks.length) {
@@ -458,7 +455,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Nothing survived: ONE constrained regeneration (owner's tuning spec): short, in-voice, on their last message, a
   // cited fact or honest uncertainty. Never a fixed filler line: "haha fair 😄" read as low effort to the judges.
   let fallback = 'none';
-  if (!messages.length && !plan.end && !opening) {
+  if (!messages.length && !plan.end && (!opening || natural)) {
     fallback = 'constrained';
     // Human mode: a short reaction on their message, no question (plan 31: fallbacks are simple reactions).
     const cPlan = human ? { ...plan, targetWords: Math.min(plan.targetWords, 10), burst: 1, topic: null, askBack: false, move: 'react' }
@@ -496,10 +493,10 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   if (!messages.length) {
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
-    const opener = natural ? `hey ${matchName}! how's your day going?` : `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
+    const opener = `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
     // Plan 34: no fixed lines. The last resort is a short line from the user's own real messages, or nothing.
-    const own = natural && !plan.end && !opening ? ownWordsLine({ samples: persona.samples ?? [], sent: mySent, rng, norm }) : null;
-    const line = natural && !plan.end && !opening ? own : plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
+    const own = natural ? (plan.end ? persona.voice.closingStyle ?? null : ownWordsLine({ samples: persona.samples ?? [], sent: mySent, rng, norm, greeting: opening })) : null;
+    const line = natural ? own : plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
     if (line) messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
     else fallback = 'silent';
   }

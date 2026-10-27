@@ -108,62 +108,64 @@ const humanMoveLine = (plan, firstName) => ({
 }[plan.move] ?? null);
 
 // --- Plan 34 (FLOW=natural): a casual start, threads, a moving lead, feelings, nothing ignored, vibe-based endings.
+// No example phrases anywhere: quoted examples got copied word for word and looped (owner, 2026-10-27: "no fixed words").
+// Every line is described; the words come from the user's own style and examples above.
 const FEELING = {
-  love: 'genuinely loves it: show real excitement the way {name} texts ("WAIT you do that?? so cool")',
-  like: 'likes it ("oh nice", "ooh love that")', meh: 'is lukewarm ("haha fair", "hmm okay")',
-  dislike: 'is NOT into it: say so honestly and kindly ("ehh not really my thing tbh, but i get it"), or a playful protest if that is {name}\'s style',
-  amused: 'found it funny: laugh the way {name} does', surprised: 'is surprised ("wait what", "no wayy")', impressed: 'is impressed ("okay that\'s actually impressive")',
-  relate: 'relates to it from a listed fact ("omg same")', empathetic: 'feels for them: kind, no jokes, no topic change',
-  shy: 'is a little shy about the compliment (a sweet, slightly flustered thanks)', tease: 'teases back playfully',
+  love: 'genuinely loves it: show real excitement, the way {name} would',
+  like: 'likes it: a warm, simple reaction', meh: 'is lukewarm about it: a light, easy-going reaction',
+  dislike: 'is NOT into it: say so honestly and kindly, or with a playful protest if that is {name}\'s style',
+  amused: 'found it funny: laugh the way {name} does', surprised: 'is surprised by it', impressed: 'is impressed by it',
+  relate: 'relates to it (only from a listed fact)', empathetic: 'feels for them: kind, no jokes, no topic change',
+  shy: 'is a little shy about the compliment: a sweet, slightly flustered thanks', tease: 'teases back playfully',
   disagree: 'disagrees, friendly but holding the view',
 };
 const PHASE = {
-  greeting: `- Phase: hello. They just said hi: greet back casually and say how your day is going in a few words (anything specific only from a listed fact, else keep it general like "pretty chill day tbh"), then give it back ("wbu?"). No profile questions, no matching questions.`,
+  greet: '- Phase: you are opening the chat. Say hi the way {name} would start a chat and ask how their day or week is going, in {name}\'s own words. One short message. Nothing about their profile yet, no matching questions.',
+  greeting: '- Phase: hello. They greeted you: greet back casually, say in a few words how your day is going (anything specific only from a listed fact, otherwise keep it general), and turn it back to them in your own words. No profile questions, no matching questions.',
   warmup: '- Phase: warming up. Light small talk about the day, mood or what they just said. No deep or matching questions yet.',
   flow: null, winding_down: null,
 };
 const NATURAL_MOVE = {
   lead: "- You're carrying the conversation right now: a fuller message that shares, tells or gives an opinion on the topic, maybe a related sub-topic of yours. At most one question, and only after giving something.",
-  follow: `- They're carrying the conversation: follow them. A shorter reaction or a follow-up about THEIR thing ("wait what", "and then??", "same, i'm terrible at that too"). Don't take over with your own topic.`,
-  hand_over: `- You've talked about yourself for a while: wrap your bit and hand over naturally ("anyway enough about me, how was your weekend?").`,
-  greet_back: null,
-  pre_close: null,
+  follow: "- They're carrying the conversation: follow them with a shorter reaction or a curious follow-up about THEIR thing, or a small related share of yours. Don't take over with your own topic.",
+  hand_over: "- You've talked about yourself for a while: wrap your bit and naturally hand the conversation over to them with something about their side.",
   bring: '- The chat has gone flat (short replies back and forth). Bring something NEW into it: something of yours, an opinion, a playful take, or a specific question about something they mentioned. Not another short reaction.',
+  greet: null, greet_back: null, pre_close: null,
 };
 function naturalLines(plan, firstName) {
   const fill = (t) => t.replace(/\{name\}/g, firstName);
   return [
-    PHASE[plan.phase] ?? null,
+    PHASE[plan.move === 'greet' ? 'greet' : plan.phase] ? fill(PHASE[plan.move === 'greet' ? 'greet' : plan.phase]) : null,
     NATURAL_MOVE[plan.move] ?? null,
-    plan.items?.length ? `- Their turn has these things that each need a response (one message can bundle them): ${plan.items.map((i) => `[${i.id}] ${i.kind}: "${i.text}"`).join('; ')}. Every question gets an answer (from facts, honest "not sure", or a kind decline); every statement at least a reaction. List the ids you respond to in "covers".` : null,
+    plan.items?.length ? `- Their turn has these things that each need a response (one message can bundle them): ${plan.items.map((i) => `[${i.id}] ${i.kind}: "${i.text}"`).join('; ')}. Every question gets an answer (from the facts, an honest not-sure, or a kind decline); every statement at least a reaction. List the ids you respond to in "covers".` : null,
     ...(plan.feelings ?? []).map((f) => `- About "${f.text}": ${firstName} ${fill(FEELING[f.feeling] ?? 'reacts naturally')}. Put the reaction first, and show its strength only in ${firstName}'s own ways (emoji, caps, stretched words, laughs) if ${firstName} texts like that.`),
     plan.thread ? (plan.thread.changed && plan.thread.bridge
-      ? `- The last topic has run its course. Move to "${plan.thread.topic}" through a natural bridge ("speaking of…", "omg that reminds me…"), never a cold jump.`
-      : `- You're both on "${plan.thread.topic}": riff on it (opinions, jokes, a mini-story, a "would you rather"). General statements about the topic need no fact; anything personal about ${firstName} (has done it, loves it) still needs a listed fact, or an honest "haven't tried it, is it good?".`) : null,
-    plan.lull ? `- The chat slowed down: give them something to react to, not an interview question: ${{ share: 'share a little thing of yours from the listed facts', opinion: 'a light opinion on the current topic', playful: 'a playful take or tease', hypothetical: 'a light hypothetical ("ok random but would you rather…")', hook: `this, phrased casually: "${plan.hook}"` }[plan.lull]}.` : null,
-    !plan.lull && plan.hook && plan.phase === 'warmup' ? `- A hook you can use casually if it fits (rephrase it, e.g. "btw …"): "${plan.hook}". Skip it if it would feel forced.` : null,
+      ? `- The last topic has run its course. Move to "${plan.thread.topic}" through a natural link to what was just said, never a cold jump.`
+      : `- You're both on "${plan.thread.topic}": riff on it (opinions, jokes, a mini-story, a light hypothetical). General statements about the topic need no fact; anything personal about ${firstName} (has done it, loves it) still needs a listed fact, or an honest admission that ${firstName} hasn't tried it.`) : null,
+    plan.lull ? `- The chat slowed down: give them something to react to, not an interview question: ${{ share: 'share a little thing of yours from the listed facts', opinion: 'a light opinion on the current topic', playful: 'a playful take or tease', hypothetical: 'a light, fun hypothetical question', hook: `something about this from their profile, in your own words: ${plan.hook}` }[plan.lull]}.` : null,
+    !plan.lull && plan.hook && plan.phase === 'warmup' ? `- Something from their profile you could bring up casually, in your own words, if it fits: ${plan.hook}. Skip it if it would feel forced.` : null,
     plan.askBack ? '- At most ONE question, and only together with something of yours (a reaction, an opinion or a share). Prefer a follow-up on what they just said. No generic get-to-know questions (hobbies, where are you from, favourites).' : '- No question this time.',
-    plan.decline ? `- They asked about ${plan.decline}, which ${firstName} would rather not get into with the agent: decline it in one short, kind line in ${firstName}'s voice ("haha i'd rather not get into that one rn 😅"), then pivot back to the current topic or something light. Never ignore it, never share anything about it.` : null,
-    plan.bring ? `- Bring this up naturally, in your own words (cite it): [${plan.bring.id}] ${plan.bring.text}. Link it to what you're talking about if you can ("btw…", "that reminds me…").` : null,
-    plan.lightAck ? '- Something they said may not fit with what matters to you: acknowledge it lightly ("ah okay fair") and carry on. Don\'t argue or interrogate.' : null,
-    plan.preClose ? `- You'll have to go soon (the reason: ${plan.excuse ?? 'got some stuff to finish up'}): signal it in ${firstName}'s own words (e.g. "okay i should head off soon 😅"), finish the current topic and answer anything still open. Don't say bye yet.` : null,
+    plan.decline ? `- They asked about ${plan.decline}, which ${firstName} would rather not get into with the agent: decline it in one short, kind line in ${firstName}'s own voice, then move back to the current topic or something light. Never ignore it, never share anything about it.` : null,
+    plan.bring ? `- Bring this up naturally, in your own words (cite it): [${plan.bring.id}] ${plan.bring.text}. Link it to what you're talking about if you can.` : null,
+    plan.lightAck ? "- Something they said may not fit with what matters to you: acknowledge it lightly and carry on. Don't argue or interrogate." : null,
+    plan.preClose ? `- You'll have to go soon (the reason: ${plan.excuse ?? 'other things to do'}): signal it in ${firstName}'s own words, finish the current topic and answer anything still open. Don't say bye yet.` : null,
   ].filter(Boolean);
 }
 const VIBE = {
-  warm: 'warm: appreciation ("this was so fun!!"), a callback to something from the chat, and a future hook ("you still owe me that spot, talk tomorrow?"); may be 2 short messages',
-  neutral: 'neutral: a short reason, polite ("haha okay i should head off, nice chatting! take care"), no future hook',
-  cool: 'cool: brief and kind ("gotta run, good luck with everything!"), no "talk later", no future plans, never rude',
+  warm: 'warm: show you enjoyed it, call back to something from this chat, and leave a light hook for next time; may be 2 short messages',
+  neutral: 'neutral: a short reason and a polite goodbye, no hook for next time',
+  cool: 'cool: brief and kind, no talking later, no future plans, never rude',
 };
 const endLine = (plan, firstName, base) => (plan.flow === 'natural'
-  ? `${base} Style: ${VIBE[plan.vibe ?? 'neutral']}. Excuse (use only this, never invent people, places or events): "${plan.excuse ?? 'got some stuff to finish up'}". Never a bare "bye", never mid-sentence.`
+  ? `${base} Style: ${VIBE[plan.vibe ?? 'neutral']}. The reason to go (use only this, never invent people, places or events): ${plan.excuse ?? 'other things to do'}. Never a bare one-word goodbye, never mid-sentence, all in ${firstName}'s own words.`
   : base);
 
 function humanLines(plan, firstName) {
   const r = plan.read ?? {};
   const natural = plan.flow === 'natural';
   return [
-    `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}. About as long as their message.`,
-    plan.opening ? null : `- They seem ${r.mood ?? 'chill'} (${r.energy ?? 'medium'} energy${r.doing && r.doing !== 'chatting' ? `, ${r.doing.replace(/_/g, ' ')}` : ''}): ${(MOOD_MATCH[r.mood] ?? MOOD_MATCH.chill).replace(/\{name\}/g, firstName)}.`,
+    `- Length: about ${plan.targetWords} words${plan.burst > 1 ? ` per message, as ${plan.burst} separate short messages` : ', one message'}.${natural ? '' : ' About as long as their message.'}`,
+    plan.opening ? null : `- They seem ${r.mood ?? 'chill'} (${r.energy ?? 'medium'} energy${r.doing && r.doing !== 'chatting' ? `, ${r.doing.replace(/_/g, ' ')}` : ''}): ${natural && ['chill', 'bored'].includes(r.mood ?? 'chill') ? 'keep it easy and friendly, and give them something to reply to' : (MOOD_MATCH[r.mood] ?? MOOD_MATCH.chill).replace(/\{name\}/g, firstName)}.`,
     plan.opening ? null : humanMoveLine(plan, firstName),
     natural ? null : plan.askBack && plan.topic?.kind !== 'agenda' ? '- At most one question, about what they said.' : plan.topic?.kind === 'agenda' ? null : '- No question this time.',
     plan.emoji ? `- Use the emoji ${plan.emoji} once.` : '- No emoji.',
@@ -190,19 +192,22 @@ const HUMAN_BLOCK = (firstName) => [
 ];
 
 const NATURAL_BLOCK = (firstName) => [
-  '- Talk, don\'t interview: share before you ask; most of what you learn about them comes from listening, not asking.',
-  '- Topics come from the chat itself. Stay on a topic while it has energy (opinions, jokes, small debates, mini-stories, "same!!"); change it only through a natural bridge.',
+  "- Talk, don't interview: share before you ask; most of what you learn about them comes from listening, not asking.",
+  '- Topics come from the chat itself. Stay on a topic while it has energy (opinions, jokes, small debates, mini-stories); change it only through a natural link.',
   '- Never leave anything they said unanswered: answer their questions (or kindly decline), react to the rest.',
-  '- Never reply with only "nice", "same", "fair enough", "makes sense" or "true". Always add something they can reply to. Vary how you react: never reuse a reaction or opening words you already used in this chat. Don\'t bounce "wbu" back every time.',
+  "- Never reply with only a bare reaction or agreement: always add something they can reply to. Vary how you react: never reuse a reaction, phrase or opening words already used in this chat by either of you. Don't keep turning the question back to them.",
   `- Anything personal about ${firstName} still comes only from the listed facts; general talk about a topic needs no fact.`,
-];
+]
 
 function finalHuman(plan, firstName) {
   return [
     plan.flow === 'natural' && plan.items?.some((i) => i.kind === 'question') && `answer their question(s) (${plan.items.filter((i) => i.kind === 'question').map((i) => `"${i.text}"`).join(', ')}).`,
     plan.flow === 'natural' && plan.decline && `kindly decline ${plan.decline} in one line, then pivot back.`,
     plan.flow === 'natural' && plan.preClose && `signal you'll have to go soon (${plan.excuse}), don't say bye yet.`,
-    plan.flow === 'natural' && plan.phase === 'greeting' && 'greet back casually, a few words about your day, then "wbu?"-style.',
+    plan.flow === 'natural' && plan.bring && `bring up [${plan.bring.id}] ${plan.bring.text} in your own words, linked to the chat; not just a reaction.`,
+    plan.flow === 'natural' && plan.mustAdd && !plan.bring && 'the chat went flat: bring something new (a share, an opinion or a specific question), not just a reaction.',
+    plan.flow === 'natural' && plan.move === 'greet' && 'open the chat with a casual hi in your own words and ask how their day or week is going.',
+    plan.flow === 'natural' && plan.phase === 'greeting' && plan.move !== 'greet' && 'greet back casually, a few words about your day, then turn it back to them in your own words.',
     plan.unknownTopic ? `answer simply: ${firstName} has nothing listed about ${plan.unknownTopic}, so say you don't know (no made-up preference).`
       : plan.answerFirst && `answer their question about ${firstName} simply (listed facts, or say in your own words that you don't know).`,
     plan.mustDisagree && `keep ${firstName}'s opposite view on "${plan.disagreeOn}" (friendly, but don't give in).`,
@@ -281,7 +286,7 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
         ...planLines(plan, firstName),
         '',
         // Plan 30 SN: the agents read like interviewers ticking off topics. This is how two people actually get talking.
-        ...(plan.mode === 'human' ? [...HUMAN_BLOCK(firstName), ...(plan.flow === 'natural' ? NATURAL_BLOCK(firstName) : [])] : [
+        ...(plan.mode === 'human' ? (plan.flow === 'natural' ? ['HOW THIS CHAT GOES:', "- A relaxed chat between two people getting to know each other. Match their mood: gentle when they're tired or down, playful when they're playful.", '- Small talk is good. You don\'t need a fact to react, agree, or talk about the day, the weekend, food or what they said.', ...NATURAL_BLOCK(firstName)] : HUMAN_BLOCK(firstName)) : [
           'HOW A GOOD CHAT FEELS:',
           '- It is a getting-to-know-you chat between two people, not an interview or a questionnaire.',
           '- Stay on the thread they are on before changing the subject. Pick up the specific details they mention and react to those.',
@@ -313,7 +318,7 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
       content: [
         ...memoryLines(memory),
         'CONVERSATION SO FAR:',
-        transcript.length ? transcript.join('\n') : `(nothing yet: write ${firstName}'s first message, reacting to something in ${matchName}'s profile)`,
+        transcript.length ? transcript.join('\n') : plan.flow === 'natural' ? `(nothing yet: write ${firstName}'s first message, a casual hello in ${firstName}'s own words)` : `(nothing yet: write ${firstName}'s first message, reacting to something in ${matchName}'s profile)`,
         warning ? `\nYOUR PREVIOUS DRAFT WAS REJECTED: ${warning}\nWrite a new one that fixes this.` : '',
         // The must-follow parts of the plan go LAST: v1 measured that a topic named only in the system prompt is ignored.
         finalInstruction(plan, firstName) ? `\nIN THIS MESSAGE: ${finalInstruction(plan, firstName)}` : '',

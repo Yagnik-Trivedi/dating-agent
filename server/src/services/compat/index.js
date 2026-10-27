@@ -39,7 +39,8 @@ export async function windDown(match, userId) {
   // A few short real messages as style exemplars (copy the style, never the content).
   const exemplars = samples.map((s) => s.text).filter((t) => t.length <= 140).sort((a, b) => a.length - b.length).slice(0, 4);
   const natural = env.RULES !== 'off' && env.CONVO_MODE === 'human' && env.FLOW === 'natural'; // plan 34: the cool ending
-  let text = natural ? 'hey, gotta run! good luck with everything 🙂' : "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
+  // Plan 34: no fixed line in natural mode; if the model fails, the user's own closing style, else nothing is sent.
+  let text = natural ? voice?.closingStyle ?? null : "hey, thanks for chatting! I don't think we're quite on the same page, but wishing you the best 🙂";
   try {
     const out = await chatJSON({
       tier: 'fast', purpose: 'wind-down', userId, matchId: match._id, schema: z.object({ reply: z.string().trim().min(1).max(300) }),
@@ -48,8 +49,9 @@ export async function windDown(match, userId) {
     const draft = cleanText(out.reply, name);
     if (draft && !draft.includes('?') && scanMessage(draft).severity === 0 && !(natural && /same page|talk (later|soon|tomorrow)|compatib/i.test(draft))) text = draft;
   } catch (err) {
-    console.error(`wind-down for ${match._id}: using the fixed line (${err.message})`); // also when AI is paused: a Pass must still close kindly
+    console.error(`wind-down for ${match._id}: model failed, using ${natural ? 'the user\'s own closing style (or nothing)' : 'the fixed line'} (${err.message})`); // also when AI is paused: a Pass must still close kindly
   }
+  if (!text) return null;
   return sendMessage({ match, senderId: userId, authoredBy: 'agent', text });
 }
 

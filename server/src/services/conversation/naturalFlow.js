@@ -23,10 +23,10 @@ export const BOUNCE = /\b(wbu|hbu|what about (you|u)|how about (you|u)|and (you|
  * The last resort when every draft failed (plan 34: nothing hard-coded): a short line from the user's OWN real
  * messages (a reaction-like sample, never one already sent in this chat). → text | null
  */
-export function ownWordsLine({ samples = [], sent = new Set(), rng, norm }) {
+export function ownWordsLine({ samples = [], sent = new Set(), rng, norm, greeting = false }) {
   const lines = samples.flatMap((s) => String(s.text ?? '').split(/(?<=[.!?])\s+|\n/)).map((t) => t.trim())
     .filter((t) => t && !t.includes('?') && !/\d/.test(t) && words(t) >= 1 && words(t) <= 6 && !sent.has(norm(t).join(' ')));
-  const reactions = lines.filter((t) => /^(ha|lol|omg|wait|ooh|oh|no way|aw|yay|wow|hmm|ugh)/i.test(t));
+  const reactions = lines.filter((t) => (greeting ? /^(h+e+y+|h+i+|hello|yo|heya|hola)\b/i : /^(ha|lol|omg|wait|ooh|oh|no way|aw|yay|wow|hmm|ugh)/i).test(t));
   const pool = reactions.length ? reactions : [];
   return pool.length ? pool[Math.floor(rng() * pool.length)] : null;
 }
@@ -153,18 +153,6 @@ export function excuseFor({ facts = [], now = new Date(), tz = N.DEFAULT_TZ } = 
 export const INVENTED_EXCUSE = /\b(mom|mum|mummy|maa|dad|papa|mother|father|sister|brother|cousin|friends?|roommate|boss|meeting|party|wedding|flight|doctor|appointment|guests?)\b/i;
 export const BARE_BYE = /^\s*(ok(ay)?[,!. ]*)?(bye+|byee+|cya|see ya|gn|good ?night|ttyl)[!. 👋🙂😊]*$/i;
 export const TALK_LATER = /\b(talk (to you )?(later|tomorrow|tmrw|soon)|ttyl|catch (you|u) later|text (you|u) (later|tomorrow)|speak soon)\b/i;
-
-/** A casual first message from the user's own greeting words (A1); no model call, no fixed template line. */
-export function greetingFor({ voice = {}, samples = [], rng, theirName, now = new Date(), tz = N.DEFAULT_TZ, lower = true }) {
-  const own = samples.map((s) => String(s.text ?? '').trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '')).filter((w) => /^(h+e+y+|h+i+|hello+|yo+|heya|hola)$/.test(w ?? ''));
-  const g = own.length ? pick(own, rng) : pick(['hey', 'hii', 'heyy'], rng);
-  const h = hourIn(tz, now);
-  const part = h < 12 ? 'morning' : h < 17 ? 'day' : 'evening';
-  const shapes = [`${g}! how's your ${part} going?`, `${g} ${theirName}! how's it going?`, `${g}! how was your day?`, `${g} ${theirName}, how's your week been?`, `${g}! how's your ${part} been?`];
-  let line = pick(shapes, rng);
-  if (voice.topEmojis?.length && rng() < Math.min(1, voice.emojiPerMessage ?? 0)) line += ` ${voice.topEmojis[0]}`;
-  return lower ? line : line.charAt(0).toUpperCase() + line.slice(1);
-}
 
 /** Off-limits for my agent (A5): "leave for me" choices, the humans-only list and my private facts. → the topic | null */
 export function offLimitsIn(text, { leaveForMe = [], privateFacts = [] } = {}) {
