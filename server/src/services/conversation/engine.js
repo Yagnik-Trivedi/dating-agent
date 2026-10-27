@@ -294,7 +294,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   plan.opening = opening;
   // "Ask my human", structurally: their question to me → its topic (dictionary only) → does my graph have ANY fact on it?
   const question = opening ? null : questionToMe(theirMsgs.map((m) => m.text).join('\n'));
-  const asked = question ? await topicOf(question, lookupConcept) : null;
+  // Plan 34: "how's your day/week?" is small talk, never an "ask my human" topic (it became "work week" → "haven't thought about it").
+  const smallQ = natural && /\b(how('?s| is| was| has| have)\s+(your|ur|the)\s+(day|week|weekend|morning|evening|night|work)|how (are|r) (you|u)|how('?s| is) it going|how have you been|what'?s up|sup|wbu|hbu|and you)\b/i.test(question ?? '');
+  const asked = question && !smallQ ? await topicOf(question, lookupConcept) : null;
   const known = asked ? knowsTopic(asked, persona.facts) : null;
   if (asked && !known && !plan.decline) plan.unknownTopic = asked.label;
 
@@ -435,7 +437,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // nothing surviving, so the constrained regeneration writes a real message instead.
     for (const s of sentences) if (mySent.has(norm(s).join(' '))) drop.add(s);
     const messages = attempt.draft.messages.map((m) => sentencesOf(m).filter((s) => !drop.has(s)).join(' ').trim()).filter(Boolean);
-    const enough = words(messages.join(' ')).length >= 3 && !orphaned(sentences.filter((s) => !drop.has(s)), [...drop]);
+    const enough = words(messages.join(' ')).length >= (natural ? 1 : 3) && !orphaned(sentences.filter((s) => !drop.has(s)), [...drop]); // plan 34: "haha nice" is a real reply
     return { leaks, drop, messages: enough ? messages : [] };
   }
   let { leaks, drop, messages } = await survivors(best);

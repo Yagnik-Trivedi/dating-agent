@@ -213,7 +213,7 @@ export function readParts(plan, ctx) {
   const t = nextThread(flow.thread, { seeds, msgCount, lowEnergy: plan.read?.energy === 'low', me, theirId: otherId, seed });
   plan.thread = t.thread ? { topic: t.thread.topic, age: msgCount - t.thread.startedAt, bridge: t.bridge, changed: t.changed } : null;
   plan.newThread = t.changed ? t.thread : null;
-  const lull = plan.phase === 'flow' && !perception.isQuestion && words(theirText) < KG.LULL_WORDS && !plan.end;
+  const lull = ['flow', 'warmup'].includes(plan.phase) && !perception.isQuestion && words(theirText) < KG.LULL_WORDS && !plan.end;
   if (lull && !plan.topic) {
     const unusedHooks = hooks.filter((h) => !(state.hooksUsed ?? []).includes(h));
     plan.lull = pick(N.LULL_KINDS.filter((k) => k !== 'hook' || unusedHooks.length), rng);
