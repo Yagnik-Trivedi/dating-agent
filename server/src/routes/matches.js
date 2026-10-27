@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { within } from '../utils/deadline.js';
 import { z } from 'zod';
 import { KgFact } from '../models/KgFact.js';
 import { Match } from '../models/Match.js';
@@ -153,8 +154,9 @@ matchesRouter.post('/messages/:id/wouldnt-say', async (req, res) => {
   const { fix } = parse(z.object({ fix: z.string().trim().min(1).max(1000).optional() }), req.body ?? {});
   const message = mongoose.isValidObjectId(req.params.id) && await Message.findOne({ _id: req.params.id, senderId: req.user._id, authoredBy: 'agent' }).lean();
   if (!message) throw httpError(404, 'NOT_FOUND', 'Agent message not found');
-  const { rule, kind } = await wouldntSay({ message, userId: req.user._id, fix });
-  res.json({ ok: true, rule, kind });
+  const r = await within(wouldntSay({ message, userId: req.user._id, fix }).catch((err) => { console.error(`wouldnt-say ${message._id}: ${err.message}`); throw err; }));
+  if (!r.done) return res.status(202).json({ ok: true, pending: true }); // saved when the model answers
+  res.json({ ok: true, rule: r.value.rule, kind: r.value.kind });
 });
 
 // My judge's decision + the label I see (plan 09 §2). Never the other side's decision or reasons.
@@ -203,5 +205,7 @@ matchesRouter.get('/matches/:id/kg', async (req, res) => {
 matchesRouter.get('/matches/:id/date-ideas', async (req, res) => {
   const match = await getMatchFor(req.params.id, req.user._id);
   if (!['compatible', 'maybe', 'handed_off'].includes(match.status)) throw httpError(409, 'NOT_READY', 'Date ideas come after a compatible or maybe verdict');
-  res.json(await dateIdeasFor(match, req.user._id));
+  const r = await within(dateIdeasFor(match, req.user._id).catch((err) => { console.error(`date ideas ${match._id}: ${err.message}`); throw err; }));
+  if (!r.done) throw httpError(503, 'DATE_IDEAS_SLOW', 'Still finding date ideas. Try again in a minute.');
+  res.json(r.value);
 });

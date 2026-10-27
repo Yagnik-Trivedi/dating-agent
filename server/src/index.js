@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { clientIp } from './middleware/clientIp.js';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
@@ -30,6 +31,7 @@ import { io } from './sockets/io.js';
 
 const app = express();
 app.set('trust proxy', 1); // Render's proxy; needed for per-IP rate limits
+app.use(clientIp); // UI polish B8: the real visitor IP for requests that came through the Vercel /api rewrite
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } })); // the API is meant to be read by the Vercel site
 app.use('/health', cors()); // any origin: the wake-up check must never be mistaken for a sleeping server (plan 30 S0)
 app.use(cors({ origin: allowOrigin }));

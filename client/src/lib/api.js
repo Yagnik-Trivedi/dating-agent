@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { clearToken, getToken } from './token'
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
+// UI polish B8: an empty VITE_API_URL keeps requests on the site itself (/api/... → the Vercel rewrite to the API).
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || undefined })
 
 api.interceptors.request.use((config) => {
   const token = getToken()

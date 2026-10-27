@@ -15,6 +15,9 @@ const schema = z.object({
   PORT: field(z.coerce.number().int().positive().default(5000)),
   NODE_ENV: field(z.enum(['development', 'production', 'test']).default('development')),
   CLIENT_URL: field(z.string().default('http://localhost:5173')),
+  // UI polish B8: the secret vercel.json sends on /api, /health and /socket.io rewrites; only requests carrying it may
+  // name their visitor IP (rate limits). Unset = every request uses req.ip as before.
+  ORIGIN_SECRET: field(z.string().min(24).optional()),
   // Vercel preview deployments of this project (team-scoped hostnames, which only the team can create).
   CLIENT_URL_PATTERN: field(z.string().default('^https://dating-agent-[a-z0-9-]+-chandal-chowkdi\\.vercel\\.app$')),
   MONGODB_URI: field(z.string({ error: 'MONGODB_URI is required' }).trim()),

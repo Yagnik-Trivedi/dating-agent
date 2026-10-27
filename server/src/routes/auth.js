@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import { signToken } from '../middleware/auth.js';
 import { Profile } from '../models/Profile.js';
@@ -41,6 +41,7 @@ authRouter.use(rateLimit({
   limit: 30,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.clientIp ?? req.ip), // UI polish B8: per visitor, also through the Vercel rewrite
   handler: (req, res) => res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again in a few minutes' } }),
 }));
 
