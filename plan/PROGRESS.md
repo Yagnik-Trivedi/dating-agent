@@ -10,7 +10,7 @@ Status key: ✅ Done · 🔄 In progress · ⏸ Waiting for the owner (STOP) · 
 
 ## Plan 30: final sprint (the only plan with open work)
 
-Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → KP → S33 → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
+Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → KP → S33 → S34 → S4 → S5 → S7**. Dates: S0–S1 by Oct 19 · S6 by Oct 20 · S2–S3 by Oct 23 · S4–S5 by Oct 25 · Nebius check Oct 26 · push + deploy + QA Oct 27 · freeze Oct 28 · submit Oct 29.
 
 | Step | What | Status | Commit | Notes / next step |
 |---|---|---|---|---|
@@ -26,6 +26,7 @@ Order: **S0 → S1 → S6 → S2 → S3 → SN → SH → KP → S33 → S4 → 
 | S33 | Plan 33 (Arya, 2026-10-23; `plan/33-questions-brain-long-chats.md`): long chats in sessions, the high bar, natural texture (C1) → question bank + brain map (Q1) → screens (Q2) → personas (P) | 🔄 C1 done, pushed + deployed (`e77d135`) | `1c7f32f`…`e77d135` | **Continue from `plan/33.1-handoff.md`.** Results below. Q1/Q2 not started (onboarding still has the old questions). Waiting for the owner: "go" for the wipe + re-match of real accounts, the `CHAT_DEPTH` choice on Render, and Q1's scope. |
 | S4 | Accounts (email verification, forgot password via Resend; rate limits) | ⬜ | — | Hidden if `RESEND_API_KEY` missing. |
 | S5 | P1: notifications, photo → interest suggestions, eval follow-ups | ⬜ | — | Only if S0–S4 are done. |
+| S34 | Plan 34 (Arya, 2026-10-27; `plan/34-natural-flow.md`): natural flow behind `FLOW=natural|plan33` (default natural): casual greeting from the user's own words, phases, few questions + get-to-know cap, threads + bridges, a lead derived from the transcript, feelings, nothing ignored (`covers` + focused retry / tapback), off-limits declines (`settings.leaveForMe` + Settings UI), dealbreaker split, pre-close + real excuse + warm/neutral/cool endings, cool wind-down, tapbacks (A4.1) | 🔄 code done, pushed on the owner's order **without tests or simulations** | (this push) | Owner, 2026-10-27: "no test no check only build everything fast, push and deploy". Only the client build + a server import/boot check ran. Not done: the FLOW=plan33 equivalence test, unit tests, the A7 simulation runs. Roll back the behaviour with `FLOW=plan33` on Render. |
 | S7 | Ship: Nebius check (Oct 26), **the one push + deploy** (owner's OK), QA, README/SUBMISSION | ⬜ | — | **STOP before the push.** |
 
 Pushed and deployed 2026-10-19: `ef33278` (SN) and `18c9e3d` (PROJECT-GUIDE.md), on Render (auto + manual deploy) and Vercel (Ready).

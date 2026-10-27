@@ -3,6 +3,7 @@
 // Users listed in seed/personas.json are created (with their full knowledge graph) if missing.
 // Each run starts from a fresh match: trust → brief → conversation → verdicts (+ wind-down), until it settles.
 import mongoose from 'mongoose';
+import { naturalMetrics } from './eval/lib/convoMetrics.js';
 import { env } from '../src/config/env.js';
 import { InboxItem } from '../src/models/InboxItem.js';
 import { ChatEvent } from '../src/models/ChatEvent.js';
@@ -39,13 +40,15 @@ async function runOnce(a, b) {
   for (const [i, x] of full.entries()) {
     if (starts.has(i) && i > 0) { session = starts.get(i); console.log(`   --- session ${session} ---`); }
     const p = x.actPlan;
-    const plan = !p ? '' : p.honestAI ? 'honest-AI' : p.fromBrief ? 'brief opener'
+    // Plan 34: phase · lead · feelings · tapback · ending vibe.
+    const nat = p?.flow === 'natural' ? [p.phase, p.lead && p.lead !== 'nobody' && `lead:${p.lead}`, p.feelings?.length && `feel:${p.feelings.map((f) => f.feeling).join('/')}`, p.tapback && `tapback ${p.tapback}`, p.preClose && 'pre-close', p.vibe && `vibe:${p.vibe}`, p.decline && `declined:${p.decline}`, p.thread?.topic && `thread:${p.thread.topic}`].filter(Boolean).join(' ') : '';
+    const plan = !p ? '' : p.honestAI ? 'honest-AI' : p.fromGreeting ? 'greeting' : p.fromBrief ? 'brief opener'
       : `${p.move ?? ''}${p.read ? ` (${p.read.mood}, ${p.read.energy}${p.read.doing && p.read.doing !== 'chatting' ? `, ${p.read.doing}` : ''})` : ''} ~${p.targetWords}w ${p.language?.primary}${p.language?.codeSwitch ? `+${p.language.secondary}` : ''}${p.askBack ? ' ?' : ''}${p.emoji ? ` ${p.emoji}` : ''}${p.mustDisagree ? ' DISAGREE' : ''}${p.topic ? ` →${p.topic.kind}:${p.topic.text}` : ''}${p.callback ? ` ↺"${p.callback}"` : ''}${p.end ? ` END:${p.end}` : ''} i=${p.interest?.toFixed?.(2) ?? '–'}`;
     const t = x.checks?.texture;
     const fill = !t ? '' : `fillers: ${t.used.join(', ') || 'none'}${t.filler ? ` (planned "${t.filler}")` : ''}${t.stripped?.length ? ` stripped: ${t.stripped.join(', ')}` : ''}${t.hedge?.loose ? ` hedged ${t.hedge.hedged}/${t.hedge.loose}` : ''}`;
     const c = x.checks;
     const chk = !c ? '' : [c.regenerated && 'regen', c.dropped?.length && `dropped ${c.dropped.length}`, c.leak?.length && 'LEAK', c.stance?.length && 'conceded'].filter(Boolean).join(', ');
-    const label = [session && `S${session}`, plan, fill, chk].filter(Boolean).join(' · ');
+    const label = [session && `S${session}`, nat, plan, fill, chk, x.reactions?.length && `reactions ${x.reactions.map((r) => r.emoji).join('')}`].filter(Boolean).join(' · ');
     console.log(`${String(i + 1).padStart(2)}. ${names[x.senderId]}: ${x.text}${label ? `\n      [${label}]` : ''}`);
   }
   if (conv?.sessions?.length) {
@@ -75,6 +78,7 @@ async function runOnce(a, b) {
     for (const x of d.dealbreakerRisk) console.log(`  ✖ dealbreaker ${x.attribute}: "${x.quote}"`);
     if (d.icebreakers?.length) console.log(`  icebreakers: ${d.icebreakers.join(' | ')}`);
   }
+  console.log(`\nPlan 34 metrics: ${JSON.stringify(naturalMetrics(full, { seed: conv?.seed }))}`);
   console.log(`\nFinal status: ${m.status}`);
   const inbox = await InboxItem.find({ matchId: m._id }).lean();
   if (inbox.length) console.log(`\nAsk-my-human items: ${inbox.map((i) => `${names[i.userId]}: "${i.question}"`).join(' | ')}`);

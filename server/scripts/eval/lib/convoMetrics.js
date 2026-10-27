@@ -84,3 +84,38 @@ export function parseTranscript(md) {
   return body.split('\n').map((l) => l.match(/^\d+\.\s+\*\*(.+?)\*\*\s+\((agent|human)\):\s*(.*)$/)).filter(Boolean)
     .map(([, speaker, who, text]) => ({ speaker, agent: who === 'agent', text }));
 }
+
+// Plan 34 (A7): the natural-flow metrics from a stored transcript (messages with senderId, text, actPlan).
+import { GETTOKNOW, leadOf } from '../../../src/services/conversation/naturalFlow.js';
+const qCount = (t) => (String(t).match(/\?/g) ?? []).length;
+export function naturalMetrics(messages, { seed = 1 } = {}) {
+  const agent = messages.filter((m) => m.authoredBy === 'agent');
+  const bySide = {};
+  for (const m of messages) (bySide[String(m.senderId)] ??= []).push(m);
+  const firstTwoCasual = Object.values(bySide).every((xs) => xs.slice(0, 2).every((m) => !m.actPlan || ['greeting', 'warmup'].includes(m.actPlan.phase) || m.actPlan.fromGreeting || m.like));
+  let windowBreaks = 0;
+  for (let i = 0; i < messages.length; i++) {
+    const w = messages.slice(Math.max(0, i - 5), i + 1);
+    for (const side of Object.keys(bySide)) if (w.filter((m) => String(m.senderId) === side && m.text.includes('?')).length > 2) windowBreaks++;
+  }
+  // Lead switches, recomputed over the transcript the way the agents see it.
+  const leads = messages.map((_, i) => leadOf(messages.slice(0, i + 1), { seed }).lead);
+  const switches = leads.filter((l, i) => i && l && leads[i - 1] && l !== leads[i - 1]).length;
+  const stints = []; let run = 1;
+  for (let i = 1; i < leads.length; i++) { if (leads[i] && leads[i] === leads[i - 1]) run++; else { if (leads[i - 1]) stints.push(run); run = 1; } }
+  const mean = stints.reduce((a, b) => a + b, 0) / (stints.length || 1);
+  const sd = Math.sqrt(stints.reduce((a, b) => a + (b - mean) ** 2, 0) / (stints.length || 1));
+  const ends = agent.filter((m) => m.actPlan?.end);
+  return {
+    firstTwoCasual, agentMessages: agent.length,
+    withQuestion: agent.length ? +(agent.filter((m) => m.text.includes('?')).length / agent.length).toFixed(2) : 0,
+    multiQuestion: agent.filter((m) => qCount(m.text) > 1).length, windowBreaks,
+    getToKnow: agent.filter((m) => GETTOKNOW.test(m.text)).length,
+    leadSwitchesPer20: messages.length ? +(switches * 20 / messages.length).toFixed(1) : 0, stintSd: +sd.toFixed(2),
+    longestThread: Math.max(0, ...agent.map((m) => (m.actPlan?.thread?.age ?? 0) + 1)),
+    coveredByRetry: agent.filter((m) => m.checks?.fallback === 'covered_question').length,
+    declines: agent.filter((m) => m.actPlan?.decline).length,
+    preClosed: agent.filter((m) => m.actPlan?.preClose).length, endings: ends.map((m) => `${m.actPlan.end}:${m.actPlan.vibe ?? '-'}`),
+    tapbacks: messages.reduce((n, m) => n + (m.reactions?.length ?? 0), 0),
+  };
+}
