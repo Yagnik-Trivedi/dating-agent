@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { Check, Users, X } from 'lucide-react'
+import { Camera, Check, MessageSquareQuote, Users, X } from 'lucide-react'
 import { Btn, Empty, Shell, Shimmer, T, photoOf } from '../components/r7'
 import PhotoNudge from '../components/PhotoNudge'
 import { useLikeFlow } from '../components/ProfileParts'
@@ -38,6 +38,29 @@ function LikeTile({ l, i, mine, onAnswer, busy }) {
   )
 }
 
+// UI polish A7: light, kind humour for an empty page that can sting (never "no one likes you"). One line per visit.
+const EMPTY_LINES = [
+  ['No likes yet.', 'Your future crush is probably still choosing their prompts.'],
+  ['Quiet in here… for now.', 'Profiles with 2+ photos get way more likes 👀'],
+  ['Plot twist:', 'the best ones take their time.'],
+]
+function NoLikes({ onGo }) {
+  const [[title, sub]] = useState(() => EMPTY_LINES[Math.floor(Math.random() * EMPTY_LINES.length)])
+  return (
+    <div className="no-likes card">
+      <Users size={28} strokeWidth={1.6} aria-hidden="true" />
+      <h2 className="h2">{title}</h2>
+      <p className="lead">{sub}</p>
+      <ul className="nl-tips">
+        <li><Camera size={18} strokeWidth={1.7} aria-hidden="true" /><span><b>Add 2 or more clear photos.</b> People like what they can see.</span></li>
+        <li><MessageSquareQuote size={18} strokeWidth={1.7} aria-hidden="true" /><span><b>Answer all 3 prompts.</b> A good answer is the easiest thing to like.</span></li>
+      </ul>
+      <div className="nl-ctas"><Btn onClick={() => onGo('/profile#photos')}>Add photos</Btn><Btn kind="secondary" onClick={() => onGo('/profile')}>Write my prompts</Btn></div>
+      <p className="small">When someone likes your photo or prompt, they show up here with what they liked.</p>
+    </div>
+  )
+}
+
 export default function LikesYou() {
   const mobile = useMobile()
   const navigate = useNavigate()
@@ -53,7 +76,7 @@ export default function LikesYou() {
   const n = likes?.length ?? 0
   const body = error ? <Empty icon={Users} title="We couldn’t load your likes" action={<Btn kind="secondary" onClick={load}>Try again</Btn>}>{error}</Empty>
     : !likes ? <div className="page narrow" aria-busy="true"><Shimmer w="40%" /><Shimmer /></div>
-      : !n ? <Empty icon={Users} title="No likes yet" action={<Btn kind="secondary" onClick={() => navigate('/profile')}>Improve your profile</Btn>}>When someone likes your photo or prompt, they’ll show up here, with what they liked. Profiles with three prompts get more likes.</Empty>
+      : !n ? <NoLikes onGo={navigate} />
         : <div className="lt-grid">{likes.map((l, i) => <LikeTile key={l.profile.userId} l={l} i={i} mine={profile ?? {}} onAnswer={answer} busy={busy} />)}</div>
   if (mobile) return <Shell title="Likes you" sub={n ? `${n} ${n === 1 ? 'person' : 'people'} · free to see` : undefined}><div className="pad"><PhotoNudge />{body}</div>{ui}</Shell>
   return (

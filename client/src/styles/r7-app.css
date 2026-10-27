@@ -299,3 +299,12 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 @media (min-width: 1100px) { .landing:not(.m) .l-trust ul { grid-template-columns: repeat(4, 1fr); gap: 28px; } .landing:not(.m) .l-trust li { flex-direction: column; gap: 10px; } }
 @media (min-width: 640px) and (max-width: 1099px) { .l-trust ul, .landing.m .l-trust ul { grid-template-columns: repeat(2, 1fr); } }
 .landing.m .l-nav { padding-left: 16px; } /* A2: same edge as the rest on phones */
+
+/* UI polish A7: the empty Likes you page */
+.no-likes { max-width: 560px; margin: 24px auto; padding: 32px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.no-likes > svg { color: var(--clay); }
+.no-likes .h2, .no-likes .lead { margin: 0; }
+.nl-tips { list-style: none; margin: 12px 0 4px; padding: 0; display: grid; gap: 10px; text-align: left; width: 100%; }
+.nl-tips li { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--cream); }
+.nl-tips svg { flex: none; margin-top: 2px; color: var(--clay-ink); }
+.nl-ctas { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 6px 0; }
