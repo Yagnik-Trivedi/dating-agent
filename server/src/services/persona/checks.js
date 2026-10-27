@@ -25,6 +25,9 @@ const INTERROGATIVE = /^\W*(what|how|do|did|does|have|has|are|is|would|will|wher
 const NO_EXPERIENCE = /\b(never (tried|done|been|had|seen|watched|played)|haven'?t (tried|done|been|had|seen|watched|played)|have not (tried|done|been)|not really (into|a)|not much of a|don'?t (really )?follow|not (really |much )?(a fan|into)|kabhi try nahi kiya|(utna )?follow nahi kar(ta|ti))\b/i;
 const UNSURE = /\b(not (really )?sure|don'?t know|no idea|can'?t say|still figuring|(never|not|haven'?t) really thought|haven'?t thought|pata nahi|idea nahi)\b/i;
 const HONEST = { test: (s) => NO_EXPERIENCE.test(s) || UNSURE.test(s) };
+// Plan 34 (A1): generic small talk about my day or mood needs no fact ("pretty chill day", "week's been okay, nothing crazy",
+// "doing good"). Anything specific ("just got back from work") still does. Short clauses only.
+export const SMALL_TALK = /^\W*(?:(?:(?:my|the|this|today'?s?)\s+)?(?:day|week|weekend|morning|evening|night|today)\s*(?:'s|has|was|is|has been)?\s*(?:been\s+)?|(?:i'?m|im|i am|all|everything'?s?|doing|been|not)\s+)?(?:pretty|really|super|so|kinda|quite|not too|not bad|not|just)?\s*(?:good|great|fine|okay|ok|alright|chill|calm|busy|hectic|long|tiring|lazy|slow|meh|decent|relaxed|nice|well|bad|nothing (?:much|crazy|special)|same old|the usual)(?:\s+(?:day|week|so far|tbh|honestly|thanks|haha|lol|nothing crazy|nothing much))*\W*$/i;
 // "you're into X", "your trekking pic", "you love …": statements about the other person.
 const YOU_CLAIM = /\b(you('re| are| were)|you (love|like|enjoy|have|had|seem|said|mentioned|told|work|live|do|go|play|read|watch|cook|travel)|your)\b/i;
 // Arranging a real meeting (times, days, "let's meet"): the agent never does this (product rule), however the model drifts.
@@ -139,7 +142,7 @@ export function attributeContradictions(text, myAttributes = {}) {
   return out;
 }
 
-export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false, myAttributes = {} }) {
+export function groundingCheck({ text, claims = [], aboutThem = [], facts, sources = new Set(), theirTexts = [], myLikes = [], answering = false, myAttributes = {}, smallTalk = false }) {
   text = ascii(text);
   claims = claims.map((c) => ({ ...c, text: ascii(c.text) }));
   aboutThem = aboutThem.map((a) => ({ ...a, text: ascii(a.text) }));
@@ -164,7 +167,7 @@ export function groundingCheck({ text, claims = [], aboutThem = [], facts, sourc
     // Answering their question about me, a clause without "I" is still about me ("favourite IPL team?" → "cheering for
     // rcb!" passed as no claim in agent-check run 4).
     const aboutMe = (c) => (FIRST_PERSON.test(c) && !ABOUT_THEM_LEAD.test(c)) || (answering && !YOU_CLAIM.test(c) && tokensOf(c).filter((w) => w.length >= 3 && !FILLER.has(w)).length >= 2);
-    const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !valid.some((v) => covers(v.text, c)));
+    const bad = clausesOf(s).filter((c) => aboutMe(c) && !REACTION.test(c) && !INTERROGATIVE.test(c) && !HONEST.test(c) && !(smallTalk && SMALL_TALK.test(c)) && !valid.some((v) => covers(v.text, c)));
     if (bad.length) {
       unsupported.push(...bad);
       drop.add(s);

@@ -203,11 +203,12 @@ const gateChecked = (a) => a.dealbreaker && agendaAttribute(a);
 const agendaSettled = (agenda) => agenda.length > 0 && agenda.filter((a) => !gateChecked(a) && (a.dealbreaker || a.priority >= KG.END_BLOCK_PRIORITY)).every((a) => a.status === 'answered');
 
 function draftProblems({ draft, plan, persona, facts, sources, theirTexts, recent, answering }) {
+  const smallTalk = plan.flow === 'natural'; // plan 34: generic day/mood small talk needs no fact
   const text = draft.messages.join(' ');
   const style = styleCheck(text, plan, persona.voice, recent);
   const myLikes = persona.facts.filter((f) => f.predicate === 'likes' && f.polarity !== -1).flatMap((f) => [f.object, f.conceptLabel].filter(Boolean));
   const myAttributes = Object.fromEntries(persona.facts.filter((f) => f.attribute && typeof f.value === 'string').map((f) => [f.attribute, f.value]));
-  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering, myAttributes });
+  const grounding = groundingCheck({ text, claims: draft.claims, aboutThem: draft.aboutThem, facts, sources, theirTexts, myLikes, answering, myAttributes, smallTalk });
   return { text, style, grounding, problems: [...style, ...grounding.problems] };
 }
 
@@ -480,7 +481,9 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
     // Last resort, logged per message (target < 5% of agent messages): a question on my planned topic.
     if (!plan.end && !opening) fallback = 'template';
     const opener = natural ? `hey ${matchName}! how's your day going?` : `hey ${matchName}! your profile made me smile 😄 how's your week going?`;
-    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng);
+    // Plan 34: a greeting still gets a greeting answer as the last resort.
+    const greetBack = natural && plan.phase === 'greeting' ? ['good good, wbu?', 'pretty good! wbu?', 'all good, hbu?'][Math.floor(rng() * 3)] : null;
+    const line = plan.end ? (persona.voice.closingStyle ?? 'take care! 👋') : opening ? opener : greetBack ?? (human ? fallbackReaction(persona.voice, readNow()) : fallbackQuestion(rng));
     messages = [lower || plan.end ? line : line[0].toUpperCase() + line.slice(1)];
   }
   // Plan 32 KP1: a burst is sent as separate bubbles (the scheduler sends each message on its own).
