@@ -106,6 +106,13 @@ export async function runReply(matchId, userId) {
     io.to(`match:${matchId}`).emit('typing', { matchId: String(matchId), userId: String(userId) });
     const turn = await composeTurn(match, userId); // plan 08 engine: perceive → interest → act plan → generate → checks
     if (!turn) return;
+    // Plan 34: nothing usable to send (no fixed fallback lines any more): try again shortly with a fresh draft, with backoff.
+    if (!turn.messages.length && !turn.end) {
+      const n = (failures.get(key) ?? 0) + 1;
+      failures.set(key, n);
+      if (n <= MAX_REPLY_RETRIES) scheduleReply(matchId, userId, Math.min(RETRY_MS, 8000 * n));
+      return turn;
+    }
 
     const conv = turn.actPlan?.session ? await Conversation.findOne({ matchId, status: 'active' }, { sessionIndex: 1 }).lean() : null;
     // Plan 34 (A4.1): a tapback lands first, like a person reacting before typing (never instead of an answer).
