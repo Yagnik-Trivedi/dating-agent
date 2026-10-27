@@ -102,6 +102,7 @@ export default function Profile() {
       <div className="ed-wrap">
         <div><h1 className="h1">Edit profile</h1>{sections}</div>
         <aside className="ed-prev" aria-label="How others see you"><p className="small">How others see you</p>
+          {!ok.length && <p className="prev-note small" role="note">No approved photo yet. Others see this placeholder.</p>}
           <div className="prev-card card"><img src={photoOf(prev, 0, 'portrait')} alt="" /><div className="pc-b">
             <b className="pc-n">{prev.name}{prev.age ? `, ${prev.age}` : ''}</b><span className="small">{[prev.job, prev.city].filter(Boolean).join(' · ')}</span>
             {prev.prompts[0]?.a && <><p className="pq">{prev.prompts[0].q}</p><p className="pa sm">{prev.prompts[0].a}</p></>}

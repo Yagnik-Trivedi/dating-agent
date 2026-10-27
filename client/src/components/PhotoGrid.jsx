@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import { Reorder } from 'motion/react'
-import { CircleAlert, Clock, Crop, ImagePlus, Star, Trash2 } from 'lucide-react'
+import { CircleAlert, Crop, ImagePlus, Loader2, RefreshCw, Star, Trash2 } from 'lucide-react'
 import { Btn, IconBtn, Sheet } from './r7'
+import { useToast } from '../hooks/useToast'
 import { api, errMsg } from '../lib/api'
 import { cropToJpeg, uploadPhoto } from '../lib/photos'
 
@@ -31,7 +32,22 @@ export default function PhotoGrid({ photos, setPhotos, onError }) {
   const [zoom, setZoom] = useState(1)
   const [area, setArea] = useState(null)
   const [upload, setUpload] = useState(null) // progress 0..1 while uploading
+  const [replacing, setReplacing] = useState(null) // UI polish A8: a rejected photo being replaced
   const list = photos ?? []
+  const toast = useToast()
+  // A8: say what the check decided as soon as it finishes (it used to change silently).
+  const seen = useRef(null)
+  useEffect(() => {
+    const before = seen.current
+    seen.current = Object.fromEntries(list.map((p) => [p._id, p.status]))
+    if (!before) return
+    for (const [i, p] of list.entries()) {
+      if (before[p._id] !== 'pending' || p.status === 'pending') continue
+      if (p.status === 'rejected') toast(`Photo ${i + 1} wasn’t approved: ${p.reasons?.[0] ?? 'it doesn’t meet the photo rules'}`, { tone: 'bad' })
+      else if (p.status === 'ok') toast(`Photo ${i + 1} is approved and visible to others`)
+    }
+  }, [list, toast])
+  const rejected = list.map((p, i) => ({ p, i })).filter(({ p }) => p.status === 'rejected')
 
   const pick = (e) => {
     const file = e.target.files?.[0]
@@ -41,13 +57,20 @@ export default function PhotoGrid({ photos, setPhotos, onError }) {
     setCrop({ x: 0, y: 0 }); setZoom(1); setSrc(URL.createObjectURL(file))
   }
   const close = () => { if (src) URL.revokeObjectURL(src); setSrc(null) }
+  const cancel = () => { close(); setReplacing(null) }
   async function use() {
     try {
       const blob = await cropToJpeg(src, area)
       close()
       setUpload(0)
       const photo = await uploadPhoto(blob, setUpload)
-      setPhotos([...list, photo])
+      if (replacing) {
+        // A8 Replace: the new photo takes the rejected one's place.
+        const next = list.map((x) => (x._id === replacing._id ? photo : x))
+        setReplacing(null)
+        await api.delete(`/api/photos/${replacing._id}`).catch(() => {})
+        await save(next)
+      } else setPhotos([...list, photo])
     } catch (err) { onError?.(errMsg(err)) } finally { setUpload(null) }
   }
   const save = async (next) => {
@@ -67,8 +90,14 @@ export default function PhotoGrid({ photos, setPhotos, onError }) {
           <Reorder.Item as="div" key={p._id} value={p} className={`slot filled s-${p.status}`} onDragEnd={() => save(list)}>
             <img src={p.url} alt={`Your photo ${i + 1}${i === 0 ? ' (main)' : ''}`} draggable={false} />
             {i === 0 && <span className="slot-main">Main</span>}
-            {p.status === 'pending' && <span className="slot-badge"><Clock size={13} strokeWidth={2} aria-hidden="true" />Checking</span>}
-            {p.status === 'rejected' && <span className="slot-badge err" title={p.reasons?.join(' ')}><CircleAlert size={13} strokeWidth={2} aria-hidden="true" />{p.reasons?.[0] ?? 'Not allowed'}</span>}
+            {p.status === 'pending' && <span className="slot-badge" role="status" title="Usually under a minute"><Loader2 className="spin" size={13} strokeWidth={2} aria-hidden="true" />Checking…</span>}
+            {p.status === 'rejected' && (
+              <span className="slot-rej" role="group" aria-label={`Photo ${i + 1} not approved`}>
+                <span className="slot-rej-why" title={p.reasons?.join(' ')}><CircleAlert size={14} strokeWidth={2} aria-hidden="true" />Not approved</span>
+                <span className="sr-only">{p.reasons?.join(' ')}</span>
+                <button type="button" className="slot-replace" onClick={() => { setReplacing(p); input.current?.click() }}><RefreshCw size={13} strokeWidth={2} aria-hidden="true" />Replace</button>
+              </span>
+            )}
             <span className="slot-acts">
               {i > 0 && <IconBtn icon={Star} label={`Make photo ${i + 1} your main photo`} className="sm" onClick={() => save([p, ...list.filter((x) => x !== p)])} />}
               <IconBtn icon={Trash2} label={`Remove photo ${i + 1}`} className="sm" onClick={() => remove(p)} />
@@ -82,8 +111,18 @@ export default function PhotoGrid({ photos, setPhotos, onError }) {
           </button>
         ))}
       </Reorder.Group>
+      {rejected.length > 0 && (
+        <div className="photo-rej-note" role="alert">
+          <CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" />
+          <div>
+            <b>{rejected.length === 1 ? 'One photo wasn’t approved' : `${rejected.length} photos weren’t approved`}, so others don’t see {rejected.length === 1 ? 'it' : 'them'}.</b>
+            <ul>{rejected.map(({ p, i }) => <li key={p._id}>Photo {i + 1}: {p.reasons?.join(' ') || 'it doesn’t meet the photo rules.'}</li>)}</ul>
+            <span className="small">Replace {rejected.length === 1 ? 'it' : 'them'} with a clear photo of you: your face visible, no text-heavy images or screenshots.</span>
+          </div>
+        </div>
+      )}
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pick} />
-      <Sheet open={Boolean(src)} title="Crop to 4:5" onClose={close} footer={<><Btn kind="secondary" onClick={() => input.current?.click()}>Replace</Btn><Btn icon={Crop} onClick={use} disabled={!area}>Use photo</Btn></>}>
+      <Sheet open={Boolean(src)} title="Crop to 4:5" onClose={cancel} footer={<><Btn kind="secondary" onClick={() => input.current?.click()}>Replace</Btn><Btn icon={Crop} onClick={use} disabled={!area}>Use photo</Btn></>}>
         <div className="crop-stage">{src && <Cropper image={src} crop={crop} zoom={zoom} aspect={4 / 5} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={(_, px) => setArea(px)} />}</div>
         <label className="crop-zoom small">Zoom <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} /></label>
       </Sheet>
