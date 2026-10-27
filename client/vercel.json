@@ -1,79 +1,40 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "headers": [
-    {
-      "source": "/api/:path*",
-      "headers": [
-        {
-          "key": "x-vercel-enable-rewrite-caching",
-          "value": "0"
-        }
-      ]
-    },
-    {
-      "source": "/health",
-      "headers": [
-        {
-          "key": "x-vercel-enable-rewrite-caching",
-          "value": "0"
-        }
-      ]
-    },
-    {
-      "source": "/socket.io/:path*",
-      "headers": [
-        {
-          "key": "x-vercel-enable-rewrite-caching",
-          "value": "0"
-        }
-      ]
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "https://dating-agent-api.onrender.com/api/$1",
+      "headers": { "x-vercel-enable-rewrite-caching": "0" },
       "transforms": [
         {
           "type": "request.headers",
           "op": "set",
-          "target": {
-            "key": "x-origin-secret"
-          },
+          "target": { "key": "x-origin-secret" },
           "args": "$ORIGIN_SECRET",
-          "env": [
-            "ORIGIN_SECRET"
-          ]
+          "env": ["ORIGIN_SECRET"]
         }
       ]
     },
     {
       "src": "/socket.io/(.*)",
       "dest": "https://dating-agent-api.onrender.com/socket.io/$1",
+      "headers": { "x-vercel-enable-rewrite-caching": "0" },
       "transforms": [
         {
           "type": "request.headers",
           "op": "set",
-          "target": {
-            "key": "x-origin-secret"
-          },
+          "target": { "key": "x-origin-secret" },
           "args": "$ORIGIN_SECRET",
-          "env": [
-            "ORIGIN_SECRET"
-          ]
+          "env": ["ORIGIN_SECRET"]
         }
       ]
     },
     {
       "src": "/health",
-      "dest": "https://dating-agent-api.onrender.com/health"
+      "dest": "https://dating-agent-api.onrender.com/health",
+      "headers": { "x-vercel-enable-rewrite-caching": "0" }
     },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
