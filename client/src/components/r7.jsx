@@ -26,12 +26,14 @@ export const Btn = ({ kind = 'primary', size = '', block, icon: I, iconRight: R,
   </button>
 )
 export const IconBtn = ({ icon: I, label, className = '', ...p }) => <button type="button" className={`ibtn ${className}`} aria-label={label} title={label} {...p}><I {...ICON} /></button>
+// UI polish B1: seed avatars are DiceBear line art; they count as "no photo" so every placeholder is the same flat illustration.
+const own = (u) => (u && !u.startsWith('https://api.dicebear.com/') ? u : null)
 /** A person's picture: their photo, else (demo people) an illustration from their id. Never a real person's photo in seed data. */
 export const photoOf = (p, i = 0, scene) => {
   const ph = p?.photos?.[i]
-  return (typeof ph === 'string' ? ph : ph?.url) || (i === 0 || scene ? illustration(String(p?.userId ?? p?._id ?? p?.name ?? '?'), scene ?? 'portrait') : null)
+  return own(typeof ph === 'string' ? ph : ph?.url) || (i === 0 || scene ? illustration(String(p?.userId ?? p?._id ?? p?.name ?? '?'), scene ?? 'portrait') : null)
 }
-export const Avatar = ({ p, src, size = 40, ring }) => <img className={`avatar ${ring ? 'ring' : ''}`} src={src ?? photoOf(p, 0, 'portrait2')} width={size} height={size} alt="" />
+export const Avatar = ({ p, src, size = 40, ring }) => <img className={`avatar ${ring ? 'ring' : ''}`} src={own(src) ?? photoOf(p, 0, 'portrait2')} width={size} height={size} alt="" />
 export const Wordmark = ({ light }) => (
   <span className={`wordmark ${light ? 'light' : ''}`}>
     <img className="wordmark-mark" src={light ? twineMarkLight : twineMark} alt="" aria-hidden="true" />
@@ -202,13 +204,13 @@ export function useDraw(ref, { duration = 1000, delay = 0, ease = 'inOutQuad', s
 /** UI polish A5: a number that counts up when it first appears (instant under reduced motion). */
 export function CountUp({ n }) {
   const rm = useReducedMotion()
-  const [v, setV] = useState(rm ? n : 0)
+  const [v, setV] = useState(0)
   useEffect(() => {
-    if (rm) { setV(n); return }
+    if (rm) return
     const a = animate(0, n, { duration: 0.6, ease: 'easeOut', onUpdate: (x) => setV(Math.round(x)) })
     return () => a.stop()
   }, [n, rm])
-  return <span className="tnum">{v}</span>
+  return <span className="tnum">{rm ? n : v}</span>
 }
 
 /* Navigation. Counts come from the shell context (Layout). "Likes you" arrives in plan 30 S3. */
