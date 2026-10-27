@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
-import { Btn, Chips, Field, Input, Shell, Toggle, photoOf } from '../components/r7'
+import { Btn, Chips, Field, Input, Sheet, Shell, Toggle } from '../components/r7'
+import { Photo, ProfileBody, photosOf } from '../components/ProfileParts'
 import PhotoGrid, { usePhotos } from '../components/PhotoGrid'
 import PhotoNudge from '../components/PhotoNudge'
 import { useMobile } from '../components/prelude'
@@ -34,6 +35,7 @@ export default function Profile() {
   const navigate = useNavigate()
   const toast = useToast()
   const { photos, setPhotos } = usePhotos()
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [f, setF] = useState(null)
   const [busy, setBusy] = useState(false)
   const [basics, setBasics] = useState(null) // [{ attr, text, options, answer, shown }]
@@ -66,7 +68,17 @@ export default function Profile() {
       toast('Saved. Your profile is checked again in the background.')
     } catch (err) { toast(errMsg(err), { tone: 'bad' }) } finally { setBusy(false) }
   }
-  const prev = { ...profile, ...f, photos: ok.map((p) => p.url) }
+  const prev = { ...profile, ...f, photos: ok.map((p) => p.url), prompts: f.prompts.filter((p) => p.a.trim()) }
+  // UI polish B9 + M8: the preview is the same profile Discover shows (ProfileBody), on phones in a bottom sheet.
+  const prevPhotos = photosOf(prev)
+  const preview = (
+    <div className="prev-body">
+      {!ok.length && <p className="prev-note small" role="note">No approved photo yet. Others see this placeholder.</p>}
+      <div className="prev-hero card"><Photo src={prevPhotos[0]} i={0} n={prevPhotos.length} name={prev.name} h={mobile ? 360 : 380} />
+        <div className="pc-b"><b className="pc-n">{prev.name}{prev.age ? `, ${prev.age}` : ''}</b><span className="small">{[prev.job, prev.city].filter(Boolean).join(' · ')}</span></div></div>
+      <div className="d-stack prev-stack"><ProfileBody p={prev} photos={prevPhotos} mobile={mobile} /></div>
+    </div>
+  )
   const sections = (
     <div className="ed-sections">
       <PhotoNudge />
@@ -97,18 +109,17 @@ export default function Profile() {
       <div className="ed-save"><Btn size="lg" block={mobile} onClick={save} loading={busy}>Save changes</Btn></div>
     </div>
   )
-  if (mobile) return <Shell title="Edit profile" back right={<Btn kind="ghost" size="sm" icon={Eye} onClick={() => navigate(`/u/${profile.userId}`)}>Preview</Btn>}><div className="pad">{sections}</div></Shell>
+  if (mobile) return (
+    <Shell title="Edit profile" back right={<Btn kind="ghost" size="sm" icon={Eye} onClick={() => setPreviewOpen(true)}>Preview</Btn>}>
+      <div className="pad">{sections}</div>
+      <Sheet open={previewOpen} title="How others see you" onClose={() => setPreviewOpen(false)}>{preview}</Sheet>
+    </Shell>
+  )
   return (
     <Shell>
       <div className="ed-wrap">
         <div><h1 className="h1">Edit profile</h1>{sections}</div>
-        <aside className="ed-prev" aria-label="How others see you"><p className="small">How others see you</p>
-          {!ok.length && <p className="prev-note small" role="note">No approved photo yet. Others see this placeholder.</p>}
-          <div className="prev-card card"><img src={photoOf(prev, 0, 'portrait')} alt="" /><div className="pc-b">
-            <b className="pc-n">{prev.name}{prev.age ? `, ${prev.age}` : ''}</b><span className="small">{[prev.job, prev.city].filter(Boolean).join(' · ')}</span>
-            {prev.prompts[0]?.a && <><p className="pq">{prev.prompts[0].q}</p><p className="pa sm">{prev.prompts[0].a}</p></>}
-          </div></div>
-        </aside>
+        <aside className="ed-prev" aria-label="How others see you"><p className="small">How others see you</p>{preview}</aside>
       </div>
     </Shell>
   )
