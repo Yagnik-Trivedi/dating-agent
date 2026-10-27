@@ -231,6 +231,9 @@ export async function judgeSide({ conversationId, userId }) {
         summaryForUser: [value.summaryForUser, ask.length && `You never found out where they stand on ${ask.join(' and ')}, so it's worth asking.`,
           worthAsking.length && `Worth asking yourself: ${worthAsking.join('; ')}.`].filter(Boolean).join(' ') };
       validation.reason = decided.reason;
+      // UI polish A3: keep the real id of the fact each point rests on (the F-alias only means something inside this call).
+      const ref = (x) => ({ ...x, ...(factById.get(x.factId)?._id && { factRef: String(factById.get(x.factId)._id) }) });
+      value = { ...value, positives: (value.positives ?? []).map(ref), frictions: (value.frictions ?? []).map(ref) };
     }
     const icebreakers = value.decision === 'no' ? [] : await writeIcebreakers({ userId: me, matchId: match._id, matchName, events, notes });
     const doc = { ...base, ...value, icebreakers, judgeModel, validation, worthAsking };

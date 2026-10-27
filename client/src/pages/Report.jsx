@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, Check, CircleHelp, Flag, Hourglass, Lock, MessageCircleMore, X } from 'lucide-react'
+import { ArrowRight, Check, CircleCheck, CircleHelp, CircleX, Eye, Flag, Hourglass, Lock, MessageCircleMore, Target, X } from 'lucide-react'
 import { Avatar, Btn, Dots, IconBtn, Shimmer, StatusChip, TopNav, useDraw } from '../components/r7'
 import { useMobile } from '../components/prelude'
 import { useAuth } from '../hooks/useAuth'
@@ -18,6 +18,60 @@ const CHIP = { compatible: 'compatible', maybe: 'maybe', incompatible: 'not' }
 function Wrap({ mobile, children }) {
   if (mobile) return <div className="scr app-scr letterscr m">{children}</div>
   return <div className="scr app-scr letterscr d"><TopNav /><div className="lt-page">{children}</div></div>
+}
+
+// UI polish A3: the letter's side columns. Left: what mattered to ME (my dealbreakers and the values my judge's points
+// rest on, from my own graph). Right: what my agent noticed about them, in their own words, and how they text. Never
+// their letter, verdict, private facts or dealbreakers.
+const IMP = { dealbreaker: 'dealbreaker', high: 'matters a lot', medium: 'matters' }
+function Mattered({ mattered }) {
+  if (!mattered || (!mattered.dealbreakers?.length && !mattered.values?.length)) return null
+  return (
+    <>
+      {mattered.dealbreakers?.length > 0 && <><h3 className="ls-h">Your dealbreakers</h3><ul className="ls-list">{mattered.dealbreakers.map((d) => (
+        <li key={d.attribute} className={d.passed ? 'ok' : 'bad'}>{d.passed ? <CircleCheck size={16} strokeWidth={1.9} aria-hidden="true" /> : <CircleX size={16} strokeWidth={1.9} aria-hidden="true" />}<span><span className="cap">{d.label}</span><span className="small"> · {d.passed ? 'passed' : 'came up in the chat'}</span></span></li>
+      ))}</ul></>}
+      {mattered.values?.length > 0 && <><h3 className="ls-h">What this rested on</h3><ul className="ls-list">{mattered.values.map((v) => (
+        <li key={v.text}><Target size={16} strokeWidth={1.8} aria-hidden="true" /><span>{v.text}{v.importance && <span className={`imp ${v.importance}`}>{IMP[v.importance]}</span>}</span></li>
+      ))}</ul></>}
+    </>
+  )
+}
+const HINGLISH = /\b(hai|nahi|kya|yaar|acha|accha|haan|bhai|matlab|kaise|thoda)\b/i
+/** How they text, from their messages in this chat (their side of the transcript). */
+function textingOf(msgs) {
+  if (!msgs.length) return []
+  const words = msgs.map((m) => (m.text ?? '').split(/\s+/).filter(Boolean).length)
+  const avg = Math.round(words.reduce((a, b) => a + b, 0) / msgs.length)
+  const share = (f) => msgs.filter(f).length / msgs.length
+  return [
+    share((m) => /^[a-z]/.test(m.text ?? '')) > 0.6 && 'mostly lowercase',
+    avg <= 8 ? `short messages (about ${avg} words)` : avg >= 20 ? `long messages (about ${avg} words)` : `about ${avg} words a message`,
+    share((m) => HINGLISH.test(m.text ?? '')) > 0.2 && 'mixes in Hinglish',
+    share((m) => (m.text ?? '').includes('?')) > 0.35 ? 'asks back often' : share((m) => (m.text ?? '').includes('?')) < 0.1 ? 'rarely asks back' : null,
+    share((m) => /\p{Extended_Pictographic}/u.test(m.text ?? '')) > 0.3 && 'uses emoji',
+  ].filter(Boolean)
+}
+function Showed({ them, notes, theirMsgs, lineOf, matchId }) {
+  const quoted = (notes ?? []).filter((n) => n.evidence?.[0]?.quote).slice(-5).reverse()
+  const style = textingOf(theirMsgs)
+  if (!quoted.length && !style.length) return null
+  return (
+    <>
+      {quoted.length > 0 && <><h3 className="ls-h">In {them}’s words</h3><ul className="ls-list q">{quoted.map((n) => {
+        const ev = n.evidence[0]
+        const line = lineOf.get(String(ev.messageId ?? ''))
+        return <li key={n._id}><span><b>{n.object}</b><q>{ev.quote}</q>{line && <Link className="link" to={`/matches/${matchId}/replay`}>message {line}</Link>}</span></li>
+      })}</ul></>}
+      {style.length > 0 && <><h3 className="ls-h">How {them} texts</h3><p className="small ls-style">{style.join(' · ')}</p></>}
+    </>
+  )
+}
+function Side({ title, icon: I, mobile, children }) {
+  if (!children) return null
+  return mobile
+    ? <details className="lt-side m card"><summary><I size={16} strokeWidth={1.8} aria-hidden="true" />{title}</summary><div className="ls-in">{children}</div></details>
+    : <aside className="lt-side card" aria-label={title}><h2 className="ls-title"><I size={16} strokeWidth={1.8} aria-hidden="true" />{title}</h2>{children}</aside>
 }
 
 function DateIdeas({ matchId, icebreakers }) {
@@ -44,7 +98,7 @@ export default function Report() {
   const rm = useReducedMotion()
   const toast = useToast()
   const { user, profile } = useAuth()
-  const { match, messages, decide, extend } = useMatch(id)
+  const { match, messages, facts: notes, decide, extend } = useMatch(id)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(null)
@@ -122,8 +176,12 @@ export default function Report() {
       {!mobile && <Link className="link push" to={`/matches/${id}/replay`}>Read the full conversation</Link>}</>
   )
 
+  const theirMsgs = messages.filter((m) => String(m.senderId) !== String(user?._id))
+  const left = <Side mobile={mobile} title="What mattered to you" icon={Target}>{Mattered({ mattered: report.mattered })}</Side>
+  const right = <Side mobile={mobile} title={`What ${them} showed`} icon={Eye}>{Showed({ them, notes, theirMsgs, lineOf, matchId: id })}</Side>
   return (
     <Wrap mobile={mobile}>
+      <div className="lt-3">{!mobile && <div className="lt-col">{left}</div>}
       <motion.article className={`letter card lv-${CHIP[verdict]}`} aria-labelledby="lt-h" initial={rm ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.2, 0.7, 0.2, 1] }}>
         <div className="lt-top">{pair}<StatusChip s={CHIP[verdict]} /><span className="private"><Lock size={14} strokeWidth={1.9} aria-hidden="true" />Private · only you see this</span>{close}</div>
         <div className="lt-body">
@@ -148,6 +206,7 @@ export default function Report() {
             <ol className="clicked" ref={list}>{[...quoted, ...report.dealbreakerRisk.filter((d) => d.quote && !quoted.some((c) => c.quote === d.quote)).map((d) => ({ text: `Something that matters a lot to you: ${d.attribute.replace(/_/g, ' ')}.`, quote: d.quote }))].map((c, k) => <li key={k}><p className="ck-t plain">{c.text}</p><Ev x={c} tone="grey" /></li>)}</ol>
             <p className="kind">We won’t show you {them} again unless you ask. Your agent learned a little more about what matters to you.</p>
           </>}
+          {mobile && <div className="lt-sides-m">{left}{right}</div>}
           {verdict !== 'incompatible' && ((decided === 'continue' || handedOff) ? <DateIdeas matchId={id} icebreakers={report.icebreakers} />
             : report.icebreakers?.length > 0 && <><h2 className="lt-sec">If you both say yes</h2><ul className="explore">{report.icebreakers.map((t) => <li key={t}>{t}</li>)}</ul></>)}
         </div>
@@ -156,6 +215,7 @@ export default function Report() {
           {!handedOff && <p className="lt-note small">{verdict === 'maybe' ? 'Up to 6 more messages, only about the open questions. ' : ''}{them} gets their own letter. Nothing changes unless you both choose to continue.</p>}
         </footer>
       </motion.article>
+      {!mobile && <div className="lt-col">{right}</div>}</div>
     </Wrap>
   )
 }

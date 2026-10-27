@@ -334,3 +334,32 @@ a.set-row { color: inherit; text-decoration: none; } a.set-row:hover b { text-de
 .pc-picker .pr-list { width: 100%; }
 @media (max-width: 820px), (pointer: coarse) { .pc-act { width: 44px; height: 44px; } .pc-answer { font-size: 18px; } }
 @media (prefers-reduced-motion: reduce) { .pc-card { transition: none; } }
+
+/* UI polish A3: the three-column letter (desktop ≥ 1100 px); phones get the sides as collapsible sections */
+.lt-3 { display: flex; gap: 24px; align-items: flex-start; justify-content: center; width: 100%; padding: 0 24px; }
+.letterscr.d .lt-3 > .letter { width: 680px; max-width: 100%; }
+.lt-side { position: sticky; top: 0; width: 280px; flex: none; padding: 18px 18px 20px; }
+.ls-title, .lt-side.m summary { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 600 15px/1.3 var(--sans); color: var(--text); }
+.ls-title svg, .lt-side.m summary svg { color: var(--clay-ink); }
+.ls-h { margin: 14px 0 6px; font-size: 12.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-2); }
+.ls-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14.5px; line-height: 1.4; }
+.ls-list li { display: flex; gap: 8px; align-items: flex-start; }
+.ls-list li > svg { flex: none; margin-top: 2px; color: var(--text-2); }
+.ls-list li.ok > svg { color: var(--olive); } .ls-list li.bad > svg { color: var(--brick); }
+.ls-list .cap { text-transform: capitalize; }
+.ls-list .imp { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--cream); font-size: 11.5px; font-weight: 600; color: var(--text-2); vertical-align: 1px; }
+.ls-list .imp.dealbreaker { background: var(--brick-bg); color: var(--brick); }
+.ls-list.q li > span { display: grid; gap: 2px; }
+.ls-list.q q { font: italic 400 15px/1.35 var(--serif); color: var(--text); }
+.ls-list.q .link { font-size: 12.5px; justify-self: start; }
+.ls-style { margin: 0; }
+.lt-sides-m { display: grid; gap: 10px; margin-top: 20px; }
+.lt-side.m { position: static; width: auto; padding: 0; }
+.lt-side.m summary { min-height: 48px; padding: 0 16px; cursor: pointer; list-style: none; margin: 0; }
+.lt-side.m .ls-in { padding: 0 16px 16px; }
+@media (max-width: 1099px) { .letterscr.d .lt-3 { flex-direction: column; align-items: center; } .letterscr.d .lt-side { position: static; width: 680px; max-width: 100%; } }
+/* B6: the sticky action bar never cuts a point in half: a fade above it and room at the end */
+.letterscr.d .lt-foot::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 28px; background: linear-gradient(to bottom, rgb(255 255 255 / 0), var(--surface)); pointer-events: none; }
+.letterscr.d .lt-body { padding-bottom: 32px; }
+@media (min-width: 1100px) { .letterscr.d .lt-3 { display: grid; grid-template-columns: 280px minmax(0, 680px) 280px; justify-content: center; } .letterscr.d .lt-3 > .letter { width: auto; } .lt-col { min-width: 0; } .lt-col > .lt-side { width: auto; } }
+@media (max-width: 1099px) { .lt-col:empty { display: none; } .letterscr.d .lt-col { width: 680px; max-width: 100%; } .letterscr.d .lt-col > .lt-side { width: auto; } }

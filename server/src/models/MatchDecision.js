@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const { ObjectId } = mongoose.Schema.Types;
 
 // One side's judge verdict on one conversation (plan 09 §1). Mine only: the other side never sees my reasons.
-const quoted = { quote: String, why: String, messageId: { type: ObjectId, ref: 'Message' }, factId: String, theirs: Boolean, _id: false };
+// factRef (UI polish A3): the real KgFact _id behind factId (the judge prompt's F1… alias), for the letter's "what mattered".
+const quoted = { quote: String, why: String, messageId: { type: ObjectId, ref: 'Message' }, factId: String, factRef: String, theirs: Boolean, _id: false };
 
 const matchDecisionSchema = new mongoose.Schema({
   conversationId: { type: ObjectId, ref: 'Conversation', required: true },
