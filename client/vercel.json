@@ -32,7 +32,16 @@
     {
       "src": "/health",
       "dest": "https://dating-agent-api.onrender.com/health",
-      "headers": { "x-vercel-enable-rewrite-caching": "0" }
+      "headers": { "x-vercel-enable-rewrite-caching": "0" },
+      "transforms": [
+        {
+          "type": "request.headers",
+          "op": "set",
+          "target": { "key": "x-origin-secret" },
+          "args": "$ORIGIN_SECRET",
+          "env": ["ORIGIN_SECRET"]
+        }
+      ]
     },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
