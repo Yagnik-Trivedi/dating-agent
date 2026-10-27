@@ -7,7 +7,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { env } from '../config/env.js';
 
 const same = (a, b) => {
-  const x = Buffer.from(String(a ?? '')), y = Buffer.from(String(b ?? ''));
+  const x = Buffer.from(String(a ?? '').trim()), y = Buffer.from(String(b ?? '').trim()); // a pasted value often ends in a newline
   return x.length === y.length && timingSafeEqual(x, y);
 };
 
@@ -17,5 +17,6 @@ export function clientIp(req, res, next) {
   const fromVercel = viaVercel && (req.get('x-vercel-forwarded-for') ?? req.get('x-real-ip') ?? req.get('x-forwarded-for'))?.split(',')[0]?.trim();
   req.clientIp = fromVercel || req.ip;
   req.viaVercel = viaVercel;
+  req.hasOriginHeader = Boolean(req.get('x-origin-secret'));
   next();
 }
