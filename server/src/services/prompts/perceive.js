@@ -8,8 +8,11 @@ export const NOTE_PREDICATES = ['likes', 'dislikes', 'values', 'goal', 'lifestyl
 export const MOODS = ['chill', 'playful', 'excited', 'tired', 'busy', 'down', 'serious', 'flirty', 'curious', 'bored'];
 export const ENERGY = ['low', 'medium', 'high'];
 export const DOING = ['chatting', 'asking', 'telling', 'venting', 'sharing_news', 'winding_down'];
+// Plan 34: what in their turn needs a response, and what deserves a reaction.
+export const ITEM_KINDS = ['question', 'news', 'story', 'feeling', 'compliment', 'joke', 'request', 'statement'];
+export const REACT_KINDS = ['opinion', 'joke', 'news', 'compliment', 'confession', 'tease', 'plan', 'complaint', 'love', 'hate'];
 
-export function build({ myName, theirName, latest, context, myLast, agenda, attributes }) {
+export function build({ myName, theirName, latest, context, myLast, agenda, attributes, natural = false }) {
   return [
     {
       role: 'system',
@@ -30,6 +33,11 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         `- "notes": facts about ${theirName} learned from these messages. "quote" must be copied EXACTLY from their message.`,
         `  predicate one of ${NOTE_PREDICATES.join(', ')}; "object" a short neutral label; "strength" 0–1 how much they like/mean it.`,
         `- "agendaHits": topics from ${myName}'s list below that their message answers, each with an exact quote. Only a clear position counts ("long-term", "I don't smoke", "want kids someday"); a vague or polite non-answer ("someone kind and real") is not a hit.`,
+        ...(natural ? [
+          `- "items": EVERYTHING in their whole turn (all their bubbles) that needs a response, each with an id i1, i2…: kind one of ${ITEM_KINDS.join(', ')}; "text" short.`,
+          `- "reactTo": what in it deserves a reaction (kind one of ${REACT_KINDS.join(', ')}). "topicSeeds": up to 3 things they mentioned that two people could chat about.`,
+          '- "theyLead": true if they are carrying the conversation right now (telling, sharing, bringing their own topic).',
+        ] : []),
         'Never infer religion, caste, ethnicity, health or sexuality. Empty lists are fine.',
         '',
         'Output JSON: {"concepts": [{"text": "...", "type": "activity", "polarity": 1}], "claims": [{"text": "...", "conceptText": "...",',
@@ -37,7 +45,7 @@ export function build({ myName, theirName, latest, context, myLast, agenda, attr
         '"warmth": false, "acknowledgesDifference": false, "answeredMyQuestion": null, "dealbreakerHint": null,',
         '"language": {"languages": ["en"], "script": "latin", "codeSwitch": false}, "mood": "chill", "energy": "medium", "doing": "chatting",',
         '"notes": [{"predicate": "likes", "object": "...", "attribute": null, "value": null, "polarity": 1, "strength": 0.6, "quote": "..."}],',
-        '"agendaHits": [{"id": "a1", "quote": "..."}]}',
+        natural ? '"agendaHits": [{"id": "a1", "quote": "..."}], "items": [{"id": "i1", "kind": "question", "text": "..."}], "reactTo": [{"text": "...", "kind": "opinion"}], "topicSeeds": ["..."], "theyLead": false}' : '"agendaHits": [{"id": "a1", "quote": "..."}]}',
       ].join('\n'),
     },
     {

@@ -88,6 +88,9 @@ const schema = z.object({
   RULES: field(z.enum(['on', 'off']).default('on')), // plan 11 B4 ablation: off = plain agents (no act plan, stance, exemplars, interest meter)
   // Plan 31: human = simple mood-matched talk, at most one plain matching question; sn = plan 30 SN exactly (the fallback).
   CONVO_MODE: field(z.enum(['human', 'sn']).default('human')),
+  // Plan 34: natural = casual start, threads, a moving lead, feelings, nothing ignored, vibe-based endings (human mode);
+  // plan33 = today's human mode exactly.
+  FLOW: field(z.enum(['natural', 'plan33']).default('natural')),
   // Plan 33 C1: full = up to 5 sessions over hours/days + the high bar; demo = 3 short sessions a minute apart; short =
   // today's single 14-message chat and judge rule. Unset: demo when a seed or judge account is in the match, else full.
   CHAT_DEPTH: field(z.enum(['full', 'demo', 'short']).optional()),

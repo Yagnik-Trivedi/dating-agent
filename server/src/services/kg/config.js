@@ -72,6 +72,26 @@ export const KG = Object.freeze({
   // Human mode: the chance of a question per message (no floor), × these when their read says so.
   ASK_HUMAN_MAX: 0.5, ASK_LOW_ENERGY: 0.3, ASK_WHEN_TOLD: 0.2,
   AGENT_MODEL_BY_SIDE: null, JUDGE_MODEL: null,
+  // Plan 34 (FLOW=natural): how real chats flow. Message counts are per side unless noted.
+  NATURAL: Object.freeze({
+    GREETING_MSGS: 1, // my first message(s) of a session: a hello and how's the day (2 with their greeting back)
+    WARMUP_MSGS: [2, 4], // then light small talk for this many of my messages (sampled), the brief's opener as a hook
+    QUESTION_WINDOW: 6, QUESTION_WINDOW_MAX: 2, // in any 6 messages in a row, each side asks at most 2 questions
+    GETTOKNOW_PER_SESSION: 1, // generic get-to-know questions ("what do you do for fun") per agent per session
+    ASK_MAX: 0.35, // the chance of a question per message, before the window and the mood
+    THREAD_MESSAGES: [4, 10], // a live thread (both sides' messages) lasts this long, sampled, before a bridge moves on
+    LEAD_STINT: [2, 8], // both sides' messages one person leads before it may pass (sampled per stint)
+    LEAD_MIN_STINT: 2, // never pass the lead after fewer messages than this (no strict alternation)
+    LEAD_TAKE_WORDS: 12, // a follower message this long (and longer than the leader's last) with new material takes the lead
+    LEAD_RUN_OUT_WORDS: 5, // a leader message this short has run out
+    LEAD_HANDOVER: 0.12, // at the end of a stint, the leader explicitly hands over ("anyway enough about me")
+    LULL_KINDS: Object.freeze(['share', 'opinion', 'playful', 'hypothetical', 'hook']),
+    TAPBACK_RATE: Object.freeze([0.15, 0.25]), // agent tapbacks, scaled by the user's emoji rate
+    TAPBACKS: Object.freeze(['❤️', '😂', '😮', '😢', '👍', '🔥', '🙄']),
+    END_WARM: 0.65, END_COOL: 0.4, // the closer's interest → warm / neutral / cool ending
+    DEFAULT_TZ: 'Asia/Kolkata',
+    LEAVE_FOR_ME_PRESETS: Object.freeze(['politics', 'religion', 'exes', 'salary']),
+  }),
   // Plan 33 C1 (Arya, 2026-10-23): long chats in sessions, like texting over a few days, each sitting a bit deeper, and a
   // much higher bar for a match. CHAT_DEPTH (env) picks one; 'short' = today's one chat of MAX_TURNS and today's judge.
   // sessionMessages: a session's length is sampled in this range (both agents' messages, the close + goodbye included);

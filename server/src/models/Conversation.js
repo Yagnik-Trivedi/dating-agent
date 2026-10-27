@@ -36,6 +36,9 @@ const conversationSchema = new mongoose.Schema({
   ledger: Mixed,
   // { [userId]: { interest, lowInterestTurns, turn, toldStoryIds, topicsTouched, temperature, model } }
   agentState: Mixed,
+  // Plan 34 (FLOW=natural), shared by both sides and derived from the transcript: { lead, leadSince, stintTarget,
+  // thread: { topic, startedBy, startedAt, target } }.
+  flow: Mixed,
   // Round 2+ ("Let them talk a bit longer"): the match's message count at which it ends, and from which a natural end is
   // allowed. Unset on round 1 → KG.MAX_TURNS / MIN_MESSAGES_FOR_NATURAL_END.
   endAfter: Number,

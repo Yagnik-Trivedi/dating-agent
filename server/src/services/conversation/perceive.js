@@ -39,6 +39,11 @@ export const perceiveSchema = z.object({
   doing: oneOf(perceivePrompt.DOING, 'chatting'),
   notes: items(z.object({ predicate: z.enum(perceivePrompt.NOTE_PREDICATES), object: z.string().trim().min(1).max(100), attribute: attr, value: z.string().nullable().catch(null), polarity: pol, strength: z.coerce.number().min(0).max(1).catch(0.5), quote: z.string().trim().min(1).max(300) })),
   agendaHits: items(z.object({ id: z.string(), quote: z.string().trim().min(1).max(300) })),
+  // Plan 34 (FLOW=natural; absent → empty): what needs a response, what deserves a reaction, topics, who carries it.
+  items: items(z.object({ id: z.string().trim().min(1).max(8), kind: oneOf(perceivePrompt.ITEM_KINDS, 'statement'), text: z.string().trim().min(1).max(200) })).default([]),
+  reactTo: items(z.object({ text: z.string().trim().min(1).max(120), kind: oneOf(perceivePrompt.REACT_KINDS, 'opinion') })).default([]),
+  topicSeeds: z.array(z.string().trim().min(1).max(60)).catch([]).default([]),
+  theyLead: bool.default(false),
 });
 
 const resolve = async (text, type, userId) => (await resolveConcept({ text, type, userId }, { tieBreak: async () => ({ same: false }) })).conceptId; // no LLM tie-break mid-chat (2-call budget)
@@ -47,26 +52,27 @@ const resolve = async (text, type, userId) => (await resolveConcept({ text, type
 function ownReaction(persona, { conceptId, attribute }) {
   const f = persona.facts.find((x) => (conceptId && String(x.conceptId) === String(conceptId) && ['likes', 'dislikes', 'opinion', 'values'].includes(x.predicate)) || (attribute && x.attribute === attribute));
   if (!f) return null;
-  return { strength: f.strength ?? f.importance ?? 0.5, polarity: f.predicate === 'dislikes' ? -1 : (f.polarity ?? 1), value: f.value, importance: f.importance, object: f.object };
+  return { strength: f.strength ?? f.importance ?? 0.5, polarity: f.predicate === 'dislikes' ? -1 : (f.polarity ?? 1), value: f.value, importance: f.importance, object: f.object, predicate: f.predicate };
 }
 
 /**
  * → { perception (for interest + plan), notes (lean), events, dealbreakerHit }
  * persona: MY loaded persona; theirMsgs: their messages since my last one; conv: Conversation; agenda: my agenda.
  */
-export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs, context, myLast, agenda, turn }) {
+export async function perceiveObserve({ match, conv, persona, otherId, theirMsgs, context, myLast, agenda, turn, natural = false }) {
   const out = await chatJSON({
     tier: 'mid', reasoning: false, temperature: 0, schema: perceiveSchema, purpose: 'agent-perceive', userId: persona.userId, matchId: match._id,
-    messages: perceivePrompt.build(perceiveArgs({ persona, theirMsgs, context, myLast, agenda })),
+    messages: perceivePrompt.build(perceiveArgs({ persona, theirMsgs, context, myLast, agenda, natural })),
   });
   return observe(out, { match, conv, persona, otherId, theirMsgs, myLast, agenda, turn });
 }
 
 /** The perceive prompt's inputs (also used by the merged turn call, plan 30 S1). */
-export const perceiveArgs = ({ persona, theirMsgs, context, myLast, agenda }) => ({
+export const perceiveArgs = ({ persona, theirMsgs, context, myLast, agenda, natural = false }) => ({
   myName: persona.firstName, theirName: context.theirName, latest: theirMsgs.map((m) => m.text).join('\n'), context: context.lines, myLast,
   // Plan 31: known and for-you items never reach a model (removed ones aren't in the agenda at all).
   agenda: agenda.filter((a) => a.status !== 'answered' && a.status !== 'for_you'), attributes: ATTRIBUTES,
+  ...(natural && { natural: true }), // plan 34: the extra read fields
 });
 
 /** Code after the read: notes (verbatim quotes only), chat moments and agenda progress, compared with MY graph. */
@@ -149,10 +155,11 @@ export async function observe(out, { match, conv, persona, otherId, theirMsgs, m
   return {
     perception: {
       concepts, conflicts, humor: out.humor, lowEffort: out.lowEffort, aboutMeQuestion: out.isQuestion && out.aboutMe, isQuestion: out.isQuestion,
-      language: out.language, mood: out.mood, energy: out.energy, doing: out.doing, dealbreakerHit: confirmed,
+      language: out.language, mood: out.mood, energy: out.energy, doing: out.doing, dealbreakerHit: confirmed, dealbreakerFirst: Boolean(dbClaim) && !confirmed,
       likes: concepts.filter((c) => c.own && c.own.polarity === 1 && c.polarity === 1).map((c) => c.own.strength),
       dislikes: concepts.filter((c) => c.own && c.own.polarity !== c.polarity).map((c) => c.own.strength),
       topics: concepts.map((c) => String(c.conceptId)),
+      items: out.items ?? [], reactTo: out.reactTo ?? [], topicSeeds: out.topicSeeds ?? [], theyLead: Boolean(out.theyLead), warmth: out.warmth,
     },
     notes, events, agenda: updated,
   };
