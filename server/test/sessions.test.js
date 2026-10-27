@@ -17,25 +17,26 @@ test('depth: CHAT_DEPTH wins; unset → demo with a seed or judge account, full 
   withEnv({ CHAT_DEPTH: 'full', RULES: 'off' }, () => assert.equal(chatDepth([{}]), 'short'));
 });
 
-test('a session is 16–24 messages in full and 16 in demo, seeded; the gap is in range', () => {
+test('a session is 50–60 messages in full and demo, seeded; the gap is in range', () => {
   const lengths = Array.from({ length: 100 }, (_, i) => newSession({ seed: i, depth: 'full', n: 1, startCount: 10 }).target - 10);
-  assert.ok(lengths.every((l) => l >= 16 && l <= 24));
+  assert.ok(lengths.every((l) => l >= 50 && l <= 60));
   assert.ok(new Set(lengths).size > 3, 'lengths vary');
   assert.equal(newSession({ seed: 7, depth: 'full', n: 2, startCount: 0 }).target, newSession({ seed: 7, depth: 'full', n: 2, startCount: 0 }).target, 'replayable');
-  assert.equal(newSession({ seed: 7, depth: 'demo', n: 1, startCount: 0 }).target, 16);
+  const demo = newSession({ seed: 7, depth: 'demo', n: 1, startCount: 0 }).target;
+  assert.ok(demo >= 50 && demo <= 60);
   const [lo, hi] = KG.CHAT_DEPTHS.full.gapMs;
   for (let s = 0; s < 50; s++) { const g = gapMs({ seed: s, depth: 'full', n: 2 }); assert.ok(g >= lo && g <= hi); }
   assert.ok(gapMs({ seed: 1, depth: 'demo', n: 2 }) <= 75_000);
 });
 
 test('limits: the close leaves room for their goodbye; a natural close never before the minimum', () => {
-  const conv = { depth: 'full', sessions: [{ n: 1, startCount: 0, target: 20 }] };
-  assert.deepEqual(sessionLimits(conv), { maxMessages: 19, naturalEndFrom: 15 });
-  assert.deepEqual(sessionLimits(conv, { otherAgent: false }), { maxMessages: 20, naturalEndFrom: 16 });
-  const short = { depth: 'demo', sessions: [{ n: 2, startCount: 16, target: 32 }] };
-  assert.deepEqual(sessionLimits(short), { maxMessages: 31, naturalEndFrom: 30 }, 'demo: the close is message 15 of the session, the goodbye 16');
-  assert.equal(hardCap({ depth: 'full' }), 5 * 24 + 4);
-  assert.equal(sessionsMax({ depth: 'demo', extraSessions: 1 }), 4);
+  const conv = { depth: 'full', sessions: [{ n: 1, startCount: 0, target: 55 }] };
+  assert.deepEqual(sessionLimits(conv), { maxMessages: 54, naturalEndFrom: 50 });
+  assert.deepEqual(sessionLimits(conv, { otherAgent: false }), { maxMessages: 55, naturalEndFrom: 51 });
+  const early = { depth: 'demo', sessions: [{ n: 2, startCount: 55, target: 107 }] };
+  assert.deepEqual(sessionLimits(early), { maxMessages: 106, naturalEndFrom: 103 }, 'a natural close never before the 50-message minimum');
+  assert.equal(hardCap({ depth: 'full' }), 5 * 60 + 4);
+  assert.equal(sessionsMax({ depth: 'demo', extraSessions: 1 }), 5);
 });
 
 test('unlocked tier per session, and the room indicator', () => {

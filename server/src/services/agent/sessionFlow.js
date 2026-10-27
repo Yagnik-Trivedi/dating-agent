@@ -8,7 +8,7 @@ import { emitToUser } from '../../sockets/io.js';
 import { enqueue } from '../jobs/queue.js';
 import { KG } from '../kg/config.js';
 import { flushUsage } from '../llm/budget.js';
-import { currentSession, depthOf, gapMs, inSessions, newSession, sessionInfo, sessionsMax } from '../conversation/sessions.js';
+import { currentSession, depthCfg, depthOf, gapMs, inSessions, newSession, sessionInfo, sessionsMax } from '../conversation/sessions.js';
 import { summarizeSession } from '../conversation/memory.js';
 import { decideSession } from '../conversation/sessionJudge.js';
 import { cancelReplies, scheduleReply, stopConversation } from './scheduler.js';
@@ -73,8 +73,11 @@ export async function runSessionEnd({ conversationId, n }) {
   const said = Object.values(decisions).map((d) => d.decision);
   console.log(`session ${match._id} #${n} ended: ${said.join(' / ') || 'no decisions'}, ${tokens} tokens`);
 
-  if (said.includes('no')) return stopConversation(match._id, 'judge_no', { endedBy: 'judge_no' });
-  if (said.length === 2 && said.every((d) => d === 'yes')) return stopConversation(match._id, 'judge_yes', { endedBy: 'judge_yes' });
+  // Owner (2026-10-28): they get to know each other first: no verdict before the depth's minSessions (a dealbreaker in
+  // chat still ends it at once, through the scheduler).
+  const decided = n >= (depthCfg(depthOf(conv))?.minSessions ?? 1);
+  if (decided && said.includes('no')) return stopConversation(match._id, 'judge_no', { endedBy: 'judge_no' });
+  if (decided && said.length === 2 && said.every((d) => d === 'yes')) return stopConversation(match._id, 'judge_yes', { endedBy: 'judge_yes' });
   if (n >= sessionsMax(conv)) return stopConversation(match._id, 'sessions_done', { endedBy: 'sessions_done' });
 
   const nextSessionAt = new Date(Date.now() + gapMs({ seed: conv.seed, depth: depthOf(conv), n: n + 1 }));

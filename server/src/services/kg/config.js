@@ -79,7 +79,8 @@ export const KG = Object.freeze({
     QUESTION_WINDOW: 6, QUESTION_WINDOW_MAX: 2, // in any 6 messages in a row, each side asks at most 2 questions
     GETTOKNOW_PER_SESSION: 1, // generic get-to-know questions ("what do you do for fun") per agent per session
     ASK_MAX: 0.35, // the chance of a question per message, before the window and the mood
-    THREAD_MESSAGES: [4, 10], // a live thread (both sides' messages) lasts this long, sampled, before a bridge moves on
+    // Owner (2026-10-28): a topic gets a couple of messages each, then the chat moves on (was 4–10: agents got stuck).
+    THREAD_MESSAGES: [3, 5], // a live thread (both sides' messages) lasts this long, sampled, before a bridge moves on
     LEAD_STINT: [2, 8], // both sides' messages one person leads before it may pass (sampled per stint)
     LEAD_MIN_STINT: 2, // never pass the lead after fewer messages than this (no strict alternation)
     LEAD_TAKE_WORDS: 12, // a follower message this long (and longer than the leader's last) with new material takes the lead
@@ -96,12 +97,15 @@ export const KG = Object.freeze({
   // much higher bar for a match. CHAT_DEPTH (env) picks one; 'short' = today's one chat of MAX_TURNS and today's judge.
   // sessionMessages: a session's length is sampled in this range (both agents' messages, the close + goodbye included);
   // a natural close is allowed from the low end. gapMs: the wait before the next session, sampled in this range.
+  // Owner (2026-10-28): sessions of 50–60 messages, and no verdict (yes or no) before minSessions sessions; only a
+  // dealbreaker that comes up in chat ends earlier. Was 16–24 messages, and a "no" could end the chat after session 1.
   CHAT_DEPTHS: Object.freeze({
-    full: Object.freeze({ sessions: 5, sessionMessages: [16, 24], gapMs: [3 * 3_600_000, 12 * 3_600_000], minSessionsForYes: 3, minMessagesForYes: 50 }),
-    demo: Object.freeze({ sessions: 3, sessionMessages: [16, 16], gapMs: [45_000, 75_000], minSessionsForYes: 3, minMessagesForYes: 40 }),
+    full: Object.freeze({ sessions: 5, minSessions: 3, sessionMessages: [50, 60], gapMs: [3 * 3_600_000, 12 * 3_600_000], minSessionsForYes: 3, minMessagesForYes: 120 }),
+    demo: Object.freeze({ sessions: 4, minSessions: 3, sessionMessages: [50, 60], gapMs: [45_000, 75_000], minSessionsForYes: 3, minMessagesForYes: 120 }),
     // Owner's chained test run (2026-10-27): all of full's sessions back to back, a few seconds apart (set per match).
-    chain: Object.freeze({ sessions: 5, sessionMessages: [16, 22], gapMs: [3_000, 8_000], minSessionsForYes: 3, minMessagesForYes: 50 }),
+    chain: Object.freeze({ sessions: 5, minSessions: 3, sessionMessages: [50, 60], gapMs: [3_000, 8_000], minSessionsForYes: 3, minMessagesForYes: 120 }),
   }),
+  HUMAN_SIDE_MAX_MESSAGES: 600, // loop guard when one side is a human: the agent never ends the chat on its own
   // What each session may draw on (A5): session 1 small talk (surface), 2 adds stories and people (personal), 3+ deep.
   SESSION_TIERS: Object.freeze(['surface', 'personal', 'deep']),
   SESSION_RAW_MESSAGES: 20, // the transcript the agent sees raw; earlier sessions reach it as summaries + threads

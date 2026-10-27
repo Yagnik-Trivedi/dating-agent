@@ -36,6 +36,8 @@ import { agendaAttribute } from '../kg/questionnaireFacts.js';
 import { debug } from '../../utils/log.js';
 
 // "are you a bot?", "am I talking to an AI?", "is this a real person?" → the honest answer (consent covers AI handling).
+// A human on the other side saying goodbye: the only thing (besides a dealbreaker) that lets my agent close the chat.
+const HUMAN_BYE = /\b(bye+|good ?night|gn|ttyl|cya|g2g|gtg|signing off|see (you|ya|u) (later|tomorrow|soon)|talk (to (you|u) )?(later|tomorrow|tmrw|soon)|catch (you|u) later|gotta go|got to go|(have|need) to (go|leave|sleep))\b/i;
 export const AI_QUESTION = /\b(are|r)\s+(you|u)\s+(an?\s+)?(bot|ai|robot|real|human|chatgpt|gpt)\b|talking\s+to\s+(an?\s+)?(bot|ai|robot|machine|chatgpt|real\s+person|human)\b|\b(is\s+this|this\s+is)\s+(an?\s+)?(bot|ai|chatgpt|real\s+person|human)\b|\b(bot|chatgpt|automated)\b[^.!]*\?/i;
 /**
  * RULES=off (plan 11 B4 ablation): a plain agent. No act plan (no sampled length, emoji, steering, disagreement or
@@ -285,16 +287,27 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   // Plan 33 (A5): each session unlocks deeper things to share: 1 small talk, 2 stories and people, 3+ everything.
   const unlocked = sessionMode ? tierRank(unlockedTier(session.n)) : tierRank('deep');
   const stories = tierRank('personal') <= unlocked ? storyCandidates(persona, state.toldStoryIds) : [];
-  const limits = sessionMode ? sessionLimits(conv, { otherAgent: Boolean(side(match, otherId)?.agentActive) })
-    : { maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END };
+  // Owner (2026-10-28): with a human on the other side, my agent never ends or pauses the chat on its own (no length
+  // limit, no natural or low-interest end): it says goodbye only after they do. A dealbreaker still ends it.
+  const otherHuman = !side(match, otherId)?.agentActive;
+  const limits = otherHuman ? { maxMessages: Infinity, naturalEndFrom: Infinity }
+    : sessionMode ? sessionLimits(conv, { otherAgent: true })
+      : { maxMessages: conv.endAfter ?? KG.MAX_TURNS, naturalEndFrom: conv.naturalEndFrom ?? MIN_MESSAGES_FOR_NATURAL_END };
+  // Low interest never cuts a chat (or a session) short before its natural-end point.
+  const planState = history.length < limits.naturalEndFrom ? { ...state, lowInterestTurns: 0 } : state;
+  const theySaidBye = otherHuman && theirMsgs.length > 0 && HUMAN_BYE.test(theirMsgs.at(-1).text);
   // Plan 34: the natural layer's context (my "leave for me" topics, the brief's openers as hooks, this session's start).
   const leaveForMe = natural ? (await User.findById(me, { 'settings.leaveForMe': 1 }).lean())?.settings?.leaveForMe ?? [] : [];
   const naturalCtx = natural && { history, me, otherId, persona, seed: conv.seed, sessionFrom: sessionMode ? session.startCount : 0, flow: conv.flow ?? {},
     hooks: (brief.openers ?? []).map((o) => o.text), leaveForMe, theirText: theirMsgs.map((m) => m.text).join('\n'), now: new Date(), tz: KG.NATURAL.DEFAULT_TZ };
   const plan = rulesOn
-    ? planAct({ mode: human ? 'human' : 'sn', state, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: human || agendaSettled(freshAgenda),
+    ? planAct({ mode: human ? 'human' : 'sn', state: planState, voice: persona.voice, perception, rng, agenda: freshAgenda, stories, msgCount: history.length, opening, agendaSettled: human || agendaSettled(freshAgenda),
       ...limits, thread: { theirs: theirMsgs.map((m) => m.text).join('\n'), mine: myLast }, ...(naturalCtx && { natural: naturalCtx }) })
     : plainPlan(persona.voice, history.length);
+  if (otherHuman && plan.end !== 'dealbreaker_hint') {
+    if (theySaidBye) Object.assign(plan, { end: 'natural', move: 'close', phase: 'winding_down', preClose: false, topic: null, askBack: false, moveOn: null });
+    else Object.assign(plan, { end: null, preClose: false });
+  }
   if (sessionMode) sessionPlan(plan, { conv, otherId, goodbye, sessionStart, theirMsgs });
   // Plan 34: a session pause or goodbye decided by sessionPlan also gets its vibe and a real excuse.
   if (natural && plan.end && !plan.vibe) Object.assign(plan, { vibe: endVibe(state.interest ?? 0.5, { dealbreaker: plan.end === 'dealbreaker_hint' }), excuse: excuseFor({ facts: persona.facts, tz: KG.NATURAL.DEFAULT_TZ }).text });
@@ -332,7 +345,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   stories.forEach((s, i) => facts.set(`S${i + 1}`, s));
   if (plan.topic?.kind === 'story') plan.topic.storyId = [...facts].find(([, f]) => String(f._id) === plan.topic.id)?.[0];
   // Plan 34: a flat chat (or my lead) brings in something of mine not yet talked about, from my own facts.
-  if (natural && (plan.mustAdd || plan.lull === 'share' || plan.move === 'lead') && !plan.end) {
+  if (natural && (plan.mustAdd || plan.moveOn || plan.lull === 'share' || plan.move === 'lead') && !plan.end) {
     const brought = new Set(state.brought ?? []);
     const pickF = [...facts].find(([id, f]) => !brought.has(String(f._id)) && f.disclosure === 'public' && ['likes', 'story', 'goal', 'opinion', 'background', 'values'].includes(f.predicate) && f.attribute !== 'job');
     if (pickF) plan.bring = { id: pickF[0], text: factText(pickF[1], pickF[1].conceptLabel), factId: String(pickF[1]._id) };

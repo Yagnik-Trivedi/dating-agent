@@ -52,18 +52,18 @@ test('a session closes, ends once, and the next one starts after the gap; the la
 
   await startNextSession({ conversationId: conv._id, n: 2 });
   c = await Conversation.findById(conv._id).lean();
-  assert.deepEqual([c.sessionIndex, c.phase, c.sessions[1].startCount, c.sessions[1].target], [2, 'chatting', 16, 32]);
+  assert.deepEqual([c.sessionIndex, c.phase, c.sessions[1].startCount, c.sessions[1].target], [2, 'chatting', 16, newSession({ seed: 42, depth: 'demo', n: 2, startCount: 16 }).target]);
   assert.equal(await Job.countDocuments({ type: 'agentTurn' }), 1, 'one agent opens the session');
   assert.deepEqual((await startNextSession({ conversationId: conv._id, n: 2 })), { skipped: true }, 'starts once');
 
-  // Sessions 2 and 3 end without a yes or a no (no evidence: the LLM is off) → after the last one, the verdict.
-  for (const n of [2, 3]) {
-    if (n === 3) await startNextSession({ conversationId: conv._id, n: 3 });
+  // Sessions 2–4 end without a yes or a no (no evidence: the LLM is off) → after the last one (demo: 4), the verdict.
+  for (const n of [2, 3, 4]) {
+    if (n > 2) await startNextSession({ conversationId: conv._id, n });
     await endSession(conv._id, n);
     await summarized(conv, n);
     await runSessionEnd({ conversationId: conv._id, n });
   }
   c = await Conversation.findById(conv._id).lean();
-  assert.deepEqual([c.status, c.endedBy, c.sessions.length], ['ended', 'sessions_done', 3]);
+  assert.deepEqual([c.status, c.endedBy, c.sessions.length], ['ended', 'sessions_done', 4]);
   assert.equal((await Match.findById(match._id).lean()).status, 'evaluating');
 });

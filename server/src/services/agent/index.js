@@ -51,8 +51,11 @@ export async function onIncomingMessage(message) {
     return;
   }
   const conv = await Conversation.findOne({ matchId: match._id, status: 'active' }, { endAfter: 1, depth: 1, phase: 1, extraSessions: 1 }).lean();
-  // Plan 33: a session-mode chat ends through its sessions; the cap here is only the loop guard.
-  if (await Message.countDocuments({ matchId: match._id }) >= (inSessions(conv) ? hardCap(conv) : conv?.endAfter ?? KG.MAX_TURNS)) {
+  // Plan 33: a session-mode chat ends through its sessions; the cap here is only the loop guard. With a human on one
+  // side the agent never ends the chat on its own (owner, 2026-10-28), so only a much larger guard applies.
+  const humanSide = match.perUser.some((p) => !p.agentActive);
+  const cap = humanSide ? KG.HUMAN_SIDE_MAX_MESSAGES : inSessions(conv) ? hardCap(conv) : conv?.endAfter ?? KG.MAX_TURNS;
+  if (await Message.countDocuments({ matchId: match._id }) >= cap) {
     await stopConversation(match._id, 'max_turns');
     return;
   }

@@ -85,7 +85,8 @@ export function nextThread(prev, { seeds = [], msgCount, lowEnergy = false, me, 
   const live = prev && age < prev.target && !(lowEnergy && age >= 2);
   if (live) return { thread: prev, changed: false, bridge: false };
   const topic = seeds.find((s) => !prev || s.toLowerCase() !== String(prev.topic).toLowerCase());
-  if (!topic) return { thread: prev ?? null, changed: false, bridge: false };
+  // Owner (2026-10-28): a thread that has had its run is never kept just because nothing new came up: move on anyway.
+  if (!topic) return { thread: null, changed: false, bridge: false, moveOn: prev ? String(prev.topic) : null };
   const target = between(N.THREAD_MESSAGES, seeded((seed + msgCount * 131) >>> 0)());
   return { thread: { topic, startedBy: theirId ?? me, startedAt: msgCount, target }, changed: true, bridge: Boolean(prev) };
 }
@@ -228,6 +229,7 @@ export function readParts(plan, ctx) {
   const t = nextThread(flow.thread, { seeds, msgCount, lowEnergy: plan.read?.energy === 'low', me, theirId: otherId, seed });
   plan.thread = t.thread ? { topic: t.thread.topic, age: msgCount - t.thread.startedAt, bridge: t.bridge, changed: t.changed } : null;
   plan.newThread = t.changed ? t.thread : null;
+  plan.moveOn = t.moveOn && plan.phase === 'flow' && !plan.end && !plan.preClose ? t.moveOn : null;
   const lull = ['flow', 'warmup'].includes(plan.phase) && !perception.isQuestion && words(theirText) < KG.LULL_WORDS && !plan.end;
   if (lull && !plan.topic) {
     const unusedHooks = hooks.filter((h) => !(state.hooksUsed ?? []).includes(h));
