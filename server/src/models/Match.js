@@ -35,6 +35,7 @@ const matchSchema = new mongoose.Schema({
   chatDepth: { type: String, enum: ['full', 'demo', 'short', 'chain', null], default: undefined },
   chain: Mixed, // { owner, next: [userId], depth }
   instant: { type: Boolean, default: undefined }, // owner's test match: agents reply with no debounce and no typing delay
+  language: Mixed, // owner's test match: { mix, codeSwitchRate } replaces both agents' own language mix in this chat
 }, { timestamps: true, versionKey: false });
 
 export const Match = mongoose.model('Match', matchSchema);

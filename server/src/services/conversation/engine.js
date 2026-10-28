@@ -230,7 +230,11 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const me = String(userId);
   const otherId = otherUserId(match, me);
   const conv = (await Conversation.findOne({ matchId: match._id, status: 'active' })) ?? await startConversationDoc(match);
-  const persona = await loadPersona(me);
+  const cached = await loadPersona(me);
+  // Owner's test match: a fixed language for this chat (both sides), instead of each user's own mix. Copy, never the cache.
+  const persona = match.language?.mix
+    ? { ...cached, voice: { ...cached.voice, language: { ...cached.voice.language, mix: match.language.mix, codeSwitchRate: match.language.codeSwitchRate ?? 0.6, mirrorsLanguage: 0 } } }
+    : cached;
   const brief = match.brief?.[me] ?? {};
   const agenda = brief.agenda ?? [];
   // Plan 30 S3: a photo message reads as "(sent a photo)"; a like comment carries what it was about.
