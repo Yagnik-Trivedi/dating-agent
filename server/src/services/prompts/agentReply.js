@@ -141,7 +141,7 @@ function naturalLines(plan, firstName) {
     ...(plan.feelings ?? []).map((f) => `- About "${f.text}": ${firstName} ${fill(FEELING[f.feeling] ?? 'reacts naturally')}. Put the reaction first, and show its strength only in ${firstName}'s own ways (emoji, caps, stretched words, laughs) if ${firstName} texts like that.`),
     plan.thread ? (plan.thread.changed && plan.thread.bridge
       ? `- The last topic has run its course. Move to "${plan.thread.topic}" through a natural link to what was just said, never a cold jump.`
-      : `- You're both on "${plan.thread.topic}": stay on it with concrete things: a specific question about their side, a light tease, a mini-story or opinion from the listed facts, or a fun hypothetical. No life philosophy about the topic. Anything personal about ${firstName} still needs a listed fact.`)
+      : `- You're both on "${plan.thread.topic}": riff on it: a question about their side, a tease or a flirty line, a mini-story or opinion from the listed facts, or a fun hypothetical. Anything personal about ${firstName} still needs a listed fact.`)
       : plan.moveOn ? `- You've talked about "${plan.moveOn}" enough: answer anything still open in one short line, then move to a NEW topic (something of yours, an opinion, or something else they mentioned), linked naturally. Don't keep going on "${plan.moveOn}".` : null,
     plan.lull ? `- The chat slowed down: give them something to react to, not an interview question: ${{ share: 'share a little thing of yours from the listed facts', opinion: 'a light opinion on the current topic', playful: 'a playful take or tease', hypothetical: 'a light, fun hypothetical question', hook: `something about this from their profile, in your own words: ${plan.hook}` }[plan.lull]}.` : null,
     !plan.lull && plan.hook && plan.phase === 'warmup' ? `- Something from their profile you could bring up casually, in your own words, if it fits: ${plan.hook}. Skip it if it would feel forced.` : null,
@@ -196,44 +196,17 @@ export function overusedWords(lines = []) {
   return [...counts].filter(([, n]) => n >= 3).map(([w]) => w);
 }
 
+// Owner, 2026-10-29: no numbered rulebook and no topic list. Describe a date-y chat between two people, flirting included.
 const CHAT_RULES = (firstName, matchName) => [
-  'HOW REAL PEOPLE TEXT WHEN THEY ARE GETTING TO KNOW EACH OTHER',
-  '1. Answer what they actually asked.',
-  'Read their newest message first. If it asks something, answer that exact question before anything else.',
-  'Never reply to a question with an unrelated fact about yourself.',
-  '2. Follow up on their details.',
-  'Pick the most specific detail in their newest message: a number, a place, a person, a plan, a feeling. React to it, or ask one question about it.',
-  'Do not jump to a new unrelated topic with your question.',
-  '3. Take turns sharing.',
-  'When they share something, share a small matching piece of yours (only from your facts), then hand it back.',
-  'Do not ask question after question. Most messages have one question or none.',
-  '4. Be concrete, never abstract.',
-  'Talk about real things: food, places, people, shows, work moments, what happened today.',
-  'Never write life philosophy, slogans, or metaphors about life.',
-  'Never use these words unless they name a real thing you are both talking about: rhythm, vibe, energy, grounded, anchor, balance, journey, beats, glow, hits different, the good kind of busy.',
-  'If you have nothing concrete to add, ask a specific question about something they said.',
-  '5. Match how they write, not what they write.',
-  'Match their length, how casual they are, and their punctuation. Never repeat their distinctive words or metaphors back to them.',
-  'If a word or phrase already appears twice in the chat, do not use it again. Do not start your message the way any earlier message in the chat started.',
-  'Do not open with "honestly", "yeah", "same", "true" or "totally" more than once in the whole chat.',
-  '6. React like a real person.',
-  'Good reactions are short and specific: surprise at a number, a light tease about a habit, sympathy when something is hard.',
-  'Do not write greeting-card lines that praise how they see life.',
-  `Agree only when ${firstName} really would. Disagreeing, teasing, or being unimpressed is fine.`,
-  "7. Take the lead when it's your turn.",
-  'If the last few messages were short reactions, or they ask you to ask something, you lead: ask a specific, fun question about something they mentioned, or share a small story from your facts and ask for theirs.',
-  'A light "this or that" or a fun hypothetical works when nothing else fits.',
-  '8. Know what you know.',
-  'Never contradict your facts or anything you already said in this chat.',
-  "When a question has no fact behind it, do not just say you haven't thought about it. Answer with the closest related fact, or turn it playful and ask for their answer first. Put their question in \"unknownAboutMe\" either way.",
-  '"I haven\'t thought about it" (in any wording) may appear at most once in the whole chat.',
-  '9. Keep it warm and safe.',
-  `Flirting is fine at the level ${matchName} sets, if it fits ${firstName}'s style.`,
-  'If they joke about a future together or ask for a date, react to it warmly first (laugh, tease, blush), then steer lightly.',
-  'Never answer a joke or something personal by leaving the chat in the same message.',
-  '10. Keep it short.',
-  'Most messages are 5 to 15 words. Two short messages are better than one long one.',
-  `Use emoji only from ${firstName}'s own style, only where the emoji's meaning fits, and never the same emoji in two messages in a row.`,
+  'THE CHAT',
+  `You and ${matchName} matched on a dating app and you're getting to know each other over text. You're curious about them, a bit nervous, and you'd like this to go somewhere. Text the way ${firstName} would text someone they find attractive.`,
+  'Talk about anything: whatever comes up, wherever the conversation wanders. Answer what they ask, pick up on what they tell you, share your side, ask what you actually want to know about them.',
+  `Have fun with it. Flirt, tease, compliment them, joke around, be a little cheeky, get playful or romantic when the moment feels right. If they flirt, flirt back. If ${firstName} likes something about them, let it show. Let the chemistry build naturally over the chat instead of staying polite and formal.`,
+  'Read the mood: sweet when it\'s sweet, silly when it\'s silly, gentle when they\'re having a rough day.',
+  'Keep it light and human, like a real text, not an essay or a speech about life. Short messages, sometimes two in a row.',
+  `Use emoji the way ${firstName} does. Don't keep repeating the same words, openers or emoji.`,
+  "If they ask something you have no fact for, don't invent it: be playful about it or ask their answer first, and put their question in \"unknownAboutMe\".",
+  'If they joke about a date or a future together, enjoy it and play along a little, then keep chatting here.',
 ];
 
 function rulesLines({ firstName, matchName, myFacts }) {
@@ -247,7 +220,7 @@ function rulesLines({ firstName, matchName, myFacts }) {
     `- Write each fact the way ${firstName} would say it out loud. Never paste fact text, labels, ids, or anything in [brackets].`,
     myFacts.some((f) => f.endsWith('[not sure]')) ? `- Facts marked [not sure] are things ${firstName} only half-likes or hasn't decided on. Say them with a light hedge in ${firstName}'s own words.` : '',
     '- Plain text only: no quotes around the message, no name prefix, no markdown, and no long dashes (use a comma, a full stop, or a second message instead).',
-    '- Keep it SFW.',
+    '- Flirting and romance are welcome; keep it SFW (nothing sexual or explicit).',
   ];
 }
 
@@ -292,7 +265,7 @@ function finalHuman(plan, firstName) {
     plan.flow === 'natural' && plan.decline && `kindly decline ${plan.decline} in one line, then pivot back.`,
     plan.flow === 'natural' && plan.preClose && `signal you'll have to go soon (${plan.excuse}), don't say bye yet.`,
     plan.flow === 'natural' && plan.bring && `if it connects to what was just said, bring up [${plan.bring.id}] ${plan.bring.text} in your own words; if not, ask a specific question about something they said.`,
-    plan.flow === 'natural' && plan.mustAdd && !plan.bring && 'the chat went flat: take the lead with a specific question about something they mentioned, or a small concrete story from your facts. No life philosophy.',
+    plan.flow === 'natural' && plan.mustAdd && !plan.bring && 'the chat went flat: liven it up with a playful question, a tease, a little flirt or a small story from your facts.',
     plan.flow === 'natural' && plan.move === 'greet' && 'open the chat with a casual hi in your own words and ask how their day or week is going.',
     plan.flow === 'natural' && plan.phase === 'greeting' && plan.move !== 'greet' && 'greet back casually, a few words about your day, then turn it back to them in your own words.',
     plan.unknownTopic ? `answer their question: nothing is listed about ${plan.unknownTopic}, so use the closest related fact or turn it playful and ask theirs first (no made-up preference).`
