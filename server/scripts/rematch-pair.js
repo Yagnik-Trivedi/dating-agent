@@ -19,7 +19,7 @@ const argv = process.argv.slice(2);
 const DEPTH = argv.includes('--depth') ? argv[argv.indexOf('--depth') + 1] : null;
 const TAKEOVER = argv.includes('--takeover') ? argv[argv.indexOf('--takeover') + 1] : null;
 const LANG = argv.includes('--lang') ? argv[argv.indexOf('--lang') + 1] : null;
-const LANGS = { hinglish: { mix: { hi_latn: 0.7, en: 0.3 }, codeSwitchRate: 0.8 }, gujarati: { mix: { gu_latn: 0.5, en: 0.5 }, codeSwitchRate: 0.8 } };
+const LANGS = { hinglish: { mix: { hi_latn: 0.7, en: 0.3 }, codeSwitchRate: 0.8 }, gujarati: { mix: { gu_latn: 0.75, en: 0.25 }, codeSwitchRate: 0.8 } };
 const [nameA, nameB] = argv.filter((a, i) => !a.startsWith('--') && !['--depth', '--takeover', '--lang'].includes(argv[i - 1]));
 const YES = argv.includes('--yes');
 const INSTANT = argv.includes('--instant');

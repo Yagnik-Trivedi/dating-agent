@@ -279,6 +279,8 @@ function finalHuman(plan, firstName) {
     !plan.topic && plan.move === 'share' && `share a little of ${firstName}'s that connects, no question.`,
     !plan.topic && plan.move === 'ask_theirs' && 'react, then one short question about what they just said.',
     `about ${plan.targetWords} words.`,
+    // The language line in the system prompt alone was ignored for Gujarati (English exemplars won).
+    plan.language?.primary && plan.language.primary !== 'en' && `write it mostly in ${langName(plan.language.primary)}${plan.language.codeSwitch ? `, with some ${langName(plan.language.secondary)} words mixed in` : ''}, not in plain English.`,
   ].filter(Boolean).join(' ');
 }
 
