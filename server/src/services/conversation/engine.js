@@ -364,12 +364,15 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
   const aboutThem = notes.map((n, i) => `[N${i + 1}] ${n.predicate}: ${n.object}`);
   if (brief.summary) { aboutThem.push(`[P1] from their profile: ${brief.summary}`); sources.add('P1'); }
   // Plan 33: the last 20 messages raw (with a marker where a session started), earlier sessions as summaries + threads.
-  const transcript = rawTranscript(history, sessionMode ? conv : null, (m) => `${String(m.senderId) === me ? 'You' : matchName}: ${m.text}`);
+  const chatLabel = (m) => `${String(m.senderId) === me ? 'You' : matchName}: ${m.text}`;
+  const transcript = rawTranscript(history, sessionMode ? conv : null, chatLabel);
+  // The whole chat (every sitting) goes in the system prompt too, so nothing said earlier is forgotten or asked twice.
+  const fullChat = history.length ? { lines: rawTranscript(history, sessionMode ? conv : null, chatLabel, KG.FULL_CHAT_MAX_MESSAGES), hidden: Math.max(0, history.length - KG.FULL_CHAT_MAX_MESSAGES) } : null;
   const memory = sessionMode ? memoryFor(conv, { me, otherId, myName: persona.firstName, theirName: matchName }) : null;
   // Questions I asked in earlier sessions: never again (plan 33 A5, "nothing gets asked twice").
   const earlierQuestions = sessionMode ? history.slice(0, session.startCount).filter((m) => String(m.senderId) === me).flatMap((m) => sentencesOf(m.text)).filter((s) => s.includes('?')) : [];
   const prompt = {
-    firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, plan, memory,
+    firstName: persona.firstName, matchName, myFacts, aboutThem, transcript, fullChat, plan, memory,
     style: [persona.voice.description,
       // Plan 30 S2: a short onboarding leaves few samples (confidence low): plain and short beats an invented style.
       (persona.voice.sampleCount ?? 0) < KG.VOICE_CONFIDENT_SAMPLES && `Only a few examples of how ${persona.firstName} texts are known: keep replies short and plain, and don't invent quirks.`,

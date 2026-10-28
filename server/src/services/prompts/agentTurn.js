@@ -22,7 +22,7 @@ export function build({ reply, read }) {
         '',
         `Output ONE JSON object: {"read": ${readShape}, "messages": ["..."], "claims": [{"text": "...", "factIds": ["F1"], "stance": "positive|negative|neutral"}],`,
         `"aboutThem": [{"text": "...", "sourceIds": ["N1"]}], "unknownAboutMe": null, "end": false${reply.plan?.flow === 'natural' ? ', "covers": ["i1"]' : ''}}`,
-        `List EVERY self-claim in "claims" and EVERY statement about ${reply.matchName} (not questions) in "aboutThem". Reactions like "haha love that" need neither.`,
+        `List EVERY self-claim in "claims" and EVERY statement about ${reply.matchName} (not questions) in "aboutThem". A plain reaction with no claim needs neither.`,
       ].join('\n'),
     },
     {

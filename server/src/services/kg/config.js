@@ -109,6 +109,7 @@ export const KG = Object.freeze({
   // What each session may draw on (A5): session 1 small talk (surface), 2 adds stories and people (personal), 3+ deep.
   SESSION_TIERS: Object.freeze(['surface', 'personal', 'deep']),
   SESSION_RAW_MESSAGES: 20, // the transcript the agent sees raw; earlier sessions reach it as summaries + threads
+  FULL_CHAT_MAX_MESSAGES: 200, // the whole chat in the system prompt (every sitting); older ones only as summaries
   SESSION_CLOSING_STALE_MS: 120_000, // a session close nobody answered ends the session anyway (resume sweep)
   // The A7 bar (full and demo). A positive is THEIR words on one of MY facts (verified, as in short); its tier and branch
   // come from that fact (judge/evidenceTier.js). Surface likes count at most SURFACE_MAX in total; extra deep positives

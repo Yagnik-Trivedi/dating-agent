@@ -65,8 +65,8 @@ export function memoryFor(conv, { me, otherId, myName, theirName }) {
 }
 
 /** The last SESSION_RAW_MESSAGES messages, with a marker where a new session started. */
-export function rawTranscript(history, conv, label) {
-  const from = Math.max(0, history.length - KG.SESSION_RAW_MESSAGES);
+export function rawTranscript(history, conv, label, limit = KG.SESSION_RAW_MESSAGES) {
+  const from = Math.max(0, history.length - limit);
   const starts = new Set((conv?.sessions ?? []).filter((s) => s.n > 1).map((s) => s.startCount));
   return history.slice(from).flatMap((m, i) => [...(starts.has(from + i) ? ['--- (some hours later) ---'] : []), label(m)]);
 }
