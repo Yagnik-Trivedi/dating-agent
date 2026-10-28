@@ -2,6 +2,7 @@
 // perceive prompt, unchanged) AND write my next message (the agent-reply prompt, unchanged), so a turn costs one model
 // round-trip instead of two. Output: { read: <perceive JSON>, messages, claims, aboutThem, unknownAboutMe, end }.
 import * as agentReply from './agentReply.js';
+import { CHECK_SHAPE } from './agentReply.js';
 import * as perceive from './perceive.js';
 
 export function build({ reply, read }) {
@@ -20,7 +21,7 @@ export function build({ reply, read }) {
         `FIRST, for ${reply.firstName}'s private notes, READ ${reply.matchName}'s latest message(s) (this goes under "read" and is never sent):`,
         readRules,
         '',
-        `Output ONE JSON object: {"read": ${readShape}, "messages": ["..."], "claims": [{"text": "...", "factIds": ["F1"], "stance": "positive|negative|neutral"}],`,
+        `Output ONE JSON object: {"read": ${readShape}, ${CHECK_SHAPE}, "messages": ["..."], "claims": [{"text": "...", "factIds": ["F1"], "stance": "positive|negative|neutral"}],`,
         `"aboutThem": [{"text": "...", "sourceIds": ["N1"]}], "unknownAboutMe": null, "end": false${reply.plan?.flow === 'natural' ? ', "covers": ["i1"]' : ''}}`,
         `List EVERY self-claim in "claims" and EVERY statement about ${reply.matchName} (not questions) in "aboutThem". A plain reaction with no claim needs neither.`,
       ].join('\n'),

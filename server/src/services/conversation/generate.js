@@ -8,6 +8,8 @@ import * as agentTurn from '../prompts/agentTurn.js';
 import { perceiveSchema } from './perceive.js';
 import { cleanText } from '../persona/text.js';
 
+const noDash = (m) => m.replace(/\s*[—–]\s*/g, ', ').replace(/,\s*([,.!?])/g, '$1').replace(/^,\s*/, '');
+
 const nullableText = z.preprocess((v) => (typeof v === 'string' && v.trim() && !/^(null|none)$/i.test(v.trim()) ? v.trim() : null), z.string().max(300).nullable());
 const schema = z.object({
   messages: z.preprocess((v) => (typeof v === 'string' ? [v] : v), z.array(z.string()).min(1)).transform((m) => m.map((x) => x.trim()).filter(Boolean).slice(0, 3)),
@@ -21,7 +23,7 @@ const schema = z.object({
 /** → { messages, claims, aboutThem, unknownAboutMe, end } (messages cleaned). */
 export async function generate({ prompt, tier = 'mid', temperature, userId, matchId, warning }) {
   const out = await chatJSON({ tier, reasoning: false, temperature, schema, purpose: 'agent-reply', userId, matchId, messages: agentReply.build({ ...prompt, warning }) });
-  return { ...out, messages: out.messages.map((m) => cleanText(m, prompt.firstName)).filter(Boolean) };
+  return { ...out, messages: out.messages.map((m) => cleanText(noDash(m), prompt.firstName)).filter(Boolean) };
 }
 
 /** Plan 30 S1: read their message AND write mine in ONE call. → { read (perceive JSON), draft } */
@@ -31,5 +33,5 @@ export async function generateTurn({ prompt, read, tier = 'mid', temperature, us
     messages: agentTurn.build({ reply: { ...prompt, warning }, read }),
   });
   const { read: perceived, ...draft } = out;
-  return { read: perceived, draft: { ...draft, messages: draft.messages.map((m) => cleanText(m, prompt.firstName)).filter(Boolean) } };
+  return { read: perceived, draft: { ...draft, messages: draft.messages.map((m) => cleanText(noDash(m), prompt.firstName)).filter(Boolean) } };
 }
