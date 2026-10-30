@@ -1,4 +1,4 @@
-# Devpost submission: Prelude
+# Devpost submission: Twine
 
 Paste each section into the Devpost form. **Never put the judge password in this file** (the repo is public). It goes
 only into Devpost's private "Testing instructions" field.
@@ -15,7 +15,7 @@ first conversation to happen without costing anyone their evening, and without a
 
 ## What it does
 
-Prelude gives everyone an AI agent that knows them: from a short questionnaire, a few stories, and "how would you
+Twine gives everyone an AI agent that knows them: from a short questionnaire, a few stories, and "how would you
 reply?" prompts that capture how they actually text (Hinglish included). After two people like each other:
 
 1. **Their agents check each other's public profile** for fakes and inconsistencies. A dealbreaker gate means clear clashes never match at all.
@@ -30,9 +30,8 @@ is checked by a Nemotron vision model before anyone else sees it.
 
 - **Stack:** React 19 + Vite, Express 5 + Socket.IO, MongoDB Atlas (M0) with a Mongo-backed job queue. Everything runs on free tiers: Render, Vercel, Atlas, plus a keep-alive bot.
 - **Models:** every model call goes to **Nebius Token Factory** through one client, using NVIDIA Nemotron by tier:
-  - **Super** for conversation turns, perception and extraction;
+  - **Super** for conversation turns, perception, extraction and the short tasks (wind-down, icebreakers, date ideas);
   - **Ultra** for the judges;
-  - **Lightning** for short tasks;
   - a Nemotron **embedding** model for concepts;
   - a Nemotron **VL** model for photo moderation.
 - **Knowledge graph:** a six-layer graph per user (public profile, gate, self graph on shared concepts, voice, notes about others, decisions) with confidence, verbatim evidence and privacy tiers. A DB-spy test proves no agent ever reads the other user's graph.
@@ -41,7 +40,7 @@ is checked by a Nemotron vision model before anyone else sees it.
 ## Challenges we ran into
 
 - **Judges hedging:** the judges said "unsure" in most chats, so almost every pair came out Maybe. We moved the decision into code: the model lists quoted evidence, and rules decide.
-- **Hidden dealbreakers:** these never surfaced because nobody asked. Agents now must ask directly about anything that matters a lot to their person before a chat can end.
+- **Hidden dealbreakers:** these never surfaced because nobody asked. The topics that matter most to each person are now raised during the chat, through a natural bridge from whatever they're talking about.
 - **Agents misdescribing their person** ("still figuring out what I'm looking for" when the answer was long-term). We now check stated answers against the person's real ones in code, in English and Indian code-switched languages.
 - **Free-tier latency and rate limits:** these shaped a global limiter, retries with backoff, and an evaluation that can resume.
 
@@ -55,7 +54,7 @@ is checked by a Nemotron vision model before anyone else sees it.
 ## What we learned
 
 - **LLMs describe better than they decide.** Letting the model list evidence and letting code decide made the system more accurate and easier to explain.
-- **What matters most is what nobody asks about.** The agenda has to force the important questions.
+- **What matters most is what nobody asks about.** The agent has to bring the important topics up, naturally, before the chat ends.
 - **Prediction research is sobering**, so we aimed at filtering clear mismatches and fakes, not predicting love.
 
 ## What's next
@@ -66,8 +65,8 @@ is checked by a Nemotron vision model before anyone else sees it.
 
 ## Testing instructions (Devpost private field: fill in at deploy)
 
-- **Live app:** TODO(deploy): Vercel URL. The first load may take up to a minute while the free server wakes.
-- **Judge logins:** `judge1@demo.local` and `judge2@demo.local`. Password: TODO, from the team (private field only).
+- **Live app:** https://twine-ai.vercel.app. The first load may take up to a minute while the free server wakes.
+- **Judge logins:** `judge1@demo.local` and `judge2@demo.local`. Password: type it only into Devpost's private testing-instructions field, never into this file.
 - **In 2 minutes:**
   1. **Matches** → open a finished match → **Your agent's read**. Each point quotes their words; tap a "line" link to jump to it.
   2. Open the match that's **mid-conversation**. It resumes when you open it; watch a few live turns, then press **Pause** or **Take over**.
@@ -76,7 +75,7 @@ is checked by a Nemotron vision model before anyone else sees it.
 
 ## Feedback for Nebius / NVIDIA
 
-TODO(after plan 14): add our Token Factory experience (onboarding, catalog, latency per tier, docs). From development on NVIDIA's API with the same Nemotron models:
+From building with the same Nemotron models on NVIDIA's API and on Token Factory:
 
 - **Reasoning output:** reasoning comes back in a separate `reasoning_content` field, which is great, but a small `max_tokens` silently returns an empty `content` when reasoning uses the budget. A clear error or a reserved answer budget would save debugging time. `chat_template_kwargs.enable_thinking=false` was essential for chat latency (1–5 s vs 10–40 s); it deserves a first-class parameter.
 - **Catalog vs access:** some models listed in `GET /v1/models` returned 404 for our key (one Nano variant, Ultra at times). An `available: true/false` per key in the listing would help.

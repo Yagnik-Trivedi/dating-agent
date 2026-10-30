@@ -428,7 +428,7 @@ Full report: `server/eval/results/speed-before.md`, from `node scripts/speed-rep
 - **(2026-10-21) The NVIDIA key in `server/.env` gets `404 Function … Not found for account` on `MODEL_MID` (`nvidia/nemotron-3-super-120b-a12b`)**, though `/v1/models` lists it. Fast (Lightning) and smart (Ultra) answer. Mid writes every agent reply, the brief, the read and graph builds, so with this key agents can't talk. If the deployed site uses the same account, check it. The plan 31 simulation used `MODEL_MID=nvidia/nemotron-3-ultra-550b-a55b` for that run only (shell override; `.env` unchanged).
 - **Cloudinary** (`CLOUDINARY_*`) and **Resend** (`RESEND_API_KEY`, `EMAIL_FROM`): not in `.env` yet → S3/S4 build against local stubs and hide in production.
 - **Nebius account + credits** by Oct 26 (S7 / plan 14). Until then: NVIDIA free API.
-- **Production seed:** a teammate runs `seed.js` + `seed.js --judges` against Atlas (see `DEPLOY-HANDOFF.md`).
+- **Production seed:** a teammate runs `seed.js` + `seed.js --judges` against Atlas (see `plan/archive/DEPLOY-HANDOFF.md`).
 - **Env values for Render/Vercel** are collected here and set by the owner at S7.
 
 ## How to continue

@@ -1,10 +1,12 @@
-# Prelude
+# Twine
 
 **Your AI agent has the first conversation for you, in your own words, and tells you, with quotes, whether it's worth your time.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-A04E2E.svg)](LICENSE) · **Live demo:** TODO(deploy): Vercel URL · Judge logins are in the Devpost testing instructions.
+[![License: MIT](https://img.shields.io/badge/License-MIT-A04E2E.svg)](LICENSE) · **Live demo:** [twine-ai.vercel.app](https://twine-ai.vercel.app) · Judge logins are in the Devpost testing instructions.
 
-Built for the Nebius x NVIDIA Global AI Hackathon (Best Apps & Agents). The repo is called `dating-agent`; the app is Prelude.
+Built for the Nebius x NVIDIA Global AI Hackathon (Best Apps & Agents). The repo is called `dating-agent`; the app is Twine.
+
+> The API runs on Render's free tier, so the first request after a quiet spell can take up to a minute while the server wakes.
 
 ## The problem
 
@@ -24,8 +26,6 @@ match was never going to work. That's hours of small talk spent on people who we
 - **Your agent never invents facts about you.** Every claim about you cites a fact from your graph, checked in code. When it doesn't know, it asks you ("Ask my human").
 - **Only you see your read**, and every point quotes the other person's own words.
 
-<!-- TODO(deploy): screenshot or GIF of the match room -->
-
 ## How we use NVIDIA Nemotron + Nebius Token Factory
 
 Every LLM call goes through one client (`server/src/services/llm/client.js`) pointed at Token Factory's
@@ -34,12 +34,12 @@ OpenAI-compatible API. Model IDs come from `.env`, never from code, so switching
 | Task | Tier → model | Why this tier |
 |---|---|---|
 | Agent replies, reading their message (perceive + notes), match brief, fact extraction from stories, trust check, reflections, voice corrections, notes compaction | **mid** → Nemotron 3 Super | Needs real language understanding in your voice, including Hinglish; reasoning is off for chat turns (2–5 s instead of 10–40 s). |
+| Stance check, wind-down message, icebreakers, date-idea write-up | **mid** → Nemotron 3 Super | Short tasks, but measured on the free tier Super with reasoning off answered in 2–9 s while Lightning took 30–60 s, so they moved up a tier. `LLM_TASK_TIERS` moves any task back without a code change. |
 | Judges (one per side, private) | **smart** → Nemotron 3 Ultra, falling back to Super | The one decision that matters most. It runs once per side per conversation, at temperature 0. |
-| Stance check, wind-down message, icebreakers, date-idea write-up | **fast** → Nemotron 3.5 Lightning | Short, frequent, cheap. |
 | Concept matching, "asked about me?", leak check, exemplar choice | **embed** → Nemotron embedding model | One shared vector per *concept* (not per fact), so storage stays at ~88 KB per user. |
 | Photo moderation | **vision** → Nemotron VL | Describes each new photo (a person? text, contact details, QR codes, explicit content); **code** decides ok/rejected. |
 
-TODO(deploy): replace with the exact Token Factory model IDs after the switch (plan 14). Development ran on NVIDIA's API with the same Nemotron families.
+The exact model IDs per tier are set in `.env` (`MODEL_FAST`, `MODEL_MID`, `MODEL_SMART`, `MODEL_EMBED`, `MODEL_VISION`; see [`server/.env.example`](server/.env.example)). Every call records which model answered, and a judge records whether Ultra or the Super fallback decided.
 
 - **Reasoning models:** `max_tokens` is generous (≥ 2048) so reasoning can't eat the answer. Reasoning text lives in a separate field and never reaches a user. Per tier, reasoning can be switched off with `chat_template_kwargs.enable_thinking=false` where speed matters.
 - **Every output is validated:** JSON outputs go through zod, with one retry, then a graceful fallback. Quotes must be verbatim or they're dropped in code.
@@ -52,7 +52,7 @@ MongoDB · Express 5 · React 19 + Vite · Node 22, with Socket.IO for the live 
 (no Redis) runs onboarding builds, agent turns, judges and nightly maintenance; a restart resumes them.
 
 - `server/src/services/`: `llm/` (client, budget), `kg/` (knowledge graph), `trust/`, `brief/`, `conversation/` (per-turn engine, judges), `agent/` (scheduling, pause, take over), `compat/` (settle, hand-off), `tavily/` (date ideas).
-- `client/src/`: the Prelude design (light + "lamplight"), one screen per route, code-split.
+- `client/src/`: the Twine design (light theme), one screen per route, code-split.
 - Every message stores `authoredBy: human | agent`, for the audit trail and the reveal at hand-off.
 
 ## Knowledge graph
@@ -96,14 +96,14 @@ only lists evidence, each quote tied to something that matters to you, and **cod
 - **Maybe:** anything else.
 
 Re-judging the same 17 saved chats doubled accuracy ([rejudge.md](server/eval/results/rejudge.md)). The remaining
-misses were hidden conflicts nobody asked about. So the agent must now ask directly about anything that matters a lot
-to you before a chat can end. On fresh chats for those pairs, the drinking conflict surfaced and was caught
+misses were hidden conflicts nobody asked about. So the topics that matter most to you are now raised during the chat,
+through a natural bridge from whatever you're talking about. On fresh chats for those pairs, the drinking conflict surfaced and was caught
 ([results-step4.md](server/eval/results-step4.md)).
 
 ## Safety and consent
 
 - **Consent** is required at sign-up: "Early conversations with your matches may be handled by AI agents, including yours."
-- **You're in control:** you can read every line, pause your agent, take over in one tap, or turn agents off entirely. "Talk anyway" overrides any verdict.
+- **You're in control:** you can read every line, pause your agent, take over in one tap, or turn agents off entirely. "Talk anyway" reopens a match your own judge called Not compatible.
 - **Honest if asked:** a sincere "are you a bot?" always gets an honest answer. At hand-off, the reveal says how many messages were the agents'.
 - **Scam and fake detection:** rules plus an LLM consistency check on the public profile; scam scripts in chat stop the agents at once.
 - **No inference of religion, caste, ethnicity or race** from names or photos. Profile photos stay blurred until both people say yes.
@@ -112,10 +112,9 @@ to you before a chat can end. On fresh chats for those pairs, the drinking confl
 
 ## Honest limits
 
-- **Predicting compatibility before two people meet is weak in the research** (e.g. Joel, Eastwick & Finkel, 2017). So Prelude filters clear mismatches and fakes and saves you the first conversations; it doesn't claim to predict love.
+- **Predicting compatibility before two people meet is weak in the research** (e.g. Joel, Eastwick & Finkel, 2017). So Twine filters clear mismatches and fakes and saves you the first conversations; it doesn't claim to predict love.
 - **Synthetic evaluation:** the evaluation uses 38 hand-written synthetic personas, not real users.
 - **Languages:** English and the Indian code-switched mixes we tested (Hinglish, Devanagari Hindi, Gujarati-, Tamil- and Marathi-English).
-- **Photos:** the landing photo is a labelled placeholder.
 
 ## Setup
 
@@ -139,4 +138,4 @@ Step-by-step instructions are in [DEPLOY.md](DEPLOY.md).
 
 ## Team and license
 
-TODO(deploy): team names. MIT, see [LICENSE](LICENSE).
+Built by [Yagnik-Trivedi](https://github.com/Yagnik-Trivedi), [Viranshul-P](https://github.com/Viranshul-P), [Aryapatel-007](https://github.com/Aryapatel-007) and Swayam Prajapati. MIT, see [LICENSE](LICENSE).

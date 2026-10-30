@@ -1,3 +1,5 @@
+> **Archived (2026-10-30).** Internal team notes; links below are relative to the repo root. Current docs: [README](../../README.md), [DEPLOY](../../DEPLOY.md).
+
 # Gemini's audit report, Claude's check against the code, and the agreed fixes
 
 Reference notes. Covers the whole review from 2026-10-20: Gemini's "Engineering Report: Prelude" (and the

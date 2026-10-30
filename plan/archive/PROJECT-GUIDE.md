@@ -1,3 +1,5 @@
+> **Archived (2026-10-30).** Internal team notes; links below are relative to the repo root. Current docs: [README](../../README.md), [DEPLOY](../../DEPLOY.md).
+
 # Prelude: the whole project, explained
 
 This guide is for anyone who wants to understand the project end to end: what it does, how it's built, why it's built that way, what happened so far and what's still open. It's written for someone new to the codebase. It assumes basic web-development knowledge (React, Node, MongoDB), but nothing about this project.

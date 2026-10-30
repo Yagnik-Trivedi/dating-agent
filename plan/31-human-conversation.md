@@ -4,7 +4,7 @@
 > It replaces `plan/31-human-conversation-1.md` and `plan/31-human-conversation-2.md`. Delete both when this file is added.
 > Version 1 made the agents ask the same matching questions in a longer way (stories, hints). That was wrong.
 > This version keeps version 2's idea and fixes one gap found in the code (section B2, first point).
-> It builds on plan 30 step SN, which is in the code, and on the agreed fixes in `BUG_BY_GEMINI.md` (repo root).
+> It builds on plan 30 step SN, which is in the code, and on the agreed fixes in `plan/archive/BUG_BY_GEMINI.md`.
 > Part A is the design. Part B maps it onto this repo. Part C has the prompts for Claude Code.
 > Everything sits behind one env flag (`CONVO_MODE=human|sn`), so the demo can fall back to SN in one line.
 

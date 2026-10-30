@@ -1,3 +1,5 @@
+> **Archived (2026-10-30).** Internal team notes; links below are relative to the repo root. Current docs: [README](../../README.md), [DEPLOY](../../DEPLOY.md).
+
 # Deploy handoff (quick version)
 
 Full steps are in [DEPLOY.md](DEPLOY.md). This is the short checklist for whoever deploys.
