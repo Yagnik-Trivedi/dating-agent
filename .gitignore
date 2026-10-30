@@ -27,3 +27,7 @@ server/backups/
 
 # Claude Code local state (worktrees)
 .claude/
+
+# Team working notes (kept locally, not published)
+plan/
+CLAUDE.md
