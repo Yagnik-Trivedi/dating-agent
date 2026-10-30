@@ -19,7 +19,7 @@ import { factText } from '../kg/phrases.js';
 import { tagLanguageHeuristic } from '../kg/language.js';
 import { factsOnTopic, inboxDecision, knowsTopic, questionToMe, topicOf, attributesIn } from '../persona/askedAboutMe.js';
 import { covers, groundingCheck, hedgeSentences, leakCheck, orphaned, stanceCheck, styleCheck, styleNotes } from '../persona/checks.js';
-import { isQuestion, privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
+import { flirtLevel, isQuestion, privateGuidance, selectExemplars, selectFacts, storyCandidates, toneRules } from '../persona/contextBuilder.js';
 import { echoOf, norm, oneQuestion, ownEmojiOnly, sentencesOf, splitBurst, words } from '../persona/text.js';
 import { startConversationDoc } from '../pipeline/index.js';
 import { generate, generateTurn } from './generate.js';
@@ -382,6 +382,7 @@ export const composeTurn = (match, userId) => asActor({ role: 'agent', userId, o
       (persona.voice.sampleCount ?? 0) < KG.VOICE_CONFIDENT_SAMPLES && `Only a few examples of how ${persona.firstName} texts are known: keep replies short and plain, and don't invent quirks.`,
       persona.voice.doList?.length && `Do: ${persona.voice.doList.join('; ')}`, persona.voice.dontList?.length && `Don't: ${persona.voice.dontList.join('; ')}`, persona.voice.corrections?.length && `Corrections from ${persona.firstName}: ${persona.voice.corrections.map((c) => c.rule).join('; ')}`].filter(Boolean).join('\n'),
     exemplars: rulesOn ? selectExemplars(persona, { incomingVec, rng }) : [], guidance: privateGuidance(persona), tone: toneRules(persona),
+    flirt: flirtLevel(persona),
   };
   // What counts as said by/about them: their messages + my brief summary of their PUBLIC profile (allowed source).
   const theirTexts = [...history.filter((m) => String(m.senderId) !== me).map((m) => m.text), brief.summary ?? '', `${matchName} profile`];

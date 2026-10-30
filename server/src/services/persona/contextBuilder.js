@@ -87,6 +87,9 @@ export function privateGuidance(persona) {
 /** Trait rules (tone only). */
 export const toneRules = (persona) => traitRules(persona.traits);
 
+/** How much my agent may flirt: the `flirtiness` trait (0..1) from my onboarding bar (A.a21), or null if never set. */
+export const flirtLevel = (persona) => (Number.isFinite(persona.traits?.flirtiness) ? persona.traits.flirtiness : null);
+
 /** k of my own messages most like the incoming one, diverse by mood/language (MMR). → [{ incoming, text }] */
 export function selectExemplars(persona, { incomingVec, rng, k = KG.EXEMPLARS_K } = {}) {
   const pool = persona.samples.map((s) => ({ s, rel: incomingVec && s.vector ? cosine(incomingVec, s.vector) : rng() * 0.1 }));

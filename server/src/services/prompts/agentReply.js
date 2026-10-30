@@ -92,7 +92,7 @@ const MOOD_MATCH = {
   chill: 'keep it short and easy', playful: "play along, tease a little if that's how {name} texts", excited: 'be happy for them and ask one thing about it',
   tired: 'very short and warm, no new topics; fine to wrap up', busy: 'very short and warm, no new topics; fine to wrap up',
   down: 'stay on it and be kind: no jokes, no change of subject', serious: 'answer properly, no jokes',
-  flirty: "light and warm, only as far as {name}'s own style goes", curious: 'answer what they want to know, simply',
+  flirty: "light and warm, only as far as {name}'s flirting level allows", curious: 'answer what they want to know, simply',
   bored: "don't push questions: one easy thing, or close nicely",
 };
 const humanMoveLine = (plan, firstName) => ({
@@ -141,7 +141,7 @@ function naturalLines(plan, firstName) {
     ...(plan.feelings ?? []).map((f) => `- About "${f.text}": ${firstName} ${fill(FEELING[f.feeling] ?? 'reacts naturally')}. Put the reaction first, and show its strength only in ${firstName}'s own ways (emoji, caps, stretched words, laughs) if ${firstName} texts like that.`),
     plan.thread ? (plan.thread.changed && plan.thread.bridge
       ? `- The last topic has run its course. Move to "${plan.thread.topic}" through a natural link to what was just said, never a cold jump.`
-      : `- You're both on "${plan.thread.topic}": riff on it: a question about their side, a tease or a flirty line, a mini-story or opinion from the listed facts, or a fun hypothetical. Anything personal about ${firstName} still needs a listed fact.`)
+      : `- You're both on "${plan.thread.topic}": riff on it: a question about their side, a light tease if it fits the flirting level, a mini-story or opinion from the listed facts, or a fun hypothetical. Anything personal about ${firstName} still needs a listed fact.`)
       : plan.moveOn ? `- You've talked about "${plan.moveOn}" enough: answer anything still open in one short line, then move to a NEW topic (something of yours, an opinion, or something else they mentioned), linked naturally. Don't keep going on "${plan.moveOn}".` : null,
     plan.lull ? `- The chat slowed down: give them something to react to, not an interview question: ${{ share: 'share a little thing of yours from the listed facts', opinion: 'a light opinion on the current topic', playful: 'a playful take or tease', hypothetical: 'a light, fun hypothetical question', hook: `something about this from their profile, in your own words: ${plan.hook}` }[plan.lull]}.` : null,
     !plan.lull && plan.hook && plan.phase === 'warmup' ? `- Something from their profile you could bring up casually, in your own words, if it fits: ${plan.hook}. Skip it if it would feel forced.` : null,
@@ -196,18 +196,33 @@ export function overusedWords(lines = []) {
   return [...counts].filter(([, n]) => n >= 3).map(([w]) => w);
 }
 
-// Owner, 2026-10-29: no numbered rulebook and no topic list. Describe a date-y chat between two people, flirting included.
+// Owner, 2026-10-29: no numbered rulebook and no topic list. Owner, 2026-10-30: HOW MUCH to flirt comes from the
+// user's knowledge graph (the flirtiness trait, their onboarding bar); the words are the model's, in their style.
 const CHAT_RULES = (firstName, matchName) => [
   'THE CHAT',
-  `You and ${matchName} matched on a dating app and you're getting to know each other over text. You're curious about them, a bit nervous, and you'd like this to go somewhere. Text the way ${firstName} would text someone they find attractive.`,
+  `You and ${matchName} matched on a dating app and you're getting to know each other over text. You're curious about them and you'd like this to go somewhere. Text the way ${firstName} would text someone new they'd like to know better.`,
   'Talk about anything: whatever comes up, wherever the conversation wanders. Answer what they ask, pick up on what they tell you, share your side, ask what you actually want to know about them.',
-  `Have fun with it. Flirt, tease, compliment them, joke around, be a little cheeky, get playful or romantic when the moment feels right. If they flirt, flirt back. If ${firstName} likes something about them, let it show. Let the chemistry build naturally over the chat instead of staying polite and formal.`,
+  `Be warm and curious, and enjoy the chat. If ${firstName} likes something about them, let it show. How flirty to be comes only from "FLIRTING" above: never more than that.`,
   'Read the mood: sweet when it\'s sweet, silly when it\'s silly, gentle when they\'re having a rough day.',
   'Keep it light and human, like a real text, not an essay or a speech about life. Short messages, sometimes two in a row.',
   `Use emoji the way ${firstName} does. Don't keep repeating the same words, openers or emoji.`,
   "If they ask something you have no fact for, don't invent it: be playful about it or ask their answer first, and put their question in \"unknownAboutMe\".",
-  'If they joke about a date or a future together, enjoy it and play along a little, then keep chatting here.',
+  `If they joke about a date or a future together, react at ${firstName}'s flirting level (see "FLIRTING"), then keep chatting here.`,
 ];
+
+// The flirtiness trait (0..1, onboarding A.a21; bar 1 → none, 2–3 → a little, 4 → some, 5 → a lot) → how much. null = never set: friendly, never flirts first.
+const FLIRT_LEVELS = [
+  [0.2, (n, m) => `none. Don't flirt. If ${m} flirts, take it kindly and steer back to friendly.`],
+  [0.6, (n, m) => `a little. Mostly friendly; now and then a light compliment or gentle tease when the moment fits. If ${m} flirts, respond lightly, without escalating.`],
+  [0.9, (n, m) => `some. Playful and a bit flirty when the moment feels right, and flirt back if ${m} flirts.`],
+  [Infinity, (n, m) => `a lot. ${n} enjoys flirting: be openly playful and flirty, with compliments and teasing, and flirt back when ${m} flirts.`],
+];
+function flirtLines(level, firstName, matchName) {
+  const how = level == null
+    ? `not set. Be warm and friendly but don't flirt first. If ${matchName} flirts, take it kindly and lightly, without flirting back harder.`
+    : FLIRT_LEVELS.find(([max]) => level < max)[1](firstName, matchName);
+  return ['FLIRTING', `- How much ${firstName} wants their agent to flirt: ${how}`, `- Write any flirting in ${firstName}'s own style and words.`];
+}
 
 function rulesLines({ firstName, matchName, myFacts }) {
   return [
@@ -220,7 +235,7 @@ function rulesLines({ firstName, matchName, myFacts }) {
     `- Write each fact the way ${firstName} would say it out loud. Never paste fact text, labels, ids, or anything in [brackets].`,
     myFacts.some((f) => f.endsWith('[not sure]')) ? `- Facts marked [not sure] are things ${firstName} only half-likes or hasn't decided on. Say them with a light hedge in ${firstName}'s own words.` : '',
     '- Plain text only: no quotes around the message, no name prefix, no markdown, and no long dashes (use a comma, a full stop, or a second message instead).',
-    '- Flirting and romance are welcome; keep it SFW (nothing sexual or explicit).',
+    '- Keep it SFW: nothing sexual or explicit, and never more flirty than "FLIRTING" allows.',
   ];
 }
 
@@ -265,7 +280,7 @@ function finalHuman(plan, firstName) {
     plan.flow === 'natural' && plan.decline && `kindly decline ${plan.decline} in one line, then pivot back.`,
     plan.flow === 'natural' && plan.preClose && `signal you'll have to go soon (${plan.excuse}), don't say bye yet.`,
     plan.flow === 'natural' && plan.bring && `if it connects to what was just said, bring up [${plan.bring.id}] ${plan.bring.text} in your own words; if not, ask a specific question about something they said.`,
-    plan.flow === 'natural' && plan.mustAdd && !plan.bring && 'the chat went flat: liven it up with a playful question, a tease, a little flirt or a small story from your facts.',
+    plan.flow === 'natural' && plan.mustAdd && !plan.bring && 'the chat went flat: liven it up with a playful question or a small story from your facts.',
     plan.flow === 'natural' && plan.move === 'greet' && 'open the chat with a casual hi in your own words and ask how their day or week is going.',
     plan.flow === 'natural' && plan.phase === 'greeting' && plan.move !== 'greet' && 'greet back casually, a few words about your day, then turn it back to them in your own words.',
     plan.unknownTopic ? `answer their question: nothing is listed about ${plan.unknownTopic}, so use the closest related fact or turn it playful and ask theirs first (no made-up preference).`
@@ -324,7 +339,7 @@ function memoryLines(memory) {
   ].filter((l, i, a) => l !== '' || i === a.length - 1);
 }
 
-export function build({ firstName, matchName, style, exemplars, myFacts, guidance, tone, aboutThem, transcript, fullChat = null, plan, warning, memory = null }) {
+export function build({ firstName, matchName, style, exemplars, myFacts, guidance, tone, aboutThem, transcript, fullChat = null, plan, warning, memory = null, flirt = null }) {
   const none = '(none)';
   const overused = overusedWords(fullChat?.lines ?? transcript);
   return [
@@ -339,6 +354,8 @@ export function build({ firstName, matchName, style, exemplars, myFacts, guidanc
         `How ${firstName} texts: ${style || 'casual, warm, short messages.'}`,
         tone.length ? `Personality: ${tone.join('; ')}.` : '',
         exemplars.length ? `Real messages ${firstName} has written (copy the style, never the content):\n${exemplars.map((e) => `- to "${e.incoming}" → "${e.text}"`).join('\n')}` : '',
+        '',
+        ...flirtLines(flirt, firstName, matchName),
         '',
         'WHAT YOU CAN SAY ABOUT YOURSELF',
         `These are the only facts about ${firstName} you may state. Cite their ids in "claims".`,

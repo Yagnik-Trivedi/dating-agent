@@ -66,6 +66,8 @@ export const QUESTIONS = {
         { id: 'a18', text: 'Make a mess of things.', trait: 'conscientiousness', reverse: true },
         { id: 'a19', text: 'Seldom feel blue.', trait: 'neuroticism', reverse: true },
         { id: 'a20', text: 'Do not have a good imagination.', trait: 'openness', reverse: true },
+        // Not Mini-IPIP (owner, 2026-10-30): how much my agent may flirt, a 0..1 trait fact the reply prompt reads.
+        { id: 'a21', text: 'Want my agent to flirt with my matches.', trait: 'flirtiness', reverse: false },
       ],
     },
     {

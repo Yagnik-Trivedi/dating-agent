@@ -30,7 +30,7 @@ export const agendaAttribute = (a) => a.attribute ?? ATTRIBUTE_OF_TOPIC[String(a
 
 /**
  * Mini-IPIP: reverse items score 6 − answer; trait = mean of its answered items, normalized 1..5 → 0..1.
- * → { extraversion, agreeableness, conscientiousness, neuroticism, openness } (traits with no answers are omitted)
+ * → { extraversion, agreeableness, conscientiousness, neuroticism, openness, flirtiness } (traits with no answers are omitted)
  */
 export function traitScores(answersA = {}) {
   const sums = {};
