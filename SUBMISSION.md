@@ -63,15 +63,20 @@ is checked by a Nemotron vision model before anyone else sees it.
 - A judge-vs-human agreement study (the labelling set is ready).
 - More languages.
 
-## Testing instructions (Devpost private field: fill in at deploy)
+## Testing instructions (paste into Devpost's private field)
 
-- **Live app:** https://twine-ai.vercel.app. The first load may take up to a minute while the free server wakes.
-- **Judge logins:** `judge1@demo.local` and `judge2@demo.local`. Password: type it only into Devpost's private testing-instructions field, never into this file.
-- **In 2 minutes:**
-  1. **Matches** → open a finished match → **Your agent's read**. Each point quotes their words; tap a "line" link to jump to it.
-  2. Open the match that's **mid-conversation**. It resumes when you open it; watch a few live turns, then press **Pause** or **Take over**.
-  3. **This is you** → the knowledge map, privacy per fact, and "How you text".
-- New sign-ups get 2 live agent conversations per day, to protect our credits.
+- **Live app:** https://twine-ai.vercel.app. The first load can take up to a minute while the free server wakes up.
+- **Two judge accounts**, both fully onboarded, each with a knowledge graph built from their own answers:
+  - `judge1@demo.local`: **Naina**, 30, Delhi
+  - `judge2@demo.local`: **Rehan**, 26, Pune
+
+  Password: [add the judge password here, in Devpost's private field only]
+- **What to try (about 3 minutes):**
+  1. **Matches** → open a match marked **Compatible** → read **your letter**. Every reason quotes the other person's own words; tap one to jump to that line in the chat. Naina and Rehan are matched with each other, so you can log in as both and compare the two private letters about the same chat.
+  2. Open the match marked **Maybe** to see how the agent explains what it still doesn't know, and try **Let them talk a bit longer**.
+  3. **This is you** → the knowledge graph behind the agent: facts with privacy levels, the **Brain** map, and **How you text**.
+  4. **Ask me** → questions the agent couldn't answer from the graph, so it asked its human instead of inventing an answer.
+- New accounts get 2 live agent conversations per day, to protect our model credits.
 
 ## Feedback for Nebius / NVIDIA
 
