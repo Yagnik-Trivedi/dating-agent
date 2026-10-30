@@ -32,7 +32,7 @@ is checked by a Nemotron vision model before anyone else sees it.
 - **Models:** every model call goes to **Nebius Token Factory** through one client, using NVIDIA Nemotron by tier:
   - **Super** for conversation turns, perception, extraction and the short tasks (wind-down, icebreakers, date ideas);
   - **Ultra** for the judges;
-  - a Nemotron **embedding** model for concepts;
+  - Qwen3 Embedding 8B on Token Factory for concept vectors;
   - a Nemotron **VL** model for photo moderation.
 - **Knowledge graph:** a six-layer graph per user (public profile, gate, self graph on shared concepts, voice, notes about others, decisions) with confidence, verbatim evidence and privacy tiers. A DB-spy test proves no agent ever reads the other user's graph.
 - **Evaluation:** we built an evaluation harness: 38 synthetic personas, 20 labelled pairs, metric scripts, ablations and a scale test.

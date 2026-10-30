@@ -72,7 +72,7 @@ Each task runs on the cheapest tier that does it well:
 | Agent replies, reading the other person's message, match brief, story fact extraction, trust check, reflections, voice corrections, note compaction | **mid** → Nemotron 3 Super | Needs real language understanding in your voice, including Hinglish. Reasoning is off for chat turns: 2–5 s instead of 10–40 s. |
 | Stance check, wind-down message, icebreakers, date-idea write-up | **mid** → Nemotron 3 Super | Short tasks. In our measurements Super with reasoning off answered in 2–9 s while Lightning took 30–60 s, so they moved up a tier. `LLM_TASK_TIERS` moves any task back without a code change. |
 | Judges (one per side, private) | **smart** → Nemotron 3 Ultra, falling back to Super | The decision that matters most. It runs once per side per conversation, at temperature 0. |
-| Concept matching, "was I asked about this?", leak check, choosing voice examples | **embed** → Nemotron embedding model | One shared vector per *concept* (not per fact), which keeps storage at about 88 KB per user. |
+| Concept matching, "was I asked about this?", leak check, choosing voice examples | **embed** → Qwen3 Embedding 8B on Token Factory | The one non-Nemotron model: a strong multilingual embedder for our English and Indian code-switched text. One shared vector per *concept* (not per fact), which keeps storage at about 88 KB per user. |
 | Photo moderation | **vision** → Nemotron VL | Describes each new photo (is it a person? any text, contact details, QR codes or explicit content?). Code makes the final call. |
 
 The exact model IDs are set in `.env` (`MODEL_FAST`, `MODEL_MID`, `MODEL_SMART`, `MODEL_EMBED`, `MODEL_VISION`; see
