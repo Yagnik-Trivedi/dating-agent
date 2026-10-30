@@ -58,7 +58,7 @@ test('merged turn prompt: the read instructions and the reply rules in one reque
     reply: { firstName: 'Meera', matchName: 'Ishaan', style: '', exemplars: [], myFacts: ['[F1] likes: trekking'], guidance: [], tone: [], aboutThem: [], transcript: ['Ishaan: hey'], plan },
     read: { myName: 'Meera', theirName: 'Ishaan', latest: 'hey, love treks', context: [], myLast: null, agenda: [], attributes: 'smoking (never|sometimes)' },
   });
-  assert.match(sys.content, /You are Meera, texting a match/);
+  assert.match(sys.content, /You are Meera\. You are texting Ishaan/);
   assert.match(sys.content, /"notes": facts about Ishaan/);
   assert.match(sys.content, /\{"read": \{"concepts"/);
   assert.equal((sys.content.match(/Output JSON/g) ?? []).length, 0, 'no leftover per-prompt output lines');

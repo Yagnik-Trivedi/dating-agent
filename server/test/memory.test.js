@@ -47,10 +47,10 @@ test('the whole chat (every sitting, with markers) goes in the system prompt, in
   assert.equal(fullChat.lines.filter((l) => l.includes('message')).length, 40);
   const reply = { firstName: 'Meera', matchName: 'Ishaan', style: '', exemplars: [], myFacts: [], guidance: [], tone: [], aboutThem: [], transcript: rawTranscript(history, conv, label), fullChat, plan: { move: 'react', targetWords: 8, reactions: [], language: { primary: 'en' } } };
   const [sys] = agentReply.build(reply);
-  assert.match(sys.content, /THE WHOLE CHAT WITH ISHAAN SO FAR[\s\S]*\nYou: message 1\n[\s\S]*--- \(some hours later\) ---[\s\S]*Ishaan: message 40\n/);
+  assert.match(sys.content, /THE WHOLE CHAT SO FAR[\s\S]*\nYou: message 1\n[\s\S]*--- \(some hours later\) ---[\s\S]*Ishaan: message 40\n/);
   assert.equal((sys.content.match(/^--- \(some hours later\) ---$/gm) ?? []).length, 2, 'both later sittings marked');
   const [turnSys] = agentTurn.build({ reply, read: { myName: 'Meera', theirName: 'Ishaan', latest: ['message 40'], context: { lines: [] }, myLast: null, agenda: [], attributes: [] } });
-  assert.match(turnSys.content, /THE WHOLE CHAT WITH ISHAAN SO FAR[\s\S]*You: message 1\n/);
+  assert.match(turnSys.content, /THE WHOLE CHAT SO FAR[\s\S]*You: message 1\n/);
   const capped = agentReply.build({ ...reply, fullChat: { lines: rawTranscript(history, conv, label, 10), hidden: 30 } })[0].content;
   assert.match(capped, /\(30 older messages are not shown here/);
   assert.doesNotMatch(capped, /You: message 1\n/);

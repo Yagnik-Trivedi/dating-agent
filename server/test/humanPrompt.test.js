@@ -19,11 +19,12 @@ const voice = { wordCounts: [8, 10], questionBackRate: 0.4, language: { mix: { e
 const reply = (plan) => ({ firstName: 'Arya', matchName: 'Kabir', style: 'casual', exemplars: [], myFacts: ['[F1] likes: trekking'], guidance: [], tone: [], aboutThem: [], transcript: ['Kabir: i might move abroad for my masters'], plan });
 const text = (msgs) => msgs.map((m) => m.content).join('\n');
 
-test('P1: the human block says small talk needs no fact and most messages are short reactions; SN block gone', () => {
+test('P1: the chat block keeps it light and short, a plain reaction needs no fact; SN block gone', () => {
   const plan = planAct({ mode: 'human', voice, rng: rng(1), agenda, state: { interest: 0.6, turn: 3, warm: true }, thread: { theirs: 'ugh so tired, back to back classes' }, msgCount: 4 });
   const p = text(agentReply.build(reply(plan)));
-  assert.match(p, /Small talk is good\. You don't need a fact to react/);
-  assert.match(p, /Most messages are a short reply or reaction/);
+  assert.match(p, /Keep it light and human, like a real text/);
+  assert.match(p, /Short messages, sometimes two in a row/);
+  assert.match(p, /A plain reaction with no claim needs neither/);
   assert.match(p, /They seem tired \(low energy\): very short and warm/);
   assert.doesNotMatch(p, /HOW A GOOD CHAT FEELS|Share before you ask/);
 });
